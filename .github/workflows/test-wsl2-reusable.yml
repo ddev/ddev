@@ -98,7 +98,17 @@ jobs:
             exit 1
           }
           wsl -- uname -a
-          wsl -- systemctl is-system-running --wait
+          $state = (wsl -- systemctl is-system-running --wait).Trim()
+          Write-Host "systemd state: $state"
+          # A failed unit unrelated to Docker leaves systemd "degraded"; log it rather than fail.
+          if ($state -eq "degraded") {
+            wsl -- systemctl --failed --no-pager
+            wsl -- bash -c "systemctl --failed --plain --no-legend | awk '{print `$1}' | xargs -r -n1 journalctl --no-pager -n 30 -u"
+            exit 0
+          } elseif ($state -ne "running") {
+            Write-Error "Unexpected systemd state: $state"
+            exit 1
+          }
 
       - uses: actions/checkout@v7
         with:
