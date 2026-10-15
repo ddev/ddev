@@ -58,10 +58,10 @@ var WebTagBranch = "20261008_remove_gitpod_workaround"
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "9d4baa2aca" // 20261001_mysql_97_complaints-9d4baa2aca
+var BaseDBTag = "b902a02bd7" // 20261011_rfay_dbserver_innodb_defaults-b902a02bd7
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
-var BaseDBTagBranch = "20261001_mysql_97_complaints"
+var BaseDBTagBranch = "20261011_rfay_dbserver_innodb_defaults"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
