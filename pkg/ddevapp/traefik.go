@@ -39,7 +39,7 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, []string, error) {
 		var virtualHost string
 		if virtualHostPointer, ok := service.Environment["VIRTUAL_HOST"]; ok && virtualHostPointer != nil && *virtualHostPointer != "" {
 			virtualHost = *virtualHostPointer
-			util.Debug("VIRTUAL_HOST=%v for %s", virtualHost, serviceName)
+			util.Verbose("VIRTUAL_HOST=%v for %s", virtualHost, serviceName)
 		}
 		if virtualHost == "" {
 			continue
@@ -47,7 +47,7 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, []string, error) {
 		hostnames := strings.Split(virtualHost, ",")
 		if httpExposePointer, ok := service.Environment["HTTP_EXPOSE"]; ok && httpExposePointer != nil && *httpExposePointer != "" {
 			httpExpose := *httpExposePointer
-			util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
+			util.Verbose("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
 			routeEntries, err := processHTTPExpose(serviceName, httpExpose, false, hostnames)
 			if err != nil {
 				return nil, nil, err
@@ -57,7 +57,7 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, []string, error) {
 
 		if httpsExposePointer, ok := service.Environment["HTTPS_EXPOSE"]; ok && httpsExposePointer != nil && *httpsExposePointer != "" {
 			httpsExpose := *httpsExposePointer
-			util.Debug("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
+			util.Verbose("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
 			routeEntries, err := processHTTPExpose(serviceName, httpsExpose, true, hostnames)
 			if err != nil {
 				return nil, nil, err
@@ -344,7 +344,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 					} else {
 						// Track this cert as expected so it won't be removed during cleanup
 						expectedCerts[certFile] = true
-						util.Debug("Copied cert %s from project %s to global traefik certs dir", certFile, app.Name)
+						util.Verbose("Copied cert %s from project %s to global traefik certs dir", certFile, app.Name)
 					}
 				}
 			}
@@ -402,14 +402,14 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 			return fmt.Errorf("failed to set ownership on traefik files: %v", err)
 		}
 
-		util.Debug("Copied global Traefik config in %s directly to router container %s", globalTraefikDir, containerName)
+		util.Verbose("Copied global Traefik config in %s directly to router container %s", globalTraefikDir, containerName)
 	} else {
 		// Router not running yet - copy to volume as fallback
 		err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "custom-global-config", false)
 		if err != nil {
 			return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
 		}
-		util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik volume", globalTraefikDir)
+		util.Verbose("Copied global Traefik config in %s to ddev-global-cache/traefik volume", globalTraefikDir)
 	}
 
 	// Sync config directory - remove stale project configs from the volume

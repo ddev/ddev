@@ -183,7 +183,7 @@ func StartDdevRouter() error {
 			return fmt.Errorf("failed to start ddev-router: %v", err)
 		}
 	} else {
-		output.UserOut.Printf("%s already running, pushing new config...", nodeps.RouterContainer)
+		util.Debug("%s already running, pushing new config", nodeps.RouterContainer)
 
 		// Update network aliases in place rather than recreating the container.
 		// Starting any project with a new hostname changes the router's aliases,
@@ -236,7 +236,7 @@ func StartDdevRouter() error {
 		}
 	}
 
-	util.Debug("Getting traefik error output")
+	util.Verbose("Getting traefik error output")
 	traefikErr := GetRouterConfigErrors()
 	if traefikErr != "" {
 		util.Warning("Warning: There are router configuration problems:\n%s", traefikErr)
@@ -475,7 +475,7 @@ func ClearRouterHealthcheck() error {
 		return nil
 	}
 
-	util.Debug("Forcing router healthcheck to clear status")
+	util.Verbose("Forcing router healthcheck to clear status")
 	uid, _, _ := dockerutil.GetContainerUser()
 	_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy /tmp/ddev-traefik-errors.txt && /healthcheck.sh", uid)
 	if err != nil {

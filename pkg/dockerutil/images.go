@@ -172,7 +172,7 @@ func RemoveImage(tag string) error {
 		_, err = apiClient.ImageRemove(ctx, tag, client.ImageRemoveOptions{Force: true})
 
 		if err == nil {
-			util.Debug("Deleted Docker image %s", tag)
+			util.Verbose("Deleted Docker image %s", tag)
 		} else {
 			util.Warning("Unable to delete %s: %v", tag, err)
 		}

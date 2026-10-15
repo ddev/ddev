@@ -198,7 +198,7 @@ func TestAnnounceBaseDBSeed(t *testing.T) {
 	require.Contains(t, out, "Initializing new database volume from the 'seed' snapshot")
 	require.Contains(t, out, fileutil.ShortHomeJoin(filepath.ToSlash(seedFile)))
 	require.Contains(t, out, "(2.0KB)")
-	require.Contains(t, out, "this may take a long time")
+	require.Contains(t, out, "may take a while")
 	require.Contains(t, out, "default_container_timeout")
 	require.Contains(t, out, "ddev logs -s db -f "+app.Name)
 	require.Contains(t, out, strconv.Itoa(SnapshotRestoreDefaultWaitTime))
