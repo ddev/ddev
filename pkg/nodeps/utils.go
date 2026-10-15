@@ -1,15 +1,19 @@
 package nodeps
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 	"unicode"
 
 	"golang.org/x/term"
@@ -213,4 +217,47 @@ func IsEnvTrue(envVar string) bool {
 // IsEnvFalse returns the opposite of IsEnvTrue
 func IsEnvFalse(envVar string) bool {
 	return !IsEnvTrue(envVar)
+}
+
+// WriteFileAtomic writes data to a temp file beside path and renames it into
+// place, so readers see the old or the new content, never a truncated file,
+// and a failed write leaves the old file intact. A symlinked path keeps its
+// link and the target is replaced.
+func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
+	if resolved, err := filepath.EvalSymlinks(path); err == nil {
+		path = resolved
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.tmp")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = os.Remove(tmp.Name()) }()
+
+	if _, err = tmp.Write(data); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err = tmp.Sync(); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err = tmp.Close(); err != nil {
+		return err
+	}
+	if err = os.Chmod(tmp.Name(), perm); err != nil {
+		return err
+	}
+	err = os.Rename(tmp.Name(), path)
+	if IsWindows() {
+		// Windows fails with ERROR_ACCESS_DENIED (5) or ERROR_SHARING_VIOLATION (32)
+		// while another process, such as a concurrent ddev or an antivirus scanner,
+		// has either file open, so retry briefly.
+		var errno syscall.Errno
+		deadline := time.Now().Add(time.Second)
+		for errors.As(err, &errno) && (errno == 5 || errno == 32) && time.Now().Before(deadline) {
+			time.Sleep(20 * time.Millisecond)
+			err = os.Rename(tmp.Name(), path)
+		}
+	}
+	return err
 }

@@ -30,6 +30,9 @@ type stateManager struct {
 // Load see interface description.
 func (m *stateManager) Load() (err error) {
 	m.state, err = m.storage.Read()
+	if m.state == nil {
+		m.state = make(types.RawState)
+	}
 
 	if err == nil {
 		m.stateChanged = false

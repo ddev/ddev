@@ -711,12 +711,26 @@ func ReadProjectList() error {
 		return fmt.Errorf("could not read global projects file %s: %v", globalProjectsFile, err)
 	}
 
-	// Unmarshal into a fresh map, since unmarshaling into the existing one
-	// would keep projects that were removed from the file since the last read.
+	// A fresh map drops projects removed from the file since the last read.
+	// An unparseable list is set aside rather than blocking every command,
+	// since projects re-register on `ddev start`.
 	projects := map[string]*ProjectInfo{}
 	err = yaml.Unmarshal(source, &projects)
 	if err != nil {
-		return fmt.Errorf("unable to load DDEV global projects file %s: %v", globalProjectsFile, err)
+		badFile := globalProjectsFile + ".bad"
+		DdevProjectList = make(map[string]*ProjectInfo)
+		if renameErr := os.Rename(globalProjectsFile, badFile); renameErr != nil {
+			// Another ddev process, such as the TUI, may have set it aside first.
+			if os.IsNotExist(renameErr) {
+				return nil
+			}
+			return fmt.Errorf("unable to move unparseable global projects file %s to %s: %v", globalProjectsFile, badFile, renameErr)
+		}
+		output.UserErr.Warningf("Unable to parse global projects file %s, moved it to %s and started with an empty project list: %v", globalProjectsFile, badFile, err)
+		return WriteProjectList(DdevProjectList)
+	}
+	if projects == nil {
+		projects = make(map[string]*ProjectInfo)
 	}
 	DdevProjectList = projects
 
@@ -748,13 +762,9 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 		return err
 	}
 
-	// Write to projects file
-	err = os.WriteFile(GetProjectListPath(), projectsBytes, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	// Other ddev processes, such as the TUI, may read the list mid-write, and
+	// ReadProjectList sets aside a list it cannot parse.
+	return nodeps.WriteFileAtomic(GetProjectListPath(), projectsBytes, 0644)
 }
 
 // GetGlobalDdevDir returns the DDEV global config directory, and creates it as needed.

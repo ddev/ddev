@@ -60,12 +60,42 @@ func (yamlStorageTestSuite *YamlStorageTestSuite) TestReadReturnsStateWithoutSta
 	yamlStorageTestSuite.EqualValues(types.RawState{}, data)
 }
 
-func (yamlStorageTestSuite *YamlStorageTestSuite) TestReadReturnsErrorForInvalidStateFile() {
-	storage := yaml.New(filepath.Join("testdata", "invalid.yml"))
-	data, err := storage.Read()
+func (yamlStorageTestSuite *YamlStorageTestSuite) TestReadResetsUnreadableStateFile() {
+	tests := map[string]string{
+		"empty":     "",
+		"null":      "null\n",
+		"doc start": "---\n",
+		"invalid":   "{{{ not: [yaml\n",
+	}
 
-	yamlStorageTestSuite.ErrorContains(err, "yaml: unmarshal errors")
-	yamlStorageTestSuite.Nil(data)
+	for name, content := range tests {
+		yamlStorageTestSuite.Run(name, func() {
+			stateFile := filepath.Join(yamlStorageTestSuite.T().TempDir(), "state.yml")
+			yamlStorageTestSuite.Require().NoError(os.WriteFile(stateFile, []byte(content), 0600))
+
+			data, err := yaml.New(stateFile).Read()
+
+			yamlStorageTestSuite.Require().NoError(err)
+			yamlStorageTestSuite.Require().Equal(types.RawState{}, data)
+		})
+	}
+}
+
+func (yamlStorageTestSuite *YamlStorageTestSuite) TestSetAfterEmptyStateFile() {
+	stateFile := filepath.Join(yamlStorageTestSuite.T().TempDir(), "state.yml")
+	yamlStorageTestSuite.Require().NoError(os.WriteFile(stateFile, nil, 0600))
+
+	state := yaml.NewState(stateFile)
+	yamlStorageTestSuite.Require().NoError(state.Set("key1", map[string]string{"value": "string1"}))
+	yamlStorageTestSuite.Require().NoError(state.Save())
+
+	data, err := yaml.New(stateFile).Read()
+	yamlStorageTestSuite.Require().NoError(err)
+	yamlStorageTestSuite.Require().Equal("string1", data["key1"].(map[string]any)["value"])
+
+	leftovers, err := filepath.Glob(stateFile + ".*.tmp")
+	yamlStorageTestSuite.Require().NoError(err)
+	yamlStorageTestSuite.Require().Empty(leftovers)
 }
 
 func (yamlStorageTestSuite *YamlStorageTestSuite) TestWriteProperlyWritesState() {

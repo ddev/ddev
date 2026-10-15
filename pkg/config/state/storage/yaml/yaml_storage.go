@@ -6,6 +6,8 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/state"
 	"github.com/ddev/ddev/pkg/config/state/types"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -37,9 +39,17 @@ func (s *yamlStorage) Read() (raw types.RawState, err error) {
 		return
 	}
 
-	err = yaml.Unmarshal(content, &raw)
+	// The state is a disposable cache, so an empty file (left by a crash
+	// mid-write) or an unparseable one is reset rather than blocking DDEV.
+	if err = yaml.Unmarshal(content, &raw); err != nil {
+		util.Debug("Ignoring unreadable state file %s: %v", s.filePath, err)
+		return make(types.RawState), nil
+	}
+	if raw == nil {
+		raw = make(types.RawState)
+	}
 
-	return
+	return raw, nil
 }
 
 // Write see interface description.
@@ -58,9 +68,7 @@ func (s *yamlStorage) Write(raw types.RawState) (err error) {
 	finalContent := []byte("---\n")
 	finalContent = append(finalContent, content...)
 
-	err = os.WriteFile(s.filePath, finalContent, 0600)
-
-	return
+	return nodeps.WriteFileAtomic(s.filePath, finalContent, 0600)
 }
 
 func (s *yamlStorage) TagName() string {
