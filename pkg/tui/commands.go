@@ -2,343 +2,230 @@ package tui
 
 import (
 	"bufio"
-	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
-	"runtime"
+	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/atotto/clipboard"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/nodeps"
 )
 
-// operationAutoReturnDelay is the time to wait before auto-returning from a
-// successfully completed operation view.
-var operationAutoReturnDelay = 2 * time.Second
+const (
+	refreshInterval = 5 * time.Second
+	statusLifetime  = 5 * time.Second
+	maxStreamLines  = 5000
+)
 
-// scheduleOperationAutoReturn returns a command that sends an
-// operationAutoReturnMsg after a short delay.
-func scheduleOperationAutoReturn() tea.Cmd {
-	return tea.Tick(operationAutoReturnDelay, func(time.Time) tea.Msg {
-		return operationAutoReturnMsg{}
-	})
+// execPause is how long an operation's last output stays up before the TUI
+// redraws over it.
+var execPause = time.Second
+
+func tickCmd() tea.Cmd {
+	return tea.Tick(refreshInterval, func(time.Time) tea.Msg { return tickMsg{} })
 }
 
-// loadProjects fetches the project list in the background.
-func loadProjects() tea.Msg {
-	// Re-read the global project list from disk so we pick up changes
-	// made by subprocesses (e.g. ddev config).
-	_ = globalconfig.ReadProjectList()
-	apps, err := ddevapp.GetProjects(false)
+func expireStatusCmd(id int) tea.Cmd {
+	return tea.Tick(statusLifetime, func(time.Time) tea.Msg { return statusExpiredMsg{id: id} })
+}
+
+// Indirections so tests can see what a key runs without running it.
+var (
+	execDdev          = execDdevCmd
+	xdebugStatus      = xdebugCmd
+	latestAddons      = latestAddonsCmd
+	startStream       = startStreamCmd
+	openTargetCmd     = openTarget
+	openInPhpStormCmd = openInPhpStorm
+	writeClipboard    = clipboard.WriteAll
+)
+
+// ddevBinary returns the ddev binary to run subcommands with. Tests point it
+// at a built binary, since os.Executable is the test binary there.
+var ddevBinary = os.Executable
+
+// baseEnv is the environment from before the TUI described any project.
+// Describe sets the project's variables on this process, and some would
+// carry over to a subcommand for another project: a PostgreSQL project's
+// DDEV_DB_CONTAINER_COMMAND would start a MySQL database with PostgreSQL
+// flags. Unset, as in tests, subcommands get the current environment.
+var baseEnv []string
+
+// ddevCommand prepares a ddev subcommand in dir (the current directory if
+// empty) that cannot start a nested TUI.
+func ddevCommand(dir string, args ...string) (*exec.Cmd, error) {
+	bin, err := ddevBinary()
 	if err != nil {
-		return projectsLoadedMsg{err: err}
+		return nil, err
 	}
-
-	projects := make([]ProjectInfo, 0, len(apps))
-	for _, app := range apps {
-		projects = append(projects, extractProjectInfo(app))
+	c := exec.Command(bin, args...)
+	env := baseEnv
+	if env == nil {
+		env = os.Environ()
 	}
-	return projectsLoadedMsg{projects: projects}
+	c.Env = append(slices.Clone(env), "DDEV_NO_TUI=true")
+	c.Dir = dir
+	return c, nil
 }
 
-// loadDetailCmd fetches full project detail in the background.
-func loadDetailCmd(appRoot string) tea.Cmd {
-	return func() tea.Msg {
-		if _, err := os.Stat(appRoot); os.IsNotExist(err) {
-			return projectDetailLoadedMsg{err: fmt.Errorf("project directory no longer exists: %s", appRoot)}
-		}
-
-		app, err := ddevapp.NewApp(appRoot, true)
-		if err != nil {
-			return projectDetailLoadedMsg{err: err}
-		}
-
-		desc, err := app.Describe(false)
-		if err != nil {
-			return projectDetailLoadedMsg{err: err}
-		}
-
-		detail := ProjectDetail{
-			Name:    app.Name,
-			AppRoot: appRoot,
-		}
-
-		detail.Status, _ = desc["status"].(string)
-		detail.Type, _ = desc["type"].(string)
-		detail.PHPVersion, _ = desc["php_version"].(string)
-		detail.WebserverType, _ = desc["webserver_type"].(string)
-		detail.NodeJSVersion, _ = desc["nodejs_version"].(string)
-		detail.Docroot, _ = desc["docroot"].(string)
-		detail.DatabaseType, _ = desc["database_type"].(string)
-		detail.DatabaseVersion, _ = desc["database_version"].(string)
-		detail.PerformanceMode, _ = desc["performance_mode"].(string)
-
-		if urls, ok := desc["urls"].([]string); ok {
-			detail.URLs = urls
-		}
-
-		detail.MailpitURL, _ = desc["mailpit_https_url"].(string)
-		if detail.MailpitURL == "" {
-			detail.MailpitURL, _ = desc["mailpit_url"].(string)
-		}
-
-		if dbInfo, ok := desc["dbinfo"].(map[string]any); ok {
-			if port, ok := dbInfo["published_port"].(int); ok {
-				detail.DBPublishedPort = fmt.Sprintf("127.0.0.1:%d", port)
-			}
-		}
-
-		detail.Addons = ddevapp.GetInstalledAddonNames(app)
-
-		if services, ok := desc["services"].(map[string]map[string]any); ok {
-			for name, svc := range services {
-				status, _ := svc["status"].(string)
-				detail.Services = append(detail.Services, ServiceInfo{Name: name, Status: status})
-			}
-		}
-
-		return projectDetailLoadedMsg{detail: detail}
-	}
+// lastLine returns the last non-blank line of s as plain text, for a
+// message in the status line.
+func lastLine(s string) string {
+	lines := strings.Split(strings.TrimSpace(s), "\n")
+	return strings.TrimSpace(ansi.Strip(cleanLine(lines[len(lines)-1])))
 }
 
-// startLogStreamCmd starts `ddev logs -f` as a background subprocess and
-// streams its output line-by-line into the TUI via a channel.
-func startLogStreamCmd(appRoot string) tea.Cmd {
-	return func() tea.Msg {
-		ddevBin, err := os.Executable()
-		if err != nil {
-			return logStreamEndedMsg{}
-		}
-
-		cmd := exec.Command(ddevBin, "logs", "-f")
-		cmd.Dir = appRoot
-		cmd.Env = append(os.Environ(), "DDEV_NO_TUI=true")
-
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			return logStreamEndedMsg{}
-		}
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			return logStreamEndedMsg{}
-		}
-
-		if err := cmd.Start(); err != nil {
-			return logStreamEndedMsg{}
-		}
-
-		ch := make(chan string, 100)
-		// Merge stdout and stderr into the channel
-		scan := func(r io.Reader) {
-			scanner := bufio.NewScanner(r)
-			for scanner.Scan() {
-				ch <- scanner.Text()
-			}
-		}
-		go scan(stdout)
-		go func() {
-			scan(stderr)
-			// Wait for process to finish, then close channel
-			_ = cmd.Wait()
-			close(ch)
-		}()
-
-		return logStreamStartedMsg{lines: ch, process: cmd.Process}
+// execDdevCmd hands the terminal to the ddev subcommand of op. Its output
+// goes to the terminal's normal screen, so it is still there, errors
+// included, after the TUI quits.
+func execDdevCmd(op operationAction) tea.Cmd {
+	c, err := ddevCommand(op.dir, op.args...)
+	if err != nil {
+		return func() tea.Msg { return op.finished(err) }
 	}
+	return tea.Exec(terminalCommand{Cmd: c, pause: execPause, shell: op.shell}, op.finished)
 }
 
-// waitForLogLineCmd waits for the next line from the log stream channel.
-func waitForLogLineCmd(ch <-chan string) tea.Cmd {
-	if ch == nil {
-		return nil
+// finished reports how the command of op exited.
+func (op operationAction) finished(err error) tea.Msg {
+	var exitErr *exec.ExitError
+	if op.shell && errors.As(err, &exitErr) {
+		return execFinishedMsg{title: op.title, done: fmt.Sprintf("%s (%v)", op.done, err)}
 	}
-	return func() tea.Msg {
-		line, ok := <-ch
-		if !ok {
-			return logStreamEndedMsg{}
-		}
-		return logLineMsg{line: line}
-	}
+	return execFinishedMsg{title: op.title, done: op.done, err: err, selectCurrent: op.selectCurrent}
 }
 
-// startOperationStreamCmd starts a ddev subcommand as a background subprocess
-// and streams its output line-by-line into the TUI. Unlike startLogStreamCmd,
-// it captures the exit status via a separate error channel.
-// If dir is empty, no working directory is set on the command.
-func startOperationStreamCmd(dir string, args ...string) tea.Cmd {
+// terminalCommand runs a ddev subcommand in the terminal. It prints the
+// command first, so the terminal's scrollback shows what ran even when it
+// prints nothing, and leaves the output up for pause after it exits, or
+// until Enter after a failure.
+type terminalCommand struct {
+	*exec.Cmd
+	pause time.Duration
+	// shell is set for ssh, whose exit status is not a failure.
+	shell bool
+}
+
+func (c terminalCommand) Run() error {
+	if c.Stdout != nil {
+		_, _ = fmt.Fprintln(c.Stdout, shellLine(c.Dir, c.Args[1:]))
+	}
+	err := c.Cmd.Run()
+	if err != nil && !c.shell && c.Stdin != nil && c.Stdout != nil {
+		_, _ = fmt.Fprint(c.Stdout, "\nPress Enter to return to the dashboard")
+		_, _ = bufio.NewReader(c.Stdin).ReadString('\n')
+		return err
+	}
+	time.Sleep(c.pause)
+	return err
+}
+
+// shellLine is the commands that run ddev with args in dir, or in the
+// current directory when dir is empty. A separate cd works in any shell.
+func shellLine(dir string, args []string) string {
+	line := "$ ddev " + strings.Join(args, " ")
+	if dir == "" {
+		return line
+	}
+	path := formatProjectPath(dir)
+	if strings.ContainsFunc(path, func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsDigit(r) && !strings.ContainsRune("~/._-+@:,", r)
+	}) {
+		// Quoted, ~ would not expand, so the full path is used.
+		path = "'" + strings.ReplaceAll(filepath.ToSlash(dir), "'", `'\''`) + "'"
+	}
+	return "$ cd " + path + "\n" + line
+}
+
+// The setters hand the command the terminal's own files. A writer that is
+// not a file would be copied through a pipe, so stderr could land after a
+// prompt written to stdout later.
+func (c terminalCommand) SetStdin(r io.Reader)  { c.Stdin = r }
+func (c terminalCommand) SetStdout(w io.Writer) { c.Stdout = w }
+func (c terminalCommand) SetStderr(w io.Writer) { c.Stderr = w }
+
+// startStreamCmd starts a ddev subcommand in dir and streams its combined
+// output as stream id.
+func startStreamCmd(id int, dir string, args ...string) tea.Cmd {
 	return func() tea.Msg {
-		ddevBin, err := os.Executable()
+		c, err := ddevCommand(dir, args...)
 		if err != nil {
-			return operationStreamEndedMsg{err: err}
+			return streamEndedMsg{id: id, err: err}
+		}
+		stdout, outW := io.Pipe()
+		stderr, errW := io.Pipe()
+		c.Stdout, c.Stderr = outW, errW
+		if err := c.Start(); err != nil {
+			return streamEndedMsg{id: id, err: err}
 		}
 
-		cmd := exec.Command(ddevBin, args...)
-		cmd.Env = append(os.Environ(), "DDEV_NO_TUI=true")
-		if dir != "" {
-			cmd.Dir = dir
-		}
-
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			return operationStreamEndedMsg{err: err}
-		}
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			return operationStreamEndedMsg{err: err}
-		}
-
-		if err := cmd.Start(); err != nil {
-			return operationStreamEndedMsg{err: err}
-		}
-
-		ch := make(chan string, 100)
+		lines := make(chan string, 100)
 		errCh := make(chan error, 1)
-
 		var wg sync.WaitGroup
 		scan := func(r io.Reader) {
 			defer wg.Done()
 			scanner := bufio.NewScanner(r)
+			scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 			for scanner.Scan() {
-				ch <- scanner.Text()
+				lines <- strings.TrimRight(scanner.Text(), "\r")
 			}
+			// A line too long to scan must not block the subprocess.
+			_, _ = io.Copy(io.Discard, r)
 		}
-
 		wg.Add(2)
 		go scan(stdout)
 		go scan(stderr)
-
 		go func() {
+			err := c.Wait()
+			_ = outW.Close()
+			_ = errW.Close()
 			wg.Wait()
-			cmdErr := cmd.Wait()
-			errCh <- cmdErr
-			close(ch)
+			errCh <- err
+			// Closed so a second reader after the exit error gets nil
+			// instead of blocking.
+			close(errCh)
+			close(lines)
 		}()
-
-		return operationStreamStartedMsg{lines: ch, errCh: errCh, process: cmd.Process}
+		return streamStartedMsg{id: id, lines: lines, errCh: errCh, process: c.Process}
 	}
 }
 
-// waitForOperationLineCmd reads the next line from the operation stream.
-// When the channel closes, it reads the error from errCh and returns
-// operationStreamEndedMsg.
-func waitForOperationLineCmd(lines <-chan string, errCh <-chan error) tea.Cmd {
-	if lines == nil {
-		return nil
-	}
+// waitForStreamCmd waits for output from stream id, or for its exit. It
+// takes every line already waiting, so a burst of output is one update.
+func waitForStreamCmd(id int, lines <-chan string, errCh <-chan error) tea.Cmd {
 	return func() tea.Msg {
 		line, ok := <-lines
 		if !ok {
-			var cmdErr error
-			if errCh != nil {
-				cmdErr = <-errCh
-			}
-			return operationStreamEndedMsg{err: cmdErr}
+			return streamEndedMsg{id: id, err: <-errCh}
 		}
-		return logLineMsg{line: line}
-	}
-}
-
-// ddevExecCommandInDir runs a ddev subcommand in the given directory.
-// If dir is empty, the current directory is used.
-func ddevExecCommandInDir(dir string, args ...string) tea.Cmd {
-	ddevBin, err := os.Executable()
-	if err != nil {
-		return func() tea.Msg {
-			return operationFinishedMsg{err: err}
-		}
-	}
-
-	c := exec.Command(ddevBin, args...)
-	c.Env = append(os.Environ(), "DDEV_NO_TUI=true")
-	if dir != "" {
-		c.Dir = dir
-	}
-
-	return tea.ExecProcess(c, func(err error) tea.Msg {
-		return operationFinishedMsg{err: err}
-	})
-}
-
-// ddevExecCommandDetail runs a ddev subcommand and returns operationDetailFinishedMsg.
-func ddevExecCommandDetail(dir string, args ...string) tea.Cmd {
-	ddevBin, err := os.Executable()
-	if err != nil {
-		return func() tea.Msg {
-			return operationDetailFinishedMsg{err: err}
-		}
-	}
-
-	c := exec.Command(ddevBin, args...)
-	c.Env = append(os.Environ(), "DDEV_NO_TUI=true")
-	if dir != "" {
-		c.Dir = dir
-	}
-
-	return tea.ExecProcess(c, func(err error) tea.Msg {
-		return operationDetailFinishedMsg{err: err}
-	})
-}
-
-// ddevConfigCommand runs `ddev config` interactively, capturing stderr
-// so the actual error message can be shown in the TUI status bar.
-func ddevConfigCommand() tea.Cmd {
-	ddevBin, err := os.Executable()
-	if err != nil {
-		return func() tea.Msg {
-			return operationFinishedMsg{err: err}
-		}
-	}
-
-	var stderrBuf bytes.Buffer
-	c := exec.Command(ddevBin, "config")
-	c.Env = append(os.Environ(), "DDEV_NO_TUI=true")
-	// Tee stderr to both the terminal (so user sees it) and a buffer (for status bar)
-	c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
-
-	return tea.ExecProcess(c, func(err error) tea.Msg {
-		if err != nil && stderrBuf.Len() > 0 {
-			// Extract the last non-empty line from stderr for a meaningful message
-			lines := strings.Split(strings.TrimSpace(stderrBuf.String()), "\n")
-			lastLine := strings.TrimSpace(lines[len(lines)-1])
-			if lastLine != "" {
-				return operationFinishedMsg{err: fmt.Errorf("%s", lastLine)}
+		batch := []string{line}
+		for len(batch) < 1000 {
+			select {
+			case line, ok := <-lines:
+				if !ok {
+					return streamLinesMsg{id: id, lines: batch}
+				}
+				batch = append(batch, line)
+			default:
+				return streamLinesMsg{id: id, lines: batch}
 			}
 		}
-		return operationFinishedMsg{err: err}
-	})
+		return streamLinesMsg{id: id, lines: batch}
+	}
 }
 
-// loadRouterStatus fetches the router health status in the background.
-func loadRouterStatus() tea.Msg {
-	status, _ := ddevapp.GetRouterStatus()
-	return routerStatusMsg{status: status}
-}
-
-// xdebugToggleCmd runs `ddev xdebug toggle` in the project directory.
-func xdebugToggleCmd(appRoot string) tea.Cmd {
+func latestAddonsCmd(appRoot string) tea.Cmd {
 	return func() tea.Msg {
-		ddevBin, err := os.Executable()
-		if err != nil {
-			return xdebugToggledMsg{err: err}
-		}
-
-		c := exec.Command(ddevBin, "xdebug", "toggle")
-		c.Env = append(os.Environ(), "DDEV_NO_TUI=true")
-		c.Dir = appRoot
-
-		out, err := c.CombinedOutput()
-		if err != nil {
-			return xdebugToggledMsg{err: err}
-		}
-		// The toggle output contains "enabled" or "disabled"
-		enabled := strings.Contains(strings.ToLower(string(out)), "enabled")
-		return xdebugToggledMsg{err: nil, enabled: enabled}
+		return latestAddonsMsg{appRoot: appRoot, versions: latestAddonVersions()}
 	}
 }
 
@@ -348,15 +235,14 @@ func xdebugToggleCmd(appRoot string) tea.Cmd {
 func openTarget(what, target string) tea.Cmd {
 	return func() tea.Msg {
 		var cmd *exec.Cmd
-		switch runtime.GOOS {
-		case "darwin":
+		switch {
+		case nodeps.IsMacOS():
 			cmd = exec.Command("open", target)
-		case "windows":
+		case nodeps.IsWindows():
 			cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", target)
+		case nodeps.IsWSL2():
+			return openedMsg{what: what, err: openOnWSL(target)}
 		default:
-			if nodeps.IsWSL2() {
-				return openedMsg{what: what, err: openOnWSL(target)}
-			}
 			if _, err := exec.LookPath("xdg-open"); err != nil {
 				return openedMsg{what: what, err: fmt.Errorf("no opener found (install xdg-utils)")}
 			}
@@ -414,44 +300,13 @@ func openOnWSL(target string) error {
 	return nil
 }
 
-// copyToClipboard copies text to the system clipboard using platform-specific tools.
+// copyToClipboard copies text with the system clipboard tool. Without one,
+// the clipboardMsg asks for the terminal's OSC 52 clipboard instead.
 func copyToClipboard(text string) tea.Cmd {
 	return func() tea.Msg {
-		var cmd *exec.Cmd
-
-		switch runtime.GOOS {
-		case "darwin":
-			cmd = exec.Command("pbcopy")
-		case "linux":
-			// Try wayland first, then X11
-			if _, err := exec.LookPath("wl-copy"); err == nil {
-				cmd = exec.Command("wl-copy")
-			} else if _, err := exec.LookPath("xclip"); err == nil {
-				cmd = exec.Command("xclip", "-selection", "clipboard")
-			} else if _, err := exec.LookPath("xsel"); err == nil {
-				cmd = exec.Command("xsel", "--clipboard", "--input")
-			} else {
-				return clipboardMsg{err: fmt.Errorf("no clipboard tool found (install xclip, xsel, or wl-copy)")}
-			}
-		default:
-			return clipboardMsg{err: fmt.Errorf("clipboard not supported on %s", runtime.GOOS)}
+		if err := writeClipboard(text); err != nil {
+			return clipboardMsg{fallback: text}
 		}
-
-		pipe, err := cmd.StdinPipe()
-		if err != nil {
-			return clipboardMsg{err: err}
-		}
-
-		if err := cmd.Start(); err != nil {
-			return clipboardMsg{err: err}
-		}
-
-		_, err = pipe.Write([]byte(text))
-		_ = pipe.Close()
-		if err != nil {
-			return clipboardMsg{err: err}
-		}
-
-		return clipboardMsg{err: cmd.Wait()}
+		return clipboardMsg{}
 	}
 }

@@ -295,7 +295,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 		dbinfo["host"] = "db"
 		dbPublicPort, err := app.GetPublishedPort("db")
 		if err != nil && status == SiteRunning {
-			util.Warning("failed to GetPublishedPort(db): %v", err)
+			util.Debug("failed to GetPublishedPort(db): %v", err)
 		}
 		dbinfo["dbPort"] = GetInternalPort(app, "db")
 		dbinfo["published_port"] = dbPublicPort
@@ -317,7 +317,9 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 	routerStatus, logOutput := GetRouterStatus()
 	appDesc["router_status"] = routerStatus
 	appDesc["router_status_log"] = logOutput
-	appDesc["ssh_agent_status"] = GetSSHAuthStatus()
+	sshAgentStatus, sshAgentLog := GetSSHAuthStatus()
+	appDesc["ssh_agent_status"] = sshAgentStatus
+	appDesc["ssh_agent_status_log"] = sshAgentLog
 	appDesc["php_version"] = app.GetPhpVersion()
 	appDesc["webserver_type"] = app.GetWebserverType()
 
@@ -345,7 +347,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 
 		c, err := dockerutil.InspectContainer(serviceName)
 		if err != nil {
-			util.Warning("Could not get container info for %s", serviceName)
+			util.Debug("Could not get container info for %s", serviceName)
 			continue
 		}
 		fullName := strings.TrimPrefix(serviceName, "/")

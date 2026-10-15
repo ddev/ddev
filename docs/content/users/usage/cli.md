@@ -4,27 +4,46 @@ Type `ddev help` or `ddev --help` or `ddev -h` in a terminal window to see the a
 
 ## Interactive Dashboard
 
-Running `ddev` with no arguments launches an interactive terminal dashboard. The dashboard shows all your DDEV projects, their status, and lets you manage them with keyboard shortcuts:
+Running `ddev` with no arguments launches an interactive terminal dashboard. The dashboard shows all your DDEV projects and their status, and lets you manage them with these keyboard shortcuts.
+
+### Navigation
 
 | Key | Action |
 |-----|--------|
-| <kbd>s</kbd> / <kbd>S</kbd> | Start / Stop selected project |
-| <kbd>r</kbd> | Restart selected project |
-| <kbd>a</kbd> / <kbd>A</kbd> | Start all / Stop all projects |
-| <kbd>P</kbd> | Poweroff all DDEV projects and containers |
-| <kbd>D</kbd> | Delete selected project and its database, like [`ddev delete`](../usage/commands.md#delete); confirm with <kbd>y</kbd>, or <kbd>O</kbd> to skip the snapshot |
+| <kbd>Enter</kbd> | Open project detail view |
+| <kbd>↑</kbd> / <kbd>↓</kbd> or <kbd>k</kbd> / <kbd>j</kbd> | Move the selection, or scroll the detail and log views |
+| <kbd>PgUp</kbd>/<kbd>b</kbd> / <kbd>PgDn</kbd>/<kbd>f</kbd>, <kbd>Home</kbd>/<kbd>g</kbd> / <kbd>End</kbd>/<kbd>G</kbd> | Scroll the list, detail or logs a screen at a time, or jump to the start or end |
+| <kbd>u</kbd> / <kbd>d</kbd> | Scroll the detail or logs half a screen up or down |
+| <kbd>Esc</kbd> / <kbd>Backspace</kbd> | Go back |
+| <kbd>/</kbd> | Filter projects by name, type, status, or directory name; <kbd>Enter</kbd>, <kbd>Tab</kbd>, <kbd>↑</kbd> or <kbd>↓</kbd> ends typing, and <kbd>Esc</kbd> clears the filter |
+| <kbd>r</kbd> | Refresh |
+| <kbd>?</kbd> | Show or hide the full list of keys |
+| <kbd>q</kbd> | Quit |
+
+### Projects
+
+| Key | Action |
+|-----|--------|
+| <kbd>s</kbd> / <kbd>S</kbd> | Start / Stop the project |
+| <kbd>R</kbd> | Restart the project |
+| <kbd>D</kbd> | Delete the project and its database, like [`ddev delete`](../usage/commands.md#delete); confirm with <kbd>y</kbd>, or <kbd>O</kbd> to skip the snapshot |
 | <kbd>l</kbd> | Launch project URL in browser |
 | <kbd>m</kbd> | Launch Mailpit in browser |
+| <kbd>x</kbd> | Launch XHGui in browser |
 | <kbd>o</kbd> | Open project directory in the file manager |
 | <kbd>v</kbd> / <kbd>p</kbd> | Open project in VS Code / PhpStorm |
-| <kbd>Enter</kbd> or <kbd>d</kbd> | Open project detail view |
-| <kbd>e</kbd> | SSH into web container (from detail view) |
-| <kbd>L</kbd> | Follow logs (from detail view) |
-| <kbd>X</kbd> | Toggle Xdebug (from detail view) |
-| <kbd>C</kbd> | Run `ddev config` interactively |
-| <kbd>/</kbd> | Filter projects |
-| <kbd>?</kbd> | Show full help |
-| <kbd>q</kbd> | Quit |
+| <kbd>e</kbd> | SSH into web container (detail view) |
+| <kbd>L</kbd> | Follow logs (detail view) |
+| <kbd>X</kbd> | Toggle Xdebug (detail view) |
+| <kbd>c</kbd> | Copy the project URL (detail view) |
+| <kbd>n</kbd> | Make a database snapshot, like [`ddev snapshot`](../usage/commands.md#snapshot), while the project runs (detail view) |
+| <kbd>N</kbd> | Restore the latest snapshot, like [`ddev snapshot restore --latest`](../usage/commands.md#snapshot-restore); confirm with <kbd>y</kbd> (detail view) |
+| <kbd>U</kbd> | Update the installed add-ons that have a newer release, like [`ddev add-on update`](../usage/commands.md#add-on-update); confirm with <kbd>y</kbd> (detail view) |
+| <kbd>a</kbd> / <kbd>A</kbd> | Start all / Stop all projects; confirm with <kbd>y</kbd> |
+| <kbd>P</kbd> | Poweroff all DDEV projects and containers; confirm with <kbd>y</kbd> |
+| <kbd>C</kbd> | Run `ddev config` interactively in the current directory |
+
+Commands such as start and delete run in the terminal itself, so their output, errors included, stays in the terminal after you quit the dashboard.
 
 In terminals that support [OSC 8 hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda), project paths and URLs in the dashboard and detail view are clickable, as are the VS Code and PhpStorm links in the detail view. The editor links use the `vscode://` and `phpstorm://` URL schemes, so they work only when that editor is installed, and some terminals block those schemes. PhpStorm does not register `phpstorm://` on Windows, so there the PhpStorm link needs a separately installed handler. The <kbd>p</kbd> key avoids this by using PhpStorm's command-line launcher when it is on your `PATH`, which [JetBrains Toolbox](https://www.jetbrains.com/toolbox-app/) can install.
 

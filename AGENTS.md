@@ -20,6 +20,7 @@ its own; other agents should open them directly.
 | Go code | `.claude/rules/go.md` |
 | Docs or any Markdown | `.claude/rules/docs.md` |
 | Apache/nginx config or templates | `.claude/rules/webserver-config.md` |
+| `pkg/tui` (`ddev tui`) | `.claude/rules/tui.md` |
 | A commit, PR, or issue | `.claude/skills/ddev-commit/SKILL.md` |
 | Any comment, in any file | `.claude/rules/comments.md` |
 
