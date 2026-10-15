@@ -80,6 +80,8 @@ jobs:
           wsl --install --name DDEV --no-launch
           # Create testuser, enable systemd, set default user
           wsl -d DDEV --user root bash -c "useradd -m -s /bin/bash testuser && echo 'testuser:password' | chpasswd && usermod -aG sudo testuser && printf '[boot]\nsystemd=true\n\n[user]\ndefault=testuser\n' > /etc/wsl.conf"
+          # WSL owns binfmt_misc (for WSLInterop) and newer releases mount it read-only, so systemd-binfmt fails.
+          wsl -d DDEV --user root ln -sf /dev/null /etc/systemd/system/systemd-binfmt.service
           wsl --set-default DDEV
           Write-Host "Verifying WSL installation"
           wsl --list --verbose
@@ -98,7 +100,13 @@ jobs:
             exit 1
           }
           wsl -- uname -a
-          wsl -- systemctl is-system-running --wait
+          $state = (wsl -- systemctl is-system-running --wait).Trim()
+          Write-Host "systemd state: $state"
+          if ($state -ne "running") {
+            wsl -u root -- bash -c "systemctl --failed --plain --no-legend | cut -d' ' -f1 | xargs -r systemctl status --no-pager -l -n 30"
+            Write-Error "Unexpected systemd state: $state"
+            exit 1
+          }
 
       - uses: actions/checkout@v7
         with:
