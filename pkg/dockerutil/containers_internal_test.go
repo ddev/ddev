@@ -8,6 +8,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestCacheContainersOverlap releases the first cache before the second, as
+// overlapping callers in different goroutines can
+func TestCacheContainersOverlap(t *testing.T) {
+	first := CacheContainers()
+	second := CacheContainers()
+	require.NotNil(t, cachedContainers.Load())
+	first()
+	require.NotNil(t, cachedContainers.Load(), "the second caller still holds the cache")
+	second()
+	require.Nil(t, cachedContainers.Load())
+}
+
 // TestSanitizeUsername tests the username sanitization logic
 func TestSanitizeUsername(t *testing.T) {
 	tests := []struct {

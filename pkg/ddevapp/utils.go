@@ -419,8 +419,9 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 	return appSlice, nil
 }
 
-// GetInactiveProjects returns projects that are currently running
+// GetInactiveProjects returns projects that are not currently running
 func GetInactiveProjects() ([]*DdevApp, error) {
+	defer dockerutil.CacheContainers()()
 	var inactiveApps []*DdevApp
 
 	apps, err := GetProjects(false)
