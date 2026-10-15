@@ -1715,7 +1715,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		}
 	}
 	for _, v := range volumesNeeded {
-		util.Debug("creating docker volume %s", v)
+		util.Verbose("creating docker volume %s", v)
 		labels := map[string]string{}
 		if strings.HasPrefix(v, app.Name) || strings.HasPrefix(v, "ddev-"+app.Name) {
 			labels["com.docker.compose.project"] = app.GetComposeProjectName()
@@ -1832,13 +1832,13 @@ func (app *DdevApp) start(o StartOptions) error {
 	var chownErr error
 	var chownWg sync.WaitGroup
 	chownWg.Go(func() {
-		util.Debug("Exec %s", chownCmd)
+		util.Verbose("Exec %s", chownCmd)
 		_, chownOut, cErr := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, labels, nil, nil)
 		if cErr != nil {
 			chownErr = fmt.Errorf("failed to '%s' inside volumes: %v, output=%s", chownCmd, cErr, chownOut)
 			return
 		}
-		util.Debug("Done %s: output=%s", chownCmd, chownOut)
+		util.Verbose("Done %s: output=%s", chownCmd, chownOut)
 	})
 
 	// While chown runs in background, do config and compose build.
@@ -1848,9 +1848,12 @@ func (app *DdevApp) start(o StartOptions) error {
 	// Fix any obsolete things like old shell commands, etc.
 	app.FixObsolete()
 
-	// Warn the user if there is any custom configuration in use.
-	if message, hasWarnings := app.CheckCustomConfig(false); hasWarnings {
-		util.Warning(message)
+	// Warn the user if there is any custom configuration in use. Nobody reads
+	// it in noninteractive runs like CI, where it repeats on every start.
+	if globalconfig.IsInteractive() {
+		if message, hasWarnings := app.CheckCustomConfig(false); hasWarnings {
+			util.Warning(message)
+		}
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
@@ -1937,7 +1940,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		wait.Done(nil, "built")
 	}
 
-	util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
+	util.Verbose("Removing dangling images for the project %s", app.GetComposeProjectName())
 	danglingImages, dErr := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
 	if dErr != nil {
 		return fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), dErr)
@@ -2056,7 +2059,7 @@ func (app *DdevApp) start(o StartOptions) error {
 	}
 
 	// At this point we should have all files synced inside the container
-	util.Debug("Running /start.sh in ddev-webserver")
+	util.Verbose("Running /start.sh in ddev-webserver")
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		// Write to PID 1's stdout so the output reaches docker logs.
 		// If start.sh dies, we want to make sure the container gets killed off
@@ -2158,7 +2161,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		util.Warning("Failed to populate global custom command files: %v", err)
 	}
 
-	util.Debug("Testing to see if /mnt/ddev_config is properly mounted")
+	util.Verbose("Testing to see if /mnt/ddev_config is properly mounted")
 	_, _, err = app.Exec(&ExecOpts{
 		Cmd: `ls -l /mnt/ddev_config/nginx_full/nginx-site.conf >/dev/null`,
 	})
@@ -2166,7 +2169,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		util.Warning("Something is wrong with your Docker provider and /mnt/ddev_config is not mounted from the project .ddev folder. Your project cannot normally function successfully with this situation. Is your project in your home directory?")
 	}
 
-	util.Debug("Getting stderr output from 'log-stderr.sh --show'")
+	util.Verbose("Getting stderr output from 'log-stderr.sh --show'")
 	logStderr, _, _ := app.Exec(&ExecOpts{
 		Cmd: "log-stderr.sh --show 2>/dev/null || true",
 	})
@@ -3633,7 +3636,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// Certs may want to remain for Let's Encrypt, for example, and should do no harm
 	// for stopped project
 	c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
-	util.Debug("Removing merged config for project with command '%s'", c)
+	util.Verbose("Removing merged config for project with command '%s'", c)
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 	if err != nil {
 		util.Warning("Unable to remove project merged traefik yaml: %v, output='%s'", err, out)
@@ -3645,7 +3648,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		// If removing data, we want to get rid of the official certs and merged traefik config
 		// This would not remove extra certs that they had put in certs directory.
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db} /mnt/ddev-global-cache/traefik/*/%[1]s.{crt,key} /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
-		util.Debug("Cleaning ddev-global-cache with command '%s'", c)
+		util.Verbose("Cleaning ddev-global-cache with command '%s'", c)
 		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)

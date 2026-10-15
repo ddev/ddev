@@ -471,7 +471,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string, force bool) error {
 	if status == SiteRunning || status == SitePaused {
 		util.Success("Stopping db container for snapshot restore of '%s'...", snapshotFile)
 		maxWaitTime := max(SnapshotRestoreDefaultWaitTime, app.GetMaxContainerWaitTime())
-		util.Success("With large snapshots this may take a long time.\nThis may time out after %d seconds \nbut you can increase it by changing default_container_timeout.", maxWaitTime)
+		util.Success("A large snapshot may take a while; the %ds timeout is set by default_container_timeout.", maxWaitTime)
 		dbContainer, err := GetContainer(app, "db")
 		if err != nil || dbContainer == nil {
 			return fmt.Errorf("no container found for db; err=%v", err)

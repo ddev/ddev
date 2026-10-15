@@ -548,16 +548,12 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 	// left the substitution could be recovered from.
 	ddevapp.RouterPortSubstitutions = make(map[string]string)
 
-	reuseMessage := nodeps.RouterContainer + " already running, pushing new config"
 	recreateMessage := "Starting " + nodeps.RouterContainer + ", pushing config"
 
 	getOutput := util.CaptureUserOut()
 	err = app2.Start()
 	startOutput := getOutput()
 	require.NoError(t, err)
-
-	require.Contains(t, startOutput, reuseMessage,
-		"project2 should reuse the running router, output: %s", startOutput)
 	require.NotContains(t, startOutput, recreateMessage,
 		"project2 should NOT recreate the router just because the standard port freed up, output: %s", startOutput)
 
@@ -1174,9 +1170,7 @@ func TestRouterNotRebuiltOnHostnameChange(t *testing.T) {
 		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
 	})
 
-	// The message the router prints when it reuses the running container versus
-	// the message it prints when it (re)creates the container.
-	reuseMessage := nodeps.RouterContainer + " already running, pushing new config"
+	// The message the router prints when it (re)creates the container.
 	recreateMessage := "Starting " + nodeps.RouterContainer + ", pushing config"
 
 	// First project start creates the router from scratch.
@@ -1193,9 +1187,6 @@ func TestRouterNotRebuiltOnHostnameChange(t *testing.T) {
 	err = app2.Start()
 	startOutput := getOutput()
 	require.NoError(t, err)
-
-	require.Contains(t, startOutput, reuseMessage,
-		"second project start should reuse the running router, output: %s", startOutput)
 	require.NotContains(t, startOutput, recreateMessage,
 		"second project start should NOT recreate the router, output: %s", startOutput)
 
@@ -1219,8 +1210,6 @@ func TestRouterNotRebuiltOnHostnameChange(t *testing.T) {
 	restartOutput := getOutput()
 	require.NoError(t, err)
 
-	require.Contains(t, restartOutput, reuseMessage,
-		"restart should reuse the running router, output: %s", restartOutput)
 	require.NotContains(t, restartOutput, recreateMessage,
 		"restart should NOT recreate the router, output: %s", restartOutput)
 

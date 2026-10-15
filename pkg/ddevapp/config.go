@@ -963,7 +963,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		if err != nil {
 			util.Debug("Unable to autodetect timezone: %v", err.Error())
 		} else {
-			util.Debug("Using automatically detected timezone: TZ=%s", timezone)
+			util.Verbose("Using automatically detected timezone: TZ=%s", timezone)
 		}
 	}
 

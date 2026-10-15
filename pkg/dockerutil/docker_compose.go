@@ -324,7 +324,7 @@ func PullImages(images []types.ServiceConfig, pullAlways bool) error {
 	}
 
 	if len(pulls) == 0 {
-		util.Debug("All images already exist locally, no pull needed")
+		util.Verbose("All images already exist locally, no pull needed")
 		return nil
 	}
 

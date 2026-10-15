@@ -39,7 +39,7 @@ func PopulateGlobalCustomCommandFiles() error {
 	cacheKey := currentHash + "|" + volCreatedAt
 	hashFilePath := filepath.Join(globalconfig.GetGlobalDdevDir(), globalCommandsHashFile)
 	if savedKey, err := os.ReadFile(hashFilePath); err == nil && string(savedKey) == cacheKey && volCreatedAt != "" {
-		util.Debug("PopulateGlobalCustomCommandFiles: skipping, global commands unchanged")
+		util.Verbose("PopulateGlobalCustomCommandFiles: skipping, global commands unchanged")
 		return nil
 	}
 
