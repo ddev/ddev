@@ -103,27 +103,56 @@ func TestQuietEventProcessorSuppressesSubEvents(t *testing.T) {
 	var buf bytes.Buffer
 	ep := newQuietEventProcessor(&buf)
 
+	ep.Start(t.Context(), "pull")
 	ep.On(
 		// Sub-event (layer download progress) must be dropped entirely.
-		api.Resource{ID: "sha256:layer", ParentID: "ddev/ddev-webserver:latest", Status: api.Working, Text: "Downloading", Details: "45%"},
+		api.Resource{ID: "sha256:layer", ParentID: "Image ddev/ddev-webserver:latest", Status: api.Working, Text: "Downloading", Details: "45%"},
 		// In-progress top-level event must be dropped.
-		api.Resource{ID: "ddev/ddev-webserver:latest", Status: api.Working, Text: "Pulling"},
+		api.Resource{ID: "Image ddev/ddev-webserver:latest", Status: api.Working, Text: "Pulling"},
 		// Final top-level event must be reported.
-		api.Resource{ID: "ddev/ddev-webserver:latest", Status: api.Done, Text: "Pulled"},
+		api.Resource{ID: "Image ddev/ddev-webserver:latest", Status: api.Done, Text: "Pulled"},
 		// A repeat of the same final event must not be reported twice.
-		api.Resource{ID: "ddev/ddev-webserver:latest", Status: api.Done, Text: "Pulled"},
+		api.Resource{ID: "Image ddev/ddev-webserver:latest", Status: api.Done, Text: "Pulled"},
 		// A different top-level resource erroring out must be reported.
-		api.Resource{ID: "ddev/ddev-dbserver:latest", Status: api.Error, Text: "Error", Details: "pull access denied"},
+		api.Resource{ID: "Image ddev/ddev-dbserver:latest", Status: api.Error, Text: "Error", Details: "pull access denied"},
 	)
+	// Errors are printed before the operation ends.
+	require.Contains(t, buf.String(), "Image ddev/ddev-dbserver:latest Error pull access denied")
+	ep.Done("pull", false)
 
 	out := buf.String()
 	require.NotContains(t, out, "Downloading", "layer sub-events must be suppressed")
 	require.NotContains(t, out, "Pulling", "in-progress top-level events must be suppressed")
 	require.Equal(t, 1, strings.Count(out, "ddev/ddev-webserver:latest"),
 		"expected exactly one reported line for the webserver image")
-	require.Contains(t, out, "ddev/ddev-webserver:latest Pulled")
-	require.Contains(t, out, "ddev/ddev-dbserver:latest Error")
-	require.Contains(t, out, "pull access denied")
+	require.Contains(t, out, "Image Pulled: ddev/ddev-webserver:latest\n")
+}
+
+// TestQuietEventProcessorConsolidates verifies that Done states of the same
+// kind and status are reported as one line when the operation ends, and that
+// a resource moving through several final states reports each of them.
+func TestQuietEventProcessorConsolidates(t *testing.T) {
+	var buf bytes.Buffer
+	ep := newQuietEventProcessor(&buf)
+
+	ep.Start(t.Context(), "stop")
+	ep.On(
+		api.Resource{ID: "Container ddev-p-web", Status: api.Working, Text: "Stopping"},
+		api.Resource{ID: "Container ddev-p-db", Status: api.Working, Text: "Stopping"},
+		api.Resource{ID: "Container ddev-p-db", Status: api.Done, Text: "Stopped"},
+		api.Resource{ID: "Container ddev-p-web", Status: api.Done, Text: "Stopped"},
+		api.Resource{ID: "Container ddev-p-db", Status: api.Done, Text: "Removed"},
+		api.Resource{ID: "Container ddev-p-web", Status: api.Done, Text: "Removed"},
+		api.Resource{ID: "Network ddev-p_default", Status: api.Done, Text: "Removed"},
+	)
+	require.Empty(t, buf.String(), "Done states must wait for the end of the operation")
+	ep.Done("stop", true)
+
+	require.Equal(t,
+		"Container Stopped: ddev-p-db, ddev-p-web\n"+
+			"Container Removed: ddev-p-db, ddev-p-web\n"+
+			"Network Removed: ddev-p_default\n",
+		buf.String())
 }
 
 // TestSuppressLogrusFormatterDirect exercises the formatter installed at
