@@ -103,7 +103,7 @@ jobs:
           # A failed unit unrelated to Docker leaves systemd "degraded"; log it rather than fail.
           if ($state -eq "degraded") {
             wsl -- systemctl --failed --no-pager
-            wsl -- bash -c "systemctl --failed --plain --no-legend | awk '{print `$1}' | xargs -r -n1 journalctl --no-pager -n 30 -u"
+            wsl -u root -- bash -c "systemctl --failed --plain --no-legend | cut -d' ' -f1 | xargs -r systemctl status --no-pager -l -n 30"
             exit 0
           } elseif ($state -ne "running") {
             Write-Error "Unexpected systemd state: $state"
