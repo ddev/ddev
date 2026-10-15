@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"fmt"
 	"io"
@@ -28,6 +29,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -952,7 +954,12 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		return err
 	}
 
+	// The extracted dump can be large, and it lives inside the project.
+	unregister := interrupt.OnInterrupt(func(context.Context) {
+		_ = os.RemoveAll(dbPath)
+	})
 	defer func() {
+		unregister()
 		_ = os.RemoveAll(dbPath)
 	}()
 
