@@ -109,10 +109,10 @@ RUN <<EOF
         --no-install-recommends --no-install-suggests \
         build-essential php-pear "php${DDEV_PHP_VERSION}-dev" ${build_packages}
     # yes '' accepts the default answer to every question pecl asks
-    pecl -d php_suffix="${DDEV_PHP_VERSION}" install "${extension}" < <(yes '') \
-        | tee /tmp/pecl.log
     # pecl prints the line that enables the extension, like extension=brotli.so
-    ini=$(grep -o '[a-z_]*extension=[^"]*\.so' /tmp/pecl.log | tail -1)
+    ini=$(pecl -d php_suffix="${DDEV_PHP_VERSION}" install "${extension}" \
+        < <(yes '') | tee /dev/stderr \
+        | grep -o '[a-z_]*extension=[^"]*\.so' | tail -1)
     name=$(basename "${ini#*=}" .so)
     echo "${ini}" > "/etc/php/${DDEV_PHP_VERSION}/mods-available/${name}.ini"
     phpenmod -v "${DDEV_PHP_VERSION}" "${name}"
