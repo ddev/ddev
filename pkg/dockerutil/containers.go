@@ -1279,6 +1279,18 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	return nil
 }
 
+// CopyArchiveToContainer extracts an uncompressed tar stream into dstPath, which
+// must exist, inside the container, given by name or ID, creating any parent
+// directories that entries in the tar imply.
+func CopyArchiveToContainer(nameOrID string, dstPath string, content io.Reader) error {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return err
+	}
+	_, err = apiClient.CopyToContainer(ctx, nameOrID, client.CopyToContainerOptions{DestinationPath: dstPath, Content: content})
+	return err
+}
+
 // CopyFromContainer copies a path from a specified container and location to a dstPath on host
 func CopyFromContainer(containerName string, containerPath string, hostPath string) error {
 	startTime := time.Now()

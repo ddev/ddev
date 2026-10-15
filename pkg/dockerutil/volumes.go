@@ -55,20 +55,6 @@ func VolumeExists(volumeName string) bool {
 	return true
 }
 
-// VolumeCreatedAt returns the CreatedAt timestamp string of the named volume,
-// or an empty string if the volume does not exist or the call fails.
-func VolumeCreatedAt(volumeName string) string {
-	ctx, apiClient, err := GetDockerClient()
-	if err != nil {
-		return ""
-	}
-	v, err := apiClient.VolumeInspect(ctx, volumeName, client.VolumeInspectOptions{})
-	if err != nil {
-		return ""
-	}
-	return v.Volume.CreatedAt
-}
-
 // VolumeLabels returns map of labels found on volume.
 func VolumeLabels(volumeName string) (map[string]string, error) {
 	ctx, apiClient, err := GetDockerClient()

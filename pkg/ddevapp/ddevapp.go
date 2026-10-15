@@ -1898,6 +1898,12 @@ func (app *DdevApp) start(o StartOptions) error {
 	// ddev-global-cache is shared by every project and user, so it is never
 	// chowned; the sticky bit lets add-ons create their own directories in it.
 	chownCmd := fmt.Sprintf("chmod 1777 /mnt/ddev-global-cache; chown -R %s:%s", uid, gid)
+	// Global commands no longer live in the volume. Remove them only while the
+	// old cache key exists, which FixObsolete deletes below, so a downgraded DDEV
+	// without the key copies them again.
+	if fileutil.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), legacyGlobalCommandsHashFile)) {
+		chownCmd = "rm -rf /mnt/ddev-global-cache/global-commands; " + chownCmd
+	}
 	labels := map[string]string{}
 	if dockerutil.UseKeepID() {
 		labels["com.ddev.userns"] = "keep-id"
@@ -2071,6 +2077,14 @@ func (app *DdevApp) start(o StartOptions) error {
 	if err != nil {
 		return err
 	}
+
+	// Copy global commands while the steps below wait for the containers to
+	// become ready.
+	globalCommandsErr := make(chan error, 1)
+	go func() {
+		_, err := PopulateGlobalCustomCommandFiles(app)
+		globalCommandsErr <- err
+	}()
 
 	if !IsRouterDisabled(app) {
 		if _, caRootErr := globalconfig.ReadCAROOTDetails(); caRootErr != nil {
@@ -2260,7 +2274,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		})
 	}
 
-	err = PopulateGlobalCustomCommandFiles()
+	err = <-globalCommandsErr
 	if err != nil {
 		util.Warning("Failed to populate global custom command files: %v", err)
 	}
