@@ -338,12 +338,11 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// Make sure that the non-command stuff we installed has been copied into /mnt/ddev-global-cache
-	commandDirInVolume := "/mnt/ddev-global-cache/global-commands/"
+	// Make sure that the non-command stuff we installed has been copied into the web container
 	for _, f := range []string{".gitattributes", "db/mysqldump.example", "db/README.txt", "web/README.txt"} {
-		filePathInVolume := path.Join(commandDirInVolume, f)
-		out, err = exec.RunHostCommand(DdevBin, "exec", "[ -f "+filePathInVolume+" ] && exit 0 || exit 1")
-		assert.NoError(err, filePathInVolume+" does not exist, output=%s", out)
+		filePathInContainer := path.Join(ddevapp.GlobalCommandsContainerDir, f)
+		out, err = exec.RunHostCommand(DdevBin, "exec", "[ -f "+filePathInContainer+" ] && exit 0 || exit 1")
+		assert.NoError(err, filePathInContainer+" does not exist, output=%s", out)
 	}
 
 	// Make sure that the non-command stuff we installed is in project commands dir
@@ -553,12 +552,6 @@ func TestMysqlCommand(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	// This populates the project's
-	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
-	// This matters when --no-bind-mount=true
-	_, err = exec.RunHostCommand("ddev")
-	assert.NoError(err)
-
 	dbVersionsToTest := []ddevapp.DatabaseDesc{
 		{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion},
 	}
@@ -623,12 +616,6 @@ func TestPsqlCommand(t *testing.T) {
 
 	err = app.WriteConfig()
 	require.NoError(t, err)
-
-	// This populates the project's
-	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
-	// This matters when --no-bind-mount=true
-	_, err = exec.RunHostCommand("ddev")
-	assert.NoError(err)
 
 	err = app.Start()
 	require.NoError(t, err)

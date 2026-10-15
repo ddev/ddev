@@ -50,7 +50,7 @@ teardown() {
       "${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin" \
       "/usr/local/n/bin" \
       "/var/www/html/bin" \
-      "/mnt/ddev-global-cache/global-commands/web"; do
+      "/usr/local/lib/ddev/global-commands/web"; do
       case ":$PATH:" in
         *":$p:"*) ;;
         *) echo "Missing from PATH: $p" >&2; exit 1 ;;
