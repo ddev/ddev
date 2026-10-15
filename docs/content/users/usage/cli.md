@@ -119,7 +119,8 @@ You can export a database with [`ddev export-db`](../usage/commands.md#export-db
 
 ```bash
 ddev export-db --file=/tmp/db.sql.gz
-ddev export-db --gzip=false --file=/tmp/db.sql
+ddev export-db --file=/tmp/db.sql
+ddev export-db --compression=zstd >/tmp/db.sql.zst
 ddev export-db >/tmp/db.sql.gz
 ```
 
@@ -152,7 +153,7 @@ Archive extraction path:
 Successfully imported files for d10
 ```
 
-`ddev import-files` supports the following file types: `.tar`, `.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tgz`, or `.zip`.
+`ddev import-files` supports the following file types: `.tar`, `.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tar.zst`, `.tgz`, or `.zip`.
 
 It can also import a directory containing static assets.
 

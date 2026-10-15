@@ -136,8 +136,10 @@ Database imports can be any of the following file types:
 
 - Raw SQL Dump (`.sql`)
 - Gzipped SQL Dump (`.sql.gz`)
+- `bzip2` SQL Dump (`.sql.bz2`)
 - Xz’d SQL Dump (`.sql.xz`)
-- (Gzipped) Tarball Archive (`.tar`, `.tar.gz`, `.tgz`)
+- Zstandard SQL Dump (`.sql.zst`)
+- Tarball Archive (`.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`, `.tar.zst`)
 - ZIP Archive (`.zip`)
 - stdin
 

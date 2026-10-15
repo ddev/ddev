@@ -77,20 +77,29 @@ func TestCmdExportDB(t *testing.T) {
 	assert.FileExists(outputFile)
 	assert.True(fileutil.FgrepStringInFile(outputFile, "13751eca-19cf-41c2-90d4-9363f3a07c45"))
 
-	// Export with various types of compression
-	cTypes := map[string]string{
-		"gzip":  "gz",
-		"bzip2": "bz2",
-		"xz":    "xz",
+	// Export with legacy flags, --compression, and type inferred from the extension
+	cTypes := []struct {
+		cType string
+		ext   string
+		flags []string
+	}{
+		{"gzip", "gz", []string{"--gzip"}},
+		{"bzip2", "bz2", []string{"--bzip2"}},
+		{"xz", "xz", []string{"--xz"}},
+		{"zstd", "zst", []string{"--compression=zstd"}},
+		{"zstd", "zst", nil},
+		{"xz", "xz", nil},
 	}
 	outDir := filepath.Join(site.Dir, "tmp")
 	err = os.MkdirAll(outDir, 0755)
 	assert.NoError(err)
 	err = os.Chdir(app.AppRoot)
 	require.NoError(t, err)
-	for cType, ext := range cTypes {
+	for _, c := range cTypes {
+		cType, ext := c.cType, c.ext
 		outputFile := filepath.Join(outDir, "db.sql."+ext)
-		out, err := exec2.RunHostCommand(DdevBin, "export-db", "-f="+outputFile, "--"+cType)
+		_ = os.RemoveAll(outputFile)
+		out, err := exec2.RunHostCommand(DdevBin, append([]string{"export-db", "-f=" + outputFile}, c.flags...)...)
 		require.NoError(t, err, "export-db output failure for %s, output=%s", outputFile, out)
 		require.FileExists(t, outputFile)
 		uncompressedFile := filepath.Join(outDir, "db.sql")
@@ -105,6 +114,9 @@ func TestCmdExportDB(t *testing.T) {
 			assert.NoError(err)
 		case "xz":
 			err = archive.UnXz(outputFile, outDir)
+			assert.NoError(err)
+		case "zstd":
+			err = archive.UnZstd(outputFile, outDir)
 			assert.NoError(err)
 		}
 		assert.True(fileutil.FgrepStringInFile(uncompressedFile, "13751eca-19cf-41c2-90d4-9363f3a07c45"))
@@ -137,4 +149,47 @@ func TestCmdExportDB(t *testing.T) {
 		Cmd:     fmt.Sprintf(`%s nondefault -e 'SELECT * FROM nondefault_table;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
+}
+
+// TestResolveExportCompression checks how --compression, the legacy flags,
+// and the --file extension combine, without needing a running project.
+func TestResolveExportCompression(t *testing.T) {
+	tests := []struct {
+		args    []string
+		file    string
+		want    string
+		wantErr bool
+	}{
+		{nil, "", "gzip", false},
+		{nil, "/tmp/db.sql.gz", "gzip", false},
+		{nil, "/tmp/db.SQL.ZST", "zstd", false},
+		{nil, "/tmp/db.sql.xz", "xz", false},
+		{nil, "/tmp/db.sql.bz2", "bzip2", false},
+		{nil, "/tmp/db.sql", "none", false},
+		{nil, "/tmp/db.mysql", "none", false},
+		{nil, "/tmp/db.dump", "gzip", false},
+		{[]string{"--compression=zstd"}, "", "zstd", false},
+		{[]string{"--compression=none"}, "/tmp/db.sql.gz", "none", false},
+		{[]string{"--compression=lz4"}, "", "", true},
+		{[]string{"--gzip=false"}, "", "none", false},
+		{[]string{"--gzip=false"}, "/tmp/db.sql.gz", "none", false},
+		{[]string{"--xz"}, "/tmp/db.sql", "xz", false},
+		{[]string{"--gzip=false", "--bzip2"}, "", "bzip2", false},
+		{[]string{"--gzip", "--xz"}, "", "", true},
+		{[]string{"--compression=gzip", "--gzip"}, "", "gzip", false},
+		{[]string{"--compression=zstd", "--xz"}, "", "", true},
+		{[]string{"--compression=zstd", "--gzip=false"}, "", "zstd", false},
+		{[]string{"--compression=gzip", "--gzip=false"}, "", "", true},
+	}
+	for _, tc := range tests {
+		cmd := NewExportDBCmd()
+		require.NoError(t, cmd.ParseFlags(tc.args))
+		got, err := resolveExportCompression(cmd.Flags(), tc.file)
+		if tc.wantErr {
+			require.Error(t, err, "args=%v file=%s", tc.args, tc.file)
+			continue
+		}
+		require.NoError(t, err, "args=%v file=%s", tc.args, tc.file)
+		require.Equal(t, tc.want, got, "args=%v file=%s", tc.args, tc.file)
+	}
 }

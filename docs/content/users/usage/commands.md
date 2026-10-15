@@ -769,13 +769,15 @@ ddev exec -s db -u root ls -la /root
 
 Dump a database to a file or to stdout.
 
+With `--file` and no `--compression`, the compression type comes from the file extension: `.gz`, `.zst`, `.xz`, `.bz2`, or `.sql`/`.mysql` for none. Any other extension, and output to stdout, uses gzip.
+
 Flags:
 
-* `--bzip2`: Use bzip2 compression.
+* `--compression`: Compression type: `gzip`, `zstd`, `xz`, `bzip2`, or `none`. `zstd` is not available with MariaDB 5.5.
 * `--database`, `-d`: Target database to export from (default `"db"`)
 * `--file`, `-f`: Path to a SQL dump file to export to
-* `--gzip`: Use gzip compression (default `true`)
-* `--xz`: Use xz compression.
+
+The older `--gzip`, `--gzip=false`, `--xz`, and `--bzip2` flags still work.
 
 Example:
 
@@ -783,8 +785,11 @@ Example:
 # Dump and compress the current project’s database to `/tmp/db.sql.gz`
 ddev export-db --file=/tmp/db.sql.gz
 
+# Dump the current project’s database with zstd compression
+ddev export-db --file=/tmp/db.sql.zst
+
 # Dump the current project’s database, without compressing it, to `/tmp/db.sql`
-ddev export-db --gzip=false --file /tmp/db.sql
+ddev export-db --file /tmp/db.sql
 
 # Dump and compress the current project’s `foo` database instead of `db`
 ddev export-db --database=foo --file=/tmp/db.sql.gz
@@ -792,8 +797,11 @@ ddev export-db --database=foo --file=/tmp/db.sql.gz
 # Output the current project’s database and use `>` to write to `/tmp/db.sql.gz`
 ddev export-db > /tmp/db.sql.gz
 
+# Output the current project’s database with zstd compression
+ddev export-db --compression=zstd > /tmp/db.sql.zst
+
 # Dump my-project’s database, without compressing it, to `/tmp/my-project.sql`
-ddev export-db my-project --gzip=false --file=/tmp/my-project.sql
+ddev export-db my-project --file=/tmp/my-project.sql
 ```
 
 ## `heidisql`
@@ -849,7 +857,7 @@ Flags:
 
 * `--database`, `-d`: Target database to import into (default `"db"`)
 * `--extract-path`: Path to extract within the archive
-* `--file`, `-f`: Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format
+* `--file`, `-f`: Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tar.zst`, `.tgz`, or `.zip` format
 * `--no-drop`: Do not drop the database before importing
 * `--no-progress`: Do not output progress
 
@@ -885,7 +893,7 @@ Pull the uploaded files directory of an existing project to the default public u
 Flags:
 
 * `--extract-path`: Path to extract within the archive.
-* `--source`, `-s`: Path to the source directory or source archive in `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format.
+* `--source`, `-s`: Path to the source directory or source archive in `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tar.zst`, `.tgz`, or `.zip` format.
 * `--target`, `-t`: Target upload dir, defaults to the first upload dir.
 
 Example:

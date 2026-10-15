@@ -1395,7 +1395,7 @@ func TestDdevImportDB(t *testing.T) {
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
 
 		// Test simple db loads.
-		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.sql.bz2", "users.sql.xz", "users.mysql.gz", "users.mysql.bz2", "users.mysql.xz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.sql.tar.bz2", "users.sql.tar.xz", "users.mysql.tar.gz", "users.mysql.tar.xz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
+		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.sql.bz2", "users.sql.xz", "users.mysql.gz", "users.mysql.bz2", "users.mysql.xz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.sql.tar.bz2", "users.sql.tar.xz", "users.mysql.tar.gz", "users.mysql.tar.xz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users.sql.zst", "users.mysql.zst", "users.sql.tar.zst", "users.mysql.tar.zst", "users_with_USE_statement.sql"} {
 			p := filepath.Join(origDir, "testdata", t.Name(), dbType, file)
 			if !fileutil.FileExists(p) {
 				t.Logf("skipping %s because it does not exist", p)
@@ -2142,6 +2142,7 @@ func TestDdevExportDB(t *testing.T) {
 				"gzip":  "gz",
 				"bzip2": "bz2",
 				"xz":    "xz",
+				"zstd":  "zst",
 			}
 			for cType, ext := range cTypes {
 				err = app.ExportDB("tmp/users1.sql."+ext, cType, "db")
@@ -2155,6 +2156,9 @@ func TestDdevExportDB(t *testing.T) {
 					assert.NoError(err)
 				case "xz":
 					err = archive.UnXz("tmp/users1.sql."+ext, "tmp")
+					assert.NoError(err)
+				case "zstd":
+					err = archive.UnZstd("tmp/users1.sql."+ext, "tmp")
 					assert.NoError(err)
 				}
 
@@ -2924,7 +2928,7 @@ func TestDdevImportFiles(t *testing.T) {
 
 		if app.GetUploadDir() != "" {
 			// Import trivial archive with various types of archive/compression and verify that files arrive
-			extensions := []string{"tgz", "zip", "tar.xz", "tar.bz2", "tar.gz"}
+			extensions := []string{"tgz", "zip", "tar.xz", "tar.bz2", "tar.gz", "tar.zst"}
 			for _, ext := range extensions {
 				tarballPath := filepath.Join(origDir, "testdata", t.Name(), "files."+ext)
 				_ = os.RemoveAll(filepath.Join(app.GetHostUploadDirFullPath(), "files."+ext+".txt"))

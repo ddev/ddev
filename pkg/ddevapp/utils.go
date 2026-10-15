@@ -303,7 +303,7 @@ func CreateGitIgnore(targetDir string, alwaysIgnores []string, ignores ...string
 
 // isTar determines whether the object at the filepath is a .tar archive.
 func isTar(filePath string) bool {
-	tarSuffixes := []string{".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz"}
+	tarSuffixes := []string{".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst", ".tgz"}
 	for _, suffix := range tarSuffixes {
 		if strings.HasSuffix(filePath, suffix) {
 			return true
