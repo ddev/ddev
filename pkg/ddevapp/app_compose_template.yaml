@@ -101,6 +101,9 @@ services:
         gid: '{{ .GID }}'
         DDEV_PHP_VERSION: ${DDEV_PHP_VERSION}
         DDEV_DATABASE: ${DDEV_DATABASE}
+      # A secret, unlike a build arg, stays out of the image
+      secrets:
+        - github_token
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     command: /pre-start.sh
 
@@ -332,3 +335,7 @@ volumes:
     external: true
 
   {{ end }}{{/* end if and .MutagenEnabled (not .NoProjectMount) */}}
+
+secrets:
+  github_token:
+    environment: DDEV_BUILD_GITHUB_TOKEN

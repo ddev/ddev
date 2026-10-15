@@ -1729,6 +1729,17 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 `))
 	require.NoError(t, err)
 
+	// Make sure that the GitHub token gets into the web build as the github_token secret,
+	// with the random value keeping a cached layer from passing
+	t.Setenv("DDEV_GITHUB_TOKEN", "")
+	t.Setenv("GH_TOKEN", "")
+	githubToken := util.RandString(16)
+	t.Setenv("GITHUB_TOKEN", githubToken)
+	err = ddevapp.WriteImageDockerfile(app.GetConfigPath("web-build/Dockerfile.github-token"), []byte(`
+RUN --mount=type=secret,id=github_token echo `+util.RandString(16)+` && cat /run/secrets/github_token >/var/tmp/github-token
+`))
+	require.NoError(t, err)
+
 	// Make sure that TARGETARCH and friends working on db container
 	err = ddevapp.WriteImageDockerfile(app.GetConfigPath("db-build/Dockerfile.targets"), []byte(`
 RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFORM}"
@@ -1844,6 +1855,12 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 		Cmd: fmt.Sprintf("ls /var/tmp/running-php-%s >/dev/null", app.PHPVersion),
 	})
 	assert.NoError(err)
+
+	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /var/tmp/github-token",
+	})
+	require.NoError(t, err, "out=%s stderr=%s", out, stderr)
+	require.Equal(t, githubToken, out)
 }
 
 // TestConfigLoadingOrder verifies that configs load in lexicographical order

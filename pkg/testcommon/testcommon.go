@@ -365,6 +365,7 @@ func ClearDockerEnv() {
 		"LINES",
 		"DDEV_XDEBUG_ENABLED",
 		"IS_DDEV_PROJECT",
+		"DDEV_BUILD_GITHUB_TOKEN",
 	}
 	for _, env := range envVars {
 		err := os.Unsetenv(env)

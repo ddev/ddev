@@ -143,6 +143,7 @@ OpenMage
 OpenSearch
 OpenSSH
 OrbStack
+Packagist
 PECL
 PEM
 PHAR
@@ -273,6 +274,7 @@ blackfire's
 blazingly
 bool
 breakpoint
+brotli
 browser
 browsersync
 bugfix
