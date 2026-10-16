@@ -3,6 +3,7 @@ package dockerutil_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -62,6 +63,26 @@ func TestRemoveVolume(t *testing.T) {
 	_ = dockerutil.RemoveVolume(spareVolume)
 	err = dockerutil.RemoveVolume(spareVolume)
 	assert.NoError(err)
+}
+
+func TestRemoveVolumeInUseNamesContainer(t *testing.T) {
+	testVolume := strings.ToLower(t.Name())
+	containerName := testVolume + "-holder"
+	holderLabels := map[string]string{"com.ddev.test-volume": testVolume}
+	_ = dockerutil.RemoveContainersByLabels(holderLabels)
+	_ = dockerutil.RemoveVolume(testVolume)
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = dockerutil.RemoveContainersByLabels(holderLabels)
+		_ = dockerutil.RemoveVolume(testVolume)
+	})
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, containerName, []string{"true"}, nil, nil, []string{testVolume + ":/mnt"}, "0", false, false, holderLabels, nil, nil)
+	require.NoError(t, err)
+
+	err = dockerutil.RemoveVolume(testVolume)
+	require.ErrorContains(t, err, "is in use by one or more containers")
+	require.ErrorContains(t, err, "docker rm -f "+containerName)
 }
 
 // TestCopyIntoVolume makes sure CopyToVolume copies a local directory into a volume

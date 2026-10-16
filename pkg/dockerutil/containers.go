@@ -246,6 +246,22 @@ func FindContainersByLabels(labels map[string]string) ([]container.Summary, erro
 	return containers.Items, nil
 }
 
+// FindContainersByVolume includes exited containers, since those still block volume removal.
+func FindContainersByVolume(volumeName string) ([]container.Summary, error) {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return nil, err
+	}
+	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{
+		All:     true,
+		Filters: client.Filters{}.Add("volume", volumeName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return containers.Items, nil
+}
+
 // FindContainersWithLabel returns all containers with the given label
 // It ignores the value of the label, is only interested that the label exists.
 func FindContainersWithLabel(label string) ([]container.Summary, error) {
