@@ -35,8 +35,20 @@ func TestUpdate(t *testing.T) {
 		{
 			name:   "references to other variables stay for the framework",
 			text:   "APP_NAME=Laravel\nMAIL_HOST=127.0.0.1\nMAIL_FROM_NAME=\"${APP_NAME}\"\nVITE_APP_NAME=\"${APP_NAME}\"\n",
-			values: map[string]string{"MAIL_HOST": "127.0.0.1"},
-			want:   "APP_NAME=Laravel\nMAIL_HOST=\"127.0.0.1\"\nMAIL_FROM_NAME=\"${APP_NAME}\"\nVITE_APP_NAME=\"${APP_NAME}\"\n",
+			values: map[string]string{"MAIL_HOST": "mailpit"},
+			want:   "APP_NAME=Laravel\nMAIL_HOST=\"mailpit\"\nMAIL_FROM_NAME=\"${APP_NAME}\"\nVITE_APP_NAME=\"${APP_NAME}\"\n",
+		},
+		{
+			name:   "a value already set keeps how it is written",
+			text:   "DB_HOST=db # comment\nDB_USER='db'\nexport DB_PASS=\"db\"\nDB_NAME=\n",
+			values: map[string]string{"DB_HOST": "db", "DB_USER": "db", "DB_PASS": "db", "DB_NAME": ""},
+			want:   "DB_HOST=db # comment\nDB_USER='db'\nexport DB_PASS=\"db\"\nDB_NAME=\n",
+		},
+		{
+			name:   "a value that only some parsers read as the new one is rewritten",
+			text:   "ESCAPED=a$$b\nREF=${DB_HOST}\nSLASH=\"a\\\\b\"\n",
+			values: map[string]string{"ESCAPED": "a$b", "REF": "${DB_HOST}", "SLASH": `a\b`},
+			want:   "ESCAPED='a$b'\nREF='${DB_HOST}'\nSLASH='a\\b'\n",
 		},
 		{
 			name:   "spaces around equals",

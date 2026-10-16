@@ -1249,7 +1249,7 @@ Pull files and database using a configured [provider plugin](./../providers/inde
 
 Flags:
 
-* `--environment=ENV1=val1,ENV2=val2`: Add or override provider environment variables, and a bare `NAME` takes its value from your shell. With DDEV v1.25.5+, it can be repeated and a value can contain commas, see [`web_environment`](../configuration/environment-variables.md#web_environment).
+* `--environment=ENV1=val1,ENV2=val2`: Add or override provider environment variables. With DDEV v1.25.5+, it can be repeated, a value can contain commas, and a bare `NAME` takes its value from your shell, see [`web_environment`](../configuration/environment-variables.md#web_environment).
 * `--skip-confirmation`, `-y`: Skip confirmation step.
 * `--skip-db`: Skip pulling database archive.
 * `--skip-files`: Skip pulling file archive.
@@ -1289,7 +1289,7 @@ Push files and database using a configured [provider plugin](./../providers/inde
 
 Flags:
 
-* `--environment=ENV1=val1,ENV2=val2`: Add or override provider environment variables, and a bare `NAME` takes its value from your shell. With DDEV v1.25.5+, it can be repeated and a value can contain commas, see [`web_environment`](../configuration/environment-variables.md#web_environment).
+* `--environment=ENV1=val1,ENV2=val2`: Add or override provider environment variables. With DDEV v1.25.5+, it can be repeated, a value can contain commas, and a bare `NAME` takes its value from your shell, see [`web_environment`](../configuration/environment-variables.md#web_environment).
 * `--skip-confirmation`, `-y`: Skip confirmation step.
 * `--skip-db`: Skip pushing database archive.
 * `--skip-files`: Skip pushing file archive.

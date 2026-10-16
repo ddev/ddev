@@ -97,6 +97,8 @@ func TestShellExportsWithExpansion(t *testing.T) {
 	t.Setenv("DOTENV_TEST_VAR", "from-env")
 	home, err := exec.Command(util.FindBashPath(), "-c", `printf '%s' "$HOME"`).Output()
 	require.NoError(t, err)
+	rootHome, err := exec.Command(util.FindBashPath(), "-c", `printf '%s' ~root`).Output()
+	require.NoError(t, err)
 
 	tests := map[string]struct{ value, want string }{
 		"PLAIN":          {"plain", "plain"},
@@ -109,9 +111,12 @@ func TestShellExportsWithExpansion(t *testing.T) {
 		"WINDOWS_PATH":   {`C:\path\to`, `C:\path\to`},
 		"TRAILING_BS":    {`ends with \`, `ends with \`},
 		"NEWLINE":        {"line1\nline2", "line1\nline2"},
+		"BS_NEWLINE":     {"line1\\\nline2", "line1\\\nline2"},
 		"VAR":            {"$DOTENV_TEST_VAR/x", "from-env/x"},
 		"BRACED_VAR":     {"${DOTENV_TEST_VAR}-x", "from-env-x"},
 		"DEFAULT":        {"${DOTENV_TEST_UNSET:-def}", "def"},
+		"DEFAULT_QUOTED": {`${DOTENV_TEST_UNSET:-"a b"} "c"`, `a b "c"`},
+		"DEFAULT_NESTED": {`${DOTENV_TEST_UNSET:-${DOTENV_TEST_VAR}}}`, "from-env}"},
 		"ESCAPED_DOLLAR": {`\$DOTENV_TEST_VAR`, "$DOTENV_TEST_VAR"},
 		"SUBSHELL":       {"$(echo sub)", "sub"},
 		"SUBSHELL_QUOTE": {`$(echo "x y") "z"`, `x y "z"`},
@@ -122,6 +127,7 @@ func TestShellExportsWithExpansion(t *testing.T) {
 		"TILDE":          {"~", string(home)},
 		"TILDE_PATH":     {"~/tmp/repo", string(home) + "/tmp/repo"},
 		"TILDE_INSIDE":   {"a~b ~/x", "a~b ~/x"},
+		"TILDE_USER":     {"~root/x", string(rootHome) + "/x"},
 		"EMPTY":          {"", ""},
 	}
 	values := map[string]string{}

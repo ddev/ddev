@@ -95,7 +95,10 @@ func TestProcessBashActionEnv(t *testing.T) {
 		"TEMPLATE":  "{{ .DdevProjectConfig.name }}",
 		"NEWLINE":   "line1\nline2",
 		"EMPTY":     "",
+		// The host value wins, as it does for host commands
+		"FROM_SHELL": "shell",
 	}
+	t.Setenv("FROM_SHELL", "shell")
 	envText := `PAREN=')value('
 SHELL_OPS='a;b&c|d<e>f'
 BACKTICK='a` + "`id`" + `b'
@@ -111,6 +114,7 @@ SPACES='  two  spaces  '
 TEMPLATE='{{ .DdevProjectConfig.name }}'
 NEWLINE="line1\nline2"
 EMPTY=
+FROM_SHELL=file
 database.default.hostname=db
 `
 	require.NoError(t, os.WriteFile(filepath.Join(app.AppConfDir(), ".env"), []byte(envText), 0644))

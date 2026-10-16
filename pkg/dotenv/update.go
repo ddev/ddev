@@ -29,10 +29,11 @@ type assignment struct {
 // Update returns text with each name in values set to Quote(value).
 //
 // An existing assignment keeps its place, its `export` prefix and any
-// trailing comment, and a quoted value that spans several lines is replaced
-// whole. With no assignment, the first commented-out one, like `# DB_HOST=`,
-// is uncommented in place. Otherwise the variable is appended, sorted by name,
-// matching the file's line endings and its use of `export`.
+// trailing comment, and is left as written when it already has the value. A
+// quoted value that spans several lines is replaced whole. With no
+// assignment, the first commented-out one, like `# DB_HOST=`, is uncommented
+// in place. Otherwise the variable is appended, sorted by name, matching the
+// file's line endings and its use of `export`.
 func Update(text string, values map[string]string) string {
 	assignments := findAssignments(text)
 	type edit struct {
@@ -59,7 +60,9 @@ func Update(text string, values map[string]string) string {
 		switch {
 		case len(active) > 0:
 			for _, a := range active {
-				edits = append(edits, edit{a.valueStart, a.valueEnd, quoted})
+				if !readsAs(text[a.valueStart:a.valueEnd], values[name]) {
+					edits = append(edits, edit{a.valueStart, a.valueEnd, quoted})
+				}
 			}
 		case commented != nil:
 			prefix := ""
@@ -92,6 +95,22 @@ func Update(text string, values map[string]string) string {
 		text += strings.Join(appended, newline) + newline
 	}
 	return text
+}
+
+// readsAs reports whether raw, a value as written in an env file, already
+// reads as value both by compose rules and literally, so replacing it would
+// only change its quoting. Any ${VAR} in raw makes the two differ, and a
+// backslash outside single quotes counts as a change, see Quote for Symfony.
+func readsAs(raw, value string) bool {
+	if strings.Contains(raw, `\`) && !strings.HasPrefix(raw, "'") {
+		return false
+	}
+	composeValues, err := Parse("", "V="+raw, func(string) (string, bool) { return "\x00", true })
+	if err != nil || composeValues["V"] != value {
+		return false
+	}
+	literalValues, err := ParseLiteral("", "V="+raw)
+	return err == nil && literalValues["V"] == value
 }
 
 // ParseLiteral parses env file text like Parse, but keeps $ references as

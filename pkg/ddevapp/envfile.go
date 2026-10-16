@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -112,22 +113,31 @@ func (app *DdevApp) envFileNamesForTarget(target string) ([]string, error) {
 	return dotenv.ReadNames(filterEnvFilesForTarget(envFiles, target)...)
 }
 
-// SetHostEnvFromFiles sets the values of the env files that target every
-// service, .env and .env.local, global ones included, on DDEV's own process,
-// so host commands it starts inherit them. As in compose, a variable already
-// set on the host keeps its value. The returned function unsets them again,
-// so another project handled by the same ddev run does not see them.
+// HostEnvFromFiles is ReadEnvFilesForTarget for a command run on the host:
+// a variable already set on the host keeps its value, as it does for ${VAR}
+// in a compose file. Only containers take the env file's value instead.
+func (app *DdevApp) HostEnvFromFiles(target string) (map[string]string, error) {
+	values, err := app.ReadEnvFilesForTarget(target)
+	maps.DeleteFunc(values, func(name, _ string) bool {
+		_, set := os.LookupEnv(name)
+		return set
+	})
+	return values, err
+}
+
+// SetHostEnvFromFiles sets the HostEnvFromFiles values of .env and
+// .env.local, global ones included, on DDEV's own process, so host commands
+// it starts inherit them. The returned function unsets them again, so another
+// project handled by the same ddev run does not see them.
 func (app *DdevApp) SetHostEnvFromFiles() (unset func(), err error) {
-	values, err := app.ReadEnvFilesForTarget("")
+	values, err := app.HostEnvFromFiles("")
 	if err != nil {
 		return func() {}, err
 	}
 	var names []string
 	for name, value := range values {
-		if _, set := os.LookupEnv(name); !set {
-			_ = os.Setenv(name, value)
-			names = append(names, name)
-		}
+		_ = os.Setenv(name, value)
+		names = append(names, name)
 	}
 	return func() {
 		for _, name := range names {

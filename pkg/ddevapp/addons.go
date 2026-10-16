@@ -240,7 +240,7 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 
 	// Added after the template runs, so "{{" in an env value stays literal,
 	// and before set -x, so verbose output does not print secrets
-	envMap, err := app.ReadEnvFilesForTarget(installDesc.Name)
+	envMap, err := app.HostEnvFromFiles(installDesc.Name)
 	if err != nil {
 		return fmt.Errorf("unable to read env files for bash action: %v", err)
 	}
