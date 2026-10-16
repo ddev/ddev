@@ -11,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/moby/moby/api/types/container"
 )
 
 // DatabaseMismatchMessage describes a project configured for one database while
@@ -230,6 +231,18 @@ func (app *DdevApp) getDBVersionFromVolume() (string, error) {
 	}
 
 	return strings.TrimSpace(out), nil
+}
+
+// runningDBContainer returns the project's db container if it is running, else nil.
+// Callers use it to avoid mounting the database volume a second time: providers that
+// back volumes with a block device (apple container) permit either one writer or any
+// number of readers, never a mix, so a second attachment fails while the db runs.
+func (app *DdevApp) runningDBContainer() *container.Summary {
+	c, err := app.FindContainerByType("db")
+	if err != nil || c == nil || c.State != "running" {
+		return nil
+	}
+	return c
 }
 
 // GetDBTypeVersionFromString takes an input string and derives the info from the uses
