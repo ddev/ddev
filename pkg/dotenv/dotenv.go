@@ -70,15 +70,21 @@ func readFiles(paths []string, lookup func(string) (string, bool)) (map[string]s
 // Symfony Dotenv read back unchanged, with no expansion, as does CakePHP's
 // josegonzalez/dotenv for a value with no backslash.
 //
-// Values are double-quoted, except that a value with `\` or `$` is
-// single-quoted when it can be: josegonzalez keeps `\$` as written, and
-// Symfony expands \n in `"\\n"` before it unescapes \\.
+// A value of only bareValueRegex characters is left unquoted. Others are
+// double-quoted, except that a value with `\` or `$` is single-quoted when
+// it can be: josegonzalez keeps `\$` as written, and Symfony expands \n in
+// `"\\n"` before it unescapes \\.
 func Quote(value string) string {
+	if bareValueRegex.MatchString(value) {
+		return value
+	}
 	if strings.ContainsAny(value, `\$`) && !strings.ContainsAny(value, "'\n\r") && !strings.HasSuffix(value, `\`) {
 		return "'" + value + "'"
 	}
 	return `"` + quoteReplacer.Replace(value) + `"`
 }
+
+var bareValueRegex = regexp.MustCompile(`^[A-Za-z0-9_.:/@%+,-]*$`)
 
 var quoteReplacer = strings.NewReplacer(
 	`\`, `\\`,

@@ -282,12 +282,12 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.FileExists(t, busyboxEnvFile, "unable to find .ddev/.env.busybox file, but it should be here")
 	busyboxEnvFileContents, err := os.ReadFile(busyboxEnvFile)
 	require.NoError(t, err, "unable to read .ddev/.env.busybox file after add-on install")
-	require.Contains(t, string(busyboxEnvFileContents), `BUSYBOX_TAG="1.36.0"`)
-	require.Contains(t, string(busyboxEnvFileContents), `PRE_INSTALL_VARIABLE="pre"`)
-	require.Contains(t, string(busyboxEnvFileContents), `POST_INSTALL_VARIABLE="post"`)
+	require.Contains(t, string(busyboxEnvFileContents), `BUSYBOX_TAG=1.36.0`)
+	require.Contains(t, string(busyboxEnvFileContents), `PRE_INSTALL_VARIABLE=pre`)
+	require.Contains(t, string(busyboxEnvFileContents), `POST_INSTALL_VARIABLE=post`)
 	require.Contains(t, string(busyboxEnvFileContents), `DOLLAR_SIGN='$dollar_variable'`)
 	// --force-run is converted to empty string
-	require.Contains(t, string(busyboxEnvFileContents), `FORCE_RUN=""`)
+	require.Contains(t, string(busyboxEnvFileContents), "FORCE_RUN=\n")
 
 	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "bare-busybox"))
 	require.NoError(t, err, "out=%s", out)

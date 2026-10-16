@@ -167,7 +167,7 @@ func TestWriteProjectEnvFileUnchanged(t *testing.T) {
 	require.NoError(t, WriteProjectEnvFile(envFile, map[string]string{"DB_HOST": "db2"}, "DB_HOST=\"db\"\n"))
 	contents, err := os.ReadFile(envFile)
 	require.NoError(t, err)
-	require.Equal(t, "DB_HOST=\"db2\"\n", string(contents))
+	require.Equal(t, "DB_HOST=db2\n", string(contents))
 }
 
 // TestGitIgnoreEnvFiles tests that .env.local and .env.*.local stay ignored once they exist

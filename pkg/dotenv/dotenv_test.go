@@ -58,7 +58,12 @@ func TestQuoteRoundTrip(t *testing.T) {
 }
 
 func TestQuoteFormat(t *testing.T) {
-	require.Equal(t, `"plain"`, dotenv.Quote("plain"))
+	require.Equal(t, "plain", dotenv.Quote("plain"))
+	require.Equal(t, "https://a.ddev.site:8443/p_q-r.s@t%2F+u,v", dotenv.Quote("https://a.ddev.site:8443/p_q-r.s@t%2F+u,v"))
+	require.Equal(t, "", dotenv.Quote(""))
+	require.Equal(t, `"two words"`, dotenv.Quote("two words"))
+	require.Equal(t, `"a#b"`, dotenv.Quote("a#b"))
+	require.Equal(t, `"{{ .Name }}"`, dotenv.Quote("{{ .Name }}"))
 	require.Equal(t, `"say \"hi\""`, dotenv.Quote(`say "hi"`))
 	require.Equal(t, `'C:\new $x "y"'`, dotenv.Quote(`C:\new $x "y"`))
 	require.Equal(t, `'$dollar_variable'`, dotenv.Quote(`$dollar_variable`))

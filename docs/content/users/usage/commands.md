@@ -665,7 +665,7 @@ ddev dotenv global get .ddev/.env.web.local --api-key
 *Alias: `dotenv global add`.*
 
 Create or update a global `.env` file, which applies to every project, with values specified via long flags from the command line.
-Flags in the format `--env-key=value` will be converted to environment variable names like `ENV_KEY="value"`.
+Flags in the format `--env-key=value` will be converted to environment variable names like `ENV_KEY=value`.
 Name the file as `.ddev/<file>`, the same way as in a project; it is written to the [global DDEV directory](architecture.md#global-files).
 
 Example:
@@ -686,7 +686,7 @@ ddev dotenv global set .ddev/.env.web.local --api-key=secret
 *Alias: `dotenv add`.*
 
 Create or update a `.env` file with values specified via long flags from the command line.
-Flags in the format `--env-key=value` will be converted to environment variable names like `ENV_KEY="value"`.
+Flags in the format `--env-key=value` will be converted to environment variable names like `ENV_KEY=value`.
 Provide the path relative to the project root when specifying the file.
 
 Example:

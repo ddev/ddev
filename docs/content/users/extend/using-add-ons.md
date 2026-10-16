@@ -171,7 +171,7 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm
 ddev restart
 ```
 
-This sets `REDIS_TAG="7-bookworm"` which the add-on uses during service startup.
+This sets `REDIS_TAG=7-bookworm` which the add-on uses during service startup.
 
 You can also edit the `.ddev/.env.redis` file directly:
 

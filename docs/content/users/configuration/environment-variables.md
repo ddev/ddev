@@ -72,7 +72,7 @@ With DDEV v1.25.5+, DDEV reads these files the same way `docker-compose` does, s
 * A line with only a name, like `MY_VAR`, passes that variable through from the host.
 * On the host, a variable already set in your shell keeps its value, so `MY_VAR=x ddev start` overrides `.ddev/.env` for add-on actions, host commands, hooks, and `${MY_VAR}` in a compose file. Containers always get the value from the file.
 
-[`ddev dotenv set`](../usage/commands.md#dotenv-set) quotes each value so it is read back exactly as given, and leaves a line that already has the value as it is.
+[`ddev dotenv set`](../usage/commands.md#dotenv-set) quotes each value that needs it, so it is read back exactly as given, and leaves a line that already has the value as it is.
 
 ## Override Order
 
