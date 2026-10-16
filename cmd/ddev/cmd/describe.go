@@ -43,6 +43,7 @@ running 'ddev describe <projectname>'.`,
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [projectname]'")
 		}
+		defer dockerutil.CacheContainers()()
 
 		apps, err := getRequestedProjects(args, false)
 		if err != nil {

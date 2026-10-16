@@ -205,6 +205,7 @@ func loadProjects() tea.Msg {
 	if _, err := dockerutil.GetDockerVersion(); err != nil {
 		return projectsLoadedMsg{err: err, warning: logs.take()}
 	}
+	defer dockerutil.CacheContainers()()
 	apps, err := ddevapp.GetProjects(false)
 	if err != nil {
 		return projectsLoadedMsg{err: err, warning: logs.take()}
@@ -292,6 +293,7 @@ func loadDetail(appRoot string) (ProjectDetail, error) {
 	if _, err := dockerutil.GetDockerVersion(); err != nil {
 		return ProjectDetail{}, err
 	}
+	defer dockerutil.CacheContainers()()
 	app, err := ddevapp.NewApp(appRoot, true)
 	if err != nil {
 		return ProjectDetail{}, err

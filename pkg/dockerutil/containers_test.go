@@ -386,6 +386,43 @@ func TestGetAppContainers(t *testing.T) {
 	assert.Contains(containers[0].Image, versionconstants.WebImg)
 }
 
+// TestCacheContainers checks that cached lookups find what Docker finds
+func TestCacheContainers(t *testing.T) {
+	lookups := []map[string]string{
+		{"com.ddev.site-name": testContainerName, "com.docker.compose.service": "web"},
+		{"com.ddev.site-name": testContainerName, "com.docker.compose.oneoff": ""},
+		{"com.ddev.site-name": testContainerName, "com.docker.compose.service": "db"},
+		{"com.ddev.site-name": testContainerName, "no.such.label": ""},
+	}
+	names := []string{testContainerName, testContainerName[:len(testContainerName)-1], "no-such-container"}
+	find := func() (ids []string) {
+		for _, labels := range lookups {
+			containers, err := dockerutil.FindContainersByLabels(labels)
+			require.NoError(t, err)
+			ids = append(ids, fmt.Sprint(len(containers)))
+			for _, c := range containers {
+				ids = append(ids, c.ID)
+			}
+		}
+		for _, name := range names {
+			c, err := dockerutil.FindContainerByName(name)
+			require.NoError(t, err)
+			if c != nil {
+				ids = append(ids, c.ID)
+			}
+			ids = append(ids, "|")
+		}
+		return ids
+	}
+
+	want := find()
+	require.Equal(t, "1", want[0], "the test container should be found")
+	release := dockerutil.CacheContainers()
+	require.Equal(t, want, find())
+	release()
+	require.Equal(t, want, find())
+}
+
 // TestFindContainerByName does a simple test of FindContainerByName()
 func TestFindContainerByName(t *testing.T) {
 	assert := asrt.New(t)

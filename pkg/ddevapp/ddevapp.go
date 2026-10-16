@@ -3860,7 +3860,7 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 		}
 	}
 	if directHTTPURL := app.GetWebContainerDirectHTTPURL(); directHTTPURL != "" {
-		httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
+		httpURLs = append(httpURLs, directHTTPURL)
 	}
 
 	allURLs = append(httpsURLs, httpURLs...)
