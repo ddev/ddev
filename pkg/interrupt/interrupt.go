@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"slices"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -23,6 +24,7 @@ var (
 	nextID    int
 	delegates = map[os.Signal]int{}
 	installed bool
+	exiting   atomic.Bool
 )
 
 // OnInterrupt registers f to run on every interrupt until unregister is
@@ -89,6 +91,9 @@ func handle(sig os.Signal, sigs chan os.Signal) {
 	fns := slices.Collect(maps.Values(cleanups))
 	delegated := delegates[sig] > 0
 	mu.Unlock()
+	if !delegated {
+		exiting.Store(true)
+	}
 
 	done := make(chan struct{})
 	go func() {
@@ -106,6 +111,16 @@ func handle(sig os.Signal, sigs chan os.Signal) {
 	case <-sigs:
 	}
 	exit(sig)
+}
+
+// WaitIfExiting blocks for good once the handler has begun cleaning up before
+// exiting. Fatal error paths call it, because cleanup such as removing a
+// container makes in-flight work fail, and exiting on that failure would
+// beat the handler and report an error instead of the signal.
+func WaitIfExiting() {
+	if exiting.Load() {
+		select {}
+	}
 }
 
 // Run calls each cleanup function in parallel and waits for them to return
