@@ -100,20 +100,21 @@ func CanExport(name string) bool {
 	return bashNameRegex.MatchString(name) && !slices.Contains(bashReadonlyNames, name)
 }
 
-// ShellExports returns one bash `export NAME='value'` line per variable,
-// sorted by name. Values are single-quoted, so bash never expands them.
-// Names CanExport rejects are left out.
-func ShellExports(values map[string]string) string {
-	return shellExports(values, shellQuote)
-}
-
-// ShellExportsWithExpansion is ShellExports for values read as the inside of
-// a bash double-quoted string, such as provider environment_variables:
-// $VAR, ${VAR}, $(cmd) and a leading ~ expand where the script runs, and \
-// escapes $, \, " and `. An unescaped quote or backtick is literal, except
-// inside ${...} or $(...), which bash reads on their own.
+// ShellExportsWithExpansion returns one bash `export NAME="value"` line per
+// variable, sorted by name, leaving out names CanExport rejects. Values are
+// read as the inside of a bash double-quoted string, such as provider
+// environment_variables: $VAR, ${VAR}, $(cmd) and a leading ~ expand where
+// the script runs, and \ escapes $, \, " and `. An unescaped quote or
+// backtick is literal, except inside ${...} or $(...), which bash reads on
+// their own.
 func ShellExportsWithExpansion(values map[string]string) string {
-	return shellExports(values, shellDoubleQuote)
+	var lines []string
+	for _, name := range slices.Sorted(maps.Keys(values)) {
+		if CanExport(name) {
+			lines = append(lines, "export "+name+"="+shellDoubleQuote(values[name]))
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 // EscapeExpansion escapes $ and \ in value, so ShellExportsWithExpansion
@@ -124,22 +125,6 @@ func EscapeExpansion(value string) string {
 }
 
 var expansionEscaper = strings.NewReplacer(`\`, `\\`, `$`, `\$`)
-
-func shellExports(values map[string]string, quote func(string) string) string {
-	var lines []string
-	for _, name := range slices.Sorted(maps.Keys(values)) {
-		if !CanExport(name) {
-			continue
-		}
-		lines = append(lines, "export "+name+"="+quote(values[name]))
-	}
-	return strings.Join(lines, "\n")
-}
-
-// shellQuote single-quotes s for bash and sh, which read it back unchanged.
-func shellQuote(s string) string {
-	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
-}
 
 // tildePrefixRegex matches a leading ~, ~/ or ~user/, which bash only
 // expands with no quote before the first slash.

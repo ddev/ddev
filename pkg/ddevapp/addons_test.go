@@ -94,6 +94,9 @@ func TestProcessBashActionEnv(t *testing.T) {
 		"SPACES":    "  two  spaces  ",
 		"TEMPLATE":  "{{ .DdevProjectConfig.name }}",
 		"NEWLINE":   "line1\nline2",
+		"UNC_PATH":  `\\server\share`,
+		"ESCAPES":   `\n\t\\`,
+		"CRLF":      "line1\r\nline2",
 		"EMPTY":     "",
 		// The host value wins, as it does for host commands
 		"FROM_SHELL": "shell",
@@ -113,6 +116,9 @@ GLOB='*'
 SPACES='  two  spaces  '
 TEMPLATE='{{ .DdevProjectConfig.name }}'
 NEWLINE="line1\nline2"
+UNC_PATH='\\server\share'
+ESCAPES='\n\t\\'
+CRLF="line1\r\nline2"
 EMPTY=
 FROM_SHELL=file
 database.default.hostname=db

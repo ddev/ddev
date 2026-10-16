@@ -2948,7 +2948,7 @@ func runHostCommandWithCapturedOutput(app *DdevApp, cmd string) error {
 	}
 
 	_ = app.DockerEnv()
-	unsetEnv, err := app.SetHostEnvFromFiles()
+	unsetEnv, err := app.SetHostEnvFromFiles("")
 	if err != nil {
 		return err
 	}

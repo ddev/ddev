@@ -20,7 +20,6 @@ import (
 	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/dotenv"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/github"
@@ -238,13 +237,12 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 	}
 	addonAction := doc.String()
 
-	// Added after the template runs, so "{{" in an env value stays literal,
-	// and before set -x, so verbose output does not print secrets
-	envMap, err := app.HostEnvFromFiles(installDesc.Name)
+	unsetEnv, err := app.SetHostEnvFromFiles(installDesc.Name)
 	if err != nil {
 		return fmt.Errorf("unable to read env files for bash action: %v", err)
 	}
-	action = "set -eu -o pipefail\n" + dotenv.ShellExports(envMap) + "\n"
+	defer unsetEnv()
+	action = "set -eu -o pipefail\n"
 	if verbose {
 		action += "set -x\n"
 	}

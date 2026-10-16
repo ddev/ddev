@@ -125,12 +125,13 @@ func (app *DdevApp) HostEnvFromFiles(target string) (map[string]string, error) {
 	return values, err
 }
 
-// SetHostEnvFromFiles sets the HostEnvFromFiles values of .env and
-// .env.local, global ones included, on DDEV's own process, so host commands
-// it starts inherit them. The returned function unsets them again, so another
-// project handled by the same ddev run does not see them.
-func (app *DdevApp) SetHostEnvFromFiles() (unset func(), err error) {
-	values, err := app.HostEnvFromFiles("")
+// SetHostEnvFromFiles sets the HostEnvFromFiles values for target on DDEV's
+// own process, so host commands it starts inherit them; an empty target means
+// .env and .env.local, global ones included. The environment, unlike a script,
+// reaches Git Bash on Windows unchanged. The returned function unsets them
+// again, so another project handled by the same ddev run does not see them.
+func (app *DdevApp) SetHostEnvFromFiles(target string) (unset func(), err error) {
+	values, err := app.HostEnvFromFiles(target)
 	if err != nil {
 		return func() {}, err
 	}

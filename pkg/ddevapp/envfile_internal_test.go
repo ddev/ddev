@@ -132,7 +132,7 @@ func TestSetHostEnvFromFiles(t *testing.T) {
 	write(".env.local", "DDEV_TEST_FROM_LOCAL=local\n")
 	write(".env.web", "DDEV_TEST_WEB_ONLY=web\n")
 
-	unsetEnv, err := app.SetHostEnvFromFiles()
+	unsetEnv, err := app.SetHostEnvFromFiles("")
 	require.NoError(t, err)
 	require.Equal(t, "a b) c", os.Getenv("DDEV_TEST_FROM_ENV"))
 	require.Equal(t, "local", os.Getenv("DDEV_TEST_FROM_LOCAL"))
