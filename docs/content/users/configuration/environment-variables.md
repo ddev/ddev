@@ -175,6 +175,18 @@ ddev config --web-environment-add="MY_ENV_VAR=someval"
 ddev config global --web-environment-add="MY_ENV_VAR=someval"
 ```
 
+With DDEV v1.25.5+, both flags can be repeated, and a comma only separates variables before `NAME=` or after a bare name, so a value can contain commas. `--web-environment-add` replaces a variable that is already in the list. The `--environment` flag of `ddev pull` and `ddev push` follows the same rules.
+
+| Flag | Result |
+| --- | --- |
+| `--web-environment-add="A=1,B=2"` | `A=1` and `B=2` |
+| `--web-environment-add=A=1 --web-environment-add=B=2` | `A=1` and `B=2` |
+| `--web-environment-add="METHODS=GET,POST"` | `METHODS=GET,POST` |
+| `--web-environment-add=MY_HOST_VAR` | `MY_HOST_VAR`, passed through from the host |
+| `--web-environment-add="MY_HOST_VAR,A=1"` | `MY_HOST_VAR` from the host, and `A=1` |
+| `--web-environment-add="A=1,MY_HOST_VAR"` | `A=1,MY_HOST_VAR`, one variable; repeat the flag instead |
+| `--web-environment-add="A=2"` when `A=1` is set | `A=2` |
+
 ## Host Variables Forwarded on Exec
 
 Some variables describe the session that runs a command rather than the project, so DDEV copies them from the host into every [`ddev exec`](../usage/commands.md#exec), [`ddev ssh`](../usage/commands.md#ssh), and custom command, in any service. They reach only that command, so none of them needs a restart. A variable is forwarded when it is set on the host, even to an empty value, because some tools only check that it exists:

@@ -473,8 +473,8 @@ Flags:
 * `--update`: Update project settings based on detection and `project-type` overrides (except for `generic` type).
 * `--upload-dirs`: Set the project’s upload directories, the destination directories of the `ddev import-files` command, or `--upload-dirs=""` to remove previously configured values.
 * `--use-dns-when-possible`: Use DNS for hostname resolution instead of `/etc/hosts` when possible (default `true`).
-* `--web-environment`: Set the environment variables in the `web` container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"` or `--web-environment=""` to remove previously configured values.
-* `--web-environment-add`: Append environment variables to the `web` container: `--web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`
+* `--web-environment`: Set the environment variables in the `web` container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"` or `--web-environment=""` to remove previously configured values. With DDEV v1.25.5+, it can be repeated and a value can contain commas, see [`web_environment`](../configuration/environment-variables.md#web_environment).
+* `--web-environment-add`: Add or replace environment variables in the `web` container: `--web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`. With DDEV v1.25.5+, it can be repeated and a value can contain commas, see [`web_environment`](../configuration/environment-variables.md#web_environment).
 * `--web-image`: Set the `web` container image ([for advanced use only](../configuration/config.md#webimage)).
 * `--web-image-default`: Set the default `web` container image, the same as `--web-image=""`.
 * `--web-working-dir`: Override the default working directory for the `web` service.
@@ -521,8 +521,8 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--traefik-monitor-port`: Can be used to change the Traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999` (see [default](../configuration/config.md#traefik_monitor_port)).
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.
 * `--use-letsencrypt`: Enables experimental Let’s Encrypt integration, `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`.
-* `--web-environment`: Set the environment variables in the `web` container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
-* `--web-environment-add`: Append environment variables to the `web` container: `--web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`
+* `--web-environment`: Set the environment variables in the `web` container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"` or `--web-environment=""` to remove them. With DDEV v1.25.5+, it can be repeated and a value can contain commas, see [`web_environment`](../configuration/environment-variables.md#web_environment).
+* `--web-environment-add`: Add or replace environment variables in the `web` container: `--web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`. With DDEV v1.25.5+, it can be repeated and a value can contain commas, see [`web_environment`](../configuration/environment-variables.md#web_environment).
 * `--wsl2-no-windows-hosts-mgt`: WSL2 only; make DDEV ignore Windows-side hosts file ([for advanced use only](../configuration/config.md#wsl2_no_windows_hosts_mgt)).
 * `--xdebug-ide-location`: For less usual IDE locations specify where the IDE is running for Xdebug to reach it ([for advanced use only](../configuration/config.md#xdebug_ide_location)).
 * `--xhprof-mode`: XHProf mode, possible values are `prepend`, `xhgui` (see [default](../configuration/config.md#xhprof_mode)).
@@ -1249,7 +1249,7 @@ Pull files and database using a configured [provider plugin](./../providers/inde
 
 Flags:
 
-* `--environment=ENV1=val1,ENV2=val2`
+* `--environment=ENV1=val1,ENV2=val2`: Add or override provider environment variables, and a bare `NAME` takes its value from your shell. With DDEV v1.25.5+, it can be repeated and a value can contain commas, see [`web_environment`](../configuration/environment-variables.md#web_environment).
 * `--skip-confirmation`, `-y`: Skip confirmation step.
 * `--skip-db`: Skip pulling database archive.
 * `--skip-files`: Skip pulling file archive.
@@ -1289,7 +1289,7 @@ Push files and database using a configured [provider plugin](./../providers/inde
 
 Flags:
 
-* `--environment=ENV1=val1,ENV2=val2`
+* `--environment=ENV1=val1,ENV2=val2`: Add or override provider environment variables, and a bare `NAME` takes its value from your shell. With DDEV v1.25.5+, it can be repeated and a value can contain commas, see [`web_environment`](../configuration/environment-variables.md#web_environment).
 * `--skip-confirmation`, `-y`: Skip confirmation step.
 * `--skip-db`: Skip pushing database archive.
 * `--skip-files`: Skip pushing file archive.

@@ -2,6 +2,7 @@ package util
 
 import (
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -39,4 +40,36 @@ func MergeEnv(lists ...[]string) []string {
 		}
 	}
 	return merged
+}
+
+var envAssignmentStartRegex = regexp.MustCompile(`^[ \t]*[A-Za-z_][A-Za-z0-9_]*=`)
+
+// EnvFlagEntries returns the NAME=value and bare NAME entries from every use
+// of a repeatable environment flag, --web-environment or --environment.
+//
+// A comma starts a new entry when NAME= follows it or when it ends a bare
+// NAME. Any other comma belongs to the value, so `TOKEN=a,b,ENV=main` is two
+// entries and `METHODS=GET,POST` one. An empty or quoted empty flag value
+// adds nothing.
+func EnvFlagEntries(flagValues []string) []string {
+	entries := []string{}
+	for _, value := range flagValues {
+		value = strings.TrimSpace(value)
+		if value == "" || value == `""` || value == `''` {
+			continue
+		}
+		start := len(entries)
+		for part := range strings.SplitSeq(value, ",") {
+			newEntry := len(entries) == start ||
+				envAssignmentStartRegex.MatchString(part) ||
+				!strings.Contains(entries[len(entries)-1], "=")
+			switch {
+			case !newEntry:
+				entries[len(entries)-1] += "," + part
+			case strings.TrimSpace(part) != "":
+				entries = append(entries, strings.TrimLeft(part, " \t"))
+			}
+		}
+	}
+	return entries
 }

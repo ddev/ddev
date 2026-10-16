@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dotenv"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -144,6 +147,47 @@ func GetUnknownFlags(cmd *cobra.Command) (map[string]string, error) {
 		}
 	}
 	return unknownFlags, nil
+}
+
+const (
+	webEnvironmentUsage    = `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval" or --web-environment="" to remove them. Repeatable`
+	webEnvironmentAddUsage = `Add or replace environment variables in the web container: --web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval". Repeatable`
+)
+
+// environmentFlagUsage returns the help text of the --environment flag of
+// ddev pull and ddev push.
+func environmentFlagUsage(command string) string {
+	return `Add or override environment variables during ` + command + `: --environment="NAME=value,OTHER=value". Repeatable`
+}
+
+// addEnvironmentFlag adds the entries of the --environment flag to env, see
+// util.EnvFlagEntries.
+func addEnvironmentFlag(env map[string]string, flagValues []string) error {
+	for _, entry := range util.EnvFlagEntries(flagValues) {
+		name, value, hasValue := strings.Cut(entry, "=")
+		if !dotenv.CanExport(name) {
+			return fmt.Errorf("invalid environment variable setting '%s', expected NAME=value or NAME with a shell variable name", entry)
+		}
+		if !hasValue {
+			if value, hasValue = os.LookupEnv(name); !hasValue {
+				util.Warning("Not passing %s, it is not set on the host", name)
+				continue
+			}
+		}
+		env[name] = value
+	}
+	return nil
+}
+
+// addWebEnvironment adds entries to existing, replacing an entry with the
+// same name, and returns them sorted.
+func addWebEnvironment(existing []string, entries []string) []string {
+	if len(entries) == 0 {
+		return existing
+	}
+	merged := util.MergeEnv(existing, entries)
+	slices.Sort(merged)
+	return merged
 }
 
 // prettyCmd formats the Docker command to be more readable.

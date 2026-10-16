@@ -1235,3 +1235,30 @@ func TestGlobalConfigOmitProjectNameDefault(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(globalconfig.DdevGlobalConfig.OmitProjectNameByDefault)
 }
+
+// TestAddWebEnvironment tests that --web-environment-add replaces an entry
+// with the same name instead of keeping both, see #4959
+func TestAddWebEnvironment(t *testing.T) {
+	existing := []string{"SOME_VERSION=2.0", "KEEP=1", "BARE"}
+	got := addWebEnvironment(existing, []string{"SOME_VERSION=3.0"})
+	require.Equal(t, []string{"BARE", "KEEP=1", "SOME_VERSION=3.0"}, got)
+	got = addWebEnvironment(got, []string{"SOME_VERSION=1.0", "NEW=x"})
+	require.Equal(t, []string{"BARE", "KEEP=1", "NEW=x", "SOME_VERSION=1.0"}, got)
+	got = addWebEnvironment(got, []string{"BARE=now-set"})
+	require.Equal(t, []string{"BARE=now-set", "KEEP=1", "NEW=x", "SOME_VERSION=1.0"}, got)
+	require.Equal(t, got, addWebEnvironment(got, nil))
+}
+
+func TestAddEnvironmentFlag(t *testing.T) {
+	t.Setenv("DDEV_TEST_HOST_VALUE", "from-host")
+	env := map[string]string{"KEEP": "1", "OVERRIDE": "old"}
+	err := addEnvironmentFlag(env, []string{"OVERRIDE=new,TOKEN=abc==,LIST=a,b", "URL=https://x?a=1&b=2", "", "DDEV_TEST_HOST_VALUE,DDEV_TEST_UNSET_VALUE"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"KEEP": "1", "OVERRIDE": "new", "TOKEN": "abc==", "LIST": "a,b", "URL": "https://x?a=1&b=2", "DDEV_TEST_HOST_VALUE": "from-host"}, env)
+
+	for _, invalid := range []string{"=value", "my-var=x", "1ABC=x", "UID=1000"} {
+		require.ErrorContains(t, addEnvironmentFlag(env, []string{invalid}), invalid)
+	}
+	require.NoError(t, addEnvironmentFlag(env, []string{"METHODS=GET,POST"}))
+	require.Equal(t, "GET,POST", env["METHODS"])
+}
