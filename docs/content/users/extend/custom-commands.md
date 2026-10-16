@@ -124,6 +124,8 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_XHGUI_HTTPS_PORT`: Router XHGui port for HTTPS
 * `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, `generic`
 
+With DDEV v1.25.5+, host scripts also get the variables from `.ddev/.env`, `.ddev/.env.local`, and their [global equivalents](../configuration/environment-variables.md#global-env-files), unless the variable is already set in your shell.
+
 Useful variables for container scripts are:
 
 * `DDEV_APPROOT`: Absolute path to the project files within the web container

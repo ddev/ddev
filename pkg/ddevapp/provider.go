@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/dotenv"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/output"
@@ -471,18 +472,13 @@ func (p *Provider) Validate() error {
 	return nil
 }
 
-// injectedEnvironment() returns a string with environment variables that should be injected
-// before a command.
+// injectedEnvironment returns the bash exports to run before a provider
+// command, see dotenv.ShellExportsWithExpansion.
 func (p *Provider) injectedEnvironment() string {
-	s := "true"
-	if len(p.EnvironmentVariables) > 0 {
-		s = "export"
-		for k, v := range p.EnvironmentVariables {
-			v = strings.ReplaceAll(v, " ", `\ `)
-			s = s + fmt.Sprintf(" %s=%s ", k, v)
-		}
+	if exports := dotenv.ShellExportsWithExpansion(p.EnvironmentVariables); exports != "" {
+		return exports
 	}
-	return s
+	return "true"
 }
 
 // GetInfo returns a human-readable description of the provider's target environment.

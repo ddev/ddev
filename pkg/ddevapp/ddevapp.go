@@ -2948,6 +2948,11 @@ func runHostCommandWithCapturedOutput(app *DdevApp, cmd string) error {
 	}
 
 	_ = app.DockerEnv()
+	unsetEnv, err := app.SetHostEnvFromFiles()
+	if err != nil {
+		return err
+	}
+	defer unsetEnv()
 	// Interactive: these commands prompt for ssh passphrases and print
 	// transfer progress, so they keep stdin and a live terminal.
 	out, err := exec.RunInteractiveCommandWithCapture(bashPath, []string{"-c", cmd})

@@ -99,6 +99,14 @@ func ShellExports(values map[string]string) string {
 	return shellExports(values, shellQuote)
 }
 
+// ShellExportsWithExpansion is ShellExports for values read as the inside of
+// a bash double-quoted string, such as provider environment_variables:
+// $VAR, ${VAR}, $(cmd) and a leading ~ expand where the script runs, \ escapes
+// $ and \, and other characters, quotes and backticks included, are literal.
+func ShellExportsWithExpansion(values map[string]string) string {
+	return shellExports(values, shellDoubleQuote)
+}
+
 func shellExports(values map[string]string, quote func(string) string) string {
 	var lines []string
 	for _, name := range slices.Sorted(maps.Keys(values)) {
@@ -113,4 +121,63 @@ func shellExports(values map[string]string, quote func(string) string) string {
 // shellQuote single-quotes s for bash and sh, which read it back unchanged.
 func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+// shellDoubleQuote double-quotes s, escaping " and backticks unless s
+// already escapes them; a $(...) is copied as written, since quotes inside
+// it start a new context. A leading ~ or ~/ stays unquoted, because bash only
+// expands a tilde with no quote before the first slash.
+func shellDoubleQuote(s string) string {
+	if s == "~" {
+		return s
+	}
+	tilde := ""
+	if strings.HasPrefix(s, "~/") {
+		tilde, s = "~/", s[2:]
+	}
+	var b strings.Builder
+	backslashes := 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		escaped := backslashes%2 == 1
+		if c == '$' && !escaped && strings.HasPrefix(s[i+1:], "(") {
+			end := commandSubstitutionEnd(s, i+1)
+			b.WriteString(s[i:end])
+			i, backslashes = end-1, 0
+			continue
+		}
+		if (c == '"' || c == '`') && !escaped {
+			b.WriteByte('\\')
+		}
+		if c == '\\' {
+			backslashes++
+		} else {
+			backslashes = 0
+		}
+		b.WriteByte(c)
+	}
+	// A trailing lone backslash would escape the closing quote
+	if backslashes%2 == 1 {
+		b.WriteByte('\\')
+	}
+	return tilde + `"` + b.String() + `"`
+}
+
+// commandSubstitutionEnd returns the index after the ) that closes the ( at
+// open, or len(s) when it is unbalanced.
+func commandSubstitutionEnd(s string, open int) int {
+	depth := 0
+	for i := open; i < len(s); i++ {
+		switch s[i] {
+		case '\\':
+			i++
+		case '(':
+			depth++
+		case ')':
+			if depth--; depth == 0 {
+				return i + 1
+			}
+		}
+	}
+	return len(s)
 }

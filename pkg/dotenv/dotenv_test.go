@@ -93,6 +93,54 @@ func TestShellExports(t *testing.T) {
 	}
 }
 
+func TestShellExportsWithExpansion(t *testing.T) {
+	t.Setenv("DOTENV_TEST_VAR", "from-env")
+	home, err := exec.Command(util.FindBashPath(), "-c", `printf '%s' "$HOME"`).Output()
+	require.NoError(t, err)
+
+	tests := map[string]struct{ value, want string }{
+		"PLAIN":          {"plain", "plain"},
+		"SPACES":         {"two  words", "two  words"},
+		"SHELL_OPS":      {")a;b&c|d<e>f(", ")a;b&c|d<e>f("},
+		"SQUOTE":         {"it's", "it's"},
+		"DQUOTE":         {`say "hi"`, `say "hi"`},
+		"ESCAPED_DQUOTE": {`say \"hi\"`, `say "hi"`},
+		"BACKTICK":       {"a`id`b", "a`id`b"},
+		"WINDOWS_PATH":   {`C:\path\to`, `C:\path\to`},
+		"TRAILING_BS":    {`ends with \`, `ends with \`},
+		"NEWLINE":        {"line1\nline2", "line1\nline2"},
+		"VAR":            {"$DOTENV_TEST_VAR/x", "from-env/x"},
+		"BRACED_VAR":     {"${DOTENV_TEST_VAR}-x", "from-env-x"},
+		"DEFAULT":        {"${DOTENV_TEST_UNSET:-def}", "def"},
+		"ESCAPED_DOLLAR": {`\$DOTENV_TEST_VAR`, "$DOTENV_TEST_VAR"},
+		"SUBSHELL":       {"$(echo sub)", "sub"},
+		"SUBSHELL_QUOTE": {`$(echo "x y") "z"`, `x y "z"`},
+		"SUBSHELL_NEST":  {`a$(echo "$(echo in)")b`, "ainb"},
+		"ARITHMETIC":     {"$((2+3))", "5"},
+		"UNC_PATH":       {`\\server\share`, `\server\share`},
+		"TILDE":          {"~", string(home)},
+		"TILDE_PATH":     {"~/tmp/repo", string(home) + "/tmp/repo"},
+		"TILDE_INSIDE":   {"a~b ~/x", "a~b ~/x"},
+		"EMPTY":          {"", ""},
+	}
+	values := map[string]string{}
+	for name, tc := range tests {
+		values[name] = tc.value
+	}
+	names := slices.Sorted(maps.Keys(values))
+	script := dotenv.ShellExportsWithExpansion(values) + "\nprintf '%s\\0'"
+	for _, name := range names {
+		script += ` "$` + name + `"`
+	}
+	out, err := exec.Command(util.FindBashPath(), "-c", script).Output()
+	require.NoError(t, err, "script=%s", script)
+	got := strings.Split(strings.TrimSuffix(string(out), "\x00"), "\x00")
+	require.Len(t, got, len(names))
+	for i, name := range names {
+		require.Equal(t, tests[name].want, got[i], "value of %s", name)
+	}
+}
+
 func TestShellExportsSorted(t *testing.T) {
 	require.Equal(t, "export A='1'\nexport B='2'", dotenv.ShellExports(map[string]string{"B": "2", "A": "1"}))
 	require.Empty(t, dotenv.ShellExports(nil))

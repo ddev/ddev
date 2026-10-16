@@ -112,6 +112,30 @@ func (app *DdevApp) envFileNamesForTarget(target string) ([]string, error) {
 	return dotenv.ReadNames(filterEnvFilesForTarget(envFiles, target)...)
 }
 
+// SetHostEnvFromFiles sets the values of the env files that target every
+// service, .env and .env.local, global ones included, on DDEV's own process,
+// so host commands it starts inherit them. As in compose, a variable already
+// set on the host keeps its value. The returned function unsets them again,
+// so another project handled by the same ddev run does not see them.
+func (app *DdevApp) SetHostEnvFromFiles() (unset func(), err error) {
+	values, err := app.ReadEnvFilesForTarget("")
+	if err != nil {
+		return func() {}, err
+	}
+	var names []string
+	for name, value := range values {
+		if _, set := os.LookupEnv(name); !set {
+			_ = os.Setenv(name, value)
+			names = append(names, name)
+		}
+	}
+	return func() {
+		for _, name := range names {
+			_ = os.Unsetenv(name)
+		}
+	}, nil
+}
+
 // ReadProjectEnvFile reads an env file, returning its values and its text.
 // ${VAR} references resolve the way dotenv.ReadFiles resolves them. The map
 // is never nil, so a caller can fill it in when the file does not exist yet.

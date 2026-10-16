@@ -61,6 +61,8 @@ A trailing `.local` only marks the file as gitignored, and a label after the ser
 
 Every one of these files is also passed to `docker-compose config`, whatever it is named, so `${SOME_VARIABLE}` in a `.ddev/docker-compose.*.yaml` file is expanded from all of them together. That is the point of the `.ddev/.env.redis-build` row above: when a variable is only meant to be substituted into a compose file, give the file a name that is not a service name and it will never appear inside a container.
 
+With DDEV v1.25.5+, `.ddev/.env`, `.ddev/.env.local`, and their global equivalents also reach commands DDEV runs on the host: [host custom commands](../extend/custom-commands.md), `exec-host` [hooks](hooks.md), and [provider](../providers/index.md) commands with `service: host`. A variable already set in your shell keeps its value there.
+
 ### How Values Are Read
 
 With DDEV v1.25.5+, DDEV reads these files the same way `docker-compose` does, so a value is the same in a container, in an add-on action, and in `${SOME_VARIABLE}` in a compose file:
