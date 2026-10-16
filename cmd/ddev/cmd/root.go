@@ -12,6 +12,7 @@ import (
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/tui"
@@ -165,6 +166,7 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 func Execute() {
 	Setup()
 	if err := RootCmd.Execute(); err != nil {
+		interrupt.WaitIfExiting()
 		os.Exit(-1)
 	}
 }

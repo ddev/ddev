@@ -755,8 +755,11 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 	}
 
 	if removeContainerAfterRun {
-		// nolint: errcheck
-		defer RemoveContainer(c.ID)
+		untrack := trackContainer(c.ID)
+		defer func() {
+			_ = RemoveContainer(c.ID)
+			untrack()
+		}()
 	}
 
 	var hijackedResp *client.HijackedResponse
@@ -1325,7 +1328,7 @@ func setupRawTerminal() (restore func(), err error) {
 		return nil, fmt.Errorf("failed to set stdout to raw mode: %v", err)
 	}
 
-	restore = func() {
+	restoreTerminal := func() {
 		if stdinState != nil {
 			_ = term.RestoreTerminal(os.Stdin.Fd(), stdinState)
 		}
@@ -1333,6 +1336,10 @@ func setupRawTerminal() (restore func(), err error) {
 			_ = term.RestoreTerminal(os.Stdout.Fd(), stdoutState)
 		}
 	}
+	untrack := trackRawTerminal(restoreTerminal)
 
-	return restore, nil
+	return func() {
+		untrack()
+		restoreTerminal()
+	}, nil
 }

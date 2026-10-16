@@ -15,6 +15,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -122,6 +123,8 @@ ddev share myproject`,
 		// Set up signal handling for SIGINT/SIGTERM
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+		releaseInterrupt := interrupt.Delegate(os.Interrupt, syscall.SIGTERM)
+		defer releaseInterrupt()
 
 		// Start provider
 		err = providerCmd.Start()
