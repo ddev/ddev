@@ -183,7 +183,7 @@ func StartDdevRouter() error {
 			return fmt.Errorf("failed to start ddev-router: %v", err)
 		}
 	} else {
-		output.UserOut.Printf("%s already running, pushing new config...", nodeps.RouterContainer)
+		util.Debug("%s already running, pushing new config", nodeps.RouterContainer)
 
 		// Update network aliases in place rather than recreating the container.
 		// Starting any project with a new hostname changes the router's aliases,
@@ -236,7 +236,7 @@ func StartDdevRouter() error {
 		}
 	}
 
-	util.Debug("Getting traefik error output")
+	util.Verbose("Getting traefik error output")
 	traefikErr := GetRouterConfigErrors()
 	if traefikErr != "" {
 		util.Warning("Warning: There are router configuration problems:\n%s", traefikErr)
@@ -475,7 +475,7 @@ func ClearRouterHealthcheck() error {
 		return nil
 	}
 
-	util.Debug("Forcing router healthcheck to clear status")
+	util.Verbose("Forcing router healthcheck to clear status")
 	uid, _, _ := dockerutil.GetContainerUser()
 	_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy /tmp/ddev-traefik-errors.txt && /healthcheck.sh", uid)
 	if err != nil {
@@ -798,7 +798,7 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	var routerPortsAlreadyBound []string
 	r, err := FindDdevRouter()
 	if r != nil && err == nil && r.State == "running" {
-		util.Debug("GetAvailableRouterPort(): Router exists, checking bound ports")
+		util.Verbose("GetAvailableRouterPort(): Router exists, checking bound ports")
 		// Check if the proposedPort is already being handled by the router.
 		routerPortsAlreadyBound, err = dockerutil.GetBoundHostPorts(r.ID)
 		if err != nil {
@@ -807,7 +807,7 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 		} else if nodeps.ArrayContainsString(routerPortsAlreadyBound, proposedPort) {
 			// If the proposedPort is already bound by the router,
 			// there's no need to go find a substitute port.
-			util.Debug("GetAvailableRouterPort(): proposedPort %s already bound on ddev-router, accepting it", proposedPort)
+			util.Verbose("GetAvailableRouterPort(): proposedPort %s already bound on ddev-router, accepting it", proposedPort)
 			return proposedPort, "", false
 		}
 	}
@@ -823,7 +823,7 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 			return proposedPort, substitutePort, true
 		}
 		// If the proposedPort is available (not active) for use, just have the router use it
-		util.Debug("GetAvailableRouterPort(): proposedPort %s is available, use proposedPort=%s", proposedPort, proposedPort)
+		util.Verbose("GetAvailableRouterPort(): proposedPort %s is available, use proposedPort=%s", proposedPort, proposedPort)
 		return proposedPort, "", false
 	}
 

@@ -24,7 +24,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	}
 
 	if !globalconfig.IsInteractive() {
-		util.Warning("Not trying to add hostnames to hosts file because DDEV_NONINTERACTIVE=true")
+		util.Verbose("Not trying to add hostnames to hosts file because DDEV_NONINTERACTIVE=true")
 		return nil
 	}
 
@@ -82,7 +82,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 // where needed.
 func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 	if !globalconfig.IsInteractive() {
-		util.Warning("Not trying to remove hostnames from hosts file because DDEV_NONINTERACTIVE=true")
+		util.Verbose("Not trying to remove hostnames from hosts file because DDEV_NONINTERACTIVE=true")
 		return nil
 	}
 

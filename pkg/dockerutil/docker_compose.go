@@ -63,8 +63,9 @@ func NewComposeServiceWithStreams(stdout, stderr io.Writer) (context.Context, ap
 		ep = display.Full(stdout, stderr, false)
 	case output.JSONOutput:
 		ep = display.Plain(&output.JSONProgressWriter{})
-	case globalconfig.DdevDebug:
-		// Explicit opt-in to full per-layer progress verbosity even without a terminal.
+	case globalconfig.DdevVerbose:
+		// Per-layer progress is opt-in through DDEV_VERBOSE, not DDEV_DEBUG,
+		// because CI runs with DDEV_DEBUG and would drown in pull ticks.
 		ep = display.Plain(output.UserErr.Out)
 	default:
 		// Non-interactive output (CI, coder.ddev.com, piped output) with display.Plain
@@ -82,21 +83,29 @@ func NewComposeServiceWithStreams(stdout, stderr io.Writer) (context.Context, ap
 	return dm.goContext, svc, err
 }
 
-// quietEventProcessor implements api.EventProcessor, reporting only the final
-// Done/Error/Warning status of each top-level resource (an image pull, a
-// container, ...) and suppressing the per-layer sub-events (ParentID set)
-// that account for most of display.Plain's output volume.
+// quietEventProcessor implements api.EventProcessor for non-interactive
+// output. It drops per-layer sub-events (ParentID set) and in-progress
+// states, prints Error/Warning at once, and collects Done states into one
+// line per kind and status at the end of each operation, for example
+// "Container Stopped: ddev-d11-web, ddev-d11-db".
 type quietEventProcessor struct {
 	out      io.Writer
 	mu       sync.Mutex
 	reported map[string]bool
+	// pending holds Done names per "<kind> <status>" key, in arrival order.
+	pending     map[string][]string
+	pendingKeys []string
 }
 
 func newQuietEventProcessor(out io.Writer) *quietEventProcessor {
-	return &quietEventProcessor{out: out, reported: map[string]bool{}}
+	return &quietEventProcessor{out: out, reported: map[string]bool{}, pending: map[string][]string{}}
 }
 
-func (q *quietEventProcessor) Start(_ context.Context, _ string) {}
+func (q *quietEventProcessor) Start(_ context.Context, _ string) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.flush()
+}
 
 func (q *quietEventProcessor) On(events ...api.Resource) {
 	q.mu.Lock()
@@ -107,16 +116,43 @@ func (q *quietEventProcessor) On(events ...api.Resource) {
 		}
 		switch e.Status {
 		case api.Done, api.Error, api.Warning:
-			if q.reported[e.ID] {
+			// A resource passes through several final states in one
+			// operation (Created, then Started), so dedupe on both.
+			if q.reported[e.ID+"\x00"+e.Text] {
 				continue
 			}
-			q.reported[e.ID] = true
-			_, _ = fmt.Fprintln(q.out, e.ID, e.Text, e.Details)
+			q.reported[e.ID+"\x00"+e.Text] = true
+			if e.Status != api.Done || e.Details != "" {
+				_, _ = fmt.Fprintln(q.out, e.ID, e.Text, e.Details)
+				continue
+			}
+			kind, name, found := strings.Cut(e.ID, " ")
+			if !found {
+				kind, name = "", e.ID
+			}
+			key := strings.TrimSpace(kind + " " + e.Text)
+			if _, ok := q.pending[key]; !ok {
+				q.pendingKeys = append(q.pendingKeys, key)
+			}
+			q.pending[key] = append(q.pending[key], name)
 		}
 	}
 }
 
-func (q *quietEventProcessor) Done(_ string, _ bool) {}
+func (q *quietEventProcessor) Done(_ string, _ bool) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.flush()
+}
+
+// flush prints and clears the collected Done lines; callers hold q.mu.
+func (q *quietEventProcessor) flush() {
+	for _, key := range q.pendingKeys {
+		_, _ = fmt.Fprintf(q.out, "%s: %s\n", key, strings.Join(q.pending[key], ", "))
+	}
+	q.pending = map[string][]string{}
+	q.pendingKeys = nil
+}
 
 // ExitCodeToError converts the (exitCode, err) return of api.Compose.Exec /
 // RunOneOffContainer into a single error usable with errors.As(&cli.StatusError{}).
@@ -288,7 +324,7 @@ func PullImages(images []types.ServiceConfig, pullAlways bool) error {
 	}
 
 	if len(pulls) == 0 {
-		util.Debug("All images already exist locally, no pull needed")
+		util.Verbose("All images already exist locally, no pull needed")
 		return nil
 	}
 

@@ -265,7 +265,7 @@ func (app *DdevApp) SeedDescription(seed *SeedSnapshot) string {
 // matches reality.
 func (app *DdevApp) announceBaseDBSeed(description string, maxWaitTime int) {
 	util.Success("Initializing new database volume from %s...", description)
-	util.Success("With a large database this may take a long time.\nThis may time out after %d seconds \nbut you can increase it by changing default_container_timeout.", maxWaitTime)
+	util.Success("A large database may take a while; the %ds timeout is set by default_container_timeout.", maxWaitTime)
 	output.UserOut.Printf("You can follow the progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
 }
 
