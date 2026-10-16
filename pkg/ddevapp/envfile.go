@@ -136,21 +136,6 @@ func (app *DdevApp) SetHostEnvFromFiles() (unset func(), err error) {
 	}, nil
 }
 
-// ReadProjectEnvFile reads an env file, returning its values and its text.
-// ${VAR} references resolve the way dotenv.ReadFiles resolves them. The map
-// is never nil, so a caller can fill it in when the file does not exist yet.
-func ReadProjectEnvFile(envFilePath string) (envMap map[string]string, envText string, err error) {
-	envText, err = ReadEnvFileText(envFilePath)
-	if err != nil {
-		return map[string]string{}, "", err
-	}
-	envMap, err = dotenv.Parse(envFilePath, envText, os.LookupEnv)
-	if err != nil {
-		return map[string]string{}, envText, err
-	}
-	return envMap, envText, nil
-}
-
 // ReadEnvFileText returns the text of an env file without parsing it, for
 // writers that edit an application's own .env, which compose never reads.
 func ReadEnvFileText(envFilePath string) (string, error) {

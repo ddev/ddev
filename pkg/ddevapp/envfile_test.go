@@ -100,6 +100,16 @@ func TestEnvValuesInContainerAndPHP(t *testing.T) {
 	}
 }
 
+// readAppEnvFile reads an application .env the way ddev dotenv get does.
+func readAppEnvFile(t *testing.T, path string) (map[string]string, string) {
+	t.Helper()
+	text, err := ddevapp.ReadEnvFileText(path)
+	require.NoError(t, err)
+	values, err := dotenv.ParseLiteral(path, text)
+	require.NoError(t, err)
+	return values, text
+}
+
 func TestWriteProjectEnvFile(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -120,9 +130,7 @@ func TestWriteProjectEnvFile(t *testing.T) {
 		_ = os.RemoveAll(appEnvFile)
 		err = fileutil.CopyFile(envFileName, appEnvFile)
 		require.NoError(t, err)
-		readEnvMap, readEnvText, err := ddevapp.ReadProjectEnvFile(appEnvFile)
-		require.NoError(t, err)
-		_ = readEnvMap
+		readEnvMap, readEnvText := readAppEnvFile(t, appEnvFile)
 
 		// Override with some new items
 		writeEnvMap := map[string]string{
@@ -136,8 +144,7 @@ func TestWriteProjectEnvFile(t *testing.T) {
 		err = ddevapp.WriteProjectEnvFile(appEnvFile, writeEnvMap, readEnvText)
 		require.NoError(t, err)
 
-		postWriteEnvMap, postWriteEnvText, err := ddevapp.ReadProjectEnvFile(appEnvFile)
-		require.NoError(t, err)
+		postWriteEnvMap, postWriteEnvText := readAppEnvFile(t, appEnvFile)
 
 		// Make sure that the values we intended to change got changed
 		for k := range writeEnvMap {
