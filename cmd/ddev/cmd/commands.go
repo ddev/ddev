@@ -335,7 +335,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			// host; a Windows path is not useful here.
 			containerBasePath := path.Join("/mnt/ddev_config", filepath.Base(filepath.Dir(serviceDirOnHost)), service)
 			if strings.HasPrefix(serviceDirOnHost, globalconfig.GetGlobalDdevDir()) {
-				containerBasePath = path.Join("/mnt/ddev-global-cache/global-commands/", service)
+				containerBasePath = path.Join(ddevapp.GlobalCommandsContainerDir, service)
 			}
 			inContainerFullPath := path.Join(containerBasePath, commandName)
 			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative, mutagenSync)

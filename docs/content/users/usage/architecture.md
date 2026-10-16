@@ -214,14 +214,13 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 ## The `ddev-global-cache` Volume
 
-`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web`, `db`, and `ddev-router` containers use it, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
+`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web`, `db`, and `ddev-router` containers use it, and custom services can mount it too. Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
 
 | Directory | Scope | Contents |
 | --- | --- | --- |
 | `bashhistory/<project>-db`, `bashhistory/<project>-web` | Per project | Bash history |
 | `composer` | Shared | Composer cache |
 | `corepack` | Shared | Package managers installed by `corepack` |
-| `global-commands` | Shared | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
 | `mkcert` | Shared | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
 | `mysqlhistory/<project>-db`, `mysqlhistory/<project>-web` | Per project | MySQL client history |
 | `n_prefix/<project>-web` | Per project | Node.js versions downloaded by `n` |

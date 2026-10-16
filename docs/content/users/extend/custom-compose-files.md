@@ -202,7 +202,6 @@ services:
       - .:/mnt/ddev_config
       # `ddev-global-cache` gets mounted so we have the CAROOT
       # This is required so that the CA is available for `mkcert` to install
-      # and for custom commands to work
       - ddev-global-cache:/mnt/ddev-global-cache
 ```
 
@@ -255,7 +254,6 @@ services:
     user: "${DDEV_UID}:${DDEV_GID}"
     volumes:
       - .:/mnt/ddev_config
-      - ddev-global-cache:/mnt/ddev-global-cache
       # Mount the project root to /var/www/html inside the container
       - ../:/var/www/html
 ```
@@ -286,7 +284,6 @@ services:
     user: "${DDEV_UID}:${DDEV_GID}"
     volumes:
       - .:/mnt/ddev_config
-      - ddev-global-cache:/mnt/ddev-global-cache
       # Mount the project root to /var/www/html inside the container
       - ../:/var/www/html
 ```

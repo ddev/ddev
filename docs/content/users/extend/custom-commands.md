@@ -40,11 +40,12 @@ open -a PhpStorm.app ${DDEV_APPROOT}
 
 To provide a command which will execute in a container, add a Bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The Bash script will be executed inside the named container. For example, see the [several standard DDEV script-based web container commands](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/web).
 
-You can run commands in custom containers as well as standard DDEV `web` and `db` containers. Use the service name, like `.ddev/commands/solr/<command>`. The only catch with a custom container is that your service must mount `/mnt/ddev-global-cache` like the `web` and `db` containers do; the `volumes` section of `docker-compose.<servicename>.yaml` needs:
+You can run commands in custom containers as well as standard DDEV `web` and `db` containers. Use the service name, like `.ddev/commands/solr/<command>`. The only catch with a custom container is that DDEV finds it by the container name `ddev-<project>-<service>`, and runs project commands from the project’s `.ddev` directory mounted at `/mnt/ddev_config`, like the `web` and `db` containers do. The service in `docker-compose.<servicename>.yaml` needs:
 
 ```
+    container_name: ddev-${DDEV_SITENAME}-solr
     volumes:
-      - ddev-global-cache:/mnt/ddev-global-cache
+      - .:/mnt/ddev_config
 ```
 
 For example, to add a `solrtail` command that runs in a Solr service, add `.ddev/commands/solr/solrtail` with:
@@ -61,9 +62,9 @@ tail -f /opt/solr/server/logs/solr.log
 
 ## Global Commands
 
-Global commands work exactly the same as project-level commands, but they need to go in your *global* `.ddev` directory. Your home directory has a `.ddev/commands` in it, where you can add host, web, or db commands.
+Global commands work exactly the same as project-level commands, but they need to go in your *global* `.ddev` directory. Your home directory has a `.ddev/commands` in it, where you can add host, web, or db commands, or commands for a custom service.
 
-Changes to the command files in the global `.ddev` directory need a `ddev start` for changes to be picked up by a project, as the global commands are copied to the project on start.
+[`ddev start`](../usage/commands.md#start) copies the global `.ddev/commands` directory, without `host`, into every project container whose service name has a directory there. Changes to global container commands need a `ddev start` or [`ddev utility fix-commands`](../usage/commands.md#utility-fix-commands) before a project picks them up.
 
 ## Shell Command Examples
 

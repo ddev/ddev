@@ -30,15 +30,15 @@ path_append "/usr/local/n/bin"
 # Add /var/www/html/bin as the next-to-last item to the $PATH.
 path_append "/var/www/html/bin"
 
-# Add /mnt/ddev-global-cache/global-commands/web as a fallback for commands like `xdebug on`,
+# Add /usr/local/lib/ddev/global-commands/web as a fallback for commands like `xdebug on`,
 # but drop it when this shell is running a script from that dir, so a wrapper calling a
 # same-named binary (e.g. yarn -> `yarn "$@"`) doesn't recurse into itself.
 case "$0" in
-  /mnt/ddev-global-cache/global-commands/web/*)
-    path_remove "/mnt/ddev-global-cache/global-commands/web"
+  /usr/local/lib/ddev/global-commands/web/*)
+    path_remove "/usr/local/lib/ddev/global-commands/web"
     ;;
   *)
-    path_append "/mnt/ddev-global-cache/global-commands/web"
+    path_append "/usr/local/lib/ddev/global-commands/web"
     ;;
 esac
 
