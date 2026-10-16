@@ -467,6 +467,11 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string, mutagenSync bool) 
 		// Load environment variables that may be useful for script.
 		if app != nil {
 			_ = app.DockerEnv()
+			unsetEnv, err := app.SetHostEnvFromFiles("")
+			if err != nil {
+				util.Failed("Failed to read env files for %s: %v", name, err)
+			}
+			defer unsetEnv()
 		}
 
 		runMutagenSync(app, mutagenSync)

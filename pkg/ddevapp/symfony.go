@@ -90,7 +90,7 @@ func symfonyPostStartAction(app *DdevApp) error {
 
 	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env.local")
 	// won't throw any error here, as it will be created anyway
-	_, envText, _ := ReadProjectEnvFile(envFilePath)
+	envText, _ := ReadEnvFileText(envFilePath)
 
 	envMap := make(map[string]string)
 

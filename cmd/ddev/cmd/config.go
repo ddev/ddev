@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -125,7 +124,8 @@ var (
 	// shareProviderArgs provides additional args to the share provider
 	shareProviderArgs string
 
-	webEnvironmentLocal string
+	webEnvironmentLocal    []string
+	webEnvironmentAddLocal []string
 
 	// ddevVersionConstraint sets a ddev version constraint to validate the ddev against
 	ddevVersionConstraint string
@@ -251,8 +251,8 @@ func registerConfigCmd() {
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", `Comma-delimited list of project FQDNs or --additional-fqdns="" to remove any configured FQDNs`)
 	ConfigCommand.Flags().StringVar(&omitContainersArg, "omit-containers", "", "Comma-delimited list of container types that should not be started when the project is started")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("omit-containers", configCompletionFuncWithCommas(nodeps.GetValidOmitContainers()))
-	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment", "", `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval" or --web-environment="" to remove any previously configured values`)
-	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment-add", "", `Append environment variables to the web container: --web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
+	ConfigCommand.Flags().StringArrayVar(&webEnvironmentLocal, "web-environment", nil, webEnvironmentUsage)
+	ConfigCommand.Flags().StringArrayVar(&webEnvironmentAddLocal, "web-environment-add", nil, webEnvironmentAddUsage)
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the .ddev/config.yaml file if it exists, or error that it doesn't exist")
 	ConfigCommand.Flags().StringSlice("upload-dirs", []string{}, `Set the project's upload directories, the destination directories of the 'ddev import-files' command, or --upload-dirs="" to remove previously configured values`)
 	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", nodeps.WebserverDefault, fmt.Sprintf("Set the project's desired webserver type: %s", strings.Join(nodeps.GetValidWebserverTypes(), "/")))
@@ -573,31 +573,11 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp, 
 	app.OmitContainers = processFlag(cmd, "omit-containers", app.OmitContainers)
 
 	if cmd.Flag("web-environment").Changed {
-		env := strings.TrimSpace(webEnvironmentLocal)
-		if env == "" || env == `""` || env == `''` {
-			app.WebEnvironment = []string{}
-		} else {
-			app.WebEnvironment = strings.Split(env, ",")
-		}
+		app.WebEnvironment = util.EnvFlagEntries(webEnvironmentLocal)
 	}
 
 	if cmd.Flag("web-environment-add").Changed {
-		env := strings.TrimSpace(webEnvironmentLocal)
-		if env != "" {
-			envspl := strings.Split(env, ",")
-			conc := append(app.WebEnvironment, envspl...)
-			// Convert to a hashmap to remove duplicate values.
-			hashmap := make(map[string]string)
-			for i := range conc {
-				hashmap[conc[i]] = conc[i]
-			}
-			keys := []string{}
-			for key := range hashmap {
-				keys = append(keys, key)
-			}
-			app.WebEnvironment = keys
-			sort.Strings(app.WebEnvironment)
-		}
+		app.WebEnvironment = addWebEnvironment(app.WebEnvironment, util.EnvFlagEntries(webEnvironmentAddLocal))
 	}
 
 	if cmd.Flag("webimage-extra-packages").Changed {

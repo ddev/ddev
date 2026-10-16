@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
@@ -111,6 +112,62 @@ func TestEnvFilesGlobalAndProject(t *testing.T) {
 	dbEnv, err := app.ReadEnvFilesForTarget("db")
 	require.NoError(t, err)
 	require.Equal(t, map[string]string{"SHARED": "project", "GLOBALONLY": "yes"}, dbEnv)
+}
+
+// TestSetHostEnvFromFiles tests that host commands get the env files that
+// target every service, without overriding variables the host already sets
+func TestSetHostEnvFromFiles(t *testing.T) {
+	t.Setenv("DDEV_XDG_CONFIG_HOME", t.TempDir())
+	t.Setenv("DDEV_TEST_HOST_SET", "from-host")
+	for _, name := range []string{"DDEV_TEST_FROM_ENV", "DDEV_TEST_FROM_LOCAL", "DDEV_TEST_WEB_ONLY"} {
+		t.Setenv(name, "")
+		require.NoError(t, os.Unsetenv(name))
+	}
+	app := &DdevApp{Name: t.Name(), AppRoot: t.TempDir()}
+	require.NoError(t, os.MkdirAll(app.AppConfDir(), 0755))
+	write := func(name, contents string) {
+		require.NoError(t, os.WriteFile(filepath.Join(app.AppConfDir(), name), []byte(contents), 0644))
+	}
+	write(".env", "DDEV_TEST_FROM_ENV='a b) c'\nDDEV_TEST_HOST_SET=from-file\n")
+	write(".env.local", "DDEV_TEST_FROM_LOCAL=local\n")
+	write(".env.web", "DDEV_TEST_WEB_ONLY=web\n")
+
+	unsetEnv, err := app.SetHostEnvFromFiles("")
+	require.NoError(t, err)
+	require.Equal(t, "a b) c", os.Getenv("DDEV_TEST_FROM_ENV"))
+	require.Equal(t, "local", os.Getenv("DDEV_TEST_FROM_LOCAL"))
+	require.Equal(t, "from-host", os.Getenv("DDEV_TEST_HOST_SET"))
+	_, set := os.LookupEnv("DDEV_TEST_WEB_ONLY")
+	require.False(t, set, ".env.web must stay with the web container")
+
+	// Another project in the same ddev run must not inherit them
+	unsetEnv()
+	_, set = os.LookupEnv("DDEV_TEST_FROM_ENV")
+	require.False(t, set)
+	require.Equal(t, "from-host", os.Getenv("DDEV_TEST_HOST_SET"))
+}
+
+// TestWriteProjectEnvFileUnchanged tests that a project-type .env update
+// rewrites the file only when its content changes
+func TestWriteProjectEnvFileUnchanged(t *testing.T) {
+	envFile := filepath.Join(t.TempDir(), ".env")
+	values := map[string]string{"DB_HOST": "db"}
+
+	// Copied from .env.example even when the example already has the values
+	require.NoError(t, WriteProjectEnvFile(envFile, values, "DB_HOST=\"db\"\n"))
+	require.FileExists(t, envFile)
+
+	past := time.Now().Add(-time.Hour).Truncate(time.Second)
+	require.NoError(t, os.Chtimes(envFile, past, past))
+	require.NoError(t, WriteProjectEnvFile(envFile, values, "DB_HOST=\"db\"\n"))
+	info, err := os.Stat(envFile)
+	require.NoError(t, err)
+	require.True(t, info.ModTime().Equal(past), "an unchanged .env must not be rewritten")
+
+	require.NoError(t, WriteProjectEnvFile(envFile, map[string]string{"DB_HOST": "db2"}, "DB_HOST=\"db\"\n"))
+	contents, err := os.ReadFile(envFile)
+	require.NoError(t, err)
+	require.Equal(t, "DB_HOST=db2\n", string(contents))
 }
 
 // TestGitIgnoreEnvFiles tests that .env.local and .env.*.local stay ignored once they exist

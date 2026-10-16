@@ -100,7 +100,7 @@ func updateCraftCMSDotEnv(app *DdevApp) (string, error) {
 	}
 
 	// Read existing env file
-	_, existingEnvText, err := ReadProjectEnvFile(envFilePath)
+	existingEnvText, err := ReadEnvFileText(envFilePath)
 	// If envFilePath doesn't exist, that's not really an error, continue
 	if err != nil && !os.IsNotExist(err) {
 		return "", err

@@ -42,3 +42,42 @@ func TestMergeEnv(t *testing.T) {
 		require.Equal(t, tc.expected, util.MergeEnv(tc.lists...), "lists=%v", tc.lists)
 	}
 }
+
+func TestEnvFlagEntries(t *testing.T) {
+	testCases := []struct {
+		flagValues []string
+		expected   []string
+	}{
+		{nil, []string{}},
+		{[]string{"", `""`, `''`, "  "}, []string{}},
+		{[]string{"A=1"}, []string{"A=1"}},
+		{[]string{"A=1,B=2"}, []string{"A=1", "B=2"}},
+		{[]string{"A=1, B=2"}, []string{"A=1", "B=2"}},
+		{[]string{"  A=1 "}, []string{"A=1"}},
+		{[]string{"A=1", "B=2,C=3"}, []string{"A=1", "B=2", "C=3"}},
+		{[]string{"TOKEN=a,b,ENV=main"}, []string{"TOKEN=a,b", "ENV=main"}},
+		{[]string{"LIST=1,2,3"}, []string{"LIST=1,2,3"}},
+		{[]string{"MSG=red, green"}, []string{"MSG=red, green"}},
+		{[]string{"DSN=a=b,c=d"}, []string{"DSN=a=b", "c=d"}},
+		{[]string{"QUERY=x?a=1&b=2,ENV=main"}, []string{"QUERY=x?a=1&b=2", "ENV=main"}},
+		{[]string{"EMPTY=,NEXT=1"}, []string{"EMPTY=", "NEXT=1"}},
+		{[]string{"TRAILING=a,"}, []string{"TRAILING=a,"}},
+		{[]string{"FOO,BAR"}, []string{"FOO", "BAR"}},
+		{[]string{"foo,bar"}, []string{"foo", "bar"}},
+		{[]string{"FOO,bar=1"}, []string{"FOO", "bar=1"}},
+		{[]string{"BAR,BAZ,FOO=a"}, []string{"BAR", "BAZ", "FOO=a"}},
+		{[]string{"METHODS=GET,POST"}, []string{"METHODS=GET,POST"}},
+		{[]string{"FOO=a", "BAR"}, []string{"FOO=a", "BAR"}},
+		{[]string{"FOO=a,b"}, []string{"FOO=a,b"}},
+		{[]string{"MODULES=Foo,Bar"}, []string{"MODULES=Foo,Bar"}},
+		{[]string{"FOO=a, BAR"}, []string{"FOO=a, BAR"}},
+		{[]string{"FOO=a,1b"}, []string{"FOO=a,1b"}},
+		{[]string{"FOO=a,,b"}, []string{"FOO=a,,b"}},
+		{[]string{"FOO=a", ",b"}, []string{"FOO=a", "b"}},
+		{[]string{"FOO,,BAR,"}, []string{"FOO", "BAR"}},
+		{[]string{"bad-name=x"}, []string{"bad-name=x"}},
+	}
+	for _, tc := range testCases {
+		require.Equal(t, tc.expected, util.EnvFlagEntries(tc.flagValues), "flagValues=%q", tc.flagValues)
+	}
+}
