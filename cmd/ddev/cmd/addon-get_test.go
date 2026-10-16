@@ -266,7 +266,7 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	busyboxEnvFile := filepath.Join(site.Dir, ".ddev/.env.busybox")
 	require.NoFileExists(t, busyboxEnvFile, ".ddev/.env.busybox file should not exist at this point")
 
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag=1.36.0", "--pre-install-variable=pre", "--pre-install-variable2=pre2", "--post-install-variable", "post", "--force-run", "--dollar-sign", `$dollar_variable`)
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag=1.36.0", "--pre-install-variable=pre", "--pre-install-variable2=pre2", "--post-install-variable", "post", "--force-run", "--dollar-sign", `$dollar_variable`, "--shell-special", `)it's "x" C:\new`)
 	require.NoError(t, err, "out=%s", out)
 	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"))
 	require.NoError(t, err, "out=%s", out)
@@ -274,6 +274,8 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.Contains(t, out, "PRE_INSTALL_VARIABLE=pre")
 	require.Contains(t, out, "PRE_INSTALL_VARIABLE2=pre2")
 	require.Contains(t, out, "POST_INSTALL_VARIABLE=post")
+	require.Contains(t, out, "DOLLAR_SIGN=$dollar_variable")
+	require.Contains(t, out, `SHELL_SPECIAL=)it's "x" C:\new`)
 
 	// .env.busybox file should exist and contain the expected environment variable
 	busyboxEnvFile = filepath.Join(site.Dir, ".ddev/.env.busybox")
@@ -283,7 +285,7 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.Contains(t, string(busyboxEnvFileContents), `BUSYBOX_TAG="1.36.0"`)
 	require.Contains(t, string(busyboxEnvFileContents), `PRE_INSTALL_VARIABLE="pre"`)
 	require.Contains(t, string(busyboxEnvFileContents), `POST_INSTALL_VARIABLE="post"`)
-	require.Contains(t, string(busyboxEnvFileContents), `DOLLAR_SIGN="\$dollar_variable"`)
+	require.Contains(t, string(busyboxEnvFileContents), `DOLLAR_SIGN='$dollar_variable'`)
 	// --force-run is converted to empty string
 	require.Contains(t, string(busyboxEnvFileContents), `FORCE_RUN=""`)
 

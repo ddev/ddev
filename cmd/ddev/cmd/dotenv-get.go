@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dotenv"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -57,8 +59,17 @@ ddev dotenv global get .ddev/.env.web.local --api-key`,
 func dotEnvGet(cmd *cobra.Command, arg string, app *ddevapp.DdevApp) {
 	envFile := dotEnvFilePath(app, arg)
 
-	// Read the .env file
-	envMap, _, err := ddevapp.ReadProjectEnvFile(envFile)
+	envText, err := ddevapp.ReadEnvFileText(envFile)
+	if err != nil {
+		util.Failed("Unable to read %s file: %v", envFile, err)
+	}
+	var envMap map[string]string
+	if isApplicationEnvFile(app, envFile) {
+		// The framework that reads an application .env has its own $ rules
+		envMap, err = dotenv.ParseLiteral(envFile, envText)
+	} else {
+		envMap, err = dotenv.Parse(envFile, envText, os.LookupEnv)
+	}
 	if err != nil {
 		util.Failed("Unable to read %s file: %v", envFile, err)
 	}
@@ -88,12 +99,20 @@ func dotEnvGet(cmd *cobra.Command, arg string, app *ddevapp.DdevApp) {
 	// Extract the environment variable name
 	envName := strings.ToUpper(strings.ReplaceAll(strings.TrimPrefix(flag, "--"), "-", "_"))
 	if val, exists := envMap[envName]; exists {
-		// Show a raw, unescaped value without double quotes.
-		// See https://stackoverflow.com/questions/50054666/golang-not-escape-a-string-variable
-		output.UserOut.Print(strings.Trim(fmt.Sprintf("%#v", val), `"`))
+		output.UserOut.Print(val)
 	} else {
 		util.Failed("The environment variable '%s' not found in %s", envName, envFile)
 	}
+}
+
+// isApplicationEnvFile reports whether envFile is a project file outside
+// .ddev/, which DDEV never passes to compose.
+func isApplicationEnvFile(app *ddevapp.DdevApp, envFile string) bool {
+	if app == nil {
+		return false
+	}
+	relPath, err := filepath.Rel(filepath.Join(app.GetAbsAppRoot(false), ".ddev"), envFile)
+	return err != nil || !filepath.IsLocal(relPath)
 }
 
 func registerDotenvGetCmd() {

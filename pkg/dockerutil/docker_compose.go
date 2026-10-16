@@ -339,6 +339,13 @@ var suppressedLogrusMessages = []string{
 	"No resource found to remove",
 }
 
+// onceLogrusMessages are substrings of messages printed only the first time
+// each distinct message appears. Compose and pkg/dotenv both interpolate the
+// same env files, once per service, so an unset ${VAR} would repeat.
+var onceLogrusMessages = []string{
+	"variable is not set. Defaulting to a blank string.",
+}
+
 // suppressLogrusFormatter wraps an underlying logrus.Formatter and returns
 // (nil, nil) for entries whose Message matches a suppressedLogrusMessages
 // substring. Returning empty bytes makes logrus's downstream Out.Write a
@@ -352,12 +359,21 @@ var suppressedLogrusMessages = []string{
 type suppressLogrusFormatter struct {
 	underlying logrus.Formatter
 	suppress   []string
+	once       []string
+	seen       sync.Map
 }
 
 func (f *suppressLogrusFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	for _, s := range f.suppress {
 		if strings.Contains(entry.Message, s) {
 			return nil, nil
+		}
+	}
+	for _, s := range f.once {
+		if strings.Contains(entry.Message, s) {
+			if _, printed := f.seen.LoadOrStore(entry.Message, true); printed {
+				return nil, nil
+			}
 		}
 	}
 	return f.underlying.Format(entry)
@@ -373,6 +389,7 @@ func setupLogrusSuppression(logger *logrus.Logger) {
 	logger.SetFormatter(&suppressLogrusFormatter{
 		underlying: logger.Formatter,
 		suppress:   suppressedLogrusMessages,
+		once:       onceLogrusMessages,
 	})
 }
 

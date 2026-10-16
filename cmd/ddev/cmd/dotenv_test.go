@@ -111,17 +111,49 @@ func TestCmdDotEnvGetAndSet(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "--test-value-with-special-characters", `Test$variable\nwith\n_new_lines`)
 	require.NoError(t, err, "out=%s", out)
 
-	// New line character `\n` should be read as it is, without a multiline
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", envFile, "--test-value-with-special-characters")
 	require.NoError(t, err, "out=%s", out)
 	require.Equal(t, out, `Test$variable\nwith\n_new_lines`+"\n")
 
-	// Double quotes should be escaped, and test setting several variables at once
+	// Test setting several variables at once
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "--my-value", `"t'h"i's`, "--another-value", "foobar")
 	require.NoError(t, err, "out=%s", out)
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", envFile, "--my-value")
 	require.NoError(t, err, "out=%s", out)
-	require.Equal(t, out, `\"t'h\"i's`+"\n")
+	require.Equal(t, out, `"t'h"i's`+"\n")
+
+	// Values are stored and printed unchanged, and setting a multi-line value
+	// again replaces all of its lines
+	specialValues := []string{`C:\new\table`, `ends with \`, "{{ .Name }}", "a)b;c`id`", "line1\nline2", "$HOME ${HOME}"}
+	for _, value := range specialValues {
+		for range 2 {
+			out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "--special-value", value)
+			require.NoError(t, err, "value=%q out=%s", value, out)
+		}
+		out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", envFile, "--special-value")
+		require.NoError(t, err, "value=%q out=%s", value, out)
+		require.Equal(t, value+"\n", out)
+	}
+
+	// A $ written by hand stays as written in an application .env, which its
+	// framework reads, and follows compose rules in .ddev/, as containers do
+	handWritten := "HAND_BASE=base\nHAND_DOLLAR=asd$HAND_BASE\nHAND_REF=\"${HAND_BASE}-x\"\n"
+	appEnvFile := filepath.Join(testDir, ".env.handwritten")
+	ddevEnvFile := filepath.Join(testDir, ".ddev", ".env.handwritten")
+	for file, want := range map[string][]string{
+		appEnvFile:  {"asd$HAND_BASE", "${HAND_BASE}-x"},
+		ddevEnvFile: {"asdbase", "base-x"},
+	} {
+		require.NoError(t, os.WriteFile(file, []byte(handWritten), 0644))
+		out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", file, "--hand-dollar")
+		require.NoError(t, err, "out=%s", out)
+		require.Equal(t, want[0]+"\n", out, "file=%s", file)
+		out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", file, "--hand-ref")
+		require.NoError(t, err, "out=%s", out)
+		require.Equal(t, want[1]+"\n", out, "file=%s", file)
+		require.NoError(t, os.Remove(file))
+	}
+
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", envFile, "--another-value")
 	require.NoError(t, err, "out=%s", out)
 	require.Equal(t, out, "foobar\n")

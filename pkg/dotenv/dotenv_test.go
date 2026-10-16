@@ -1,0 +1,154 @@
+package dotenv_test
+
+import (
+	"maps"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"slices"
+	"strings"
+	"testing"
+
+	"github.com/ddev/ddev/pkg/dotenv"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/stretchr/testify/require"
+)
+
+// trickyValues covers characters that have broken env handling before.
+var trickyValues = map[string]string{
+	"PAREN":            ")value(",
+	"SHELL_OPS":        "a;b&c|d<e>f",
+	"BACKTICK":         "a`id`b",
+	"SUBSHELL":         "$(id)",
+	"DOLLAR":           "$HOME ${HOME} $$",
+	"DEFAULT_SYNTAX":   "${UNSET:-def}",
+	"SQUOTE":           "it's",
+	"DQUOTE":           `say "hi"`,
+	"TRAILING_DQUOTE":  `ends with "`,
+	"ONLY_DQUOTES":     `""`,
+	"BACKSLASH":        `C:\new\table\back`,
+	"TRAILING_BSLASH":  `ends with \`,
+	"ESCAPED_DOLLAR":   `\$x`,
+	"LITERAL_ESCAPES":  `\n\t\r\\`,
+	"NEWLINE":          "line1\nline2",
+	"CRLF":             "line1\r\nline2",
+	"TAB":              "a\tb",
+	"HASH":             "#not a comment",
+	"SPACE_HASH":       "value #not a comment",
+	"TILDE":            "~/dir",
+	"BRACES":           "a{1,2}b",
+	"TEMPLATE":         "{{ .Name }}",
+	"GLOB":             "*",
+	"SPACES":           "  two  spaces  ",
+	"EQUALS":           "a=b=c",
+	"UNICODE":          "héllo wörld ✓",
+	"EMPTY":            "",
+	"export_lowercase": "x",
+}
+
+func TestQuoteRoundTrip(t *testing.T) {
+	var text strings.Builder
+	for _, name := range slices.Sorted(maps.Keys(trickyValues)) {
+		text.WriteString(name + "=" + dotenv.Quote(trickyValues[name]) + "\n")
+	}
+	got, err := dotenv.Parse(".env", text.String(), nil)
+	require.NoError(t, err)
+	require.Equal(t, trickyValues, got)
+}
+
+func TestQuoteFormat(t *testing.T) {
+	require.Equal(t, `"plain"`, dotenv.Quote("plain"))
+	require.Equal(t, `"say \"hi\""`, dotenv.Quote(`say "hi"`))
+	require.Equal(t, `'C:\new $x "y"'`, dotenv.Quote(`C:\new $x "y"`))
+	require.Equal(t, `'$dollar_variable'`, dotenv.Quote(`$dollar_variable`))
+	require.Equal(t, `"it's C:\\new \$x"`, dotenv.Quote(`it's C:\new $x`))
+	require.Equal(t, `"a\\b \"c\" \$d\ne"`, dotenv.Quote("a\\b \"c\" $d\ne"))
+	require.Equal(t, `"ends with \\"`, dotenv.Quote(`ends with \`))
+}
+
+func TestShellExports(t *testing.T) {
+	values := maps.Clone(trickyValues)
+	values["database.default.hostname"] = "skipped"
+	values["my-var"] = "skipped"
+	values["1STARTS_WITH_DIGIT"] = "skipped"
+	values["UID"] = "skipped"
+	values["PPID"] = "skipped"
+
+	exports := dotenv.ShellExports(values)
+	require.NotContains(t, exports, "skipped")
+
+	names := slices.Sorted(maps.Keys(trickyValues))
+	var script strings.Builder
+	script.WriteString("set -eu -o pipefail\n" + exports + "\nprintf '%s\\0'")
+	for _, name := range names {
+		script.WriteString(` "$` + name + `"`)
+	}
+	out, err := exec.Command(util.FindBashPath(), "-c", script.String()).Output()
+	require.NoError(t, err, "script=%s", script.String())
+
+	got := strings.Split(strings.TrimSuffix(string(out), "\x00"), "\x00")
+	require.Len(t, got, len(names))
+	for i, name := range names {
+		require.Equal(t, trickyValues[name], got[i], "value of %s", name)
+	}
+}
+
+func TestShellExportsSorted(t *testing.T) {
+	require.Equal(t, "export A='1'\nexport B='2'", dotenv.ShellExports(map[string]string{"B": "2", "A": "1"}))
+	require.Empty(t, dotenv.ShellExports(nil))
+}
+
+func TestReadFiles(t *testing.T) {
+	t.Setenv("DOTENV_TEST_HOST", "from-host")
+	t.Setenv("DOTENV_TEST_SHADOWED", "from-host")
+	t.Setenv("DOTENV_TEST_BARE", "bare-from-host")
+	dir := t.TempDir()
+	first := filepath.Join(dir, ".env")
+	second := filepath.Join(dir, ".env.web")
+	require.NoError(t, os.WriteFile(first, []byte(`SHARED=first
+FIRST_ONLY=one
+my-var=hyphen
+database.default.hostname=db
+DOTENV_TEST_SHADOWED=from-file
+`), 0644))
+	require.NoError(t, os.WriteFile(second, []byte("SHARED=second\r\n"+
+		`FROM_FIRST="${FIRST_ONLY}-two"`+"\r\n"+
+		`FROM_HOST="${DOTENV_TEST_HOST}"`+"\r\n"+
+		`HOST_WINS="${DOTENV_TEST_SHADOWED}"`+"\r\n"+
+		`DEFAULTED="${DOTENV_TEST_UNSET:-fallback}"`+"\r\n"+
+		`SINGLE='${FIRST_ONLY}'`+"\r\n"+
+		`ESCAPED="\${FIRST_ONLY}"`+"\r\n"+
+		`export EXPORTED=yes`+"\r\n"+
+		"DOTENV_TEST_BARE\r\n"+
+		"DOTENV_TEST_BARE_UNSET\r\n"), 0644))
+
+	got, err := dotenv.ReadFiles(first, second)
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{
+		"SHARED":                    "second",
+		"FIRST_ONLY":                "one",
+		"my-var":                    "hyphen",
+		"database.default.hostname": "db",
+		"DOTENV_TEST_SHADOWED":      "from-file",
+		"FROM_FIRST":                "one-two",
+		"FROM_HOST":                 "from-host",
+		"HOST_WINS":                 "from-host",
+		"DEFAULTED":                 "fallback",
+		"SINGLE":                    "${FIRST_ONLY}",
+		"ESCAPED":                   "${FIRST_ONLY}",
+		"EXPORTED":                  "yes",
+		"DOTENV_TEST_BARE":          "bare-from-host",
+	}, got)
+
+	names, err := dotenv.ReadNames(first, second)
+	require.NoError(t, err)
+	require.Equal(t, slices.Sorted(slices.Values(append(slices.Collect(maps.Keys(got)), "DOTENV_TEST_BARE_UNSET"))), names)
+
+	_, err = dotenv.ReadFiles(filepath.Join(dir, "missing"))
+	require.ErrorIs(t, err, os.ErrNotExist)
+
+	broken := filepath.Join(dir, ".env.broken")
+	require.NoError(t, os.WriteFile(broken, []byte(`BROKEN="unterminated`+"\n"), 0644))
+	_, err = dotenv.ReadFiles(broken)
+	require.ErrorContains(t, err, broken)
+}

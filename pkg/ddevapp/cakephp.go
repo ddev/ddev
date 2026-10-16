@@ -23,14 +23,14 @@ func cakephpPostStartAction(app *DdevApp) error {
 	}
 	envFileName := "config/.env"
 	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, envFileName)
-	_, _, err := ReadProjectEnvFile(envFilePath)
+	_, err := ReadEnvFileText(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("unable to read .env file in config folder: %v", err)
 	}
 	if err == nil {
 		envFileName = "config/.env.ddev"
 		envFilePath = filepath.Join(app.AppRoot, app.ComposerRoot, envFileName)
-		_, _, err = ReadProjectEnvFile(envFilePath)
+		_, err = ReadEnvFileText(envFilePath)
 		if err == nil {
 			util.Warning("CakePHP: .env.ddev file exists already. Replacing it. You can rename it or copy settings to your .env file.")
 		} else {
@@ -44,7 +44,7 @@ func cakephpPostStartAction(app *DdevApp) error {
 		util.Debug("CakePHP: .env.example does not exist yet in config folder, not trying to process it")
 		return nil
 	}
-	_, envText, err := ReadProjectEnvFile(envFilePath)
+	envText, err := ReadEnvFileText(envFilePath)
 	if err != nil {
 		return err
 	}
@@ -57,14 +57,14 @@ func cakephpPostStartAction(app *DdevApp) error {
 		dbParams = "?encoding=utf8"
 	}
 	envMap := map[string]string{
-		"export APP_NAME":                    app.GetName(),
-		"export DEBUG":                       "true",
-		"export APP_ENCODING":                "UTF-8",
-		"export DATABASE_URL":                dbConnection + "://db:db@db:" + port + "/db" + dbParams,
-		"export EMAIL_TRANSPORT_DEFAULT_URL": "smtp://localhost:1025",
-		"export SECURITY_SALT":               util.HashSalt(app.GetName()),
-		"export DEBUG_KIT_SAFE_TLD":          "site",
-		"export APP_FULL_BASE_URL":           app.GetPrimaryURL(),
+		"APP_NAME":                    app.GetName(),
+		"DEBUG":                       "true",
+		"APP_ENCODING":                "UTF-8",
+		"DATABASE_URL":                dbConnection + "://db:db@db:" + port + "/db" + dbParams,
+		"EMAIL_TRANSPORT_DEFAULT_URL": "smtp://localhost:1025",
+		"SECURITY_SALT":               util.HashSalt(app.GetName()),
+		"DEBUG_KIT_SAFE_TLD":          "site",
+		"APP_FULL_BASE_URL":           app.GetPrimaryURL(),
 	}
 	err = WriteProjectEnvFile(envFilePath, envMap, envText)
 	if err != nil {

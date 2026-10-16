@@ -27,7 +27,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/jedib0t/go-pretty/v6 v6.8.3
-	github.com/joho/godotenv v1.5.1
 	github.com/klauspost/compress v1.20.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/maruel/natural v1.3.0

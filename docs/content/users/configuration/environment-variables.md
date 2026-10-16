@@ -61,6 +61,16 @@ A trailing `.local` only marks the file as gitignored, and a label after the ser
 
 Every one of these files is also passed to `docker-compose config`, whatever it is named, so `${SOME_VARIABLE}` in a `.ddev/docker-compose.*.yaml` file is expanded from all of them together. That is the point of the `.ddev/.env.redis-build` row above: when a variable is only meant to be substituted into a compose file, give the file a name that is not a service name and it will never appear inside a container.
 
+### How Values Are Read
+
+With DDEV v1.25.5+, DDEV reads these files the same way `docker-compose` does, so a value is the same in a container, in an add-on action, and in `${SOME_VARIABLE}` in a compose file:
+
+* Single quotes keep a value exactly as written: `PASSWORD='pa$word'`.
+* With double quotes or no quotes, `$NAME` and `${NAME}` are replaced, first from the host environment and then from variables set earlier in the same file or an earlier one. `${NAME:-default}` works as it does in compose. Write `$$`, or `\$` inside double quotes, for a literal `$`.
+* A line with only a name, like `MY_VAR`, passes that variable through from the host.
+
+[`ddev dotenv set`](../usage/commands.md#dotenv-set) quotes each value so it is read back exactly as given.
+
 ## Override Order
 
 Later wins. Everything in the [global DDEV directory](../usage/architecture.md#global-files) is applied before anything belonging to the project, and within each directory DDEV sorts the files by their name with a trailing `.local` removed, which puts a `.local` file directly after the file it overrides.

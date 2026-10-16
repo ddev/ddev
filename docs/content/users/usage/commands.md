@@ -628,6 +628,8 @@ See [Environment Variables](../configuration/environment-variables.md) for which
 
 Get the value of an environment variable from a `.env` file. Provide the path relative to the project root when specifying the file.
 
+With DDEV v1.25.5+, a value from a file outside `.ddev/`, such as the application's `.env`, is printed as written, leaving `$` for the application to expand.
+
 Example:
 
 ```shell

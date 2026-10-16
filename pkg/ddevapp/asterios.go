@@ -23,7 +23,7 @@ func asteriosPostStartAction(app *DdevApp) error {
 		return nil
 	}
 	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
-	_, envText, err := ReadProjectEnvFile(envFilePath)
+	envText, err := ReadEnvFileText(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("unable to read .env file: %v", err)
 	}
@@ -33,7 +33,7 @@ func asteriosPostStartAction(app *DdevApp) error {
 			util.Debug("Asterios: .env.example does not exist yet, not trying to process it")
 			return nil
 		}
-		_, envText, err = ReadProjectEnvFile(envFilePath)
+		envText, err = ReadEnvFileText(envFilePath)
 		if err != nil {
 			return err
 		}

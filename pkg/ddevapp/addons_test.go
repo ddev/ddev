@@ -73,6 +73,69 @@ func processTestAddon(app *ddevapp.DdevApp, testName, addonName string, verbose 
 	return nil
 }
 
+// TestProcessBashActionEnv tests that env file values reach bash actions unchanged
+func TestProcessBashActionEnv(t *testing.T) {
+	t.Setenv("DDEV_XDG_CONFIG_HOME", t.TempDir())
+	app := &ddevapp.DdevApp{Name: t.Name(), AppRoot: t.TempDir()}
+	require.NoError(t, os.MkdirAll(app.AppConfDir(), 0755))
+
+	expected := map[string]string{
+		"PAREN":     ")value(",
+		"SHELL_OPS": "a;b&c|d<e>f",
+		"BACKTICK":  "a`id`b",
+		"SUBSHELL":  "$(id)",
+		"DOLLAR":    "$HOME ${HOME}",
+		"SQUOTE":    "it's",
+		"DQUOTE":    `say "hi"`,
+		"BACKSLASH": `C:\path\to`,
+		"TILDE":     "~/dir",
+		"BRACES":    "a{1,2}b",
+		"GLOB":      "*",
+		"SPACES":    "  two  spaces  ",
+		"TEMPLATE":  "{{ .DdevProjectConfig.name }}",
+		"NEWLINE":   "line1\nline2",
+		"EMPTY":     "",
+	}
+	envText := `PAREN=')value('
+SHELL_OPS='a;b&c|d<e>f'
+BACKTICK='a` + "`id`" + `b'
+SUBSHELL='$(id)'
+DOLLAR='$HOME ${HOME}'
+SQUOTE="it's"
+DQUOTE='say "hi"'
+BACKSLASH='C:\path\to'
+TILDE='~/dir'
+BRACES='a{1,2}b'
+GLOB='*'
+SPACES='  two  spaces  '
+TEMPLATE='{{ .DdevProjectConfig.name }}'
+NEWLINE="line1\nline2"
+EMPTY=
+database.default.hostname=db
+`
+	require.NoError(t, os.WriteFile(filepath.Join(app.AppConfDir(), ".env"), []byte(envText), 0644))
+
+	outDir := t.TempDir()
+	var action strings.Builder
+	for k := range expected {
+		action.WriteString(`printf '%s' "$` + k + `" > '` + filepath.ToSlash(filepath.Join(outDir, k)) + "'\n")
+	}
+	err := ddevapp.ProcessAddonAction(action.String(), ddevapp.InstallDesc{Name: "test-addon"}, app, false)
+	require.NoError(t, err)
+
+	for k, v := range expected {
+		got, err := os.ReadFile(filepath.Join(outDir, k))
+		require.NoError(t, err)
+		require.Equal(t, v, string(got), "value of %s", k)
+	}
+
+	// A directive inside an env value must not change how the action runs
+	require.NoError(t, os.WriteFile(filepath.Join(app.AppConfDir(), ".env.test-addon"), []byte("DIRECTIVE=\"x\n#ddev-warning-exit-code: 3\ny\"\n"), 0644))
+	err = ddevapp.ProcessAddonAction("exit 3", ddevapp.InstallDesc{Name: "test-addon"}, app, false)
+	require.Error(t, err)
+	require.NotContains(t, err.Error(), "DIRECTIVE", "env exports must stay out of the error text")
+}
+
 func TestProcessPHPAction(t *testing.T) {
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 

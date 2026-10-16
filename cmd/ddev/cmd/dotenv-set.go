@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"maps"
 	"os"
-	"reflect"
 	"sort"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dotenv"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -69,41 +68,34 @@ ddev dotenv global set .ddev/.env.web.local --api-key=secret`,
 func dotEnvSet(cmd *cobra.Command, arg string, app *ddevapp.DdevApp) {
 	envFile := dotEnvFilePath(app, arg)
 
-	envMap, envText, err := ddevapp.ReadProjectEnvFile(envFile)
+	envText, err := ddevapp.ReadEnvFileText(envFile)
 	if err != nil && !os.IsNotExist(err) {
 		util.Failed("Unable to read %s file: %v", envFile, err)
 	}
-
-	// Create a copy of the original envMap for comparison
-	originalEnvMap := make(map[string]string, len(envMap))
-	maps.Copy(originalEnvMap, envMap)
 
 	// Get unknown flags and convert them to env variables
 	envSlice, err := GetUnknownFlags(cmd)
 	if err != nil {
 		util.Failed("Error reading command flags: %v", err)
 	}
-	hasUnknownFlags := false
 	changedEnvMap := make(map[string]string)
 	for flag, value := range envSlice {
 		if after, ok := strings.CutPrefix(flag, "--"); ok {
 			envName := strings.ToUpper(strings.ReplaceAll(after, "-", "_"))
-			envMap[envName] = value
 			changedEnvMap[envName] = value
-			hasUnknownFlags = true
 		} else {
 			util.Failed("The flag must be in long format, but received %s", flag)
 		}
 	}
 
-	if !hasUnknownFlags {
+	if len(changedEnvMap) == 0 {
 		_ = cmd.Help()
 		return
 	}
 
 	// Write only if there are changes
-	if !reflect.DeepEqual(originalEnvMap, envMap) {
-		if err := ddevapp.WriteProjectEnvFile(envFile, changedEnvMap, envText); err != nil {
+	if newEnvText := dotenv.Update(envText, changedEnvMap); newEnvText != envText {
+		if err := os.WriteFile(envFile, []byte(newEnvText), 0644); err != nil {
 			util.Failed("Error writing .env file: %v", err)
 		}
 		// Nothing in the global DDEV directory is mounted with Mutagen
@@ -123,7 +115,7 @@ func dotEnvSet(cmd *cobra.Command, arg string, app *ddevapp.DdevApp) {
 	// Prepare the friendly message with formatted environment variables
 	var formattedVars []string
 	for _, k := range rawResultKeys {
-		formattedVars = append(formattedVars, fmt.Sprintf(`%s=%v`, k, ddevapp.EscapeEnvFileValue(changedEnvMap[k])))
+		formattedVars = append(formattedVars, fmt.Sprintf(`%s=%v`, k, dotenv.Quote(changedEnvMap[k])))
 	}
 	friendlyMsg := fmt.Sprintf("Updated %s with:\n\n%s", envFile, strings.Join(formattedVars, "\n"))
 	output.UserOut.WithField("raw", changedEnvMap).Print(friendlyMsg)
