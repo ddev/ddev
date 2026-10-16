@@ -5,7 +5,6 @@
 package dotenv
 
 import (
-	"bytes"
 	"maps"
 	"os"
 	"regexp"
@@ -23,8 +22,17 @@ func Parse(path, text string, lookup func(string) (string, bool)) (map[string]st
 	if lookup == nil {
 		lookup = func(string) (string, bool) { return "", false }
 	}
-	err := composedotenv.ParseWithFormat(strings.NewReader(text), path, values, lookup, "")
+	err := parseInto(values, path, text, lookup)
 	return values, err
+}
+
+// parseInto parses text into values. compose-go reads a bare NAME on a last
+// line with no newline as a value with an empty name, so one is added.
+func parseInto(values map[string]string, path, text string, lookup func(string) (string, bool)) error {
+	if !strings.HasSuffix(text, "\n") {
+		text += "\n"
+	}
+	return composedotenv.ParseWithFormat(strings.NewReader(text), path, values, lookup, "")
 }
 
 // ReadFiles merges env files in order, later files overriding earlier ones.
@@ -51,7 +59,7 @@ func readFiles(paths []string, lookup func(string) (string, bool)) (map[string]s
 		if err != nil {
 			return nil, err
 		}
-		if err = composedotenv.ParseWithFormat(bytes.NewReader(data), path, values, lookup, ""); err != nil {
+		if err = parseInto(values, path, string(data), lookup); err != nil {
 			return nil, err
 		}
 	}
@@ -106,6 +114,15 @@ func ShellExports(values map[string]string) string {
 func ShellExportsWithExpansion(values map[string]string) string {
 	return shellExports(values, shellDoubleQuote)
 }
+
+// EscapeExpansion escapes $ and \ in value, so ShellExportsWithExpansion
+// exports it as written, for a value already taken from the host. A leading ~
+// still expands.
+func EscapeExpansion(value string) string {
+	return expansionEscaper.Replace(value)
+}
+
+var expansionEscaper = strings.NewReplacer(`\`, `\\`, `$`, `\$`)
 
 func shellExports(values map[string]string, quote func(string) string) string {
 	var lines []string
@@ -164,13 +181,28 @@ func shellDoubleQuote(s string) string {
 }
 
 // commandSubstitutionEnd returns the index after the ) that closes the ( at
-// open, or len(s) when it is unbalanced.
+// open, or len(s) when it is unbalanced. A ( or ) inside quotes does not count.
 func commandSubstitutionEnd(s string, open int) int {
 	depth := 0
 	for i := open; i < len(s); i++ {
 		switch s[i] {
 		case '\\':
 			i++
+		case '\'':
+			if end := strings.IndexByte(s[i+1:], '\''); end >= 0 {
+				i += end + 1
+			} else {
+				i = len(s)
+			}
+		case '"':
+			for i++; i < len(s) && s[i] != '"'; i++ {
+				switch {
+				case s[i] == '\\':
+					i++
+				case strings.HasPrefix(s[i:], "$("):
+					i = commandSubstitutionEnd(s, i+1) - 1
+				}
+			}
 		case '(':
 			depth++
 		case ')':

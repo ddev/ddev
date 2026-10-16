@@ -1261,4 +1261,8 @@ func TestAddEnvironmentFlag(t *testing.T) {
 	}
 	require.NoError(t, addEnvironmentFlag(env, []string{"METHODS=GET,POST"}))
 	require.Equal(t, "GET,POST", env["METHODS"])
+
+	t.Setenv("DDEV_TEST_HOST_VALUE", `pa$$w\$(id)`)
+	require.NoError(t, addEnvironmentFlag(env, []string{"DDEV_TEST_HOST_VALUE"}))
+	require.Equal(t, `pa\$\$w\\\$(id)`, env["DDEV_TEST_HOST_VALUE"])
 }

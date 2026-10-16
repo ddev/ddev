@@ -116,6 +116,7 @@ func TestShellExportsWithExpansion(t *testing.T) {
 		"SUBSHELL":       {"$(echo sub)", "sub"},
 		"SUBSHELL_QUOTE": {`$(echo "x y") "z"`, `x y "z"`},
 		"SUBSHELL_NEST":  {`a$(echo "$(echo in)")b`, "ainb"},
+		"SUBSHELL_PAREN": {`$(echo ")" ')(')x`, ") )(x"},
 		"ARITHMETIC":     {"$((2+3))", "5"},
 		"UNC_PATH":       {`\\server\share`, `\server\share`},
 		"TILDE":          {"~", string(home)},
@@ -138,6 +139,15 @@ func TestShellExportsWithExpansion(t *testing.T) {
 	require.Len(t, got, len(names))
 	for i, name := range names {
 		require.Equal(t, tests[name].want, got[i], "value of %s", name)
+	}
+}
+
+func TestEscapeExpansion(t *testing.T) {
+	for _, value := range []string{`pa$$w`, `a\$(id)b`, "a`id`\"b\"", `ends with \`, `$HOME/~`} {
+		script := dotenv.ShellExportsWithExpansion(map[string]string{"V": dotenv.EscapeExpansion(value)}) + "\nprintf '%s' \"$V\""
+		out, err := exec.Command(util.FindBashPath(), "-c", script).Output()
+		require.NoError(t, err, "script=%s", script)
+		require.Equal(t, value, string(out), "script=%s", script)
 	}
 }
 
@@ -191,6 +201,12 @@ DOTENV_TEST_SHADOWED=from-file
 	names, err := dotenv.ReadNames(first, second)
 	require.NoError(t, err)
 	require.Equal(t, slices.Sorted(slices.Values(append(slices.Collect(maps.Keys(got)), "DOTENV_TEST_BARE_UNSET"))), names)
+
+	noNewline := filepath.Join(dir, ".env.no-newline")
+	require.NoError(t, os.WriteFile(noNewline, []byte("A=1\nDOTENV_TEST_BARE"), 0644))
+	got, err = dotenv.ReadFiles(noNewline)
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"A": "1", "DOTENV_TEST_BARE": "bare-from-host"}, got)
 
 	_, err = dotenv.ReadFiles(filepath.Join(dir, "missing"))
 	require.ErrorIs(t, err, os.ErrNotExist)

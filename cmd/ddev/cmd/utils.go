@@ -173,6 +173,7 @@ func addEnvironmentFlag(env map[string]string, flagValues []string) error {
 				util.Warning("Not passing %s, it is not set on the host", name)
 				continue
 			}
+			value = dotenv.EscapeExpansion(value)
 		}
 		env[name] = value
 	}

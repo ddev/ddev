@@ -261,6 +261,7 @@ autologin
 awk
 backend
 backends
+backticks
 bak
 bash
 bashrc
