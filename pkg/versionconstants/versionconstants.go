@@ -49,10 +49,10 @@ func IsUnreleasedDdevVersion(version string) bool {
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "250b008004" // 20261008_remove_gitpod_workaround-250b008004
+var WebTag = "85bef53b7f" // 20261014_rfay_history_volumes-85bef53b7f
 
 // WebTagBranch is the branch WebTag's content was built from.
-var WebTagBranch = "20261008_remove_gitpod_workaround"
+var WebTagBranch = "20261014_rfay_history_volumes"
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"

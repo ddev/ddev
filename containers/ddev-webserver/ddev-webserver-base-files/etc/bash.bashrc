@@ -46,4 +46,4 @@ if [ -x /usr/lib/command-not-found -o -x /usr/share/command-not-found/command-no
   }
 fi
 
-export HISTFILE=/mnt/ddev-global-cache/bashhistory/${HOSTNAME}/bash_history
+export HISTFILE=/mnt/ddev-history/bash_history
