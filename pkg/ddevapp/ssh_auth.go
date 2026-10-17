@@ -65,14 +65,43 @@ func SSHAgentUpstreamSocket() (string, error) {
 		if sock == "" {
 			return "", fmt.Errorf("ssh_agent_upstream=host but SSH_AUTH_SOCK is not set; start or forward an SSH agent first")
 		}
+		sock, err := resolveSSHAgentSocket(sock, fmt.Sprintf("SSH_AUTH_SOCK in this shell (%s)", sock), "open a new terminal")
+		if err != nil {
+			return "", err
+		}
 		return requireSSHAgentSocketDir(sock)
 	default:
 		sock, _ := util.ExpandHomedir(upstream)
 		if !filepath.IsAbs(sock) {
 			return "", fmt.Errorf("ssh_agent_upstream must be empty, 'host', or an absolute socket path, not '%s'", upstream)
 		}
+		sock, err := resolveSSHAgentSocket(sock, fmt.Sprintf("ssh_agent_upstream (%s)", sock), "point ssh_agent_upstream at the current socket")
+		if err != nil {
+			return "", err
+		}
 		return requireSSHAgentSocketDir(sock)
 	}
+}
+
+// ErrSSHAgentSocketStale means the upstream is a symlink to a socket that is
+// gone, such as a forwarded agent's socket after VS Code or SSH reconnects.
+var ErrSSHAgentSocketStale = errors.New("stale SSH agent socket")
+
+// resolveSSHAgentSocket follows symlinks, because ddev-ssh-agent mounts the
+// socket's directory, where a symlink's target is out of reach.
+func resolveSSHAgentSocket(sock string, desc string, remedy string) (string, error) {
+	if resolved, err := filepath.EvalSymlinks(sock); err == nil {
+		return resolved, nil
+	}
+	if fi, err := os.Lstat(sock); err == nil && fi.Mode()&os.ModeSymlink != 0 {
+		target, _ := os.Readlink(sock)
+		return "", fmt.Errorf("%w: %s points to %s, an agent socket that no longer exists, which happens after VS Code or SSH reconnects; %s", ErrSSHAgentSocketStale, desc, target, remedy)
+	}
+	// The agent hasn't created its socket yet.
+	if dir, err := filepath.EvalSymlinks(filepath.Dir(sock)); err == nil {
+		return filepath.Join(dir, filepath.Base(sock)), nil
+	}
+	return sock, nil
 }
 
 // requireSSHAgentSocketDir returns an error when the socket's directory is
@@ -102,10 +131,10 @@ func limaForwardedAgentSocket() (string, error) {
 	return sock, nil
 }
 
-// checkSSHAgentUpstreamListening returns an error when no agent accepts
+// CheckSSHAgentUpstreamListening returns an error when no agent accepts
 // connections on the upstream socket. With "host" outside Linux the socket is
 // inside the provider's VM, so it can't be checked from here.
-func checkSSHAgentUpstreamListening(upstream string) error {
+func CheckSSHAgentUpstreamListening(upstream string) error {
 	if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "host" && !nodeps.IsLinux() {
 		return nil
 	}
@@ -160,7 +189,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	// mount lets the relay reach the agent once it starts.
 	var listenErr error
 	if upstream != "" {
-		if listenErr = checkSSHAgentUpstreamListening(upstream); listenErr != nil {
+		if listenErr = CheckSSHAgentUpstreamListening(upstream); listenErr != nil {
 			util.Warning("No SSH agent is listening at %s (%v); containers can't use its keys until that agent is running", upstream, listenErr)
 		}
 	}
