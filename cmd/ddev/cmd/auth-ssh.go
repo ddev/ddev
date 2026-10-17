@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -60,7 +61,15 @@ var AuthSSHCommand = &cobra.Command{
 		// agent first so its warning explains why, even if no key file exists.
 		agentStarted := false
 		if globalconfig.DdevGlobalConfig.SSHAgentUpstream != "" && sshKeyFiles == nil && sshKeyDirs == nil {
-			_, upstreamErr := ddevapp.SSHAgentUpstreamSocket()
+			upstream, upstreamErr := ddevapp.SSHAgentUpstreamSocket()
+			if errors.Is(upstreamErr, ddevapp.ErrSSHAgentSocketStale) {
+				util.Failed("%v", upstreamErr)
+			}
+			if upstreamErr == nil {
+				if err := ddevapp.CheckSSHAgentUpstreamListening(upstream); err != nil {
+					util.Failed("No SSH agent is listening at %s (ssh_agent_upstream=%s): %v\nMake sure that agent is running and holds your keys.", upstream, globalconfig.DdevGlobalConfig.SSHAgentUpstream, err)
+				}
+			}
 			ensureSSHAgent()
 			if upstreamErr == nil {
 				listUpstreamSSHKeys()

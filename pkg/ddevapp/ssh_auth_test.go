@@ -311,8 +311,15 @@ func TestSSHAgentUpstream(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, relay.ID, restarted.ID)
 
+	// VS Code Remote sets SSH_AUTH_SOCK to a symlink in another directory.
+	linkDir := testcommon.CreateTmpDir(t.Name() + "-link")
+	t.Cleanup(func() {
+		_ = os.RemoveAll(linkDir)
+	})
+	link := filepath.Join(linkDir, "vscode-ssh-auth-sock")
+	require.NoError(t, os.Symlink(upstreamSock, link))
 	globalconfig.DdevGlobalConfig.SSHAgentUpstream = "host"
-	t.Setenv("SSH_AUTH_SOCK", upstreamSock)
+	t.Setenv("SSH_AUTH_SOCK", link)
 	sock, err = ddevapp.SSHAgentUpstreamSocket()
 	require.NoError(t, err)
 	require.Equal(t, upstreamSock, sock)
