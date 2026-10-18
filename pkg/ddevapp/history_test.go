@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -42,9 +43,14 @@ func TestHistoryBindMount(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, history, "history-test")
 
-	out, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: `echo "$HISTFILE"`})
+	// Rootless Docker maps db's uid to a subuid on the host, so db gets no history mount
+	expectedDBHistfile := "/mnt/ddev-history/bash_history"
+	if dockerutil.IsDockerRootless() {
+		expectedDBHistfile = ""
+	}
+	out, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: `echo "${HISTFILE:-}"`})
 	require.NoError(t, err)
-	require.Equal(t, "/mnt/ddev-history/bash_history", strings.TrimSpace(out))
+	require.Equal(t, expectedDBHistfile, strings.TrimSpace(out))
 
 	// A root-owned directory would leave its contents undeletable by the host user
 	_, _, err = app.Exec(&ddevapp.ExecOpts{User: "root", Cmd: "mkdir -p /mnt/ddev-history/rootdir && touch /mnt/ddev-history/rootdir/f"})
