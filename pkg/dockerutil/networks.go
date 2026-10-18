@@ -51,7 +51,7 @@ func EnsureDdevNetwork() {
 	}
 	err := EnsureNetwork(NetName, netOptions)
 	if err != nil {
-		output.UserErr.Fatalf("Failed to ensure Docker network %s: %v", NetName, err)
+		util.Failed("Failed to ensure Docker network %s: %v", NetName, err)
 	}
 }
 

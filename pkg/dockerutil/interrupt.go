@@ -83,7 +83,8 @@ func cleanUpInFlight(ctx context.Context) {
 			wait := apiClient.ContainerWait(ctx, id, client.ContainerWaitOptions{Condition: container.WaitConditionRemoved})
 			select {
 			case <-wait.Result:
-			case <-wait.Error:
+			case err := <-wait.Error:
+				util.Debug("Unable to wait for removal of container %s: %v", TruncateID(id), err)
 			}
 		})
 	}
