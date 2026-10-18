@@ -240,7 +240,7 @@ docker volume rm ddev-global-cache
 
 ## Shell and Client History
 
-Each service keeps its history in its own directory on the host, `.ddev/.history/<service>`, mounted at `/mnt/ddev-history`. Bash, MySQL and MariaDB, `psql`, `redis-cli`, `sqlite3`, the Node.js REPL, and Python 3.13 and later all write their history there. Because it's in the project directory, it survives [`ddev delete`](commands.md#delete), `docker system prune --volumes`, and switching Docker providers. DDEV adds a `.gitignore` to `.ddev/.history`, so the history, which can hold passwords and tokens, stays out of Git.
+Each service keeps its history in its own directory on the host, `.ddev/.history/<service>`, mounted at `/mnt/ddev-history`. Bash, MySQL and MariaDB, `psql`, `redis-cli`, `sqlite3`, the Node.js `REPL`, and Python 3.13 and later all write their history there. Because it's in the project directory, it survives [`ddev delete`](commands.md#delete), `docker system prune --volumes`, and switching Docker providers. DDEV adds a `.gitignore` to `.ddev/.history`, so the history, which can hold passwords and tokens, stays out of Git.
 
 DDEV only mounts the directory where the files written there will belong to you on the host. On Linux and WSL2 that means services that run as your user, which includes `web` and `db` but usually not third-party services that run as `root`. A `root` shell in the `web` container keeps its history in the container instead. To leave a service out, set [`x-ddev.omit-history: true`](../extend/custom-docker-services.md#x-ddev-extension).
 
