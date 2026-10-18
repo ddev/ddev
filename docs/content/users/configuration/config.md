@@ -122,6 +122,8 @@ Whether to run `corepack enable` on Node.js configuration.
 
 When `true`, `corepack enable` will be executed, making latest `pnpm` and `yarn` package managers available.
 
+Node.js 25 and later no longer include `corepack`. When it is missing, DDEV installs it from npm while building the web image, so that build needs access to the npm registry.
+
 To set a specific version of `pnpm` for a project:
 
 ```bash

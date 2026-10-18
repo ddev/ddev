@@ -146,10 +146,9 @@ func TestNodeJSRoot(t *testing.T) {
 	require.True(t, strings.HasPrefix(out, "v"+subdirVersion), "Expected node version from nodejs_root to start with '%s', but got %s", subdirVersion, out)
 }
 
-// TestCorepackEnable tests behavior of corepack_enable
+// TestCorepackEnable tests behavior of corepack_enable, both where Node.js
+// bundles corepack (<=24) and where DDEV must install it from npm (>=25)
 func TestCorepackEnable(t *testing.T) {
-	assert := asrt.New(t)
-
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
 	_ = os.Chdir(site.Dir)
@@ -158,52 +157,76 @@ func TestCorepackEnable(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true)
-	assert.NoError(err)
+	require.NoError(t, err)
 	origCorepackEnable := app.CorepackEnable
+	origNodeJSVersion := app.NodeJSVersion
+	preDockerfile := app.GetConfigPath("web-build/pre.Dockerfile.corepack-test")
 	t.Cleanup(func() {
 		runTime()
 		_ = os.Chdir(origDir)
+		_ = os.Remove(preDockerfile)
 		app.CorepackEnable = origCorepackEnable
+		app.NodeJSVersion = origNodeJSVersion
 		_ = app.Restart()
 	})
 
-	err = app.Start()
-	require.NoError(t, err)
+	for _, tc := range []struct {
+		nodeJSVersion string
+		// Simulates a base image built with Node.js >=25, which has no
+		// corepack; otherwise the one Node.js 24 left behind survives `n install`
+		removeBaseCorepack bool
+	}{
+		{nodeJSVersion: "24"},
+		{nodeJSVersion: "26", removeBaseCorepack: true},
+	} {
+		t.Run("node"+tc.nodeJSVersion, func(t *testing.T) {
+			_ = os.Remove(preDockerfile)
+			if tc.removeBaseCorepack {
+				// Not `npm uninstall -g corepack`, which also removes the yarn 1 bin links
+				err := os.WriteFile(preDockerfile, []byte("RUN rm -rf /usr/local/n/lib/node_modules/corepack /usr/local/n/bin/corepack\n"), 0644)
+				require.NoError(t, err)
+			}
+			app.NodeJSVersion = tc.nodeJSVersion
 
-	app.CorepackEnable = false
-	err = app.Start()
-	require.NoError(t, err)
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: `command -v yarn && ls -l "$(command -v yarn)"`,
-	})
-	require.NoError(t, err)
-	require.Contains(t, out, "/usr/local/n/bin/yarn")
-	require.NotContains(t, out, "corepack")
-	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: `yarn --version`,
-	})
-	require.NoError(t, err)
-	require.True(t, strings.HasPrefix(out, "1."))
+			app.CorepackEnable = false
+			err := app.Start()
+			require.NoError(t, err)
+			out, _, err := app.Exec(&ddevapp.ExecOpts{
+				Cmd: `node --version`,
+			})
+			require.NoError(t, err)
+			require.True(t, strings.HasPrefix(out, "v"+tc.nodeJSVersion+"."), "Expected node version to start with 'v%s.', but got %s", tc.nodeJSVersion, out)
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: `command -v yarn && ls -l "$(command -v yarn)"`,
+			})
+			require.NoError(t, err)
+			require.Contains(t, out, "/usr/local/n/bin/yarn")
+			require.NotContains(t, out, "corepack")
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: `yarn --version`,
+			})
+			require.NoError(t, err)
+			require.True(t, strings.HasPrefix(out, "1."))
 
-	app.CorepackEnable = true
-	err = app.Start()
-	require.NoError(t, err)
-	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: `command -v yarn && ls -l "$(command -v yarn)"`,
-	})
-	require.NoError(t, err)
-	require.Contains(t, out, "/usr/local/n/bin/yarn")
-	require.Contains(t, out, "corepack")
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: `yarn set version stable`,
-	})
-	require.NoError(t, err)
+			app.CorepackEnable = true
+			err = app.Start()
+			require.NoError(t, err)
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: `command -v yarn && ls -l "$(command -v yarn)"`,
+			})
+			require.NoError(t, err)
+			require.Contains(t, out, "/usr/local/n/bin/yarn")
+			require.Contains(t, out, "corepack")
 
-	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: `yarn --version`,
-	})
-	require.NoError(t, err)
-	require.True(t, strings.HasPrefix(out, "4."))
+			// Outside the project, so the packageManager field yarn writes
+			// can't leak into the next subtest or later tests
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: `mkdir -p /tmp/corepack-test && cd /tmp/corepack-test && echo '{}' >package.json && yarn set version stable >/dev/null && yarn --version`,
+			})
+			require.NoError(t, err)
+			require.True(t, strings.HasPrefix(out, "4."), "Expected yarn 4.x, but got %s", out)
+		})
+	}
 }
 
 // TestNpmGlobalInstall tests that `npm install -g` works for the project
