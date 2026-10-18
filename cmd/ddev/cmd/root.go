@@ -165,8 +165,9 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	Setup()
+	// Finalizers run before cobra prints a command's error and usage.
+	cobra.OnFinalize(interrupt.WaitIfExiting)
 	if err := RootCmd.Execute(); err != nil {
-		interrupt.WaitIfExiting()
 		os.Exit(-1)
 	}
 }
