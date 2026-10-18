@@ -12,6 +12,7 @@ import (
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/compose/v5/cmd/display"
 	"github.com/docker/compose/v5/pkg/api"
@@ -78,6 +79,10 @@ func (app *DdevApp) buildProjectImages(project *composeTypes.Project, opts api.B
 		return false, err
 	}
 	util.Debug("Unable to build project images: %v", err)
+	if !output.JSONOutput {
+		// End the line the build's progress dots left open.
+		_, _ = fmt.Fprintln(output.UserOut.Out)
+	}
 	util.Warning(`Unable to build project images while offline, using the ones from the last successful build.
 Dockerfile changes take effect on the next online 'ddev start'.
 See https://docs.ddev.com/en/stable/users/usage/offline/ for info.`)
