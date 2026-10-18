@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -302,14 +304,40 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	valMap["remote-config-update-interval"] = fmt.Sprintf("%d", globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval)
 	keys = append(keys, "remote-config-update-interval")
 
+	if changed := changedGlobalConfigKeys(cmd, valMap); len(changed) > 0 {
+		keys = changed
+	}
+
 	sort.Strings(keys)
 	if !output.JSONOutput {
 		for _, label := range keys {
 			output.UserOut.Printf("%s=%v", label, valMap[label])
 		}
 	} else {
-		output.UserOut.WithField("raw", valMap).Println("")
+		raw := make(map[string]string, len(keys))
+		for _, k := range keys {
+			raw[k] = valMap[k]
+		}
+		output.UserOut.WithField("raw", raw).Println("")
 	}
+}
+
+// changedGlobalConfigKeys returns the display keys for the settings named by
+// the flags given on the command line, so that only those are reported back.
+// web-environment is added to valMap here because the full listing omits it.
+func changedGlobalConfigKeys(cmd *cobra.Command, valMap map[string]string) []string {
+	var keys []string
+	cmd.Flags().Visit(func(f *pflag.Flag) {
+		key := strings.TrimSuffix(f.Name, "-reset")
+		if key == "web-environment-add" || key == "web-environment" {
+			key = "web-environment"
+			valMap[key] = fmt.Sprintf("%v", globalconfig.DdevGlobalConfig.WebEnvironment)
+		}
+		if _, ok := valMap[key]; ok && !slices.Contains(keys, key) {
+			keys = append(keys, key)
+		}
+	})
+	return keys
 }
 
 func registerConfigGlobalCmd() {

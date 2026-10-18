@@ -103,24 +103,24 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, fmt.Sprintf("performance-mode=%s", configTypes.PerformanceModeMutagen))
 	assert.Contains(out, "router-bind-all-interfaces=true")
 	assert.Contains(out, "internet-detection-timeout-ms=850")
-	assert.Contains(out, "use-letsencrypt=false")
-	assert.Contains(out, "letsencrypt-email=\n")
 	assert.Contains(out, "omit-project-name-by-default=true\n")
 	assert.Contains(out, "omit-snapshot-on-delete=true")
 	assert.Contains(out, "table-style=bright")
 	assert.Contains(out, "simple-formatting=true")
 	assert.Contains(out, "use-hardened-images=true")
 	assert.Contains(out, "fail-on-hook-fail=true")
-	assert.Contains(out, "project-tld=")
-	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
+	assert.Contains(out, "project-tld=ddev.test")
+	assert.Contains(out, `web-environment=["SOMEENV=some+val"]`)
 	assert.Contains(out, "xdebug-ide-location=container")
-	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
 	assert.Contains(out, "router-http-port=8081")
 	assert.Contains(out, "router-https-port=8882")
 	assert.Contains(out, "mailpit-http-port=18025")
 	assert.Contains(out, "mailpit-https-port=10826")
 	assert.Contains(out, "traefik-monitor-port=11999")
-	assert.Contains(out, "docker-buildx-version=system")
+	// Settings not given on the command line are not reported
+	assert.NotContains(out, "use-letsencrypt=")
+	assert.NotContains(out, "wsl2-no-windows-hosts-mgt=")
+	assert.NotContains(out, "docker-buildx-version=")
 
 	globalconfig.EnsureGlobalConfig()
 	assert.False(globalconfig.DdevGlobalConfig.InstrumentationOptIn)
@@ -139,8 +139,9 @@ func TestCmdGlobalConfig(t *testing.T) {
 
 	// Test that variables can be appended to the web environment
 	args = []string{"config", "global", `--web-environment-add="FOO=bar"`}
-	_, err = exec.RunCommand(DdevBin, args)
+	out, err = exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
+	require.Equal(t, `web-environment=["FOO=bar" "SOMEENV=some+val"]`+"\n", out)
 
 	// Test that we can remove array elements with `--item=""`
 	args = []string{"config", "global", `--web-environment=""`, `--omit-containers=""`}
