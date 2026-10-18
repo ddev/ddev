@@ -87,6 +87,7 @@ The `x-ddev` extension field lets you customize DDEV behavior per service in you
 | [`describe-info`](#customizing-ddev-describe-output) | Text shown in the `INFO` column of `ddev describe` |
 | [`describe-url-port`](#customizing-ddev-describe-output) | Text shown in the `URL/PORT` column of `ddev describe` |
 | [`omit-ddev-labels`](#omitting-comddev-labels-from-a-service) | Skip injecting `com.ddev.*` labels onto this service |
+| [`omit-history`](../usage/architecture.md#shell-and-client-history) | Skip mounting `.ddev/.history/<service>` and setting history variables for this service |
 | [`pull-images`](#service-with-a-custom-build) | Images DDEV pulls before building this service |
 | [`ssh-shell`](../extend/in-container-configuration.md#changing-ddev-ssh-shell) | Shell used by `ddev ssh -s <service>` for this service |
 

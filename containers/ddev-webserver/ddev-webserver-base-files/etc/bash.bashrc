@@ -46,4 +46,8 @@ if [ -x /usr/lib/command-not-found -o -x /usr/share/command-not-found/command-no
   }
 fi
 
-export HISTFILE=/mnt/ddev-global-cache/bashhistory/${HOSTNAME}/bash_history
+# Keep a shell whose files the host user wouldn't own, like a root shell, out of the bind-mounted history
+if [ -n "${DDEV_HISTORY_UID:-}" ] && [ "${DDEV_HISTORY_UID}" != "any" ] && [ "$(id -u)" != "${DDEV_HISTORY_UID}" ]; then
+  export HISTFILE=~/.bash_history
+  unset MYSQL_HISTFILE NODE_REPL_HISTORY PSQL_HISTORY PYTHON_HISTORY REDISCLI_HISTFILE SQLITE_HISTORY
+fi

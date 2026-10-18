@@ -102,7 +102,7 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
+mkdir -p /mnt/ddev-global-cache/{n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 
 # The following ensures a persistent and shared "global" cache for
 # yarn classic (frozen v1) and yarn berry (active). In the case of berry, the global cache

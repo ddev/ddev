@@ -20,6 +20,7 @@ sync:
         - "/.ddev/db_snapshots"
         - "/.ddev/.importdb*"
         - "/.ddev/.snapshot*"
+        - "/.ddev/.history"
         - ".DS_Store"
         - ".idea"
         {{- range $uploadDir := .UploadDirs}}
