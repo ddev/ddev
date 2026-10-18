@@ -345,10 +345,6 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			}
 		}
 	}
-
-	// We should never get here.
-	//nolint: govet
-	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
 // ContainersWait provides a wait loop to check for multiple containers in "healthy" status.
@@ -449,10 +445,6 @@ func ContainersWait(waittime int, labels map[string]string, filterServices ...st
 			}
 		}
 	}
-
-	// We should never get here.
-	//nolint: govet
-	return fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
 // getSuggestedCommandForContainerLog returns a command that can be used to find out what is wrong with a container
