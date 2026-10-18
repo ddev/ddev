@@ -1082,7 +1082,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	require.NoError(t, startErr, "app.Start() did not succeed: output:\n=====\n%s\n===== health:\n========= health =======\n%s\n========\n===== logs:\n========= logs =======\n%s\n========\n", stdout, health, logs)
 
-	// start skips this warning under DDEV_NONINTERACTIVE, as in CI.
+	// start prints this only with DDEV_VERBOSE under DDEV_NONINTERACTIVE, as in CI.
 	customConfig, _ := app.CheckCustomConfig(false)
 
 	for _, configFile := range []string{"mysql-collation.cnf", "php-override.ini", "web-entrypoint-dosomething.sh", "Dockerfile.something", "Dockerfile", "pre.Dockerfile.somethingelse"} {

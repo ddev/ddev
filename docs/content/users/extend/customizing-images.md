@@ -336,7 +336,7 @@ When `ddev start` seeds a fresh database volume from a baked-in seed, it says so
 
 ```
 Initializing new database volume from /mysqlbase/custom/base_db.zst baked into dbimage ddev/ddev-dbserver-mariadb-11.8:v1.25.0...
-With a large database this may take a long time.
+A large database may take a while; the 600s timeout is set by default_container_timeout.
 ```
 
 !!!note

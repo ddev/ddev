@@ -387,7 +387,7 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			// Status changes are routine (DDEV_VERBOSE); a stall is what DDEV_DEBUG should surface.
 			elapsed := time.Since(startTime).Round(time.Millisecond)
 			if health != lastStatus {
-				util.Debug("ContainerWait: %s status change: '%s' after %v", cName, health, elapsed)
+				util.Verbose("ContainerWait: %s status change: '%s' after %v", cName, health, elapsed)
 				lastStatus = health
 				lastLogTime = time.Now()
 			} else if time.Since(lastLogTime) >= 5*time.Second {

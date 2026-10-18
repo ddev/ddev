@@ -148,7 +148,17 @@ func (q *quietEventProcessor) Done(_ string, _ bool) {
 // flush prints and clears the collected Done lines; callers hold q.mu.
 func (q *quietEventProcessor) flush() {
 	for _, key := range q.pendingKeys {
-		_, _ = fmt.Fprintf(q.out, "%s: %s\n", key, strings.Join(q.pending[key], ", "))
+		names := q.pending[key]
+		// Compose down stops every container, even one ddev stop already
+		// stopped, so "Removed" alone covers both.
+		if kind, ok := strings.CutSuffix(key, " "+api.StatusStopped); ok {
+			removed := q.pending[kind+" "+api.StatusRemoved]
+			names = slices.DeleteFunc(slices.Clone(names), func(n string) bool { return slices.Contains(removed, n) })
+		}
+		if len(names) == 0 {
+			continue
+		}
+		_, _ = fmt.Fprintf(q.out, "%s: %s\n", key, strings.Join(names, ", "))
 	}
 	q.pending = map[string][]string{}
 	q.pendingKeys = nil

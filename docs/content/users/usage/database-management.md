@@ -110,7 +110,7 @@ A `seed` snapshot is listed as [custom configuration](../extend/customization-ex
 
 ```
 Initializing new database volume from the 'seed' snapshot /path/to/project/.ddev/db_snapshots/seed-mariadb_11.8.zst (2.2 GiB)...
-With a large database this may take a long time.
+A large database may take a while; the 600s timeout is set by default_container_timeout.
 ```
 
 ### Starting Over with a New Database

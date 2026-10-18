@@ -141,15 +141,25 @@ func TestQuietEventProcessorConsolidates(t *testing.T) {
 		api.Resource{ID: "Container ddev-p-db", Status: api.Working, Text: "Stopping"},
 		api.Resource{ID: "Container ddev-p-db", Status: api.Done, Text: "Stopped"},
 		api.Resource{ID: "Container ddev-p-web", Status: api.Done, Text: "Stopped"},
+	)
+	require.Empty(t, buf.String(), "Done states must wait for the end of the operation")
+	ep.Done("stop", false)
+	require.Equal(t, "Container Stopped: ddev-p-db, ddev-p-web\n", buf.String())
+
+	buf.Reset()
+	ep.Start(t.Context(), "down")
+	ep.On(
+		api.Resource{ID: "Container ddev-p-db", Status: api.Done, Text: "Stopped"},
+		api.Resource{ID: "Container ddev-p-web", Status: api.Done, Text: "Stopped"},
+		api.Resource{ID: "Container ddev-p-other", Status: api.Done, Text: "Stopped"},
 		api.Resource{ID: "Container ddev-p-db", Status: api.Done, Text: "Removed"},
 		api.Resource{ID: "Container ddev-p-web", Status: api.Done, Text: "Removed"},
 		api.Resource{ID: "Network ddev-p_default", Status: api.Done, Text: "Removed"},
 	)
-	require.Empty(t, buf.String(), "Done states must wait for the end of the operation")
-	ep.Done("stop", true)
+	ep.Done("down", false)
 
 	require.Equal(t,
-		"Container Stopped: ddev-p-db, ddev-p-web\n"+
+		"Container Stopped: ddev-p-other\n"+
 			"Container Removed: ddev-p-db, ddev-p-web\n"+
 			"Network Removed: ddev-p_default\n",
 		buf.String())

@@ -1848,11 +1848,13 @@ func (app *DdevApp) start(o StartOptions) error {
 	// Fix any obsolete things like old shell commands, etc.
 	app.FixObsolete()
 
-	// Warn the user if there is any custom configuration in use. Nobody reads
-	// it in noninteractive runs like CI, where it repeats on every start.
-	if globalconfig.IsInteractive() {
-		if message, hasWarnings := app.CheckCustomConfig(false); hasWarnings {
+	// Warn the user if there is any custom configuration in use. In noninteractive
+	// runs like CI it repeats on every start, so it needs DDEV_VERBOSE there.
+	if message, hasWarnings := app.CheckCustomConfig(false); hasWarnings {
+		if globalconfig.IsInteractive() {
 			util.Warning(message)
+		} else {
+			util.Verbose("%s", message)
 		}
 	}
 
