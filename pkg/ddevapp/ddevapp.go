@@ -2997,6 +2997,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		})
 	}
 	if err != nil {
+		// The interrupt cleanup killed it, so leave reporting to the handler.
+		if opts.InterruptID != "" {
+			interrupt.WaitIfExiting()
+		}
 		return stdoutResult, stderrResult, err
 	}
 	if !opts.SkipHooks {
@@ -3574,6 +3578,11 @@ func (app *DdevApp) Snapshot(snapshotName string, uncompressed bool) (string, er
 	if err != nil {
 		return "", err
 	}
+	// Like db_snapshots, it needs 777 for a container user mapped to another uid.
+	if err = util.Chmod(hostTmpDir, 0777); err != nil {
+		_ = os.RemoveAll(hostTmpDir)
+		return "", err
+	}
 	containerSnapshotPath := path.Join(containerSnapshotDir, snapshotFile)
 	interruptID := util.RandString(16)
 	unregister := interrupt.OnInterrupt(func(context.Context) {
@@ -3618,10 +3627,6 @@ func (app *DdevApp) Snapshot(snapshotName string, uncompressed bool) (string, er
 		if err != nil {
 			return "", fmt.Errorf("failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
 		}
-	}
-	err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0755)
-	if err != nil {
-		return "", err
 	}
 	err = os.Rename(filepath.Join(hostTmpDir, snapshotFile), app.GetConfigPath(filepath.Join("db_snapshots", snapshotFile)))
 	if err != nil {
