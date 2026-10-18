@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,42 +34,49 @@ func TestCmdLogs(t *testing.T) {
 	// Gather reporting about goroutines at exit
 	t.Setenv("DDEV_GOROUTINES", "true")
 
-	assert := asrt.New(t)
-
-	origDir, _ := os.Getwd()
 	site := TestSites[0]
-	// Copy our fatal error php into the docroot of testsite.
 	pwd, err := os.Getwd()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	err = os.Chdir(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	logtestFilePath := filepath.Join(site.Dir, site.Docroot, "logtest.php")
 	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "logtest.php"), logtestFilePath)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp(site.Dir, true)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
+		_ = os.Chdir(pwd)
 		_ = os.Remove(logtestFilePath)
 	})
 	// We have to sync or our logtest.php may not yet be available inside container
 	err = app.MutagenSyncFlush()
-	assert.NoError(err)
+	require.NoError(t, err)
 
+	// The project may have just been restarted by an earlier test, and the
+	// router can briefly reset connections while it picks up the new routes.
 	url := app.GetPrimaryURL() + "/logtest.php"
-	testcommon.AssertLocalHTTPContent(t, url, "Notice to demonstrate logging",
+	testcommon.RequireLocalHTTPContent(t, url, "Notice to demonstrate logging",
 		testcommon.WithMessagef("logtest.php should emit the PHP notice that `ddev logs` surfaces"),
 		testcommon.WithTimeout(10*time.Second),
+		testcommon.WithMaxAttempts(5),
 	)
 
 	out, err := exec.RunHostCommand(DdevBin, "logs")
 	require.NoError(t, err)
 	testcommon.CheckGoroutineOutput(t, out)
-	assert.Contains(string(out), "Server started")
-	assert.Contains(string(out), "Notice to demonstrate logging", "PHP notice not found for project %s output='%s", site.Name, string(out))
+	for _, want := range []string{"Server started", "Notice to demonstrate logging"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("`ddev logs` for project %s does not contain %q; last lines:\n%s", site.Name, want, lastLines(out, 20))
+		}
+	}
+}
+
+// lastLines returns at most n trailing lines of s.
+func lastLines(s string, n int) string {
+	lines := strings.Split(strings.TrimRight(s, "\r\n"), "\n")
+	return strings.Join(lines[max(0, len(lines)-n):], "\n")
 }
