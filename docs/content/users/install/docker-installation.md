@@ -119,9 +119,11 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
         ### Initialize and start the Podman machine
 
+        The Podman machine gets only 2GB of memory by default, which runs out with more than a project or two running, so create it with 6GB, adjusting to your own needs:
+
         ```bash
         # check `podman machine init -h` for more options
-        podman machine init --provider applehv
+        podman machine init --provider applehv --memory 6144
         podman machine start
         ```
 

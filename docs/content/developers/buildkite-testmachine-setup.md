@@ -365,7 +365,7 @@ Then the Buildkite agent must be configured with tags `lima=true`.
 
 Podman rootless on macOS runs containers in a lightweight VM managed by `podman machine`.
 
-1. Follow the instructions for [Podman on macOS](../users/install/docker-installation.md#macos-podman-rootless) to install Podman and set up a rootless Podman machine.
+1. Follow the instructions for [Podman on macOS](../users/install/docker-installation.md#macos-podman-rootless) to install Podman and set up a rootless Podman machine with 6GB of memory. On a testbot whose machine was created with the 2GB default, resize it with `podman machine stop && podman machine set --memory 6144`.
 2. Verify connectivity: `docker context use podman-rootless && docker ps` should return an empty container list.
 3. Stop the machine when done with initial setup: `podman machine stop`
 
