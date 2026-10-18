@@ -12,7 +12,6 @@ import (
 	"github.com/ddev/ddev/pkg/composer"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
 )
@@ -46,7 +45,7 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(app.SiteDdevSettingsFile))
+	util.Debug("Generating %s file for database connection.", filepath.Base(app.SiteDdevSettingsFile))
 	if err := writeTypo3SettingsFile(app); err != nil {
 		return "", fmt.Errorf("failed to write TYPO3 %s file: %v", app.SiteDdevSettingsFile, err.Error())
 	}

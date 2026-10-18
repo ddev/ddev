@@ -127,7 +127,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 			}
 
 			if includeExists {
-				util.Success("Include of %s found in %s", app.SiteDdevSettingsFile, app.SiteSettingsPath)
+				util.Debug("Include of %s found in %s", app.SiteDdevSettingsFile, app.SiteSettingsPath)
 			} else {
 				util.Warning(wordpressConfigInstructions, app.SiteDdevSettingsFile)
 			}
