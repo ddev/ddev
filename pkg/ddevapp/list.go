@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/globalconfig/types"
@@ -47,6 +48,7 @@ func List(settings ListCommandSettings) {
 
 	for {
 		var out bytes.Buffer
+		releaseContainers := dockerutil.CacheContainers()
 		apps, err := GetProjects(settings.ActiveOnly)
 		if err != nil {
 			util.Failed("Failed getting GetProjects: %v", err)
@@ -97,6 +99,7 @@ func List(settings ListCommandSettings) {
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
 		}
+		releaseContainers()
 
 		if !settings.Continuous {
 			break
