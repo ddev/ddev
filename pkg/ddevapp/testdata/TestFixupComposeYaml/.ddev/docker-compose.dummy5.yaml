@@ -1,0 +1,4 @@
+services:
+  dummy5:
+    image: busybox:stable
+    network_mode: service:dummy1
