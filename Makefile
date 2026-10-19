@@ -143,7 +143,7 @@ wsl_arm64: $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe $(GOTMP)/bin/wsl_arm64/mkcer
 completions: $(GOTMP)/bin/completions.tar.gz
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev-hostname $(GOTMP)/bin/linux_arm64/ddev-hostname $(GOTMP)/bin/darwin_amd64/ddev-hostname $(GOTMP)/bin/darwin_arm64/ddev-hostname $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe
-$(TARGETS): mkcert $(GOFILES)
+$(TARGETS): $(GOFILES)
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)); \
 	if [[ "$@" == *ddev-hostname.exe ]]; then \
@@ -185,13 +185,16 @@ mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTM
 
 # Set CURL to the Homebrew-installed curl, fallback to default
 CURL := $(shell command -v /opt/homebrew/opt/curl/bin/curl || command -v /usr/local/opt/curl/bin/curl || echo curl)
+# No --retry-delay, so curl backs off exponentially and rides out GitHub
+# release-asset outages longer than a fixed delay would.
+DOWNLOAD_RETRY := --retry 8 --retry-max-time 300 --retry-connrefused --retry-all-errors
 
-# Download mkcert to it can be added to tarball installations
+# mkcert is only needed to package releases, not to build or test ddev.
 $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert:
 	@export TARGET=$(word 3, $(subst /, ,$@)) && \
 	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" MKCERT_VERSION=$(MKCERT_VERSION) && \
 	mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH} && \
-	$(CURL) --fail -JL -s -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
+	$(CURL) --fail -JL -s -S $(DOWNLOAD_RETRY) -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
 
 TEST_TIMEOUT=6h
 BUILD_ARCH = $(shell go env GOARCH)
@@ -470,12 +473,12 @@ chocolatey:
 	fi
 
 $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt:
-	$(CURL) --fail -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -JL -s -o $(GOTMP)/bin/windows_amd64/mkcert.exe "https://github.com/FiloSottile/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe"
-	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
+	$(CURL) --fail -S $(DOWNLOAD_RETRY) -JL -s -o $(GOTMP)/bin/windows_amd64/mkcert.exe "https://github.com/FiloSottile/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe"
+	$(CURL) --fail -sSL $(DOWNLOAD_RETRY) -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
 
 $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt:
-	$(CURL) --fail -JL -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -s -o $(GOTMP)/bin/windows_arm64/mkcert.exe "https://github.com/FiloSottile/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-arm64.exe"
-	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/windows_arm64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
+	$(CURL) --fail -JL -S $(DOWNLOAD_RETRY) -s -o $(GOTMP)/bin/windows_arm64/mkcert.exe "https://github.com/FiloSottile/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-arm64.exe"
+	$(CURL) --fail -sSL $(DOWNLOAD_RETRY) -o $(GOTMP)/bin/windows_arm64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
 
 # golangci-lint is a Go binary, so it comes from neither install-dev-tools.sh
 # nor DEV_TOOLS_DIR. A variable because both targets below need it.
