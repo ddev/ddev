@@ -20,7 +20,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project getkirby/starterkit
+  run -0 _retry ddev composer create-project getkirby/starterkit
 
   # validate ddev launch
   DDEV_DEBUG=true run -0 ddev launch

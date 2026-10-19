@@ -19,7 +19,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project sulu/skeleton
+  run -0 _retry ddev composer create-project sulu/skeleton
   export SULU_PROJECT_NAME="My Sulu Site"
   export SULU_PROJECT_KEY="${PROJNAME}"
   export SULU_PROJECT_CONFIG_FILE="config/webspaces/${PROJNAME}.xml"

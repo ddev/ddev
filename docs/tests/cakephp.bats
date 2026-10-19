@@ -20,7 +20,7 @@ teardown() {
 
   run -0 ddev start -y
 
-  run -0 ddev composer create-project --prefer-dist --no-interaction cakephp/app:~5.0
+  run -0 _retry ddev composer create-project --prefer-dist --no-interaction cakephp/app:~5.0
 
   _extra_info
 

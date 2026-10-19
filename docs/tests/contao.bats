@@ -22,7 +22,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project contao/managed-edition:5.7
+  run -0 _retry ddev composer create-project contao/managed-edition:5.7
   # Set DATABASE_URL and MAILER_DSN in .env.local
   run -0 ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
   # Create the database

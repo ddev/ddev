@@ -20,7 +20,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project october/october
+  run -0 _retry ddev composer create-project october/october
 
   run -0 ddev artisan october:install --no-interaction
 

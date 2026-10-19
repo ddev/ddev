@@ -20,7 +20,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project asterios/app
+  run -0 _retry ddev composer create-project asterios/app
 
   DDEV_DEBUG=true run -0 ddev launch
   assert_output --partial "FULLURL ${PRIMARY_URL}"

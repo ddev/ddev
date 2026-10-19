@@ -22,7 +22,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project roots/bedrock
+  run -0 _retry ddev composer create-project roots/bedrock
 
   run -0 ddev wp core install --url="${PRIMARY_URL}" --title='My Bedrock Site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
 

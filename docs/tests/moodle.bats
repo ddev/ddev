@@ -20,7 +20,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project moodle/moodle
+  run -0 _retry ddev composer create-project moodle/moodle
 
   run -0 ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminemail=admin@example.com --adminpass=password'
 

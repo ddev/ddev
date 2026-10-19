@@ -22,7 +22,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project drupal/recommended-project:main-dev@dev
+  run -0 _retry ddev composer create-project drupal/recommended-project:main-dev@dev
 
   run -0 ddev composer require drush/drush
 
@@ -54,7 +54,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project "drupal/recommended-project"
+  run -0 _retry ddev composer create-project "drupal/recommended-project"
 
   run -0 ddev composer require drush/drush
 
@@ -80,7 +80,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project "drupal/recommended-project:^10"
+  run -0 _retry ddev composer create-project "drupal/recommended-project:^10"
 
   run -0 ddev composer require drush/drush
 
@@ -133,7 +133,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project drupal/cms
+  run -0 _retry ddev composer create-project drupal/cms
   # This check shows that post-create-project-cmd event ran successfully
   assert_output --partial "You're all set to get started with Drupal CMS"
 

@@ -71,6 +71,19 @@ _curl_github() {
   curl --retry 5 --retry-delay 2 "${auth_args[@]}" "$@"
 }
 
+# Run a command up to 3 times, for steps that download from upstream hosts
+# whose outages (GitHub 5xx and 429, packagist timeouts) outlast the tool's own retries.
+# Usage: run -0 _retry <command> [args...]
+_retry() {
+  local attempt
+  for attempt in 1 2 3; do
+    "$@" && return 0
+    [ "${attempt}" -lt 3 ] || return 1
+    echo "# Attempt ${attempt} of '$*' failed, retrying in $((attempt * 15))s" >&3
+    sleep $((attempt * 15))
+  done
+}
+
 # Fetch a page and require each string in its body. A failure reports curl's
 # error, or the missing string and the page title, rather than the whole page.
 # Usage: _assert_page_contains [curl options] <url> <string>...

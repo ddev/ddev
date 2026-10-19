@@ -20,7 +20,7 @@ teardown() {
 
   run -0 ddev start -y
 
-  run -0 ddev composer create-project laravel/laravel
+  run -0 _retry ddev composer create-project laravel/laravel
 
   _extra_info
 
@@ -47,7 +47,7 @@ teardown() {
 
   run -0 ddev start -y
 
-  run -0 ddev composer create-project laravel/laravel
+  run -0 _retry ddev composer create-project laravel/laravel
 
   _extra_info
 

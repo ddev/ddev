@@ -22,7 +22,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev wp core download
+  run -0 _retry ddev wp core download
 
   run -0 ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
 
@@ -54,7 +54,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev wp core download
+  run -0 _retry ddev wp core download
 
   run -0 ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
 
@@ -97,7 +97,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev wp core download
+  run -0 _retry ddev wp core download
   run -0 ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
 
   run bash -c "

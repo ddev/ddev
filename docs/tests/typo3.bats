@@ -19,7 +19,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project "typo3/cms-base-distribution:^14" >/dev/null
+  run -0 _retry ddev composer create-project "typo3/cms-base-distribution:^14" >/dev/null
   run -0 ddev composer require typo3/theme-camino >/dev/null
 
   run -0 ddev typo3 setup \
@@ -52,7 +52,7 @@ teardown() {
   run -0 ddev start -y >/dev/null
   _extra_info
 
-  run -0 ddev composer create-project "typo3/cms-base-distribution:^13" >/dev/null
+  run -0 _retry ddev composer create-project "typo3/cms-base-distribution:^13" >/dev/null
 
   run -0 ddev typo3 setup \
     --admin-user-password="Demo123*" \
@@ -84,7 +84,7 @@ teardown() {
   run -0 ddev start -y >/dev/null
   _extra_info
 
-  run -0 ddev composer create-project "typo3/cms-base-distribution:^12" >/dev/null
+  run -0 _retry ddev composer create-project "typo3/cms-base-distribution:^12" >/dev/null
 
   run -0 ddev typo3 setup \
     --admin-user-password="Demo123*" \
@@ -116,7 +116,7 @@ teardown() {
   run -0 ddev start -y >/dev/null
   _extra_info
 
-  run -0 ddev composer create-project "typo3/cms-base-distribution:^11" >/dev/null
+  run -0 _retry ddev composer create-project "typo3/cms-base-distribution:^11" >/dev/null
   run -0 ddev exec touch public/FIRST_INSTALL
 
   DDEV_DEBUG=true run -0 ddev launch /typo3/install.php
@@ -155,7 +155,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project typo3/cms-base-distribution:^13 >/dev/null
+  run -0 _retry ddev composer create-project typo3/cms-base-distribution:^13 >/dev/null
 
   run -0 ddev exec touch public/FIRST_INSTALL
 

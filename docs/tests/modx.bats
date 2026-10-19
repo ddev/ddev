@@ -23,7 +23,7 @@ teardown() {
   _extra_info
 
   # Install MODX Revolution via Composer (resolves to the latest stable release)
-  run -0 ddev composer create-project modx/revolution
+  run -0 _retry ddev composer create-project modx/revolution
 
   # Perform a fresh install using the DDEV database credentials. The four
   # --context_* arguments are the installer's own defaults; passing them
@@ -63,7 +63,8 @@ teardown() {
 
   # MODX has no GitHub releases, so derive the latest production release ("-pl")
   # from the tags and download the traditional distribution zip.
-  MODX_VERSION=$(_curl_github -fsSL https://api.github.com/repos/modxcms/revolution/tags | grep -o '"v[0-9][0-9.]*-pl"' | head -1 | tr -dc '0-9.')
+  # git ls-remote avoids the GitHub API's rate limit and 5xx responses.
+  MODX_VERSION=$(git ls-remote --tags --refs https://github.com/modxcms/revolution 'v*-pl' | sed -E 's|.*refs/tags/v([0-9.]+)-pl$|\1|' | sort -V | tail -1)
   echo "# MODX_VERSION=${MODX_VERSION}" >&3
   [ -n "${MODX_VERSION}" ]
 
