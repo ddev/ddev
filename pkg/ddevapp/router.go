@@ -289,8 +289,6 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 		"ports":                      exposedPorts,
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces || dockerutil.IsRemoteDockerHost(),
 		"dockerIP":                   dockerIP,
-		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
-		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"Router":                     globalconfig.DdevGlobalConfig.Router,
 		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 		"Timezone":                   timezone,
