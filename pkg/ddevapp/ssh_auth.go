@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"os"
 	"path"
@@ -90,11 +91,23 @@ var ErrSSHAgentSocketStale = errors.New("stale SSH agent socket")
 // resolveSSHAgentSocket follows symlinks, because ddev-ssh-agent mounts the
 // socket's directory, where a symlink's target is out of reach.
 func resolveSSHAgentSocket(sock string, desc string, remedy string) (string, error) {
-	if resolved, err := filepath.EvalSymlinks(sock); err == nil {
+	resolved, err := filepath.EvalSymlinks(sock)
+	if err == nil {
 		return resolved, nil
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		return "", fmt.Errorf("can't resolve %s: %w", desc, err)
 	}
 	if fi, err := os.Lstat(sock); err == nil && fi.Mode()&os.ModeSymlink != 0 {
 		target, _ := os.Readlink(sock)
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(filepath.Dir(sock), target)
+		}
+		// A target directory that still exists means the agent hasn't started
+		// yet; a forwarded agent's directory goes away with its connection.
+		if dir, err := filepath.EvalSymlinks(filepath.Dir(target)); err == nil {
+			return filepath.Join(dir, filepath.Base(target)), nil
+		}
 		return "", fmt.Errorf("%w: %s points to %s, an agent socket that no longer exists, which happens after VS Code or SSH reconnects; %s", ErrSSHAgentSocketStale, desc, target, remedy)
 	}
 	// The agent hasn't created its socket yet.
@@ -132,10 +145,11 @@ func limaForwardedAgentSocket() (string, error) {
 }
 
 // CheckSSHAgentUpstreamListening returns an error when no agent accepts
-// connections on the upstream socket. With "host" outside Linux the socket is
-// inside the provider's VM, so it can't be checked from here.
+// connections on the upstream socket. A socket a provider forwards with "host"
+// is inside its VM, so it can't be checked from here.
 func CheckSSHAgentUpstreamListening(upstream string) error {
-	if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "host" && !nodeps.IsLinux() {
+	if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "host" &&
+		(upstream == hostServicesSSHAuthSock || dockerutil.IsLima()) {
 		return nil
 	}
 	conn, err := net.DialTimeout("unix", upstream, 2*time.Second)

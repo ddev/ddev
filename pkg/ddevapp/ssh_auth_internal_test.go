@@ -51,6 +51,9 @@ func TestCheckSSHAgentUpstreamListening(t *testing.T) {
 	require.NoError(t, CheckSSHAgentUpstreamListening(sock))
 	require.NoError(t, listener.Close())
 	require.Error(t, CheckSSHAgentUpstreamListening(sock))
+
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = "host"
+	require.NoError(t, CheckSSHAgentUpstreamListening(hostServicesSSHAuthSock))
 }
 
 // TestSSHAgentUpstreamSocketPaths checks the values that need no Docker provider.
@@ -115,6 +118,9 @@ func TestSSHAgentUpstreamSocketPaths(t *testing.T) {
 	require.Equal(t, "listener.sock", name)
 
 	require.NoError(t, listener.Close())
+	sock, err = SSHAgentUpstreamSocket()
+	require.NoError(t, err)
+	require.Equal(t, target, sock)
 	require.NoError(t, os.RemoveAll(agentDir))
 	_, err = SSHAgentUpstreamSocket()
 	require.ErrorIs(t, err, ErrSSHAgentSocketStale)
