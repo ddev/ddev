@@ -75,7 +75,7 @@ func fakeOutput(t *testing.T, stdout, stderr string, fail bool, args ...string) 
 
 // newModel returns a model that received a window size, then projects when
 // any are given, the way a running program would.
-func newModel(t *testing.T, width, height int, projects ...ProjectInfo) AppModel {
+func newModel(t testing.TB, width, height int, projects ...ProjectInfo) AppModel {
 	t.Helper()
 	m := NewAppModel()
 	m.dashboard.cwd = t.TempDir()
@@ -87,7 +87,7 @@ func newModel(t *testing.T, width, height int, projects ...ProjectInfo) AppModel
 }
 
 // send feeds msgs to m through Update, dropping the commands.
-func send(t *testing.T, m AppModel, msgs ...tea.Msg) AppModel {
+func send(t testing.TB, m AppModel, msgs ...tea.Msg) AppModel {
 	t.Helper()
 	for _, msg := range msgs {
 		m, _ = sendCmd(t, m, msg)
@@ -95,7 +95,7 @@ func send(t *testing.T, m AppModel, msgs ...tea.Msg) AppModel {
 	return m
 }
 
-func sendCmd(t *testing.T, m AppModel, msg tea.Msg) (AppModel, tea.Cmd) {
+func sendCmd(t testing.TB, m AppModel, msg tea.Msg) (AppModel, tea.Cmd) {
 	t.Helper()
 	updated, cmd := m.Update(msg)
 	model, ok := updated.(AppModel)
@@ -217,6 +217,7 @@ func requireFits(t *testing.T, m AppModel, context string) {
 	require.Len(t, lines, m.height, "%s: view height\n%s", context, screen(m))
 	for i, line := range lines {
 		require.LessOrEqual(t, ansi.StringWidth(line), m.width, "%s: line %d is too wide: %q", context, i, ansi.Strip(line))
+		require.NotContains(t, line, "\t", "%s: line %d has a tab, which has no width", context, i)
 	}
 }
 
@@ -252,7 +253,7 @@ func sampleDetail() ProjectDetail {
 }
 
 // detailModel returns a model showing the loaded detail d.
-func detailModel(t *testing.T, width, height int, d ProjectDetail) AppModel {
+func detailModel(t testing.TB, width, height int, d ProjectDetail) AppModel {
 	t.Helper()
 	m := newModel(t, width, height, sampleProjects()...)
 	m, _ = m.openDetail(ProjectInfo{Name: d.Name, AppRoot: d.AppRoot, Status: d.Status})

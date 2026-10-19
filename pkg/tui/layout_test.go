@@ -30,9 +30,10 @@ func manyProjects(n int) []ProjectInfo {
 	return projects
 }
 
-// busyDetail returns a detail with long values and many services.
+// busyDetail returns a detail with long values, a tab and many services.
 func busyDetail() ProjectDetail {
 	d := sampleDetail()
+	d.Docroot = "web\tpublic"
 	d.URLs = append(d.URLs, "https://"+longText[:120]+".ddev.site")
 	for i := range 15 {
 		d.Services = append(d.Services, ServiceInfo{
@@ -100,6 +101,19 @@ func TestLayoutFollowsResize(t *testing.T) {
 			m = send(t, m, tea.WindowSizeMsg{Width: size[0], Height: size[1]})
 			requireFits(t, m, fmt.Sprintf("%s resized to %dx%d", name, size[0], size[1]))
 		}
+	}
+}
+
+// Update skips the layout for a spinner frame, so a frame must not change it.
+func TestSpinnerFrameKeepsLayout(t *testing.T) {
+	for name, state := range layoutStates {
+		m := state(t, 80, 24)
+		m.refreshing = true
+		m.layout()
+		m = send(t, m, m.spinner.Tick())
+		laid := m
+		laid.layout()
+		require.Equal(t, laid.View().Content, m.View().Content, name)
 	}
 }
 

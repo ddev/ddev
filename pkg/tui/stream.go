@@ -108,10 +108,7 @@ func (s *streamView) append(lines ...string) {
 		s.rewrap()
 		return
 	}
-	s.vp.SetContentLines(s.wrapped)
-	if s.follow {
-		s.vp.GotoBottom()
-	}
+	s.setContent()
 }
 
 func (s *streamView) resize(width, height int) {
@@ -134,7 +131,13 @@ func (s *streamView) rewrap() {
 	for _, line := range s.lines {
 		s.wrapped = append(s.wrapped, s.wrap(line)...)
 	}
-	s.vp.SetContentLines(s.wrapped)
+	s.setContent()
+}
+
+// setContent gives the viewport, which only scrolls, a blank line for each
+// wrapped one, since it measures every line it gets on every batch.
+func (s *streamView) setContent() {
+	s.vp.SetContentLines(make([]string, len(s.wrapped)))
 	if s.follow {
 		s.vp.GotoBottom()
 	}

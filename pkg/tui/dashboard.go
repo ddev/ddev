@@ -10,7 +10,6 @@ import (
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/textinput"
-	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
@@ -21,17 +20,20 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-// dashboardView lists the projects, one per row of a viewport, which
-// scrolls a row at a time to keep the selection in view.
+// dashboardView lists the projects, one per row, scrolling a row at a time
+// to keep the selection in view.
 type dashboardView struct {
 	items []projectItem
 	// visible is what the filter lets through, best match first.
 	visible []match
 	cursor  int
 	filter  textinput.Model
-	vp      viewport.Model
 	styles  Styles
 	cols    columns
+	// width and height are the list's size, top is its first row shown, and
+	// rendered is the rows from top.
+	width, height, top int
+	rendered           []string
 	// countLine is set when the line above the list fits.
 	countLine bool
 	cwd       string
@@ -61,7 +63,7 @@ type match struct {
 func newDashboardView(styles Styles, cwd string) dashboardView {
 	filter := textinput.New()
 	filter.Prompt = "Filter: "
-	v := dashboardView{filter: filter, vp: newViewport(), cwd: cwd, loading: true}
+	v := dashboardView{filter: filter, cwd: cwd, loading: true}
 	v.setStyles(styles)
 	return v
 }
@@ -280,9 +282,9 @@ func (v dashboardView) update(msg tea.KeyPressMsg, k KeyMap) (dashboardView, tea
 	case key.Matches(msg, k.End):
 		v.moveTo(len(v.visible) - 1)
 	case key.Matches(msg, k.PageDown):
-		return v.page(v.vp.Height()), nil, nil
+		return v.page(v.height), nil, nil
 	case key.Matches(msg, k.PageUp):
-		return v.page(-v.vp.Height()), nil, nil
+		return v.page(-v.height), nil, nil
 	case key.Matches(msg, k.Filter):
 		v.filter.CursorEnd()
 		v.moveTo(0)
@@ -329,7 +331,7 @@ func (v dashboardView) updateFilter(msg tea.Msg) (dashboardView, tea.Cmd) {
 // page moves the selection and the view by rows.
 func (v dashboardView) page(rows int) dashboardView {
 	v.moveTo(v.cursor + rows)
-	v.vp.SetYOffset(v.vp.YOffset() + rows)
+	v.top += rows
 	return v
 }
 
@@ -341,27 +343,29 @@ func (v *dashboardView) resize(width, height int) {
 		height--
 	}
 	v.cols = projectColumns(v.items, width)
-	v.vp.SetWidth(width)
-	v.vp.SetHeight(max(1, height))
-	v.vp.SetContent(v.rows(width))
+	v.width, v.height = width, max(1, height)
+	v.top = max(0, min(v.top, len(v.visible)-v.height))
 	switch {
-	case v.cursor < v.vp.YOffset():
-		v.vp.SetYOffset(v.cursor)
-	case v.cursor >= v.vp.YOffset()+v.vp.Height():
-		v.vp.SetYOffset(v.cursor - v.vp.Height() + 1)
+	case v.cursor < v.top:
+		v.top = v.cursor
+	case v.cursor >= v.top+v.height:
+		v.top = v.cursor - v.height + 1
 	}
+	v.rendered = v.rows()
 }
 
-// rows renders the visible projects, one per line of width.
-func (v dashboardView) rows(width int) string {
+// rows renders the visible projects from top that fit the height.
+func (v dashboardView) rows() []string {
 	if len(v.visible) == 0 {
-		return v.styles.Muted.Render("  No matching projects.")
+		return []string{v.styles.Muted.Render("  No matching projects.")}
 	}
-	lines := make([]string, len(v.visible))
-	for i, m := range v.visible {
-		lines[i] = ansi.Truncate(v.row(v.items[m.item], m.runes, i == v.cursor), width, "…")
+	end := min(len(v.visible), v.top+v.height)
+	lines := make([]string, 0, end-v.top)
+	for i := v.top; i < end; i++ {
+		m := v.visible[i]
+		lines = append(lines, v.row(v.items[m.item], m.runes, i == v.cursor))
 	}
-	return strings.Join(lines, "\n")
+	return lines
 }
 
 func (v dashboardView) title(u ui) string {
@@ -372,7 +376,7 @@ func (v dashboardView) title(u ui) string {
 func (v dashboardView) body(u ui) string {
 	switch {
 	case len(v.items) > 0:
-		rows := scrollable(u.styles, v.vp)
+		rows := scrollable(u.styles, v.rendered, v.top, len(v.visible), v.width, v.height)
 		if v.countLine {
 			return v.count(u.styles) + "\n" + rows
 		}
@@ -393,7 +397,7 @@ func (v dashboardView) count(s Styles) string {
 	total, shown := len(v.items), len(v.visible)
 	if v.filtered() {
 		count := fmt.Sprintf("%d of %d projects", shown, total)
-		w := max(0, v.vp.Width()-2-len(count)-1)
+		w := max(0, v.width-2-len(count)-1)
 		input := ansi.Truncate(v.filter.View(), w, "")
 		return "  " + input + strings.Repeat(" ", max(0, w-ansi.StringWidth(input))) + " " + s.Muted.Render(count)
 	}
@@ -572,8 +576,12 @@ func (v dashboardView) row(p projectItem, matches []int, selected bool) string {
 // fit truncates or pads s to exactly width cells. Truncating keeps escape
 // sequences, so a cut hyperlink is still terminated.
 func fit(s string, width int) string {
-	s = ansi.Truncate(s, width, "…")
-	return s + strings.Repeat(" ", max(0, width-ansi.StringWidth(s)))
+	w := ansi.StringWidth(s)
+	if w > width {
+		s = ansi.Truncate(s, width, "…")
+		w = ansi.StringWidth(s)
+	}
+	return s + strings.Repeat(" ", max(0, width-w))
 }
 
 func formatProjectPath(path string) string {

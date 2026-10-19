@@ -36,6 +36,8 @@ type detailView struct {
 	// once read.
 	latest map[string]string
 	vp     viewport.Model
+	// lines is the content of vp.
+	lines []string
 }
 
 // newDetailView shows p with what its configuration and the project list
@@ -240,14 +242,15 @@ func (v detailView) body(u ui) string {
 	if v.project == nil {
 		return message(u.width, u.spinner+"Loading project details...")
 	}
-	return scrollable(u.styles, v.vp)
+	return scrollView(u.styles, v.vp, v.lines)
 }
 
 // resize fits the view to width and height, rendering the detail for width.
 func (v *detailView) resize(s Styles, width, height int) {
 	v.vp.SetWidth(width)
 	v.vp.SetHeight(height)
-	v.vp.SetContent(v.content(s, width))
+	v.lines = strings.Split(v.content(s, width), "\n")
+	v.vp.SetContentLines(v.lines)
 }
 
 // content renders the project detail for width w.
