@@ -152,9 +152,14 @@ if [ ! -z ${PUSH:-} ]; then
   set +x
 fi
 
-# By default, load/import into local docker
+# By default, load/import into local docker. Podman needs Docker media types to
+# keep the healthcheck; see LOCAL_OUTPUT_ARGS in containers/containers_shared.mk.
+load_directive="--load"
+if docker version --format '{{range .Server.Components}}{{.Name}};{{end}}' 2>/dev/null | grep -q 'Podman Engine'; then
+  load_directive="--output=type=docker,oci-mediatypes=false"
+fi
 set -x
 if [ -z "${PUSH:-}" ]; then
     echo "Loading to local docker ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
-    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DDEV_IMAGE_TAG=${DDEV_IMAGE_TAG}" ${label_directive} ${tag_directive} .
+    docker buildx build ${load_directive} ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DDEV_IMAGE_TAG=${DDEV_IMAGE_TAG}" ${label_directive} ${tag_directive} .
 fi

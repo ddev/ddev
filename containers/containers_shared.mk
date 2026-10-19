@@ -17,10 +17,15 @@ DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
 # every other image and with the push workflows - see containers/image-metadata.sh.
 DDEV_IMAGE_LABELS = $(shell ../image-metadata.sh labels $(DDEV_IMAGE_TAG) $(notdir $(DOCKER_REPO)))
 
+# Podman reads an OCI image config without its Healthcheck
+# (containers/podman#18904), so load Docker media types there. Docker keeps
+# its default output: its containerd store adds attestations this format rejects.
+LOCAL_OUTPUT_ARGS := $(shell docker version --format '{{range .Server.Components}}{{.Name}};{{end}}' 2>/dev/null | grep -q 'Podman Engine' && echo --output=type=docker,oci-mediatypes=false)
+
 .PHONY: container push
 
 container: container-name
-	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)" $(DDEV_IMAGE_LABELS) .
+	docker build $(LOCAL_OUTPUT_ARGS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)" $(DDEV_IMAGE_LABELS) .
 
 container-name:
 	@echo "container: $(DOCKER_REPO):$(VERSION)"
