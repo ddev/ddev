@@ -126,6 +126,12 @@ podman_bin_dir() {
   dirname "${podman_bin}"
 }
 
+# `podman --version` answers before podman sets up its storage, unlike `podman
+# version`, so it still works while a broken storage.conf is what is being fixed.
+podman_major_version() {
+  podman --version 2>/dev/null | awk '{split($3, v, "."); print v[1]}' || true
+}
+
 podman_is_brew() {
   case "$(command -v podman 2>/dev/null)" in
     "${BREW_PREFIX}"/*) return 0 ;;
@@ -512,7 +518,7 @@ write_containers_conf() {
 # https://github.com/containers/podman/blob/main/docs/tutorials/performance.md#choosing-a-storage-driver
 write_storage_conf() {
   local f driver=0 roots=0 podman_major
-  podman_major="$(podman version --format '{{.Client.Version}}' 2>/dev/null | cut -d. -f1)"
+  podman_major="$(podman_major_version)"
   for f in /usr/share/containers/storage.conf /etc/containers/storage.conf; do
     [ -f "${f}" ] || continue
     if grep -Eq '^[[:space:]]*mount_program[[:space:]]*=' "${f}"; then
@@ -564,7 +570,7 @@ fix_registries_conf() {
   [ -f /etc/containers/registries.conf ] || return 0
   grep -q '^[[:space:]]*\[registries' /etc/containers/registries.conf || return 0
   local podman_major
-  podman_major="$(podman version --format '{{.Client.Version}}' 2>/dev/null | cut -d. -f1)"
+  podman_major="$(podman_major_version)"
   [ "${podman_major:-0}" -ge 6 ] 2>/dev/null || return 0
 
   if [ "${CI:-}" != "true" ]; then
@@ -802,7 +808,7 @@ check_helper_versions() {
   # Explicit pairing check, for distro installs with no bundled helpers next to
   # the podman binary. Only skew is a problem, not the paths themselves.
   local podman_major netavark_major
-  podman_major="$(podman version --format '{{.Client.Version}}' 2>/dev/null | cut -d. -f1)"
+  podman_major="$(podman_major_version)"
   netavark_major="$(printf '%s' "${netavark_ver}" | awk '{print $2}' | cut -d. -f1)"
   if [ -n "${podman_major}" ] && [ -n "${netavark_major}" ] 2>/dev/null; then
     if [ "${podman_major}" -ge 6 ] && [ "${netavark_major}" -lt 2 ]; then
