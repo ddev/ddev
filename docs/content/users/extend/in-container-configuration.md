@@ -254,6 +254,7 @@ wins.
 services:
   devilbox-php:
     container_name: ddev-${DDEV_SITENAME}-devilbox-php
+    hostname: ${DDEV_SITENAME}-devilbox-php
     image: devilbox/php-fpm-5.3
     x-ddev:
       ssh-shell: bash

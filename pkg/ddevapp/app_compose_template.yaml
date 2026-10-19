@@ -269,6 +269,7 @@ services:
   xhgui:
     image: {{ .XhguiImage }}
     container_name: ddev-${DDEV_SITENAME}-xhgui
+    hostname: {{ .Name }}-xhgui
     profiles:
       - xhgui
     restart: "no"

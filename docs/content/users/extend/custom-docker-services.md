@@ -5,7 +5,7 @@ search:
 
 # Custom Docker Compose Services
 
-When you need services that aren't available as DDEV add-ons, or require deep customization beyond what add-ons provide, you can create custom Docker Compose services using `docker-compose.*.yaml` files. For how DDEV merges these files and the conventions your service should follow (labels, container naming, the `build:`/`-built` tag pattern, port exposure), see [Defining Additional Services with Docker Compose](custom-compose-files.md).
+When you need services that aren't available as DDEV add-ons, or require deep customization beyond what add-ons provide, you can create custom Docker Compose services using `docker-compose.*.yaml` files. For how DDEV merges these files and the conventions your service should follow (labels, container naming and hostname, the `build:`/`-built` tag pattern, port exposure), see [Defining Additional Services with Docker Compose](custom-compose-files.md).
 
 !!!tip "From Custom Services to Add-ons"
     Many successful custom services eventually become DDEV add-ons so they can be shared with teams, between projects, or with the broader community. If you find your custom service useful and stable, convert it to an add-on using the [DDEV Add-on Template](https://github.com/ddev/ddev-addon-template) and see [Creating Add-ons](creating-add-ons.md).
@@ -41,6 +41,7 @@ Create `.ddev/docker-compose.myservice.yaml`:
 services:
   myservice:
     container_name: "ddev-${DDEV_SITENAME}-myservice"
+    hostname: "${DDEV_SITENAME}-myservice"
     image: nginx:alpine
     # These two labels are added automatically since DDEV v1.25.2+
     labels:
@@ -59,7 +60,7 @@ services:
 
 ### Service Configuration Best Practices
 
-Required labels, container naming, restart policy, and HTTP vs. direct port binding are covered in [Conventions for Defining Additional Services](custom-compose-files.md#conventions-for-defining-additional-services) — follow those for every custom service.
+Required labels, container naming and hostname, restart policy, and HTTP vs. direct port binding are covered in [Conventions for Defining Additional Services](custom-compose-files.md#conventions-for-defining-additional-services) — follow those for every custom service.
 
 #### Volume Mounts
 
@@ -100,6 +101,7 @@ This feature is useful for showing credentials, URLs, or usage notes for custom 
 services:
   rabbitmq:
     container_name: "ddev-${DDEV_SITENAME}-rabbitmq"
+    hostname: "${DDEV_SITENAME}-rabbitmq"
     image: rabbitmq:3-management-alpine
     # These two labels are added automatically since DDEV v1.25.2+
     labels:
@@ -142,6 +144,7 @@ services:
   # One-shot container: prepares the shared volume, then exits
   init:
     container_name: "ddev-${DDEV_SITENAME}-init"
+    hostname: "${DDEV_SITENAME}-init"
     image: busybox:stable
     command:
       - sh
@@ -178,6 +181,7 @@ Create `.ddev/docker-compose.myservice.yaml`:
 services:
   myservice:
     container_name: "ddev-${DDEV_SITENAME}-myservice"
+    hostname: "${DDEV_SITENAME}-myservice"
     image: ${BASE_IMAGE:-nginx:stable}-${DDEV_SITENAME}-myservice-built
     build:
       dockerfile_inline: |
@@ -216,6 +220,7 @@ Create `.ddev/docker-compose.sqlsrv.yaml`:
 services:
   sqlsrv:
     container_name: "ddev-${DDEV_SITENAME}-sqlsrv"
+    hostname: "${DDEV_SITENAME}-sqlsrv"
     image: mcr.microsoft.com/mssql/server:2022-latest
     # These two labels are added automatically since DDEV v1.25.2+
     labels:
@@ -254,6 +259,7 @@ Create `.ddev/docker-compose.elasticsearch.yaml`:
 services:
   elasticsearch:
     container_name: "ddev-${DDEV_SITENAME}-elasticsearch"
+    hostname: "${DDEV_SITENAME}-elasticsearch"
     image: elasticsearch:8.11.0
     # These two labels are added automatically since DDEV v1.25.2+
     labels:
@@ -291,6 +297,7 @@ Create `.ddev/docker-compose.cache.yaml`:
 services:
   redis:
     container_name: "ddev-${DDEV_SITENAME}-redis"
+    hostname: "${DDEV_SITENAME}-redis"
     image: redis:7-alpine
     # These two labels are added automatically since DDEV v1.25.2+
     labels:
@@ -302,6 +309,7 @@ services:
 
   memcached:
     container_name: "ddev-${DDEV_SITENAME}-memcached"
+    hostname: "${DDEV_SITENAME}-memcached"
     image: memcached:alpine
     # These two labels are added automatically since DDEV v1.25.2+
     labels:

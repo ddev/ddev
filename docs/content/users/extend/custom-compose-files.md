@@ -1,7 +1,7 @@
 # Defining Additional Services with Docker Compose
 
 This page covers how DDEV merges custom `docker-compose.*.yaml` files and the
-conventions your service definitions should follow (labels, container naming,
+conventions your service definitions should follow (labels, container naming and hostname,
 the `build:`/`-built` tag pattern, port exposure, and more). For guidance on
 *when* to write a custom service instead of using an add-on, the `x-ddev`
 extension field, and a gallery of worked examples, see
@@ -31,6 +31,7 @@ For most HTTP-based services, use `expose` with `HTTP_EXPOSE` and `HTTPS_EXPOSE`
 services:
   dummy-service:
     container_name: "ddev-${DDEV_SITENAME}-dummy-service"
+    hostname: "${DDEV_SITENAME}-dummy-service"
     # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
@@ -91,6 +92,15 @@ To better understand how DDEV parses your custom docker-compose files, run `ddev
 When defining additional services for your project, we recommend following these conventions to ensure DDEV handles your service the same way DDEV handles default services.
 
 * The container name should be `ddev-${DDEV_SITENAME}-<servicename>`. This ensures the auto-generated [Traefik routing configuration](./traefik-router.md#project-traefik-configuration) matches your custom service.
+* Set `hostname` to `${DDEV_SITENAME}-<servicename>`, as DDEV does for `web` and `db`. Without it, Docker uses the container ID as the hostname, so the shell prompt in `ddev ssh -s <servicename>` shows a hash instead of a name:
+
+    ```yaml
+    services:
+      dummy-service:
+        container_name: ddev-${DDEV_SITENAME}-dummy-service
+        hostname: ${DDEV_SITENAME}-dummy-service
+    ```
+
 * Provide containers with required labels:
 
     ```yaml
@@ -170,6 +180,7 @@ A more advanced solution is to configure the third-party container to trust the 
 services:
   example:
     container_name: ddev-${DDEV_SITENAME}-example
+    hostname: ${DDEV_SITENAME}-example
     # Run `mkcert -install` on container start
     # (choose either this or the `post_start` approach, not both):
     command: "bash -c 'mkcert -install && original-start-command-from-image'"
@@ -245,6 +256,7 @@ The simplest way is to run the container using the same UID and GID as the host 
 services:
   example:
     container_name: ddev-${DDEV_SITENAME}-example
+    hostname: ${DDEV_SITENAME}-example
     image: ${YOUR_DOCKER_IMAGE:-example/example:latest}
     # These two labels are added automatically since DDEV v1.25.2+
     labels:
@@ -269,6 +281,7 @@ If you need a more sophisticated user setup, similar to what `ddev-webserver` us
 services:
   example:
     container_name: ddev-${DDEV_SITENAME}-example
+    hostname: ${DDEV_SITENAME}-example
     image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-example-built
     build:
       context: example
@@ -329,6 +342,7 @@ services:
     profiles:
       - busybox
     container_name: ddev-${DDEV_SITENAME}-busybox
+    hostname: ${DDEV_SITENAME}-busybox
     # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
