@@ -2088,6 +2088,8 @@ func (app *DdevApp) start(o StartOptions) error {
 		// so send SIGTERM to process ID 1
 		Cmd:    `/start.sh >/proc/1/fd/1 2>&1 || kill -- -1`,
 		Detach: true,
+		// The daemons belong to the project, not to the session that started it.
+		SkipHostEnv: true,
 	})
 	if err != nil {
 		util.Warning("Unable to run /start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
@@ -2799,6 +2801,9 @@ type ExecOpts struct {
 	User string
 	// SkipHooks skips pre-exec and post-exec hook processing.
 	SkipHooks bool
+	// SkipHostEnv runs the command with only the container environment and
+	// Env, for a command whose processes outlive the session that ran it.
+	SkipHostEnv bool
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
@@ -2876,6 +2881,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 	tty := opts.Tty && isatty.IsTerminal(os.Stdin.Fd()) && stdoutIsTerminal
 
+	env := opts.Env
+	if !opts.SkipHostEnv {
+		env = app.execEnv(opts.Service, tty, opts.Env)
+	}
+
 	runOpts := api.RunOptions{
 		Service:     opts.Service,
 		Command:     opts.RawCmd,
@@ -2884,7 +2894,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		Detach:      opts.Detach,
 		WorkingDir:  opts.Dir,
 		User:        opts.User,
-		Environment: app.execEnv(opts.Service, tty, opts.Env),
+		Environment: env,
 	}
 
 	var stdoutResult, stderrResult string

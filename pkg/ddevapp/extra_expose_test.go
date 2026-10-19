@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -55,11 +56,21 @@ func TestExtraPortExpose(t *testing.T) {
 		{Name: "FirstDaemon", Command: "php -S 0.0.0.0:3000", Directory: "/var/www/html"},
 		{Name: "SecondDaemon", Command: "php -S 0.0.0.0:4000", Directory: "/var/www/html/sub"},
 	}
+	// The daemons must not depend on whether an AI agent ran `ddev start`.
+	t.Setenv("AI_AGENT", "test-agent")
 	err = app.Start()
 	if err != nil {
 		logs, logErr := exec.RunCommand("docker", []string{"logs", "ddev-" + app.Name + "-web"})
 		t.Fatalf("app failed to start: %v, logErr=%v logs=%v", err, logErr, logs)
 	}
+
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{Cmd: `echo "$AI_AGENT"`})
+	require.NoError(t, err)
+	require.Equal(t, "test-agent", strings.TrimSpace(stdout))
+	// Print only AI_AGENT, the rest of the environment can hold secrets.
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: `set -o pipefail; tr '\0' '\n' </proc/$(pgrep -x supervisord)/environ | { grep '^AI_AGENT=' || true; }`})
+	require.NoError(t, err)
+	require.Empty(t, stdout, "supervisord should not inherit AI_AGENT")
 
 	// Careful with portsToTest because https ports won't work on GitHub Actions Colima tests (although they work fine on normal Mac)
 	portsToTest := []string{"3000", "4000"}

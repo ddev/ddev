@@ -171,6 +171,8 @@ Some variables describe the session that runs a command rather than the project,
 * In an interactive session, `TERM` and the variables a terminal identifies itself with, such as `COLORTERM` and `TERM_PROGRAM`, so programs know how many colors and which hyperlinks they can use.
 * For [`ddev composer`](../usage/commands.md#composer), [`COMPOSER_NO_BLOCKING`](https://getcomposer.org/doc/03-cli.md#composer-no-blocking).
 
+None of them reach the daemons `ddev start` launches, such as [`web_extra_daemons`](../extend/customization-extendibility.md#running-extra-daemons-in-the-web-container), so a project runs the same whether a person or an AI agent started it.
+
 To forward another variable to `web`, add its bare name to [`web_environment`](#web_environment).
 
 ## Applying Changes
