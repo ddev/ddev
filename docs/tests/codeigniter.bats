@@ -20,7 +20,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project codeigniter4/appstarter
+  run -0 _retry ddev composer create-project codeigniter4/appstarter
 
   DDEV_DEBUG=true run -0 ddev launch
   assert_output --partial "FULLURL ${PRIMARY_URL}"

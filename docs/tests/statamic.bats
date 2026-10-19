@@ -18,7 +18,7 @@ teardown() {
 
   run -0 ddev config --project-type=laravel --docroot=public
 
-  run -0 ddev composer create-project --prefer-dist statamic/statamic
+  run -0 _retry ddev composer create-project --prefer-dist statamic/statamic
 
   _extra_info
 

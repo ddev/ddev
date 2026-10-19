@@ -20,7 +20,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project pimcore/skeleton
+  run -0 _retry ddev composer create-project pimcore/skeleton
   run -0 ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin
   # echo "web_extra_daemons:
   #   - name: consumer

@@ -22,7 +22,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project getgrav/grav
+  run -0 _retry ddev composer create-project getgrav/grav
 
   # Grav 2.0 dropped support for the classic admin plugin; admin2 is its replacement.
   run -0 ddev exec gpm install admin2 -y

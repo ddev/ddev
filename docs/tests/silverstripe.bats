@@ -22,7 +22,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project --prefer-dist silverstripe/installer
+  run -0 _retry ddev composer create-project --prefer-dist silverstripe/installer
 
   run -0 ddev sake dev/build flush=all
 

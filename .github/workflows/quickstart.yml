@@ -105,6 +105,9 @@ jobs:
           make
           # Use mutagen by default as it may cause different behaviors
           $(make DDEV_BINARY_FULLPATH) config global --performance-mode=mutagen
+          # Unauthenticated Composer downloads from GitHub get rate-limited (HTTP 429)
+          mkdir -p ~/.ddev/homeadditions/.composer
+          printf '{"github-oauth":{"github.com":"%s"}}\n' "${DDEV_GITHUB_TOKEN}" > ~/.ddev/homeadditions/.composer/auth.json
           make quickstart-test
 
       - name: Fail on timeout

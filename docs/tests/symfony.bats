@@ -25,7 +25,7 @@ teardown() {
   # Composer has no movable "lts" alias (unlike symfony-cli's --version=lts
   # below), so this pins to the current LTS branch explicitly. See
   # https://symfony.com/releases for the current LTS when this needs bumping.
-  run -0 ddev composer create-project symfony/skeleton:"7.4.*"
+  run -0 _retry ddev composer create-project symfony/skeleton:"7.4.*"
 
   run -0 bash -c 'printf "x\n" | ddev composer require webapp'
 

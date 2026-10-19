@@ -16,7 +16,7 @@ teardown() {
   run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
   run -0 ddev config --project-type=symfony --docroot=public
   run -0 ddev start -y
-  run -0 ddev composer create-project ibexa/oss-skeleton
+  run -0 _retry ddev composer create-project ibexa/oss-skeleton
   run -0 ddev console ibexa:install --no-interaction
   run -0 ddev console ibexa:graphql:generate-schema
 

@@ -22,7 +22,7 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer create-project mahocommerce/maho-starter
+  run -0 _retry ddev composer create-project mahocommerce/maho-starter
 
   # Silent Maho install with sample data; --force is needed because
   # ddev pre-creates app/etc/local.xml

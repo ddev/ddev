@@ -40,7 +40,7 @@ EOF
 
   _extra_info
 
-  run -0 ddev composer create-project --repository https://repo.magento.com/ magento/project-community-edition
+  run -0 _retry ddev composer create-project --repository https://repo.magento.com/ magento/project-community-edition
 
   # Copy the auth.json into var/composer_home for the deploying the sample data sep
   run -0 ddev exec "mkdir -p var/composer_home && cp ~/.composer/auth.json var/composer_home/auth.json"
