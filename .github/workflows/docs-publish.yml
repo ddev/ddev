@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   docs-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Setup Pages
         id: pages

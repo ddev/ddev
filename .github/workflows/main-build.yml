@@ -46,7 +46,7 @@ jobs:
   # running on separate machines.
   build:
     name: Build ${{ matrix.platform }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -189,7 +189,7 @@ jobs:
   # signing itself.
   build-installers:
     name: Build Windows installers
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: sign-windows-binaries
     steps:
       - uses: actions/checkout@v7
@@ -367,7 +367,7 @@ jobs:
       AUR_STABLE_GIT_URL: ${{ vars.AUR_STABLE_GIT_URL }}
       DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
     name: Upload artifacts
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [build, sign-windows-installers, notarize-macos]
     steps:
       - name: Load 1password secret(s)
@@ -527,7 +527,7 @@ jobs:
 
   push-devcontainers:
     name: Push devcontainer feature
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: artifacts
     steps:
       - name: Load 1password secret(s)

@@ -49,7 +49,7 @@ jobs:
   report:
     name: Report cleanup candidates
     if: ${{ github.event_name == 'schedule' || (inputs.tags == '' && inputs.report_run_id == '') }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       # Full history and tags: the script reads every release's version file.
       - uses: actions/checkout@v7
@@ -87,7 +87,7 @@ jobs:
   delete:
     name: Delete tags${{ !inputs.execute && ' (dry run)' || '' }}
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && (inputs.tags != '' || inputs.report_run_id != '') }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: image-tag-cleanup
     permissions:
       contents: read

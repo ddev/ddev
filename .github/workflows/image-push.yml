@@ -32,7 +32,7 @@ jobs:
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
     outputs:
@@ -65,7 +65,7 @@ jobs:
       fail-fast: false
       matrix:
         image: ${{ fromJson(needs.check-artifacts.outputs.images) }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       # download-artifact needs actions:read to reach another run's artifacts.
       actions: read
@@ -205,7 +205,7 @@ jobs:
   comment:
     name: Comment on the pull request
     needs: push
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read

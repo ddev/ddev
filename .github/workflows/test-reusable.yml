@@ -7,7 +7,7 @@ on:
         description: 'Runner to use'
         required: false
         type: string
-        default: 'ubuntu-24.04'
+        default: 'ubuntu-26.04'
       ddev_test_webserver_type:
         description: 'DDEV_TEST_WEBSERVER_TYPE value'
         required: false

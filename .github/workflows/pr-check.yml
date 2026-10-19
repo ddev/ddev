@@ -14,7 +14,7 @@ permissions:
 jobs:
   check_pr_title:
     name: Check PR Title
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check Type
         uses: ddev/commit-message-checker@v3
@@ -27,7 +27,7 @@ jobs:
   assign_labels:
     name: Assign Labels
     needs: check_pr_title
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Assign and check labels
         uses: fuxingloh/multi-labeler@v5

@@ -63,7 +63,7 @@ jobs:
   prepare-testargs:
     needs: determine-test-eligibility
     if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       testargs_pkg: ${{ steps.compute-testargs.outputs.testargs_pkg }}
       testargs_cmd: ${{ steps.compute-testargs.outputs.testargs_cmd }}
