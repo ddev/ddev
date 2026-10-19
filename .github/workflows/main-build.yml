@@ -51,10 +51,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { platform: linux_amd64,   target: linux_amd64 completions }
-          - { platform: linux_arm64,   target: linux_arm64 }
-          - { platform: darwin_amd64,  target: darwin_amd64 }
-          - { platform: darwin_arm64,  target: darwin_arm64 }
+          - { platform: linux_amd64,   target: linux_amd64 .gotmp/bin/linux_amd64/mkcert completions }
+          - { platform: linux_arm64,   target: linux_arm64 .gotmp/bin/linux_arm64/mkcert }
+          - { platform: darwin_amd64,  target: darwin_amd64 .gotmp/bin/darwin_amd64/mkcert }
+          - { platform: darwin_arm64,  target: darwin_arm64 .gotmp/bin/darwin_arm64/mkcert }
           - { platform: windows_amd64, target: windows_amd64_binaries }
           - { platform: windows_arm64, target: windows_arm64_binaries }
     steps:
