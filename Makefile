@@ -444,12 +444,12 @@ wsl_%_copy:
 	mkdir -p $(GOTMP)/bin/wsl_$*
 	cp $(GOTMP)/bin/windows_$*/ddev-hostname.exe $(GOTMP)/bin/windows_$*/mkcert.exe $(GOTMP)/bin/wsl_$*/
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_amd64_binaries linux_amd64 winpkg/ddev_windows_installer.nsi
+$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_amd64_binaries linux_amd64 $(GOTMP)/bin/linux_amd64/mkcert winpkg/ddev_windows_installer.nsi
 	$(MAKE) windows_amd64_sign_binaries
 	$(MAKE) windows_amd64_package
 	$(MAKE) windows_amd64_sign_installer
 
-$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_arm64_binaries linux_arm64 winpkg/ddev_windows_installer.nsi
+$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_arm64_binaries linux_arm64 $(GOTMP)/bin/linux_arm64/mkcert winpkg/ddev_windows_installer.nsi
 	$(MAKE) windows_arm64_sign_binaries
 	$(MAKE) windows_arm64_package
 	$(MAKE) windows_arm64_sign_installer
