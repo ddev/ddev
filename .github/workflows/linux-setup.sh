@@ -8,6 +8,10 @@ set -x
 
 DDEV_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
+# We install nothing from the runner image's Microsoft repo, and an outage
+# there fails `apt-get update`.
+sudo rm -f /etc/apt/sources.list.d/microsoft-prod.*
+
 # The runner image pins an old Docker and removes Docker's apt repo; install
 # the latest docker-ce the way we tell users to, so CI sees new Docker
 # releases (and their breakage) as soon as users do.
