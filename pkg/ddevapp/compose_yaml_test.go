@@ -282,11 +282,20 @@ func TestFixupComposeYaml(t *testing.T) {
 	require.NotEmpty(t, app.ComposeYaml)
 	require.NotEmpty(t, app.ComposeYaml.Services)
 
-	expectedServices := []string{"web", "db", "dummy1", "dummy2", "dummy3", "dummy5"}
+	expectedServices := []string{"web", "db", "dummy1", "dummy2", "dummy3", "dummy4", "dummy5"}
 	for _, serviceName := range expectedServices {
 		_, ok := app.ComposeYaml.Services[serviceName]
 		require.True(t, ok, "%s service not found in app.ComposeYaml.Services", serviceName)
 	}
+
+	// dummy1 sets its own container_name; dummy4 is scaled and sets its own hostname.
+	for _, serviceName := range []string{"web", "db", "dummy1", "dummy2", "dummy3"} {
+		service := app.ComposeYaml.Services[serviceName]
+		require.Equal(t, ddevapp.GetContainerName(app, serviceName), service.ContainerName, "service %s container_name", serviceName)
+		require.Equal(t, app.Name+"-"+serviceName, service.Hostname, "service %s hostname", serviceName)
+	}
+	require.Empty(t, app.ComposeYaml.Services["dummy4"].ContainerName)
+	require.Equal(t, "custom-hostname", app.ComposeYaml.Services["dummy4"].Hostname)
 
 	webService := app.ComposeYaml.Services["web"]
 	require.Nil(t, webService.Networks["ddev_default"])
