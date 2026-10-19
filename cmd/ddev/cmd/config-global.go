@@ -324,14 +324,21 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 
 // changedGlobalConfigKeys returns the display keys for the settings named by
 // the flags given on the command line, so that only those are reported back.
-// web-environment is added to valMap here because the full listing omits it.
+// web-environment values can hold tokens, so only the names of the variables
+// given on the command line are reported, never their values.
 func changedGlobalConfigKeys(cmd *cobra.Command, valMap map[string]string) []string {
 	var keys []string
 	cmd.Flags().Visit(func(f *pflag.Flag) {
 		key := strings.TrimSuffix(f.Name, "-reset")
 		if key == "web-environment-add" || key == "web-environment" {
 			key = "web-environment"
-			valMap[key] = fmt.Sprintf("%v", globalconfig.DdevGlobalConfig.WebEnvironment)
+			var names []string
+			for e := range strings.SplitSeq(strings.Trim(strings.TrimSpace(f.Value.String()), `"'`), ",") {
+				if name, _, _ := strings.Cut(e, "="); name != "" {
+					names = append(names, name)
+				}
+			}
+			valMap[key] = fmt.Sprintf("%v", names)
 		}
 		if _, ok := valMap[key]; ok && !slices.Contains(keys, key) {
 			keys = append(keys, key)

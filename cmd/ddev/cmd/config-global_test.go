@@ -110,7 +110,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "use-hardened-images=true")
 	assert.Contains(out, "fail-on-hook-fail=true")
 	assert.Contains(out, "project-tld=ddev.test")
-	assert.Contains(out, `web-environment=["SOMEENV=some+val"]`)
+	assert.Contains(out, "web-environment=[SOMEENV]")
 	assert.Contains(out, "xdebug-ide-location=container")
 	assert.Contains(out, "router-http-port=8081")
 	assert.Contains(out, "router-https-port=8882")
@@ -141,7 +141,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args = []string{"config", "global", `--web-environment-add="FOO=bar"`}
 	out, err = exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
-	require.Equal(t, `web-environment=["FOO=bar" "SOMEENV=some+val"]`+"\n", out)
+	require.Equal(t, "web-environment=[FOO]\n", out)
 
 	// Test that we can remove array elements with `--item=""`
 	args = []string{"config", "global", `--web-environment=""`, `--omit-containers=""`}
