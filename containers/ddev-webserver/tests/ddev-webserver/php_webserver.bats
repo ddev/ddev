@@ -38,45 +38,34 @@ teardown() {
   # which breaks app-generated absolute URLs when router_http(s)_port
   # is not 80/443. Make sure the client's Host header, including any
   # nonstandard port, reaches PHP unchanged.
-  run curl -s --fail -H "Host: hosttest.ddev.site:8443" http://127.0.0.1:$HOST_HTTP_PORT/test/hosttest.php
-  assert_success
+  run -0 curl -s --fail -H "Host: hosttest.ddev.site:8443" http://127.0.0.1:$HOST_HTTP_PORT/test/hosttest.php
   assert_output --partial "HTTP_HOST=hosttest.ddev.site:8443"
-  run curl -sk --fail -H "Host: hosttest.ddev.site:8443" https://127.0.0.1:$HOST_HTTPS_PORT/test/hosttest.php
-  assert_success
+  run -0 curl -sk --fail -H "Host: hosttest.ddev.site:8443" https://127.0.0.1:$HOST_HTTPS_PORT/test/hosttest.php
   assert_output --partial "HTTP_HOST=hosttest.ddev.site:8443"
 }
 
 @test "http and https phpstatus access work inside and outside container for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  run curl -sSL --fail http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
-  assert_success
+  run -0 curl -sSL --fail http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
   if [ "${OS:-$(uname)}" != "Windows_NT" ] ; then
     # TODO: Why doesn't this work on Windows?
-    run curl -sSL --fail https://127.0.0.1:$HOST_HTTPS_PORT/test/phptest.php
-    assert_success
+    run -0 curl -sSL --fail https://127.0.0.1:$HOST_HTTPS_PORT/test/phptest.php
   fi
-  run docker exec -t $CONTAINER_NAME curl --fail http://127.0.0.1/test/phptest.php
-  assert_success
-  run docker exec -t $CONTAINER_NAME curl --fail https://127.0.0.1/test/phptest.php
-  assert_success
+  run -0 docker exec -t $CONTAINER_NAME curl --fail http://127.0.0.1/test/phptest.php
+  run -0 docker exec -t $CONTAINER_NAME curl --fail https://127.0.0.1/test/phptest.php
 }
 
 @test "update-alternatives can switch PHP without world-writable alternatives directories for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  run docker exec -t "$CONTAINER_NAME" bash -c 'test "$(stat -c %A /etc/alternatives | cut -c9)" != "w" && test "$(stat -c %A /var/lib/dpkg/alternatives | cut -c9)" != "w"'
-  assert_success
-  run docker exec -t "$CONTAINER_NAME" update-alternatives --set php "/usr/bin/php${PHP_VERSION}"
-  assert_success
-  run docker exec -t "$CONTAINER_NAME" update-alternatives --set php-fpm "/usr/sbin/php-fpm${PHP_VERSION}"
-  assert_success
+  run -0 docker exec -t "$CONTAINER_NAME" bash -c 'test "$(stat -c %A /etc/alternatives | cut -c9)" != "w" && test "$(stat -c %A /var/lib/dpkg/alternatives | cut -c9)" != "w"'
+  run -0 docker exec -t "$CONTAINER_NAME" update-alternatives --set php "/usr/bin/php${PHP_VERSION}"
+  run -0 docker exec -t "$CONTAINER_NAME" update-alternatives --set php-fpm "/usr/sbin/php-fpm${PHP_VERSION}"
 }
 
 @test "service runtime and log paths are writable without broadening base runtime directories for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  run docker exec -t "$CONTAINER_NAME" bash -c 'test "$(stat -c %A /run | cut -c9)" != "w" && test -w /run/php && test -w /var/run/nginx && test -w /var/run/supervisor && test -w /var/run/apache2 && test -w /var/lock/apache2 && touch /var/log/apache2/ddev-runtime-write-test.log /var/log/nginx/ddev-runtime-write-test.log && printf test >> /var/log/php-fpm.log && printf test >> /var/log/supervisord.log'
-  assert_success
+  run -0 docker exec -t "$CONTAINER_NAME" bash -c 'test "$(stat -c %A /run | cut -c9)" != "w" && test -w /run/php && test -w /var/run/nginx && test -w /var/run/supervisor && test -w /var/run/apache2 && test -w /var/lock/apache2 && touch /var/log/apache2/ddev-runtime-write-test.log /var/log/nginx/ddev-runtime-write-test.log && printf test >> /var/log/php-fpm.log && printf test >> /var/log/supervisord.log'
 }
 
 @test "legacy PHP-FPM socket paths remain available for custom webserver configs for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  run docker exec -t "$CONTAINER_NAME" bash -c 'test -L /run/php-fpm.sock && test "$(readlink /run/php-fpm.sock)" = "/run/php/php-fpm.sock" && test -S /run/php-fpm.sock && test -S /var/run/php-fpm.sock'
-  assert_success
+  run -0 docker exec -t "$CONTAINER_NAME" bash -c 'test -L /run/php-fpm.sock && test "$(readlink /run/php-fpm.sock)" = "/run/php/php-fpm.sock" && test -S /run/php-fpm.sock && test -S /var/run/php-fpm.sock'
 }
 
 extension_is_packaged() {
@@ -99,24 +88,19 @@ extension_is_packaged() {
     return
   fi
   if [[ ${PHP_VERSION} != 8.? ]] ; then
-    run docker exec -t $CONTAINER_NAME php --re xdebug
-    assert_success
+    run -0 docker exec -t $CONTAINER_NAME php --re xdebug
     assert_output --partial "xdebug.remote_enable"
   else
-    run docker exec -t $CONTAINER_NAME php --re xdebug
-    assert_success
+    run -0 docker exec -t $CONTAINER_NAME php --re xdebug
     assert_output --partial "xdebug.mode"
   fi
-  run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php
-  assert_success
+  run -0 curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php
   assert_output --partial "Xdebug is enabled"
-  run docker exec -t $CONTAINER_NAME disable_xdebug
-  assert_success
+  run -0 docker exec -t $CONTAINER_NAME disable_xdebug
   run docker exec -t $CONTAINER_NAME php --re xdebug
   assert_failure
   assert_output --regexp "xdebug.*does not exist"
-  run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php
-  assert_success
+  run -0 curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php
   assert_output --partial "Xdebug is disabled"
 }
 
@@ -132,67 +116,55 @@ extension_is_packaged() {
     assert_output --partial "does not exist"
     return
   fi
-  run docker exec -t $CONTAINER_NAME php --re xhprof
-  assert_success
+  run -0 docker exec -t $CONTAINER_NAME php --re xhprof
   assert_output --partial "xhprof.output_dir"
-  run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php
-  assert_success
+  run -0 curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php
   assert_output --partial "XHProf is enabled"
-  run docker exec -t $CONTAINER_NAME disable_xhprof
-  assert_success
+  run -0 docker exec -t $CONTAINER_NAME disable_xhprof
   run docker exec -t $CONTAINER_NAME php --re xhprof
   assert_failure
   assert_output --partial "does not exist"
-  run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php
-  assert_success
+  run -0 curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php
   assert_output --partial "XHProf is disabled"
 }
 
 @test "verify mailpit for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   if [ ${IS_HARDENED} == "true" ]; then skip "Skipping because mailpit is not installed on hardened prod image"; fi
-  run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/test-email.php
-  assert_success
+  run -0 curl -s 127.0.0.1:$HOST_HTTP_PORT/test/test-email.php
   assert_output --partial "Test email sent"
-  run curl -s --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
-  assert_success
+  run -0 curl -s --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
 }
 
 @test "verify PHP ini settings for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # Default settings for assert.active should be 1
   if [[ ${PHP_VERSION} != 8.? ]]; then
-    run docker exec -t $CONTAINER_NAME php -i
-    assert_success
+    run -0 docker exec -t $CONTAINER_NAME php -i
     assert_output --regexp "assert.active.*=> 1 => 1"
   else
-    run docker exec -t $CONTAINER_NAME php -i
-    assert_success
+    run -0 docker exec -t $CONTAINER_NAME php -i
     assert_output --regexp "assert.active.*=> On => On"
   fi
 }
 
 @test "verify phpstatus endpoint for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  run curl -s 127.0.0.1:$HOST_HTTP_PORT/phpstatus
-  assert_success
+  run -0 curl -s 127.0.0.1:$HOST_HTTP_PORT/phpstatus
   assert_output --regexp "idle processes|php is working"
 }
 
 @test "verify error conditions for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # A nonexistent path must get ddev-webserver's explanatory 404, not a bare one.
-  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/asdf
-  assert_success
+  run -0 curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/asdf
   assert_output --partial "404"
   assert_output --partial "ddev-webserver"
   assert_output --partial "docroot"
   assert_output --partial "ddev logs"
   # X-Ddev-404-Source must be visible without reading the body.
-  run curl -sI 127.0.0.1:$HOST_HTTP_PORT/asdf
-  assert_success
+  run -0 curl -sI 127.0.0.1:$HOST_HTTP_PORT/asdf
   assert_output --partial "X-Ddev-404-Source"
   # We're just checking the error code here - there's not much more we can do in
   # this case because the container is *NOT* intercepting 50x errors.
   for item in 400 401 500; do
-    run curl -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/${item}.php
-    assert_success
+    run -0 curl -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/${item}.php
     assert_output --partial "$item"
   done
 }
@@ -201,32 +173,27 @@ extension_is_packaged() {
   # A nonexistent .php file must be rejected before php-fpm (nginx
   # `try_files $uri =404`, apache `-f %{REQUEST_FILENAME}`), so it gets
   # ddev-webserver's 404 instead of php-fpm's "No input file specified".
-  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/this-does-not-exist.php
-  assert_success
+  run -0 curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/this-does-not-exist.php
   assert_output --partial "404"
   assert_output --partial "ddev-webserver"
-  run curl -sI 127.0.0.1:$HOST_HTTP_PORT/this-does-not-exist.php
-  assert_success
+  run -0 curl -sI 127.0.0.1:$HOST_HTTP_PORT/this-does-not-exist.php
   assert_output --partial "X-Ddev-404-Source"
 }
 
 @test "verify webserver 404s do not shadow app-generated 404 bodies for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # A script that sends its own 404 body must pass through unchanged.
-  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/app-404.php
-  assert_success
+  run -0 curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/app-404.php
   assert_output --partial "404"
   assert_output --partial "App-level not found page"
   refute_output --partial "ddev-webserver"
-  run curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/app-404.php
-  assert_success
+  run -0 curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/app-404.php
   refute_output --partial "X-Ddev-404-Source"
 }
 
 @test "verify webserver 403 explanation for a no-index directory for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # test/ exists but holds only *.php helpers, so it has no index file. The
   # trailing slash makes it a directory request on both webservers.
-  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/
-  assert_success
+  run -0 curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/
   assert_output --partial "403"
   assert_output --partial "ddev-webserver"
   assert_output --partial "docroot"
@@ -234,8 +201,7 @@ extension_is_packaged() {
   # Both webservers must serve the shared HTML page, not a stock 403 page.
   assert_output --partial "<title>403: Forbidden</title>"
   # X-Ddev-403-Source must be visible without reading the body.
-  run curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/
-  assert_success
+  run -0 curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/
   assert_output --partial "403"
   assert_output --partial "X-Ddev-403-Source"
   assert_output --partial "Content-Type: text/html"
@@ -243,13 +209,11 @@ extension_is_packaged() {
 
 @test "verify webserver 403s do not shadow app-generated 403 bodies for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # A script that sends its own 403 body must pass through unchanged.
-  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/app-403.php
-  assert_success
+  run -0 curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/app-403.php
   assert_output --partial "403"
   assert_output --partial "App-level forbidden page"
   refute_output --partial "ddev-webserver"
-  run curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/app-403.php
-  assert_success
+  run -0 curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/app-403.php
   refute_output --partial "X-Ddev-403-Source"
 }
 
@@ -257,12 +221,10 @@ extension_is_packaged() {
   # Both webservers deny dot-files, and deny before looking the file up, so the
   # path need not exist. These 403s reach the explanation too, which is why the
   # page names more than the missing-index case.
-  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/.htpasswd
-  assert_success
+  run -0 curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/.htpasswd
   assert_output --partial "403"
   assert_output --partial "ddev-webserver"
-  run curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/.htpasswd
-  assert_success
+  run -0 curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/.htpasswd
   assert_output --partial "X-Ddev-403-Source"
 }
 
@@ -273,8 +235,7 @@ extension_is_packaged() {
   if [ "${WEBSERVER_TYPE}" != "apache-fpm" ]; then
     skip "test/listing/.htaccess only applies to apache-fpm"
   fi
-  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/listing/
-  assert_success
+  run -0 curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/listing/
   assert_output --partial "200"
   assert_output --partial "listed-file.txt"
   refute_output --partial "ddev-webserver"
@@ -287,35 +248,29 @@ extension_is_packaged() {
   if [ "${WEBSERVER_TYPE}" != "nginx-fpm" ]; then
     skip "project nginx config does not apply to ${WEBSERVER_TYPE}"
   fi
-  run docker exec -u root ${CONTAINER_NAME} bash -c 'mkdir -p /mnt/ddev_config/nginx && printf "location /test/listing/ {\n    autoindex on;\n}\nerror_page 403 /test/app-403.php;\n" >/mnt/ddev_config/nginx/error-pages.conf && nginx -s reload'
-  assert_success
+  run -0 docker exec -u root ${CONTAINER_NAME} bash -c 'mkdir -p /mnt/ddev_config/nginx && printf "location /test/listing/ {\n    autoindex on;\n}\nerror_page 403 /test/app-403.php;\n" >/mnt/ddev_config/nginx/error-pages.conf && nginx -s reload'
   sleep 2
-  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/listing/
-  assert_success
+  run -0 curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/listing/
   assert_output --partial "200"
   assert_output --partial "listed-file.txt"
-  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/
-  assert_success
+  run -0 curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/
   assert_output --partial "403"
   assert_output --partial "App-level forbidden page"
   refute_output --partial "ddev-webserver"
-  run docker exec -u root ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev_config/nginx/error-pages.conf && nginx -s reload'
-  assert_success
+  run -0 docker exec -u root ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev_config/nginx/error-pages.conf && nginx -s reload'
   sleep 2
 }
 
 @test "verify the explanation pages are not URLs of their own for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # They answer as error documents only, so a project keeps these paths.
   for page in 403 404; do
-    run curl -s -o /dev/null -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/ddev-webserver-${page}-error
-    assert_success
+    run -0 curl -s -o /dev/null -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/ddev-webserver-${page}-error
     refute_output "200"
   done
 }
 
 @test "verify that test/phptest.php is interpreted for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  run curl --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
-  assert_success
+  run -0 curl --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
 }
 
 @test "verify key php extensions are loaded on PHP${PHP_VERSION}" {
@@ -355,58 +310,50 @@ extension_is_packaged() {
 
   # Load xhprof first, then xdebug, because loading xhprof disables xdebug.
   if extension_is_packaged xhprof; then
-    run docker exec $CONTAINER_NAME enable_xhprof
-    assert_success
+    run -0 docker exec $CONTAINER_NAME enable_xhprof
   fi
   if extension_is_packaged xdebug; then
-    run docker exec $CONTAINER_NAME enable_xdebug
-    assert_success
+    run -0 docker exec $CONTAINER_NAME enable_xdebug
   fi
-  run docker exec $CONTAINER_NAME bash -c "php -r 'foreach (get_loaded_extensions() as \$e) echo \$e, PHP_EOL;' 2>/dev/null"
-  assert_success
+  run -0 docker exec $CONTAINER_NAME bash -c "php -r 'foreach (get_loaded_extensions() as \$e) echo \$e, PHP_EOL;' 2>/dev/null"
   for item in $extensions; do
     assert_line "$item"
   done
 
-  run docker exec $CONTAINER_NAME disable_xhprof
-  assert_success
-  run docker exec $CONTAINER_NAME disable_xdebug
-  assert_success
+  run -0 docker exec $CONTAINER_NAME disable_xhprof
+  run -0 docker exec $CONTAINER_NAME disable_xdebug
   # disable_xdebug triggers an FPM reload; wait for it to settle before the next test
   sleep 2
 }
 
 @test "verify that both nginx logs and fpm logs are being tailed (${WEBSERVER_TYPE})" {
-  run curl -sSL http://127.0.0.1:$HOST_HTTP_PORT/test/fatal.php
-  assert_success
+  # A request that lands during a late FPM reload is reset before the script
+  # runs, so nothing gets logged; retry rather than guess how long reloads take.
+  for _ in {1..10}; do
+    run -0 curl -sSL http://127.0.0.1:$HOST_HTTP_PORT/test/fatal.php
+    run -0 bash -c "docker logs ${CONTAINER_NAME} 2>&1"
+    [[ "$output" == *"PHP Fatal error:  Fatal error in"* ]] && break
+    sleep 1
+  done
   # php-fpm message direct
-  run bash -c "docker logs ${CONTAINER_NAME} 2>&1"
-  assert_success
   assert_output --partial "PHP Fatal error:  Fatal error in"
 }
 
 @test "verify htaccess doesn't break ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  run docker cp tests/ddev-webserver/testdata/nginx/auth.conf ${CONTAINER_NAME}:/etc/nginx/common.d
-  assert_success
-  run docker cp tests/ddev-webserver/testdata/nginx/junkpass ${CONTAINER_NAME}:/tmp
-  assert_success
-  run docker cp tests/ddev-webserver/testdata/apache/auth.conf ${CONTAINER_NAME}:/etc/apache2/conf-enabled
-  assert_success
+  run -0 docker cp tests/ddev-webserver/testdata/nginx/auth.conf ${CONTAINER_NAME}:/etc/nginx/common.d
+  run -0 docker cp tests/ddev-webserver/testdata/nginx/junkpass ${CONTAINER_NAME}:/tmp
+  run -0 docker cp tests/ddev-webserver/testdata/apache/auth.conf ${CONTAINER_NAME}:/etc/apache2/conf-enabled
   # Reload webserver
   if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then
-    run docker exec ${CONTAINER_NAME} apache2ctl -k graceful
-    assert_success
+    run -0 docker exec ${CONTAINER_NAME} apache2ctl -k graceful
   else
-    run docker exec ${CONTAINER_NAME} nginx -s reload
-    assert_success
+    run -0 docker exec ${CONTAINER_NAME} nginx -s reload
   fi
   sleep 2
   # Make sure we can hit /phpstatus without auth
-  run curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
-  assert_success
+  run -0 curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
   assert_output "200"
-  run curl --fail -s http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
-  assert_success
+  run -0 curl --fail -s http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
   assert_output --regexp "idle processes|php is working"
   # Make sure the auth requirement is actually working
   run curl --fail -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
@@ -414,12 +361,8 @@ extension_is_packaged() {
 
   # Make sure it works with auth when hitting phptest.php
   AUTH=$(echo -ne "junk:junk" | base64)
-  run curl --fail --header "Authorization: Basic $AUTH" 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
-  assert_success
-  run docker exec ${CONTAINER_NAME} rm /etc/nginx/common.d/auth.conf /etc/apache2/conf-enabled/auth.conf
-  assert_success
-  run docker exec ${CONTAINER_NAME} kill -HUP 1
-  assert_success
-  run docker exec ${CONTAINER_NAME} kill -USR2 1
-  assert_success
+  run -0 curl --fail --header "Authorization: Basic $AUTH" 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
+  run -0 docker exec ${CONTAINER_NAME} rm /etc/nginx/common.d/auth.conf /etc/apache2/conf-enabled/auth.conf
+  run -0 docker exec ${CONTAINER_NAME} kill -HUP 1
+  run -0 docker exec ${CONTAINER_NAME} kill -USR2 1
 }
