@@ -506,24 +506,39 @@ write_containers_conf() {
   # directory selects a wrong-version netavark, or none at all.
 }
 
-# Only worth writing where something already turned the fast path off: native
-# rootless overlay (kernel 5.13+) is podman's own default, and a fuse-overlayfs
-# mount_program is what disables it.
+# Only worth writing to undo a system storage.conf: a fuse-overlayfs
+# mount_program turns off native rootless overlay (kernel 5.13+, podman's own
+# default), and a graphroot/runroot misdirects podman 6 (see below).
 # https://github.com/containers/podman/blob/main/docs/tutorials/performance.md#choosing-a-storage-driver
 write_storage_conf() {
-  local f
+  local f driver=0 roots=0 podman_major
+  podman_major="$(podman version --format '{{.Client.Version}}' 2>/dev/null | cut -d. -f1)"
   for f in /usr/share/containers/storage.conf /etc/containers/storage.conf; do
     [ -f "${f}" ] || continue
-    grep -Eq '^[[:space:]]*mount_program[[:space:]]*=' "${f}" || continue
-    step "Overriding the ${f} fuse-overlayfs mount_program"
-    mkdir -p ~/.config/containers
-    cat > ~/.config/containers/storage.conf <<'EOF'
-[storage]
-driver = "overlay"
-EOF
-    return 0
+    if grep -Eq '^[[:space:]]*mount_program[[:space:]]*=' "${f}"; then
+      step "Overriding the ${f} fuse-overlayfs mount_program"
+      driver=1
+    fi
+    # Podman 6 applies a system graphroot/runroot to rootless users too, so a
+    # distro podman 5's storage.conf (Ubuntu 26.04) sends Homebrew's podman 6
+    # to /var/lib/containers/storage, which it cannot write.
+    if [ "${podman_major:-0}" -ge 6 ] 2>/dev/null &&
+      grep -Eq '^[[:space:]]*(graphroot|runroot)[[:space:]]*=' "${f}"; then
+      step "Overriding the ${f} graphroot/runroot with rootless paths"
+      roots=1
+    fi
   done
-  return 0
+  [ $((driver + roots)) -eq 0 ] && return 0
+
+  mkdir -p ~/.config/containers
+  {
+    echo '[storage]'
+    echo 'driver = "overlay"'
+    if [ "${roots}" -eq 1 ]; then
+      printf 'graphroot = "%s/containers/storage"\n' "${XDG_DATA_HOME:-${HOME}/.local/share}"
+      printf 'runroot = "%s/containers"\n' "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    fi
+  } > ~/.config/containers/storage.conf
 }
 
 install_policy_json() {
