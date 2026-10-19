@@ -44,15 +44,8 @@ services:
       - "127.0.0.1:{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
     volumes:
       - ddev-global-cache:/mnt/ddev-global-cache:rw
-      {{ if .letsencrypt }}
-      - ddev-router-letsencrypt:/etc/letsencrypt:rw
-      {{ end }} {{/* end if .letsencrypt */}}
     environment:
       - TRAEFIK_MONITOR_PORT={{ .TraefikMonitorPort }}
-        {{ if .letsencrypt }}
-      - LETSENCRYPT_EMAIL={{ .letsencrypt_email }}
-      - USE_LETSENCRYPT={{ .letsencrypt }}
-        {{ end }}{{/* end if .letsencrypt */}}
       - TZ={{ .Timezone }}
       # Bypass proxies to allow internal container connections
       - NO_PROXY=*
@@ -76,7 +69,3 @@ volumes:
   ddev-global-cache:
     name: ddev-global-cache
     external: true
-  {{ if .letsencrypt }}
-  ddev-router-letsencrypt:
-    name: ddev-router-letsencrypt
-  {{ end }}
