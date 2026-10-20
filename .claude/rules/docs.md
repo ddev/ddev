@@ -1,7 +1,7 @@
 ---
 paths:
   - "docs/**"
-  - "*.md"
+  - "**/*.md"
 ---
 
 # Documentation and Markdown
@@ -26,9 +26,10 @@ is correct in a command or code span, where the linter does not look.
 
 ## Line wrapping: committed files versus GitHub bodies
 
-Committed Markdown — this file, `AGENTS.md`, everything under `docs/` — renders
-as CommonMark, where a lone newline is whitespace and a paragraph reflows to the
-container width, so hand-wrapping prose to a fixed column is right here.
+Committed Markdown — this file, `AGENTS.md`, everything under `docs/` — allows
+hand-wrapped prose: a lone newline in an ordinary paragraph renders as
+whitespace. Docs use Zensical's Python-Markdown extensions; preserve their
+admonition, tab, and list syntax, including four-space list indentation.
 
 Issue, PR, and comment **bodies** invert that rule. See
 `.claude/skills/ddev-commit/SKILL.md` before writing one.

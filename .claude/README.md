@@ -1,115 +1,57 @@
-# Claude Code configuration
+# Claude Code configuration notes
 
-What is here and why. Guidance for agents lives in `AGENTS.md` at the repo
-root — this file describes only the machinery.
+Maintainer notes on the machinery; guidance for agents lives in `AGENTS.md`.
 
-```text
-.claude/
-├── settings.json      # Environment, permissions, hooks
-├── rules/             # Guidance that loads only for matching files
-│   ├── go.md              # paths: **/*.go
-│   ├── docs.md            # paths: docs/**, *.md
-│   ├── comments.md        # paths: **/*
-│   └── webserver-config.md
-├── skills/
-│   └── ddev-commit/       # /ddev-commit: commits, PRs, issues
-└── hooks/
-    ├── session-start.sh
-    └── format-edited-file.sh
-```
-
-## How guidance is split
-
-Claude Code reads `AGENTS.md` directly, including its "Claude Code automation"
-section, so there is no separate `CLAUDE.md` stub. The rest follows from how
-much context each mechanism costs:
+## Where guidance goes
 
 | Mechanism | Loaded | Holds |
 | --- | --- | --- |
 | `settings.json` | Enforced by the client | Rules that must not depend on Claude choosing to follow them |
 | `AGENTS.md` | Every session | Facts that apply to every change |
-| `rules/*.md` | When a matching file is read | Guidance for one area of the tree |
-| `skills/*/SKILL.md` | When invoked or judged relevant | Procedures you run occasionally |
+| `rules/*.md` | When a file matching `paths:` is read, or always without it | Guidance for one area of the tree |
+| `skills/*/SKILL.md` | When invoked or judged relevant | Procedures used occasionally |
 
-Adding to `AGENTS.md` costs context in every session, so prefer a rule or a
-skill unless the guidance applies to everything.
+`AGENTS.md` costs context in every session, so prefer a rule or a skill unless
+the guidance applies to everything.
 
 ## Hooks
 
-**`session-start.sh`** writes one `export PATH="..."` line to
-`$CLAUDE_ENV_FILE`, putting the docs tooling from
-`scripts/install-dev-tools.sh` and the built `ddev` binary into every later
-Bash call and hook, so Claude Code need not be launched from a direnv-active
-shell.
+Hooks run in Claude's current directory, so each `make` call passes
+`-C "$CLAUDE_PROJECT_DIR"`.
 
-It names those two locations itself rather than asking direnv, which would
-require every contributor to have direnv installed and to have run
-`direnv allow` here — and a blocked `.envrc` is invisible, since `direnv exec`
-on one exits 0 and applies nothing.
+The formatters read the edited path from the stdin payload with `jq`, the only
+place a hook is given it: `$CLAUDE_FILE_PATHS` is never populated
+([anthropics/claude-code#9567](https://github.com/anthropics/claude-code/issues/9567)).
+Their output goes to stderr because on a lint error make exits 2, and Claude
+Code shows only stderr to Claude.
 
-Constraints on this hook, all found the hard way:
+A hook's `if` takes exactly one permission rule. `Edit(...)` does not match
+the Write tool, and `||` or `{a,b}` inside a rule matched nothing in testing,
+so each tool and file type gets its own entry. The leading `/` anchors a
+pattern to the project, so edits outside it are not formatted.
 
-- `$CLAUDE_ENV_FILE` is **parsed, not sourced**, and read **once**, right after
-  the hook exits. One `export KEY="VALUE"` per line applies, so a multi-line or
-  semicolon-joined value is read as one malformed entry and silently dropped.
-  Rewriting the file later in the session changes nothing.
-- `$PATH` inside a value **is** expanded when the file is applied, so the hook
-  writes one constant line and never reads the session's own PATH.
-- Values in a `settings.json` `env` block, by contrast, are **literal** —
-  `$HOME` and `$PATH` arrive unexpanded — so PATH cannot be set there.
-- It carries **no matcher**: a `startup` matcher misses the `resume` that an
-  editor restart performs, leaving the line out of the session actually
-  running.
-- `$CLAUDE_ENV_FILE` is undocumented, so treat it as best-effort. Failures
-  report through a JSON `systemMessage`, because a hook that exits 0 has its
-  stderr swallowed outside debug mode and plain stdout would land in Claude's
-  context instead. `make staticrequired` keeps working regardless, because the
-  `Makefile` prepends the dev-tools directories itself.
+There is no commit hook. Matching `git commit` in Bash text either misses
+forms like `git -C dir commit` or catches read-only commands, so the commit
+skill runs `make staticrequired` instead.
 
-**Formatting** runs `format-edited-file.sh` on every `Edit`/`Write`. The edited
-path comes from the stdin payload, the only place a hook is given it:
-`$CLAUDE_FILE_PATHS`, which the hooks guide once documented, is never populated
-([anthropics/claude-code#9567](https://github.com/anthropics/claude-code/issues/9567)),
-so the hooks written against it formatted nothing for eight months. The path
-reaches `make golangci-lint-fix DDEV_GO_FILES=...` or
-`make markdownlint-fix DDEV_MD_FILES=...`, so a single edit lints that file,
-not the tree. Going through the Makefile keeps every formatter invocation in
-one place and picks up the dev-tools PATH it prepends, so formatting does not
-depend on the SessionStart export having applied. Neither fix target swallows
-its exit status, and an empty path is reported rather than skipped, so a crash
-or a broken config is visible.
-
-The script drops any path outside `$CLAUDE_PROJECT_DIR` before it reaches
-`DDEV_MD_FILES`: markdownlint-cli crashes outright on a path it cannot express
-relative to its working directory (`make -C` puts that at the project root),
-which a stray edit outside the repo — the scratchpad, say — would otherwise
-trigger. `DDEV_GO_FILES`/`DDEV_MD_FILES` left unset, as `make staticrequired`
-and a bare `make golangci-lint-fix` do, fall back to the whole-tree scope the
-check targets use.
-
-**The commit gate** is the one hook still an inline `make` call in
-`settings.json`, matched by an `if` field rather than a script. It runs
-`make staticrequired` on `Bash(git commit *)`; only exit 2 stops a tool call,
-and any other non-zero code prints to stderr and lets the commit through.
-
-Neither script looks for a tool anywhere but PATH, and neither needs to, since
-`make` prepends the dev-tools directories itself. When the PATH export does
-fail, `session-start.sh` says so, and a second route to the same tools would
-have hidden that.
+SessionStart writes PATH to `$CLAUDE_ENV_FILE`, which Claude Code sources
+before each Bash command. PATH cannot go in the `env` block, whose values are
+literal: `$PATH` and `$HOME` arrive unexpanded. `make` does not depend on this
+hook, since the `Makefile` prepends the dev-tools directories itself.
 
 ## Permissions
 
-The allow list holds only what Claude Code does not already treat as
-read-only. `ls`, `cat`, `grep`, `find`, and the read-only `git` forms need no
-rule, apart from a few forms that always prompt, such as `find -delete`.
+Every rule has a space before its `*`: `Bash(tr *)` matches only `tr`, while
+`Bash(tr*)` would also match `truncate`. Fetching is allowed per
+`WebFetch(domain:...)` rather than by `curl` argument patterns, which a
+reordered flag or a URL in a variable defeats.
 
-Every rule has a space before its `*`, which matters: `Bash(tr *)` matches only
-`tr`, while `Bash(tr*)` would also match `truncate`.
+## Instruction loading
 
-`curl` is not allowed against specific hosts. Argument-matching rules like
-`Bash(curl*github.com*)` do not survive a reordered flag, an `https` scheme, a
-redirect, or a URL in a variable, so fetching goes through named
-`WebFetch(domain:...)` entries instead.
+A project or parent `CLAUDE.local.md` can stop Claude from loading `AGENTS.md`
+under the default instruction setting. Use an `@AGENTS.md` import in a
+`CLAUDE.md` or select the setting that reads both instruction files.
 
-Personal overrides belong in `.claude/settings.local.json`, which is
-gitignored. Everything else here is shared team configuration and is committed.
+References: [hooks](https://code.claude.com/docs/en/hooks),
+[file rules](https://code.claude.com/docs/en/permissions#read-and-edit),
+[instruction loading](https://code.claude.com/docs/en/memory#when-claude-code-reads-agentsmd).
