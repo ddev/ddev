@@ -1,12 +1,14 @@
 package ddevapp
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
 
@@ -91,4 +93,30 @@ func TestGetDBVersionFromVolumeScript(t *testing.T) {
 			require.Equal(t, tt.expectedOutput, strings.TrimSpace(string(out)))
 		})
 	}
+}
+
+// TestCreateDumpFileDevPath checks that a /dev/fd path backed by a regular
+// file, as with `ddev export-db -f /dev/stdout >> backup.sql`, is appended to.
+func TestCreateDumpFileDevPath(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("/dev/fd does not exist on Windows")
+	}
+	out := filepath.Join(t.TempDir(), "backup.sql")
+	require.NoError(t, os.WriteFile(out, []byte("earlier\n"), 0644))
+	redirected, err := os.OpenFile(out, os.O_WRONLY|os.O_APPEND, 0)
+	require.NoError(t, err)
+	defer redirected.Close()
+
+	f, finish, err := createDumpFile(fmt.Sprintf("/dev/fd/%d", redirected.Fd()))
+	require.NoError(t, err)
+	_, err = f.WriteString("dump\n")
+	require.NoError(t, err)
+	require.NoError(t, finish(true))
+
+	content, err := os.ReadFile(out)
+	require.NoError(t, err)
+	require.Equal(t, "earlier\ndump\n", string(content))
+	entries, err := os.ReadDir(filepath.Dir(out))
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
 }

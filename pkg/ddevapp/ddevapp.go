@@ -1188,8 +1188,19 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 // createDumpFile opens a temp file beside dumpFile, which finish(true)
 // renames into place and finish(false) removes, so a failed or interrupted
 // export leaves no partial dump and keeps any earlier one. A dumpFile that is
-// not a regular file, like /dev/stdout, is written directly.
+// not a regular file is written directly.
+//
+// A path under /dev, like /dev/stdout, can resolve to a regular file the shell
+// redirected to, which it has already truncated or opened for append, so it
+// is appended to rather than replaced.
 func createDumpFile(dumpFile string) (f *os.File, finish func(ok bool) error, err error) {
+	if strings.HasPrefix(dumpFile, "/dev/") {
+		f, err = os.OpenFile(dumpFile, os.O_WRONLY|os.O_APPEND, 0)
+		if err != nil {
+			return nil, nil, err
+		}
+		return f, func(bool) error { return f.Close() }, nil
+	}
 	target := dumpFile
 	if resolved, err := filepath.EvalSymlinks(dumpFile); err == nil {
 		target = resolved
