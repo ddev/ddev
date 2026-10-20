@@ -386,7 +386,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	// Copying directly to the router ensures Traefik's fsnotify detects changes reliably
 	const inContainerTraefikDir = "/mnt/ddev-global-cache/traefik"
 	router, err := FindDdevRouter()
-	routerRunning := err == nil && router != nil
+	routerRunning := err == nil && router != nil && router.State == "running"
 	if routerRunning {
 		// Router is running - copy directly to it using container name without leading slash
 		// This triggers fsnotify reliably because changes happen inside the container that's watching

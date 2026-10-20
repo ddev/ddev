@@ -132,6 +132,7 @@ func ColorsEnabled() bool {
 type WaitTimer struct {
 	message   string
 	startTime time.Time
+	lineEnded bool
 }
 
 // StartWait prints a waiting message (without newline) and returns a WaitTimer
@@ -159,11 +160,17 @@ func (w *WaitTimer) Complete(err error) time.Duration {
 	return w.Done(err, "ready")
 }
 
+// LineEnded records that other output has ended the wait line, so Done
+// repeats the message instead of printing the timing on a line of its own.
+func (w *WaitTimer) LineEnded() {
+	w.lineEnded = true
+}
+
 // Done is Complete with a verb other than "ready", such as "built".
 func (w *WaitTimer) Done(err error, verb string) time.Duration {
 	elapsed := time.Since(w.startTime)
 	switch {
-	case JSONOutput:
+	case JSONOutput || w.lineEnded:
 		if err == nil {
 			UserOut.Printf("%s... %s in %.1fs", w.message, verb, elapsed.Seconds())
 		}

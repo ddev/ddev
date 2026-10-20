@@ -174,8 +174,9 @@ func GetMutagenConfigFile(app *DdevApp) string {
 }
 
 // CreateOrResumeMutagenSync creates or resumes a sync session
-// It detects problems with the sync and errors if there are problems
-func CreateOrResumeMutagenSync(app *DdevApp) error {
+// It detects problems with the sync and errors if there are problems.
+// lineEnded reports whether the sync monitor's output ended the caller's line.
+func CreateOrResumeMutagenSync(app *DdevApp) (lineEnded bool, err error) {
 	syncName := MutagenSyncName(app.Name)
 	configFile := GetMutagenConfigFile(app)
 	if configFile != "" {
@@ -184,10 +185,10 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 
 	container, err := GetContainer(app, "web")
 	if err != nil {
-		return fmt.Errorf("unable to GetContainer() service web, app=%v, err=%v", app, err)
+		return false, fmt.Errorf("unable to GetContainer() service web, app=%v, err=%v", app, err)
 	}
 	if container == nil {
-		return fmt.Errorf("web container for %s not found", app.Name)
+		return false, fmt.Errorf("web container for %s not found", app.Name)
 	}
 	if container.State != "running" {
 		// TODO: Improve or debug this temporary debug usage
@@ -196,29 +197,29 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		if logsErr != nil {
 			util.Warning("Error from getting logs: %v", logsErr)
 		}
-		return fmt.Errorf("cannot start Mutagen sync because web container is not running: %v", container)
+		return false, fmt.Errorf("cannot start Mutagen sync because web container is not running: %v", container)
 	}
 
 	sessionExists, err := mutagenSyncSessionExists(app)
 	if err != nil {
-		return fmt.Errorf("unable to mutagenSyncSessionExists(): %v", err)
+		return false, fmt.Errorf("unable to mutagenSyncSessionExists(): %v", err)
 	}
 	isResumingExistingSession := sessionExists
 	if sessionExists {
 		util.Verbose("Resume Mutagen sync if session already exists")
 		err := ResumeMutagenSync(app)
 		if err != nil {
-			return fmt.Errorf("unable to ResumeMutagenSync(): %v", err)
+			return false, fmt.Errorf("unable to ResumeMutagenSync(): %v", err)
 		}
 	} else {
 		vLabel, err := GetMutagenVolumeLabel(app)
 		if err != nil {
-			return fmt.Errorf("unable to GetMutagenVolumeLabel(): %v", err)
+			return false, fmt.Errorf("unable to GetMutagenVolumeLabel(): %v", err)
 		}
 
 		hLabel, err := GetMutagenConfigFileHash(app)
 		if err != nil {
-			return fmt.Errorf("unable to GetMutagenConfigFileHash(): %v", err)
+			return false, fmt.Errorf("unable to GetMutagenConfigFileHash(): %v", err)
 		}
 		// Mutagen docker protocol expects the container name with leading slash, or ID as fallback
 		// Prefer name if available because the `beta` in mutagen sync list is easier to understand
@@ -229,7 +230,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		// Mutagen uses the docker CLI (not the API) to connect to containers, so
 		// verify it's available before attempting the sync create.
 		if cliErr := dockerutil.CheckDockerCLI(); cliErr != nil {
-			return fmt.Errorf("mutagen requires a working docker CLI to connect to containers, but: %v\nInstall docker CLI and ensure it is in PATH, then retry", cliErr)
+			return false, fmt.Errorf("mutagen requires a working docker CLI to connect to containers, but: %v\nInstall docker CLI and ensure it is in PATH, then retry", cliErr)
 		}
 		// TODO: Consider using a function to specify the Docker beta
 		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", containerRef), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
@@ -244,7 +245,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		util.Debug("Creating Mutagen sync: mutagen %v", args)
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
 		if err != nil {
-			return fmt.Errorf("failed to mutagen %v (%v), output='%s'", args, err, out)
+			return false, fmt.Errorf("failed to mutagen %v (%v), output='%s'", args, err, out)
 		}
 	}
 
@@ -329,7 +330,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 			if outputComing {
 				_, _ = fmt.Fprintln(os.Stderr)
 			}
-			return err
+			return outputComing, err
 		case outputComing = <-firstOutputReceived:
 
 		// If we haven't yet received any "Status:" output, do a dot every second

@@ -1908,8 +1908,6 @@ func (app *DdevApp) start(o StartOptions) error {
 		}
 	}
 
-	wait := output.StartWait("Building project images")
-
 	buildProject, buildOptions := project, api.BuildOptions{NoCache: o.NoCache}
 	if o.NoCache {
 		// Build applies NoCache only to enabled services, so enable every profile.
@@ -1918,6 +1916,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		}
 		buildOptions.Services = append(project.ServiceNames(), builtProfileServices(project)...)
 	}
+	wait := output.StartWait("Building project images")
 	built, err := app.buildProjectImages(buildProject, buildOptions)
 	if err != nil {
 		wait.Complete(err)
@@ -2017,7 +2016,10 @@ func (app *DdevApp) start(o StartOptions) error {
 			wait.Complete(err)
 			return err
 		}
-		err = CreateOrResumeMutagenSync(app)
+		lineEnded, err := CreateOrResumeMutagenSync(app)
+		if lineEnded {
+			wait.LineEnded()
+		}
 		if err != nil {
 			wait.Complete(err)
 			return fmt.Errorf("failed to CreateOrResumeMutagenSync on Mutagen sync session '%s'. You may be able to resolve this problem using 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
