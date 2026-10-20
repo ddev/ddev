@@ -197,15 +197,6 @@ func ProcessAddonAction(action string, installDesc InstallDesc, app *DdevApp, ve
 
 // processBashHostAction executes a bash action on the host system
 func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp, verbose bool) error {
-	env, err := getInjectedEnvForBash(app, installDesc)
-	if err != nil {
-		return fmt.Errorf("unable to get injected env for bash: %v", err)
-	}
-	if env != "" {
-		action = env + "\n" + action
-	}
-	// Default behavior for bash actions
-	action = "set -eu -o pipefail\n" + action
 	t, err := template.New("ProcessAddonAction").Funcs(getTemplateFuncMap()).Parse(action)
 	if err != nil {
 		return fmt.Errorf("could not parse action '%s': %v", action, err)
@@ -244,15 +235,24 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 	if err != nil {
 		return fmt.Errorf("could not parse/execute action '%s': %v", action, err)
 	}
-	action = doc.String()
+	addonAction := doc.String()
 
-	desc := GetAddonDdevDescription(action)
-	if verbose {
-		action = "set -x; " + action
+	unsetEnv, err := app.SetHostEnvFromFiles(installDesc.Name)
+	if err != nil {
+		return fmt.Errorf("unable to read env files for bash action: %v", err)
 	}
+	defer unsetEnv()
+	action = "set -eu -o pipefail\n"
+	if verbose {
+		action += "set -x\n"
+	}
+	action += addonAction
+
+	// Directives come from addonAction, so an env value cannot set them
+	desc := GetAddonDdevDescription(addonAction)
 
 	out := ""
-	interactiveAction := GetAddonDdevInteractive(action)
+	interactiveAction := GetAddonDdevInteractive(addonAction)
 	interactiveTerminal := isatty.IsTerminal(os.Stdin.Fd()) && !output.JSONOutput
 	if interactiveAction && interactiveTerminal {
 		if desc != "" {
@@ -263,7 +263,7 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 		out, err = exec.RunHostCommand(util.FindBashPath(), "-c", action)
 	}
 	if err != nil {
-		warningCode := GetAddonDdevWarningExitCode(action)
+		warningCode := GetAddonDdevWarningExitCode(addonAction)
 		if warningCode > 0 {
 			if exitErr, ok := errors.AsType[*goexec.ExitError](err); ok {
 				// Get the exit code
@@ -280,7 +280,7 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 			if desc != "" {
 				util.Warning("%c %s (bash)", '\U0001F44E', desc)
 			}
-			err = fmt.Errorf("unable to run bash action %v: %v, output=%s", action, err, out)
+			err = fmt.Errorf("unable to run bash action %v: %v, output=%s", addonAction, err, out)
 		}
 	} else {
 		if desc != "" {
@@ -291,28 +291,6 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 		util.Warning(out)
 	}
 	return err
-}
-
-// getInjectedEnvForBash returns bash export string for env variables
-// that will be used in PreInstallActions and PostInstallActions
-func getInjectedEnvForBash(app *DdevApp, installDesc InstallDesc) (string, error) {
-	if app == nil {
-		return "", nil
-	}
-	envMap, err := app.ReadEnvFilesForTarget(installDesc.Name)
-	if err != nil {
-		return "", err
-	}
-	if len(envMap) == 0 {
-		return "", nil
-	}
-	injectedEnv := "export"
-	for k, v := range envMap {
-		// Escape all spaces and dollar signs
-		v = strings.ReplaceAll(strings.ReplaceAll(v, `$`, `\$`), ` `, `\ `)
-		injectedEnv = injectedEnv + fmt.Sprintf(" %s=%s ", k, v)
-	}
-	return injectedEnv, nil
 }
 
 // processPHPAction executes a PHP action in a container
@@ -988,7 +966,7 @@ func RemoveAddon(app *DdevApp, addonName string, verbose bool, skipRemovalAction
 	// Execute any removal actions
 	if !skipRemovalActions {
 		for i, action := range manifestData.RemovalActions {
-			err = ProcessAddonAction(action, InstallDesc{}, app, verbose)
+			err = ProcessAddonAction(action, InstallDesc{Name: manifestData.Name}, app, verbose)
 			if err != nil {
 				desc := GetAddonDdevDescription(action)
 				util.Warning("could not process removal action (%d) '%s': %v", i, desc, err)

@@ -131,16 +131,16 @@ MAIL_PORT=1025`
 				require.NoError(t, err)
 				envStr := string(envContent)
 
-				assert.Contains(envStr, `DB_HOST="db"`)
-				assert.Contains(envStr, fmt.Sprintf(`DB_PORT="%s"`, db.port))
-				assert.Contains(envStr, `DB_DATABASE="db"`)
-				assert.Contains(envStr, `DB_USERNAME="db"`)
-				assert.Contains(envStr, `DB_PASSWORD="db"`)
-				assert.Contains(envStr, fmt.Sprintf(`DB_CONNECTION="%s"`, db.connection))
-				assert.Contains(envStr, `MAIL_MAILER="smtp"`)
-				assert.Contains(envStr, `MAIL_HOST="127.0.0.1"`)
-				assert.Contains(envStr, `MAIL_PORT="1025"`)
-				assert.Contains(envStr, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
+				assert.Contains(envStr, `DB_HOST=db`)
+				assert.Contains(envStr, fmt.Sprintf(`DB_PORT=%s`, db.port))
+				assert.Contains(envStr, `DB_DATABASE=db`)
+				assert.Contains(envStr, `DB_USERNAME=db`)
+				assert.Contains(envStr, `DB_PASSWORD=db`)
+				assert.Contains(envStr, fmt.Sprintf(`DB_CONNECTION=%s`, db.connection))
+				assert.Contains(envStr, `MAIL_MAILER=smtp`)
+				assert.Contains(envStr, `MAIL_HOST=127.0.0.1`)
+				assert.Contains(envStr, `MAIL_PORT=1025`)
+				assert.Contains(envStr, fmt.Sprintf(`APP_URL=%s`, app.GetPrimaryURL()))
 			})
 		}
 	})
@@ -200,17 +200,17 @@ DB_CONNECTION=mysql`
 		envStr := string(envContent)
 
 		// Database settings should NOT be overwritten when db container is omitted
-		assert.NotContains(envStr, `DB_HOST="db"`)
-		assert.NotContains(envStr, `DB_DATABASE="db"`)
-		assert.NotContains(envStr, `DB_USERNAME="db"`)
-		assert.NotContains(envStr, `DB_PASSWORD="db"`)
+		assert.NotContains(envStr, `DB_HOST=db`)
+		assert.NotContains(envStr, `DB_DATABASE=db`)
+		assert.NotContains(envStr, `DB_USERNAME=db`)
+		assert.NotContains(envStr, `DB_PASSWORD=db`)
 
 		// Mail settings should still be set
-		assert.Contains(envStr, `MAIL_MAILER="smtp"`)
-		assert.Contains(envStr, `MAIL_HOST="127.0.0.1"`)
-		assert.Contains(envStr, `MAIL_PORT="1025"`)
+		assert.Contains(envStr, `MAIL_MAILER=smtp`)
+		assert.Contains(envStr, `MAIL_HOST=127.0.0.1`)
+		assert.Contains(envStr, `MAIL_PORT=1025`)
 		// APP_URL should be set to the primary URL
-		assert.Contains(envStr, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
+		assert.Contains(envStr, fmt.Sprintf(`APP_URL=%s`, app.GetPrimaryURL()))
 
 		// Original external database configuration should be preserved
 		assert.Contains(envStr, "DB_HOST=ddev-external-db")
@@ -274,22 +274,21 @@ DB_CONNECTION=mysql`
 
 		// When ddev- prefixed host is found, ALL database settings should be still be overwritten
 		assert.NotContains(envStr, "DB_HOST=ddev-external-project-db")
-		assert.NotContains(envStr, "DB_PORT=3306")
 		assert.NotContains(envStr, "DB_DATABASE=external_db")
 		assert.NotContains(envStr, "DB_USERNAME=external_user")
 		assert.NotContains(envStr, "DB_PASSWORD=external_pass")
 		assert.NotContains(envStr, "DB_CONNECTION=mysql")
 
-		assert.Contains(envStr, `DB_HOST="db"`)
-		assert.Contains(envStr, `DB_PORT="3306"`)
-		assert.Contains(envStr, `DB_DATABASE="db"`)
-		assert.Contains(envStr, `DB_USERNAME="db"`)
-		assert.Contains(envStr, `DB_PASSWORD="db"`)
-		assert.Contains(envStr, `DB_CONNECTION="mariadb"`)
-		assert.Contains(envStr, `MAIL_MAILER="smtp"`)
-		assert.Contains(envStr, `MAIL_HOST="127.0.0.1"`)
-		assert.Contains(envStr, `MAIL_PORT="1025"`)
-		assert.Contains(envStr, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
+		assert.Contains(envStr, `DB_HOST=db`)
+		assert.Contains(envStr, `DB_PORT=3306`)
+		assert.Contains(envStr, `DB_DATABASE=db`)
+		assert.Contains(envStr, `DB_USERNAME=db`)
+		assert.Contains(envStr, `DB_PASSWORD=db`)
+		assert.Contains(envStr, `DB_CONNECTION=mariadb`)
+		assert.Contains(envStr, `MAIL_MAILER=smtp`)
+		assert.Contains(envStr, `MAIL_HOST=127.0.0.1`)
+		assert.Contains(envStr, `MAIL_PORT=1025`)
+		assert.Contains(envStr, fmt.Sprintf(`APP_URL=%s`, app.GetPrimaryURL()))
 	})
 
 	// Test 4: Laravel project with disable_settings_management
@@ -345,7 +344,7 @@ DB_DATABASE=my_custom_db`
 		assert.Equal(originalEnv, strings.TrimSpace(envStr))
 		assert.Contains(envStr, "DB_HOST=my-custom-host")
 		assert.Contains(envStr, "DB_PORT=5432")
-		assert.NotContains(envStr, `MAIL_MAILER="smtp"`)
+		assert.NotContains(envStr, `MAIL_MAILER=smtp`)
 	})
 
 	// Test 5: Laravel project with different ddev-prefixed hostnames
@@ -416,16 +415,16 @@ DB_CONNECTION=mysql`, hostname)
 			assert.NotContains(envStr, "DB_PASSWORD=external_pass", "DB_PASSWORD should be overwritten")
 
 			// All settings should still be managed by DDEV
-			assert.Contains(envStr, `DB_HOST="db"`)
-			assert.Contains(envStr, `DB_PORT="3306"`)
-			assert.Contains(envStr, `DB_DATABASE="db"`)
-			assert.Contains(envStr, `DB_USERNAME="db"`)
-			assert.Contains(envStr, `DB_PASSWORD="db"`)
-			assert.Contains(envStr, `DB_CONNECTION="mariadb"`)
-			assert.Contains(envStr, `MAIL_MAILER="smtp"`)
-			assert.Contains(envStr, `MAIL_HOST="127.0.0.1"`)
-			assert.Contains(envStr, `MAIL_PORT="1025"`)
-			assert.Contains(envStr, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
+			assert.Contains(envStr, `DB_HOST=db`)
+			assert.Contains(envStr, `DB_PORT=3306`)
+			assert.Contains(envStr, `DB_DATABASE=db`)
+			assert.Contains(envStr, `DB_USERNAME=db`)
+			assert.Contains(envStr, `DB_PASSWORD=db`)
+			assert.Contains(envStr, `DB_CONNECTION=mariadb`)
+			assert.Contains(envStr, `MAIL_MAILER=smtp`)
+			assert.Contains(envStr, `MAIL_HOST=127.0.0.1`)
+			assert.Contains(envStr, `MAIL_PORT=1025`)
+			assert.Contains(envStr, fmt.Sprintf(`APP_URL=%s`, app.GetPrimaryURL()))
 		}
 	})
 }

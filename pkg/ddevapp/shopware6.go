@@ -139,7 +139,7 @@ func shopware6PostStartAction(app *DdevApp) error {
 		return nil
 	}
 	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env.local")
-	_, envText, err := ReadProjectEnvFile(envFilePath)
+	envText, err := ReadEnvFileText(envFilePath)
 	var envMap = map[string]string{
 		"DATABASE_URL": `mysql://db:db@db:3306/db`,
 		"APP_ENV":      "dev",

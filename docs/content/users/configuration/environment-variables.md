@@ -61,6 +61,19 @@ A trailing `.local` only marks the file as gitignored, and a label after the ser
 
 Every one of these files is also passed to `docker-compose config`, whatever it is named, so `${SOME_VARIABLE}` in a `.ddev/docker-compose.*.yaml` file is expanded from all of them together. That is the point of the `.ddev/.env.redis-build` row above: when a variable is only meant to be substituted into a compose file, give the file a name that is not a service name and it will never appear inside a container.
 
+With DDEV v1.25.5+, `.ddev/.env`, `.ddev/.env.local`, and their global equivalents also reach commands DDEV runs on the host: [host custom commands](../extend/custom-commands.md), `exec-host` [hooks](hooks.md), and [provider](../providers/index.md) commands with `service: host`.
+
+### How Values Are Read
+
+With DDEV v1.25.5+, DDEV reads these files the same way `docker-compose` does, so a container, an add-on action, a host command, and `${SOME_VARIABLE}` in a compose file all read a value the same way:
+
+* Single quotes keep a value exactly as written: `PASSWORD='pa$word'`.
+* With double quotes or no quotes, `$NAME` and `${NAME}` are replaced, first from the host environment and then from variables set earlier in the same file or an earlier one. `${NAME:-default}` works as it does in compose. Write `$$`, or `\$` inside double quotes, for a literal `$`.
+* A line with only a name, like `MY_VAR`, passes that variable through from the host.
+* On the host, a variable already set in your shell keeps its value, so `MY_VAR=x ddev start` overrides `.ddev/.env` for add-on actions, host commands, hooks, and `${MY_VAR}` in a compose file. Containers always get the value from the file.
+
+[`ddev dotenv set`](../usage/commands.md#dotenv-set) quotes each value that needs it, so it is read back exactly as given, and leaves a line that already has the value as it is.
+
 ## Override Order
 
 Later wins. Everything in the [global DDEV directory](../usage/architecture.md#global-files) is applied before anything belonging to the project, and within each directory DDEV sorts the files by their name with a trailing `.local` removed, which puts a `.local` file directly after the file it overrides.
@@ -162,6 +175,18 @@ ddev config --web-environment-add="MY_ENV_VAR=someval"
 # Set MY_ENV_VAR globally
 ddev config global --web-environment-add="MY_ENV_VAR=someval"
 ```
+
+With DDEV v1.25.5+, both flags can be repeated, and a comma only separates variables before `NAME=` or after a bare name, so a value can contain commas. `--web-environment-add` replaces a variable that is already in the list. The `--environment` flag of `ddev pull` and `ddev push` follows the same rules.
+
+| Flag | Result |
+| --- | --- |
+| `--web-environment-add="A=1,B=2"` | `A=1` and `B=2` |
+| `--web-environment-add=A=1 --web-environment-add=B=2` | `A=1` and `B=2` |
+| `--web-environment-add="METHODS=GET,POST"` | `METHODS=GET,POST` |
+| `--web-environment-add=MY_HOST_VAR` | `MY_HOST_VAR`, passed through from the host |
+| `--web-environment-add="MY_HOST_VAR,A=1"` | `MY_HOST_VAR` from the host, and `A=1` |
+| `--web-environment-add="A=1,MY_HOST_VAR"` | `A=1,MY_HOST_VAR`, one variable; repeat the flag instead |
+| `--web-environment-add="A=2"` when `A=1` is set | `A=2` |
 
 ## Host Variables Forwarded on Exec
 

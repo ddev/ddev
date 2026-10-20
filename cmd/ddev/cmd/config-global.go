@@ -24,7 +24,8 @@ var (
 	// omitContainers allows user to set value of omit_containers
 	omitContainers string
 	// webEnvironmentGlobal allows user to set value of environment in web container
-	webEnvironmentGlobal string
+	webEnvironmentGlobal    []string
+	webEnvironmentAddGlobal []string
 )
 
 // configGlobalCommand is the the `ddev config global` command
@@ -65,34 +66,12 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 	if cmd.Flag("web-environment").Changed {
-		env := strings.TrimSpace(webEnvironmentGlobal)
-		if env == "" || env == `""` || env == `''` {
-			globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
-		} else {
-			globalconfig.DdevGlobalConfig.WebEnvironment = strings.Split(env, ",")
-		}
+		globalconfig.DdevGlobalConfig.WebEnvironment = util.EnvFlagEntries(webEnvironmentGlobal)
 		dirty = true
 	}
 
 	if cmd.Flag("web-environment-add").Changed {
-		env := strings.TrimSpace(webEnvironmentGlobal)
-		if env == "" {
-			globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
-		} else {
-			envspl := strings.Split(env, ",")
-			conc := append(globalconfig.DdevGlobalConfig.WebEnvironment, envspl...)
-			// Convert to a hashmap to remove duplicate values.
-			hashmap := make(map[string]string)
-			for i := range conc {
-				hashmap[conc[i]] = conc[i]
-			}
-			keys := []string{}
-			for key := range hashmap {
-				keys = append(keys, key)
-			}
-			globalconfig.DdevGlobalConfig.WebEnvironment = keys
-			sort.Strings(globalconfig.DdevGlobalConfig.WebEnvironment)
-		}
+		globalconfig.DdevGlobalConfig.WebEnvironment = addWebEnvironment(globalconfig.DdevGlobalConfig.WebEnvironment, util.EnvFlagEntries(webEnvironmentAddGlobal))
 		dirty = true
 	}
 
@@ -350,8 +329,8 @@ func changedGlobalConfigKeys(cmd *cobra.Command, valMap map[string]string) []str
 func registerConfigGlobalCmd() {
 	configGlobalCommand.Flags().StringVarP(&omitContainers, "omit-containers", "", "", `For example, --omit-containers=ddev-ssh-agent or --omit-containers=""`)
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("omit-containers", configCompletionFuncWithCommas(globalconfig.GetValidOmitContainers()))
-	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment", "", "", `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
-	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment-add", "", "", `Append environment variables to the web container: --web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
+	configGlobalCommand.Flags().StringArrayVar(&webEnvironmentGlobal, "web-environment", nil, webEnvironmentUsage)
+	configGlobalCommand.Flags().StringArrayVar(&webEnvironmentAddGlobal, "web-environment-add", nil, webEnvironmentAddUsage)
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", true, "Whether to allow instrumentation reporting with --instrumentation-opt-in=true")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("instrumentation-opt-in", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "Bind host router ports on all interfaces, not only on the localhost network interface")

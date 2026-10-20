@@ -82,13 +82,12 @@ func (app *DdevApp) webEnvironmentHostEnv() []string {
 	if len(names) == 0 {
 		return nil
 	}
-	envFileVars, err := app.ReadEnvFilesForTarget("web")
+	envFileNames, err := app.envFileNamesForTarget("web")
 	if err != nil {
 		util.Debug("Not checking env files for web_environment names on exec: %v", err)
 	}
 	names = slices.DeleteFunc(names, func(name string) bool {
-		_, inEnvFile := envFileVars[name]
-		return inEnvFile
+		return slices.Contains(envFileNames, name)
 	})
 	return util.HostEnv(names...)
 }

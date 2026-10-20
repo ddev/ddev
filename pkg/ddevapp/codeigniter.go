@@ -16,7 +16,7 @@ import (
 func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
 	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
 
-	_, envText, err := ReadProjectEnvFile(envFilePath)
+	envText, err := ReadEnvFileText(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
 		return "", fmt.Errorf("unable to read .env file: %v", err)
 	}
@@ -31,7 +31,7 @@ func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
 			if err := fileutil.CopyFile(envExamplePath, envFilePath); err != nil {
 				return "", fmt.Errorf("failed to copy %s to .env: %v", envExamplePath, err)
 			}
-			_, envText, err = ReadProjectEnvFile(envFilePath)
+			envText, err = ReadEnvFileText(envFilePath)
 			if err != nil {
 				return "", err
 			}

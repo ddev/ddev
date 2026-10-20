@@ -253,7 +253,7 @@ services:
     - TZ={{ .Timezone }}
     - USER={{ .Username }}
     - VIRTUAL_HOST=${DDEV_HOSTNAME}
-    {{ range $env := .WebEnvironment }}- "{{ $env }}"
+    {{ range $env := .WebEnvironment }}- {{ $env | toJson }}
     {{ end }}
 
     healthcheck:

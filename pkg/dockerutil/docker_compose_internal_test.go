@@ -155,6 +155,31 @@ func TestSuppressLogrusFormatterDirect(t *testing.T) {
 	require.Contains(t, string(out), "real warning")
 }
 
+// TestOnceLogrusMessages tests that an unset-variable warning prints once per
+// variable, however many times the env files are interpolated
+func TestOnceLogrusMessages(t *testing.T) {
+	logger := logrus.New()
+	setupLogrusSuppression(logger)
+	f := logger.Formatter.(*suppressLogrusFormatter)
+	entry := func(name string) *logrus.Entry {
+		return &logrus.Entry{
+			Message: `The "` + name + `" variable is not set. Defaulting to a blank string.`,
+			Level:   logrus.WarnLevel,
+			Time:    time.Unix(0, 0),
+		}
+	}
+
+	out, err := f.Format(entry("ONCE_A"))
+	require.NoError(t, err)
+	require.Contains(t, string(out), "ONCE_A")
+	out, err = f.Format(entry("ONCE_A"))
+	require.NoError(t, err)
+	require.Empty(t, out)
+	out, err = f.Format(entry("ONCE_B"))
+	require.NoError(t, err)
+	require.Contains(t, string(out), "ONCE_B")
+}
+
 // TestSetupLogrusSuppressionIdempotent verifies that calling setupLogrusSuppression
 // twice does not stack wrappers — a real concern if init runs more than once
 // (e.g. via test reordering) or if a future caller invokes it explicitly.

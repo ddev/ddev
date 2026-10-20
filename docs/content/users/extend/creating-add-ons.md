@@ -380,7 +380,7 @@ Set the version in an `ARG` and release a new add-on version for each tool updat
 
 ### Environment Variables
 
-Users configure an add-on through the [env files](../configuration/environment-variables.md) named after it, so `.ddev/.env.myaddon` reaches the `myaddon` service and, with DDEV v1.25.4+, the add-on's own install actions as well.
+Users configure an add-on through the [env files](../configuration/environment-variables.md) named after it, so `.ddev/.env.myaddon` reaches the `myaddon` service and the add-on's own actions: install actions with DDEV v1.25.4+, and removal actions with DDEV v1.25.5+. A variable already set in the user's shell keeps its value in an action, as it does for `${VARIABLE}` in the add-on's compose file.
 
 To add variables to a service you don't own, such as `web`, use a labeled file named after your add-on:
 

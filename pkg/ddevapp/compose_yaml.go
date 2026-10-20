@@ -10,6 +10,7 @@ import (
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/dotenv"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
@@ -320,16 +321,12 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 		}
 		service.Environment["HOST_DOCKER_INTERNAL_IP"] = &hostDockerInternal.IPAddress
 
-		// Add environment variables from .env files to services
-		for _, envFile := range filterEnvFilesForTarget(envFiles, name) {
-			envMap, _, err := ReadProjectEnvFile(envFile)
-			if err != nil && !os.IsNotExist(err) {
-				util.Failed("Unable to read %s file: %v", envFile, err)
-			}
-			for envKey, envValue := range envMap {
-				val := envValue
-				service.Environment[envKey] = &val
-			}
+		envMap, err := dotenv.ReadFiles(filterEnvFilesForTarget(envFiles, name)...)
+		if err != nil {
+			return project, err
+		}
+		for envKey, envValue := range envMap {
+			service.Environment[envKey] = &envValue
 		}
 		// Pass NO_COLOR to containers
 		if !output.ColorsEnabled() && service.Environment["NO_COLOR"] == nil {

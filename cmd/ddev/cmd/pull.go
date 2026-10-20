@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -35,22 +34,14 @@ ddev pull lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=m
 }
 
 // appPull() does the work of pull
-func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDBArg bool, skipFilesArg bool, env string) {
+func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDBArg bool, skipFilesArg bool, env []string) {
 	provider, err := app.GetProvider(providerType)
 	if err != nil {
 		util.Failed("Failed to get provider: %v", err)
 	}
 
-	// Add or override the command-line provided environment variables
-	if env != "" {
-		envVars := strings.SplitSeq(env, ",")
-		for v := range envVars {
-			split := strings.Split(v, "=")
-			if len(split) != 2 {
-				util.Failed("Unable to parse command-line environment variable setting: '%v'", v)
-			}
-			provider.EnvironmentVariables[split[0]] = split[1]
-		}
+	if err = addEnvironmentFlag(provider.EnvironmentVariables, env); err != nil {
+		util.Failed("%v", err)
 	}
 
 	// If we're not performing the import step, we won't be deleting the existing db or files.
@@ -134,7 +125,7 @@ ddev pull %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 					}
 				}
 
-				environment, _ := cmd.Flags().GetString("environment")
+				environment, _ := cmd.Flags().GetStringArray("environment")
 				appPull(providerName, app, flags["skip-confirmation"], flags["skip-import"], flags["skip-db"], flags["skip-files"], environment)
 			},
 		}
@@ -150,6 +141,6 @@ ddev pull %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 		subCommand.Flags().Bool("skip-db", false, "Skip pulling database archive")
 		subCommand.Flags().Bool("skip-files", false, "Skip pulling file archive")
 		subCommand.Flags().Bool("skip-import", false, "Downloads file and/or database archives, but does not import them")
-		subCommand.Flags().String("environment", "", "Add/override environment variables during pull. Commas and equals are not allowed in the names or values.")
+		subCommand.Flags().StringArray("environment", nil, environmentFlagUsage("pull"))
 	}
 }
