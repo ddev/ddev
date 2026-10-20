@@ -173,6 +173,21 @@ func GetMutagenConfigFile(app *DdevApp) string {
 	return ""
 }
 
+// mutagenHostRoot returns the host path to use as the Mutagen sync root.
+// Mutagen refuses a root that is itself a symlink, so that case is resolved
+// to its target; any other path is returned unchanged.
+func mutagenHostRoot(appRoot string) string {
+	fi, err := os.Lstat(appRoot)
+	if err != nil || fi.Mode()&os.ModeSymlink == 0 {
+		return appRoot
+	}
+	resolved, err := filepath.EvalSymlinks(appRoot)
+	if err != nil {
+		return appRoot
+	}
+	return resolved
+}
+
 // CreateOrResumeMutagenSync creates or resumes a sync session
 // It detects problems with the sync and errors if there are problems.
 // lineEnded reports whether the sync monitor's output ended the caller's line.
@@ -233,7 +248,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) (lineEnded bool, err error) {
 			return false, fmt.Errorf("mutagen requires a working docker CLI to connect to containers, but: %v\nInstall docker CLI and ensure it is in PATH, then retry", cliErr)
 		}
 		// TODO: Consider using a function to specify the Docker beta
-		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", containerRef), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
+		args := []string{"sync", "create", mutagenHostRoot(app.AppRoot), fmt.Sprintf("docker:/%s/var/www/html", containerRef), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
 		if configFile != "" {
 			args = append(args, fmt.Sprintf(`--configuration-file=%s`, configFile))
 		}
