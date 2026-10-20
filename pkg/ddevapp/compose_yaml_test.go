@@ -282,7 +282,7 @@ func TestFixupComposeYaml(t *testing.T) {
 	require.NotEmpty(t, app.ComposeYaml)
 	require.NotEmpty(t, app.ComposeYaml.Services)
 
-	expectedServices := []string{"web", "db", "dummy1", "dummy2", "dummy3"}
+	expectedServices := []string{"web", "db", "dummy1", "dummy2", "dummy3", "dummy5"}
 	for _, serviceName := range expectedServices {
 		_, ok := app.ComposeYaml.Services[serviceName]
 		require.True(t, ok, "%s service not found in app.ComposeYaml.Services", serviceName)
@@ -319,8 +319,15 @@ func TestFixupComposeYaml(t *testing.T) {
 	totalPortsChecked := 0
 	buildServicesChecked := 0
 	omitLabelServicesChecked := 0
+	networkModeServicesChecked := 0
 	for serviceName, service := range app.ComposeYaml.Services {
 		t.Run("service_"+serviceName, func(t *testing.T) {
+			if serviceName == "dummy5" {
+				networkModeServicesChecked++
+				require.Empty(t, service.Networks, "service %s with network_mode should have no networks", serviceName)
+				require.NotContains(t, service.ExtraHosts, "host.docker.internal", "service %s shares a network namespace, so can't have extra_hosts", serviceName)
+				return
+			}
 			require.Contains(t, service.Networks, "ddev_default", "service %s missing ddev_default network", serviceName)
 			require.Contains(t, service.Networks, "default", "service %s missing default network", serviceName)
 
@@ -368,6 +375,7 @@ func TestFixupComposeYaml(t *testing.T) {
 	require.Positive(t, buildServicesChecked, "build label check never ran")
 	require.Positive(t, totalPortsChecked, "port HostIP check never ran")
 	require.Positive(t, omitLabelServicesChecked, "omit-ddev-labels check never ran")
+	require.Positive(t, networkModeServicesChecked, "network_mode check never ran")
 
 	hasPort12345 := false
 	for _, port := range webService.Ports {

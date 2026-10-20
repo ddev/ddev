@@ -294,15 +294,20 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 
 	// Ensure all services have required networks and environment variables
 	for name, service := range project.Services {
-		if _, ok := service.Networks[dockerutil.NetName]; !ok {
-			service.Networks[dockerutil.NetName] = nil
-		}
-		if _, ok := service.Networks["default"]; !ok {
-			service.Networks["default"] = nil
+		// Compose rejects networks combined with network_mode, and Docker
+		// rejects extra_hosts on a container sharing another's network namespace.
+		sharesNetNS := strings.HasPrefix(service.NetworkMode, "service:") || strings.HasPrefix(service.NetworkMode, "container:")
+		if service.NetworkMode == "" {
+			if _, ok := service.Networks[dockerutil.NetName]; !ok {
+				service.Networks[dockerutil.NetName] = nil
+			}
+			if _, ok := service.Networks["default"]; !ok {
+				service.Networks["default"] = nil
+			}
 		}
 
 		// Set up host.docker.internal based on DDEV's standard approach
-		if hostDockerInternal.ExtraHost != "" {
+		if hostDockerInternal.ExtraHost != "" && !sharesNetNS {
 			if service.ExtraHosts == nil {
 				service.ExtraHosts = composeTypes.HostsList{}
 			}
