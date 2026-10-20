@@ -310,7 +310,7 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 		// Compose rejects a fixed container_name on a scaled service.
 		if containerName := GetContainerName(app, name); service.GetScale() <= 1 && service.ContainerName != containerName {
 			if service.ContainerName != "" {
-				util.WarningOnce("Service '%s' in project '%s' sets container_name '%s'; DDEV uses '%s' instead.", name, app.Name, service.ContainerName, containerName)
+				util.WarningOnce("Service '%s' in project '%s' sets container_name '%s'; DDEV uses '%s' instead. Remove container_name, or set it to 'ddev-${DDEV_SITENAME}-%s' for older DDEV versions.", name, app.Name, service.ContainerName, containerName, name)
 			}
 			service.ContainerName = containerName
 		}
