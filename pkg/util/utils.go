@@ -145,7 +145,8 @@ func Verbose(format string, a ...any) {
 	output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
 }
 
-// ShowDots displays dots one per second. Call the returned function to stop and flush the newline.
+// ShowDots displays dots one per second. Call the returned function to stop;
+// the line is left open for output.WaitTimer to finish.
 func ShowDots() func() {
 	done := make(chan struct{})
 	var wg sync.WaitGroup
@@ -153,9 +154,6 @@ func ShowDots() func() {
 		for {
 			select {
 			case <-done:
-				if !output.JSONOutput {
-					_, _ = fmt.Fprintln(os.Stderr)
-				}
 				return
 			default:
 				if !output.JSONOutput {

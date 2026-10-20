@@ -384,12 +384,14 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 
 	// Copy to router container if running, otherwise copy to volume
 	// Copying directly to the router ensures Traefik's fsnotify detects changes reliably
+	const inContainerTraefikDir = "/mnt/ddev-global-cache/traefik"
 	router, err := FindDdevRouter()
-	if err == nil && router != nil {
+	routerRunning := err == nil && router != nil && router.State == "running"
+	if routerRunning {
 		// Router is running - copy directly to it using container name without leading slash
 		// This triggers fsnotify reliably because changes happen inside the container that's watching
 		containerName := strings.TrimPrefix(router.Names[0], "/")
-		err = dockerutil.CopyIntoContainer(globalTraefikDir, containerName, "/mnt/ddev-global-cache/traefik", "custom-global-config")
+		err = dockerutil.CopyIntoContainer(globalTraefikDir, containerName, inContainerTraefikDir, "custom-global-config")
 		if err != nil {
 			return fmt.Errorf("failed to copy global Traefik config to router container: %v", err)
 		}
@@ -412,42 +414,60 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik volume", globalTraefikDir)
 	}
 
-	// Sync config directory - remove stale project configs from the volume
-	actualConfigs, err := dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/config")
-	if err != nil {
-		return fmt.Errorf("failed to list traefik config files in volume: %v", err)
+	// Remove stale project configs and certs. Through the running router this
+	// is an exec; otherwise each list or remove starts a helper container.
+	listFiles := func(subdir string) ([]string, error) {
+		return dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/"+subdir)
 	}
-	var staleConfigs []string
-	for _, f := range actualConfigs {
-		if !expectedConfigs[f] {
-			staleConfigs = append(staleConfigs, f)
+	removeFiles := func(subdir string, files []string) error {
+		return dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/"+subdir, files)
+	}
+	if routerRunning {
+		listFiles = func(subdir string) ([]string, error) {
+			stdout, stderr, err := dockerutil.Exec(router.ID, fmt.Sprintf(`ls -1 "%s/%s" 2>/dev/null || true`, inContainerTraefikDir, subdir), "0")
+			if err != nil {
+				return nil, fmt.Errorf("%v, stderr=%s", err, stderr)
+			}
+			var files []string
+			for line := range strings.SplitSeq(stdout, "\n") {
+				if line = strings.TrimSpace(line); line != "" {
+					files = append(files, line)
+				}
+			}
+			return files, nil
+		}
+		removeFiles = func(subdir string, files []string) error {
+			var rmPaths []string
+			for _, f := range files {
+				rmPaths = append(rmPaths, fmt.Sprintf(`"%s/%s/%s"`, inContainerTraefikDir, subdir, f))
+			}
+			_, stderr, err := dockerutil.Exec(router.ID, "rm -f "+strings.Join(rmPaths, " "), "0")
+			if err != nil {
+				return fmt.Errorf("%v, stderr=%s", err, stderr)
+			}
+			return nil
 		}
 	}
-	if len(staleConfigs) > 0 {
-		err = dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/config", staleConfigs)
+	for _, s := range []struct {
+		subdir   string
+		expected map[string]bool
+	}{{"config", expectedConfigs}, {"certs", expectedCerts}} {
+		actual, err := listFiles(s.subdir)
 		if err != nil {
-			return fmt.Errorf("failed to remove stale traefik configs from volume: %v", err)
+			return fmt.Errorf("failed to list traefik %s files in volume: %v", s.subdir, err)
 		}
-		util.Debug("Removed stale traefik configs from volume: %v", staleConfigs)
-	}
-
-	// Sync certs directory - remove stale project certs from the volume
-	actualCerts, err := dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/certs")
-	if err != nil {
-		return fmt.Errorf("failed to list traefik cert files in volume: %v", err)
-	}
-	var staleCerts []string
-	for _, f := range actualCerts {
-		if !expectedCerts[f] {
-			staleCerts = append(staleCerts, f)
+		var stale []string
+		for _, f := range actual {
+			if !s.expected[f] {
+				stale = append(stale, f)
+			}
 		}
-	}
-	if len(staleCerts) > 0 {
-		err = dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/certs", staleCerts)
-		if err != nil {
-			return fmt.Errorf("failed to remove stale traefik certs from volume: %v", err)
+		if len(stale) > 0 {
+			if err = removeFiles(s.subdir, stale); err != nil {
+				return fmt.Errorf("failed to remove stale traefik %s from volume: %v", s.subdir, err)
+			}
+			util.Debug("Removed stale traefik %s from volume: %v", s.subdir, stale)
 		}
-		util.Debug("Removed stale traefik certs from volume: %v", staleCerts)
 	}
 
 	return nil

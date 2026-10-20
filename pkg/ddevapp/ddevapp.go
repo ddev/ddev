@@ -1908,20 +1908,6 @@ func (app *DdevApp) start(o StartOptions) error {
 		}
 	}
 
-	if output.JSONOutput {
-		output.UserOut.Printf("Building project images...")
-	} else {
-		// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
-		// See https://github.com/sirupsen/logrus/issues/167
-		// We want the progress dots to appear on the same line.
-		fmt.Print("Building project images...")
-		// Print a newline before util.Debug below
-		if globalconfig.DdevDebug {
-			output.UserOut.Debugln()
-		}
-	}
-	buildDurationStart := util.ElapsedDuration(time.Now())
-
 	buildProject, buildOptions := project, api.BuildOptions{NoCache: o.NoCache}
 	if o.NoCache {
 		// Build applies NoCache only to enabled services, so enable every profile.
@@ -1930,30 +1916,25 @@ func (app *DdevApp) start(o StartOptions) error {
 		}
 		buildOptions.Services = append(project.ServiceNames(), builtProfileServices(project)...)
 	}
+	wait := output.StartWait("Building project images")
 	built, err := app.buildProjectImages(buildProject, buildOptions)
 	if err != nil {
+		wait.Complete(err)
 		return err
 	}
 	if built {
 		_, logStderrOutput, logStderrErr := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, nil, nil, nil)
 		// If the web image is dirty, try to rebuild it immediately
 		if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && dockerutil.IsRegistryReachable() {
-			if output.JSONOutput {
-				output.UserOut.Printf("Rebuilding web image without cache...")
-			} else {
-				fmt.Print("Rebuilding web image without cache...")
-				if globalconfig.DdevDebug {
-					output.UserOut.Debugln()
-				}
-			}
+			wait.Done(nil, "built")
+			wait = output.StartWait("Rebuilding web image without cache")
 			err = app.composeBuild(project, api.BuildOptions{Services: []string{"web"}, NoCache: true})
 			if err != nil {
+				wait.Complete(err)
 				return err
 			}
 		}
-
-		buildDuration := util.FormatDuration(buildDurationStart())
-		util.Success("Project images built in %s.", buildDuration)
+		wait.Done(nil, "built")
 	}
 
 	util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
@@ -2029,39 +2010,33 @@ func (app *DdevApp) start(o StartOptions) error {
 		if !mounted {
 			util.Failed("Mutagen Docker volume is not mounted. Please use `ddev restart`")
 		}
-		if output.JSONOutput {
-			output.UserOut.Printf("Starting Mutagen sync process...")
-		} else {
-			// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
-			// See https://github.com/sirupsen/logrus/issues/167
-			// We want the progress dots to appear on the same line.
-			fmt.Print("Starting Mutagen sync process...")
-			// Print a newline before util.Debug below
-			if globalconfig.DdevDebug {
-				output.UserOut.Debugln()
-			}
-		}
-		mutagenDuration := util.ElapsedDuration(time.Now())
-
+		wait := output.StartWait("Starting Mutagen sync process")
 		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
+			wait.Complete(err)
 			return err
 		}
-		err = CreateOrResumeMutagenSync(app)
+		lineEnded, err := CreateOrResumeMutagenSync(app)
+		if lineEnded {
+			wait.LineEnded()
+		}
 		if err != nil {
+			wait.Complete(err)
 			return fmt.Errorf("failed to CreateOrResumeMutagenSync on Mutagen sync session '%s'. You may be able to resolve this problem using 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
 		}
 		mStatus, _, _, err := app.MutagenStatus()
 		if err != nil {
+			wait.Complete(err)
 			return err
 		}
 		util.Debug("Mutagen status after sync: %s", mStatus)
 
-		dur := util.FormatDuration(mutagenDuration())
 		if mStatus == "ok" {
-			util.Success("Mutagen sync flush completed in %s.\nFor details on sync status 'ddev mutagen st %s -l'", dur, app.Name)
+			wait.Done(nil, "flushed")
+			output.UserOut.Printf("For details on sync status 'ddev mutagen st %s -l'", app.Name)
 		} else {
-			util.Error("Mutagen sync completed with problems in %s.\nRun 'ddev utility mutagen-diagnose' for detailed diagnostics and fixes", dur)
+			dur := wait.Complete(fmt.Errorf("mutagen status %s", mStatus))
+			util.Error("Mutagen sync completed with problems in %s.\nRun 'ddev utility mutagen-diagnose' for detailed diagnostics and fixes", util.FormatDuration(dur))
 		}
 		err = fileutil.TemplateStringToFile(`#ddev-generated`, nil, app.GetConfigPath("mutagen/.start-synced"))
 		if err != nil {
@@ -2114,7 +2089,7 @@ func (app *DdevApp) start(o StartOptions) error {
 	if !app.IsDBOmitted() {
 		dependers = append(dependers, "db")
 	}
-	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", dependers))
+	wait = output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", dependers))
 	waitErr := app.Wait(dependers)
 	wait.Complete(waitErr)
 	app.DefaultContainerTimeout = origDefaultContainerTimeout
@@ -2158,10 +2133,11 @@ func (app *DdevApp) start(o StartOptions) error {
 	// WebExtraDaemons have to be started after Mutagen sync is done, because so often
 	// they depend on code being synced into the container/volume
 	if len(app.WebExtraDaemons) > 0 {
-		output.UserOut.Printf("Starting web_extra_daemons...")
+		wait := output.StartWait("Starting web_extra_daemons")
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Cmd: `supervisorctl start webextradaemons:*`,
 		})
+		wait.Done(err, "started")
 		if err != nil {
 			util.Warning("Unable to start web_extra_daemons using supervisorctl, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 		}
@@ -2454,8 +2430,14 @@ func (app *DdevApp) recreateServices(services []string, build *api.BuildOptions)
 			}
 		}
 		build.Services = services
-		if _, err = app.buildProjectImages(project, *build); err != nil {
+		wait := output.StartWait(fmt.Sprintf("Building images for %v", services))
+		built, err := app.buildProjectImages(project, *build)
+		if err != nil {
+			wait.Complete(err)
 			return err
+		}
+		if built {
+			wait.Done(nil, "built")
 		}
 	}
 	// Unlike a restart, a new container picks up a rebuilt image and config

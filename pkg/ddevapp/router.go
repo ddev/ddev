@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -101,8 +102,15 @@ func removeRouterContainer() error {
 }
 
 // StartDdevRouter ensures the router is running.
-func StartDdevRouter() error {
+func StartDdevRouter() (err error) {
 	RunUpgradeCheck()
+	start := time.Now()
+	var wait *output.WaitTimer
+	defer func() {
+		if wait != nil && err != nil {
+			wait.Complete(err)
+		}
+	}()
 
 	// The check-then-act below must not interleave with another project's start.
 	// Released before the waits for router health.
@@ -142,6 +150,7 @@ func StartDdevRouter() error {
 	}
 
 	if needsRecreation {
+		// Not a wait line: compose's progress display would overwrite it.
 		output.UserOut.Printf("Starting %s, pushing config...", nodeps.RouterContainer)
 		routerComposeFullPath, err := generateRouterCompose(activeApps)
 		if err != nil {
@@ -183,7 +192,7 @@ func StartDdevRouter() error {
 			return fmt.Errorf("failed to start ddev-router: %v", err)
 		}
 	} else {
-		output.UserOut.Printf("%s already running, pushing new config...", nodeps.RouterContainer)
+		wait = output.StartWaitSince(fmt.Sprintf("%s already running, pushing new config", nodeps.RouterContainer), start)
 
 		// Update network aliases in place rather than recreating the container.
 		// Starting any project with a new hostname changes the router's aliases,
@@ -227,14 +236,17 @@ func StartDdevRouter() error {
 		if globalconfig.DdevGlobalConfig.UseLetsEncrypt {
 			routerWaitTimeout = 180
 		}
-		wait := output.StartWait(fmt.Sprintf("Waiting for %s to become ready", nodeps.RouterContainer))
+		wait = output.StartWait(fmt.Sprintf("Waiting for %s to become ready", nodeps.RouterContainer))
 		util.Debug("Router wait: checking for container with labels %v, polling every 500ms for healthy status", label)
 		logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
-		elapsed := wait.Complete(err)
 		if err != nil {
+			elapsed := wait.Complete(err)
+			wait = nil
 			return fmt.Errorf("ddev-router failed to become ready after %.1fs; log=%s, err=%v", elapsed.Seconds(), logOutput, err)
 		}
 	}
+	wait.Done(nil, "ready")
+	wait = nil
 
 	util.Debug("Getting traefik error output")
 	traefikErr := GetRouterConfigErrors()

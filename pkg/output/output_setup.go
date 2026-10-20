@@ -130,32 +130,54 @@ func ColorsEnabled() bool {
 
 // WaitTimer tracks elapsed time for wait operations with inline output
 type WaitTimer struct {
+	message   string
 	startTime time.Time
+	lineEnded bool
 }
 
 // StartWait prints a waiting message (without newline) and returns a WaitTimer
-// to track elapsed time. Call Complete() when the operation finishes.
-// In JSON mode, no message is printed.
+// to track elapsed time. Call Complete() or Done() when the operation finishes.
+// In JSON mode the message is emitted only on success, by Done().
 func StartWait(message string) *WaitTimer {
-	if !JSONOutput {
-		_, _ = fmt.Fprintf(os.Stdout, "%s...", message)
-		if nodeps.IsEnvTrue("DDEV_DEBUG") || nodeps.IsEnvTrue("DDEV_VERBOSE") {
-			_, _ = fmt.Fprintln(os.Stdout)
-		}
-	}
-	return &WaitTimer{startTime: time.Now()}
+	return StartWaitSince(message, time.Now())
 }
 
-// Complete prints the elapsed time on the same line as the wait message.
+// StartWaitSince is StartWait for an operation that began before its message
+// could be printed, so the reported time includes the work leading up to it.
+func StartWaitSince(message string, start time.Time) *WaitTimer {
+	if !JSONOutput {
+		_, _ = fmt.Fprintf(UserOut.Out, "%s...", message)
+		if nodeps.IsEnvTrue("DDEV_DEBUG") || nodeps.IsEnvTrue("DDEV_VERBOSE") {
+			_, _ = fmt.Fprintln(UserOut.Out)
+		}
+	}
+	return &WaitTimer{message: message, startTime: start}
+}
+
+// Complete prints "ready in" and the elapsed time on the same line as the wait message.
 // If err is non-nil, just prints a newline.
 func (w *WaitTimer) Complete(err error) time.Duration {
+	return w.Done(err, "ready")
+}
+
+// LineEnded records that other output has ended the wait line, so Done
+// repeats the message instead of printing the timing on a line of its own.
+func (w *WaitTimer) LineEnded() {
+	w.lineEnded = true
+}
+
+// Done is Complete with a verb other than "ready", such as "built".
+func (w *WaitTimer) Done(err error, verb string) time.Duration {
 	elapsed := time.Since(w.startTime)
-	if !JSONOutput {
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stdout, "\n")
-		} else {
-			_, _ = fmt.Fprintf(os.Stdout, " ready in %.1fs\n", elapsed.Seconds())
+	switch {
+	case JSONOutput || w.lineEnded:
+		if err == nil {
+			UserOut.Printf("%s... %s in %.1fs", w.message, verb, elapsed.Seconds())
 		}
+	case err != nil:
+		_, _ = fmt.Fprintln(UserOut.Out)
+	default:
+		_, _ = fmt.Fprintf(UserOut.Out, " %s in %.1fs\n", verb, elapsed.Seconds())
 	}
 	return elapsed
 }
