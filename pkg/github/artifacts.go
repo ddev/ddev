@@ -25,13 +25,20 @@ var ErrNoSuccessfulRun = errors.New("no successful run found")
 // GetLatestReleaseTag returns the tag name of the latest release for owner/repo.
 // It uses GitHub's "latest release" endpoint, which excludes drafts and prereleases.
 func GetLatestReleaseTag(owner, repo string) (string, error) {
+	tag, _, err := GetLatestRelease(owner, repo)
+	return tag, err
+}
+
+// GetLatestRelease returns the tag name and HTML page URL of the latest release
+// for owner/repo, as GetLatestReleaseTag selects it.
+func GetLatestRelease(owner, repo string) (tag, htmlURL string, err error) {
 	release, err := withAuthFallback(func(ctx context.Context, client *Client) (*github.RepositoryRelease, *github.Response, error) {
 		return client.Repositories.GetLatestRelease(ctx, owner, repo)
 	})
 	if err != nil {
-		return "", fmt.Errorf("unable to get latest release for %s/%s: %w", owner, repo, err)
+		return "", "", fmt.Errorf("unable to get latest release for %s/%s: %w", owner, repo, err)
 	}
-	return release.GetTagName(), nil
+	return release.GetTagName(), release.GetHTMLURL(), nil
 }
 
 // GetPullRequestHeadSHA returns the head commit SHA of a pull request.

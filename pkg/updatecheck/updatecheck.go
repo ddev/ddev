@@ -11,53 +11,33 @@ import (
 )
 
 // AvailableUpdates returns true (along with a release URL) if there is an update available in the specified repo which is newer than the currentVersion string.
+// Dev builds never report an update, and skip the GitHub API call entirely.
 func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (avail bool, newVersion string, releaseURL string, err error) {
-	newVersion = ""
-	ctx, client, clientErr := github.GetGitHubClient(true)
-	if clientErr != nil {
-		return false, newVersion, "", clientErr
+	if !isReleaseVersion(currentVersion) {
+		return false, "", "", nil
 	}
-	opt := &github.ListOptions{Page: 1}
-	releases, resp, err := client.Repositories.ListReleases(ctx, repoOrg, repoName, opt)
+	latestTag, latestURL, err := github.GetLatestRelease(repoOrg, repoName)
 	if err != nil {
-		if tokenErr := github.HasInvalidGitHubToken(resp); tokenErr != nil {
-			ctx, client, clientErr = github.GetGitHubClient(false)
-			if clientErr != nil {
-				return false, newVersion, "", clientErr
-			}
-			releasesNoAuth, _, errNoAuth := client.Repositories.ListReleases(ctx, repoOrg, repoName, opt)
-			if errNoAuth == nil {
-				releases = releasesNoAuth
-				err = errNoAuth
-			}
-		}
+		return false, "", "", err
 	}
+	newer, err := isNewerVersion(currentVersion, latestTag)
+	if err != nil || !newer {
+		return false, latestTag, "", err
+	}
+	return true, latestTag, latestURL, nil
+}
+
+// isNewerVersion reports whether latestVersion is a higher semver than currentVersion.
+func isNewerVersion(currentVersion, latestVersion string) (bool, error) {
+	cv, err := semver.NewVersion(currentVersion)
 	if err != nil {
-		return false, newVersion, "", err
+		return false, err
 	}
-
-	if isReleaseVersion(currentVersion) {
-		cv, err := semver.NewVersion(currentVersion)
-		if err != nil {
-			return false, newVersion, "", err
-		}
-		for _, release := range releases {
-			if release.Prerelease {
-				continue
-			}
-			newReleaseVersion, err := semver.NewVersion(release.TagName)
-			if err != nil {
-				return false, newVersion, "", err
-			}
-			newVersion = release.TagName
-
-			if cv.Compare(newReleaseVersion) == -1 {
-				return true, newVersion, release.HTMLURL, nil
-			}
-		}
+	lv, err := semver.NewVersion(latestVersion)
+	if err != nil {
+		return false, err
 	}
-
-	return false, newVersion, "", nil
+	return cv.LessThan(lv), nil
 }
 
 // IsUpdateNeeded returns true if the modification date on filepath is older than the duration specified.
