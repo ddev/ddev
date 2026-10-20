@@ -147,6 +147,7 @@ func TestQuietEventProcessorConsolidates(t *testing.T) {
 	require.Equal(t, "Container Stopped: ddev-p-db, ddev-p-web\n", buf.String())
 
 	buf.Reset()
+	ep = newQuietEventProcessor(&buf)
 	ep.Start(t.Context(), "down")
 	ep.On(
 		api.Resource{ID: "Container ddev-p-db", Status: api.Done, Text: "Stopped"},
