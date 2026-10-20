@@ -1,6 +1,7 @@
 package netutil
 
 import (
+	"errors"
 	"fmt"
 	"math/rand/v2"
 	"net"
@@ -74,6 +75,23 @@ func IsPortActive(port string) bool {
 	// Otherwise, hmm, something else happened. It's not a fatal but can be reported.
 	util.Warning("Unable to properly check port status for %s:%s: err=%v", dockerIP, port, err)
 	return false
+}
+
+// IsPortRefused reports whether a connection to the port on a loopback Docker
+// IP is refused, meaning nothing listens there. It returns false for anything
+// less certain, such as a timeout or a Docker host that isn't on loopback.
+func IsPortRefused(port string) bool {
+	dockerIP, err := dockerutil.GetDockerIP()
+	if parsedIP := net.ParseIP(dockerIP); err != nil || parsedIP == nil || !parsedIP.IsLoopback() {
+		return false
+	}
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(dockerIP, port), time.Second)
+	if err == nil {
+		_ = conn.Close()
+		return false
+	}
+	// Windows reports WSAECONNREFUSED (10061) rather than ECONNREFUSED.
+	return errors.Is(err, syscall.ECONNREFUSED) || errors.Is(err, syscall.Errno(10061))
 }
 
 // HasLocalIP returns true if at least one of the provided IP addresses is

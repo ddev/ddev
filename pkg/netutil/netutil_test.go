@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/stretchr/testify/require"
 )
@@ -36,6 +37,20 @@ func TestIsHostPortFree(t *testing.T) {
 	require.False(t, netutil.IsHostPortFree("127.0.0.1", port))
 	require.NoError(t, l.Close())
 	require.True(t, netutil.IsHostPortFree("127.0.0.1", port))
+}
+
+func TestIsPortRefused(t *testing.T) {
+	if dockerIP, err := dockerutil.GetDockerIP(); err != nil || !net.ParseIP(dockerIP).IsLoopback() {
+		t.Skip("Skipping: IsPortRefused only checks a loopback Docker IP")
+	}
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = l.Close() })
+	port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+
+	require.False(t, netutil.IsPortRefused(port))
+	require.NoError(t, l.Close())
+	require.True(t, netutil.IsPortRefused(port))
 }
 
 func TestAllocateHostPort(t *testing.T) {
