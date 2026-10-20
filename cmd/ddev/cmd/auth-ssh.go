@@ -165,7 +165,7 @@ func listUpstreamSSHKeys() {
 	if err != nil && time.Since(start) >= listTimeout {
 		hint := ""
 		if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "host" && dockerutil.IsDockerDesktop() {
-			hint = "\nDocker Desktop relays the agent it found when it started; from a shell where 'ssh-add -l' works, restart it with 'osascript -e \"quit app \\\"Docker\\\"\" && open -a Docker'."
+			hint = "\nDocker Desktop relays the agent it found when it started; from a shell where 'ssh-add -l' works, run 'docker desktop restart'."
 			if nodeps.IsLinux() {
 				hint = "\nDocker Desktop relays the agent it found when it started; from a shell where 'ssh-add -l' works, run 'systemctl --user import-environment SSH_AUTH_SOCK && systemctl --user restart docker-desktop'."
 			}
