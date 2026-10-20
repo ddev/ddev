@@ -514,37 +514,36 @@ write_containers_conf() {
 
 # Only worth writing to undo a system storage.conf: a fuse-overlayfs
 # mount_program turns off native rootless overlay (kernel 5.13+, podman's own
-# default), and a graphroot/runroot misdirects podman 6 (see below).
+# default), and a graphroot/runroot misdirects podman 6 (see below). Podman reads
+# only the first main storage.conf it finds, and the user's comes first, so any
+# user file, even this minimal one, shields podman from the system file.
 # https://github.com/containers/podman/blob/main/docs/tutorials/performance.md#choosing-a-storage-driver
 write_storage_conf() {
-  local f driver=0 roots=0 podman_major
+  local f override=0 podman_major
+  [ -f ~/.config/containers/storage.conf ] && return 0
   podman_major="$(podman_major_version)"
   for f in /usr/share/containers/storage.conf /etc/containers/storage.conf; do
     [ -f "${f}" ] || continue
     if grep -Eq '^[[:space:]]*mount_program[[:space:]]*=' "${f}"; then
       step "Overriding the ${f} fuse-overlayfs mount_program"
-      driver=1
+      override=1
     fi
     # Podman 6 applies a system graphroot/runroot to rootless users too, so a
     # distro podman 5's storage.conf (Ubuntu 26.04) sends Homebrew's podman 6
     # to /var/lib/containers/storage, which it cannot write.
     if [ "${podman_major:-0}" -ge 6 ] 2>/dev/null &&
       grep -Eq '^[[:space:]]*(graphroot|runroot)[[:space:]]*=' "${f}"; then
-      step "Overriding the ${f} graphroot/runroot with rootless paths"
-      roots=1
+      step "Overriding the ${f} graphroot/runroot"
+      override=1
     fi
   done
-  [ $((driver + roots)) -eq 0 ] && return 0
+  [ "${override}" -eq 0 ] && return 0
 
   mkdir -p ~/.config/containers
-  {
-    echo '[storage]'
-    echo 'driver = "overlay"'
-    if [ "${roots}" -eq 1 ]; then
-      printf 'graphroot = "%s/containers/storage"\n' "${XDG_DATA_HOME:-${HOME}/.local/share}"
-      printf 'runroot = "%s/containers"\n' "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-    fi
-  } > ~/.config/containers/storage.conf
+  cat > ~/.config/containers/storage.conf <<'EOS'
+[storage]
+driver = "overlay"
+EOS
 }
 
 install_policy_json() {
