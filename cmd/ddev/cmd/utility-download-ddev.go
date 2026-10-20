@@ -374,7 +374,7 @@ func resolveReleaseTag(owner, repo, tag string, t buildTarget) downloadSpec {
 
 // resolveLatestRelease discovers the newest release tag, then builds its URL.
 func resolveLatestRelease(owner, repo string, t buildTarget) (downloadSpec, error) {
-	tag, err := github.GetLatestReleaseTag(owner, repo)
+	tag, _, err := github.GetLatestRelease(owner, repo)
 	if err != nil {
 		return downloadSpec{}, err
 	}
