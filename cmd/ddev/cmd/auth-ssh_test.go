@@ -157,8 +157,15 @@ func TestCmdAuthSSHUpstream(t *testing.T) {
 	require.Contains(t, out, "Make sure that agent is running")
 	require.NotContains(t, out, "Container ddev-ssh-agent")
 
+	// A target directory that still exists means the agent may not have started yet.
 	_ = os.Remove(upstreamSock)
 	out, err = exec.RunHostCommand("env", "SSH_AUTH_SOCK="+link, cmd.DdevBin, "auth", "ssh")
+	require.Error(t, err, out)
+	require.Contains(t, out, "No SSH agent is listening at "+upstreamSock)
+
+	staleLink := filepath.Join(linkDir, "stale-ssh-auth-sock")
+	require.NoError(t, os.Symlink(filepath.Join(linkDir, "gone", "agent.sock"), staleLink))
+	out, err = exec.RunHostCommand("env", "SSH_AUTH_SOCK="+staleLink, cmd.DdevBin, "auth", "ssh")
 	require.Error(t, err, out)
 	require.Contains(t, out, "no longer exists")
 
