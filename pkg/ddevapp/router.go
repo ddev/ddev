@@ -244,10 +244,12 @@ func StartDdevRouter() (err error) {
 			wait = nil
 			return fmt.Errorf("ddev-router failed to become ready after %.1fs; log=%s, err=%v", elapsed.Seconds(), logOutput, err)
 		}
-		warnUnreachableRouterPorts()
 	}
 	wait.Done(nil, "ready")
 	wait = nil
+	if needsRecreation {
+		warnUnreachableRouterPorts()
+	}
 
 	util.Verbose("Getting traefik error output")
 	traefikErr := GetRouterConfigErrors()
