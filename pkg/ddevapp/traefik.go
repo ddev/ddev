@@ -386,13 +386,14 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	// Copying directly to the router ensures Traefik's fsnotify detects changes reliably
 	const inContainerTraefikDir = "/mnt/ddev-global-cache/traefik"
 	router, err := FindDdevRouter()
+	routerRunning := err == nil && router != nil && router.State == "running"
 	if dockerutil.UseBindGlobalCache() {
 		// Global cache is a host directory; copy on the host. Copying a directory
 		// into a container is not supported on apple container/socktainer.
 		if err = copyIntoGlobalCache(globalTraefikDir, "traefik", uid, "custom-global-config", false); err != nil {
 			return fmt.Errorf("failed to copy global Traefik config into %s: %v", dockerutil.GlobalCacheSource(), err)
 		}
-	} else if err == nil && router != nil {
+	} else if routerRunning {
 		// Router is running - copy directly to it using container name without leading slash
 		// This triggers fsnotify reliably because changes happen inside the container that's watching
 		containerName := strings.TrimPrefix(router.Names[0], "/")
@@ -419,13 +420,16 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		util.Verbose("Copied global Traefik config in %s to ddev-global-cache/traefik volume", globalTraefikDir)
 	}
 
-	// Sync config directory - remove stale project configs from the volume
-	actualConfigs, err := listGlobalCacheFiles("traefik/config")
+	// Remove stale project configs and certs. Through the running router this
+	// is an exec; otherwise each list or remove starts a helper container,
+	// or with a bind-mounted global cache works on the host directly.
+	listFiles := func(subdir string) ([]string, error) {
+		return listGlobalCacheFiles("traefik/" + subdir)
 	}
 	removeFiles := func(subdir string, files []string) error {
-		return dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/"+subdir, files)
+		return removeGlobalCacheFiles("traefik/"+subdir, files)
 	}
-	if routerRunning {
+	if routerRunning && !dockerutil.UseBindGlobalCache() {
 		listFiles = func(subdir string) ([]string, error) {
 			stdout, stderr, err := dockerutil.Exec(router.ID, fmt.Sprintf(`ls -1 "%s/%s" 2>/dev/null || true`, inContainerTraefikDir, subdir), "0")
 			if err != nil {
@@ -451,29 +455,25 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 			return nil
 		}
 	}
-	if len(staleConfigs) > 0 {
-		err = removeGlobalCacheFiles("traefik/config", staleConfigs)
+	for _, s := range []struct {
+		subdir   string
+		expected map[string]bool
+	}{{"config", expectedConfigs}, {"certs", expectedCerts}} {
+		actual, err := listFiles(s.subdir)
 		if err != nil {
 			return fmt.Errorf("failed to list traefik %s files in volume: %v", s.subdir, err)
 		}
-		util.Debug("Removed stale traefik configs from volume: %v", staleConfigs)
-	}
-
-	// Sync certs directory - remove stale project certs from the volume
-	actualCerts, err := listGlobalCacheFiles("traefik/certs")
-	if err != nil {
-		return fmt.Errorf("failed to list traefik cert files in volume: %v", err)
-	}
-	var staleCerts []string
-	for _, f := range actualCerts {
-		if !expectedCerts[f] {
-			staleCerts = append(staleCerts, f)
+		var stale []string
+		for _, f := range actual {
+			if !s.expected[f] {
+				stale = append(stale, f)
+			}
 		}
-	}
-	if len(staleCerts) > 0 {
-		err = removeGlobalCacheFiles("traefik/certs", staleCerts)
-		if err != nil {
-			return fmt.Errorf("failed to remove stale traefik certs from volume: %v", err)
+		if len(stale) > 0 {
+			if err = removeFiles(s.subdir, stale); err != nil {
+				return fmt.Errorf("failed to remove stale traefik %s from volume: %v", s.subdir, err)
+			}
+			util.Debug("Removed stale traefik %s from volume: %v", s.subdir, stale)
 		}
 	}
 
