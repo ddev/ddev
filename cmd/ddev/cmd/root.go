@@ -12,6 +12,7 @@ import (
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/tui"
@@ -164,6 +165,8 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	Setup()
+	// Finalizers run before cobra prints a command's error and usage.
+	cobra.OnFinalize(interrupt.WaitIfExiting)
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}

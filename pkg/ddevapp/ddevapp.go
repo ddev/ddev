@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"fmt"
 	"io"
@@ -28,6 +29,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -952,7 +954,12 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		return err
 	}
 
+	// The extracted dump can be large, and it lives inside the project.
+	unregister := interrupt.OnInterrupt(func(context.Context) {
+		_ = os.RemoveAll(dbPath)
+	})
 	defer func() {
+		unregister()
 		_ = os.RemoveAll(dbPath)
 	}()
 
@@ -1144,9 +1151,10 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		}
 	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
-		Service: "db",
-		RawCmd:  inContainerCommand,
-		Tty:     progress && isatty.IsTerminal(os.Stdin.Fd()),
+		Service:     "db",
+		RawCmd:      inContainerCommand,
+		Tty:         progress && isatty.IsTerminal(os.Stdin.Fd()),
+		InterruptID: util.RandString(16),
 	})
 
 	if err != nil {
@@ -1175,6 +1183,69 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	}
 
 	return nil
+}
+
+// createDumpFile opens a temp file beside dumpFile, which finish(true)
+// renames into place and finish(false) removes, so a failed or interrupted
+// export leaves no partial dump and keeps any earlier one. A dumpFile that is
+// not a regular file is written directly.
+//
+// /dev/stdout, /dev/stderr, and /dev/fd/N can resolve to a file the shell
+// redirected to and already truncated or opened for append, so they are
+// written through ddev's own stdout or stderr, or opened for append.
+func createDumpFile(dumpFile string) (f *os.File, finish func(ok bool) error, err error) {
+	if !nodeps.IsWindows() {
+		switch {
+		case dumpFile == "/dev/stdout":
+			return os.Stdout, func(bool) error { return nil }, nil
+		case dumpFile == "/dev/stderr":
+			return os.Stderr, func(bool) error { return nil }, nil
+		case strings.HasPrefix(dumpFile, "/dev/fd/"):
+			f, err = os.OpenFile(dumpFile, os.O_WRONLY|os.O_APPEND, 0)
+			if err != nil {
+				return nil, nil, err
+			}
+			return f, func(bool) error { return f.Close() }, nil
+		}
+	}
+	target := dumpFile
+	if resolved, err := filepath.EvalSymlinks(dumpFile); err == nil {
+		target = resolved
+	}
+	perm := os.FileMode(0644)
+	if fi, err := os.Stat(target); err == nil {
+		if !fi.Mode().IsRegular() {
+			f, err = os.OpenFile(target, os.O_WRONLY|os.O_TRUNC, 0)
+			if err != nil {
+				return nil, nil, err
+			}
+			return f, func(bool) error { return f.Close() }, nil
+		}
+		perm = fi.Mode().Perm()
+	}
+
+	f, err = os.CreateTemp(filepath.Dir(target), "."+filepath.Base(target)+".*.tmp")
+	if err != nil {
+		return nil, nil, err
+	}
+	unregister := interrupt.OnInterrupt(func(context.Context) {
+		_ = os.Remove(f.Name())
+	})
+	finish = func(ok bool) error {
+		defer unregister()
+		err := f.Close()
+		if ok && err == nil {
+			err = os.Chmod(f.Name(), perm)
+		}
+		if ok && err == nil {
+			err = os.Rename(f.Name(), target)
+		}
+		if !ok || err != nil {
+			_ = os.Remove(f.Name())
+		}
+		return err
+	}
+	return f, finish, nil
 }
 
 // ExportDB exports the db, with optional output to a file, default gzip
@@ -1217,21 +1288,26 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 	exportCmd = exportCmd + " | " + compressionCmd
 
 	opts := &ExecOpts{
-		Service:   "db",
-		RawCmd:    []string{"bash", "-c", `set -eu -o pipefail; ` + exportCmd},
-		NoCapture: true,
+		Service:     "db",
+		RawCmd:      []string{"bash", "-c", `set -eu -o pipefail; ` + exportCmd},
+		NoCapture:   true,
+		InterruptID: util.RandString(16),
 	}
+	var finish func(ok bool) error
 	if dumpFile != "" {
-		f, err := os.OpenFile(dumpFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		f, fin, err := createDumpFile(dumpFile)
 		if err != nil {
 			return fmt.Errorf("failed to open %s: %v", dumpFile, err)
 		}
 		opts.Stdout = f
-		defer func() {
-			_ = f.Close()
-		}()
+		finish = fin
 	}
 	stdout, stderr, err := app.Exec(opts)
+	if finish != nil {
+		if finishErr := finish(err == nil); finishErr != nil && err == nil {
+			return fmt.Errorf("failed to write %s: %v", dumpFile, finishErr)
+		}
+	}
 
 	if err != nil {
 		return fmt.Errorf("unable to export db: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
@@ -2791,6 +2867,22 @@ type ExecOpts struct {
 	// SkipHostEnv runs the command with only the container environment and
 	// Env, for a command whose processes outlive the session that ran it.
 	SkipHostEnv bool
+
+	// InterruptID, if set, makes an interrupt stop the command and its
+	// children, which a Docker exec otherwise leaves running in the container.
+	InterruptID string
+}
+
+func interruptMarker(interruptID string) string {
+	return "ddev-interrupt-" + interruptID
+}
+
+// killInterruptedCmd returns a shell command that sends SIGTERM to the
+// process group of an Exec with interruptID, found by the marker in its
+// cmdline, which unlike environ any user can read. The [d] keeps grep from
+// matching its own arguments.
+func killInterruptedCmd(interruptID string) string {
+	return fmt.Sprintf(`for f in /proc/[0-9]*/cmdline; do if grep -qzx '[d]dev-interrupt-%s' "$f" 2>/dev/null; then p=${f#/proc/}; kill -TERM -"${p%%/cmdline}" 2>/dev/null; fi; done; true`, interruptID)
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
@@ -2873,9 +2965,21 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		env = app.execEnv(opts.Service, tty, opts.Env)
 	}
 
+	command := opts.RawCmd
+	if opts.InterruptID != "" {
+		// The wrapper shell leads the exec's process group and carries the
+		// marker as its $0; "exit" keeps it from exec'ing the command away.
+		command = append([]string{"sh", "-c", `"$@"; exit $?`, interruptMarker(opts.InterruptID)}, opts.RawCmd...)
+		containerName := GetContainerName(app, opts.Service)
+		unregister := interrupt.OnInterrupt(func(context.Context) {
+			_, _, _ = dockerutil.Exec(containerName, killInterruptedCmd(opts.InterruptID), "")
+		})
+		defer unregister()
+	}
+
 	runOpts := api.RunOptions{
 		Service:     opts.Service,
-		Command:     opts.RawCmd,
+		Command:     command,
 		Tty:         tty,
 		Interactive: true,
 		Detach:      opts.Detach,
@@ -2911,6 +3015,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		})
 	}
 	if err != nil {
+		// The interrupt cleanup killed it, so leave reporting to the handler.
+		if opts.InterruptID != "" {
+			interrupt.WaitIfExiting()
+		}
 		return stdoutResult, stderrResult, err
 	}
 	if !opts.SkipHooks {
@@ -3482,10 +3590,33 @@ func (app *DdevApp) Snapshot(snapshotName string, uncompressed bool) (string, er
 
 	util.Success("Creating database snapshot %s", snapshotName)
 
-	c := getBackupCommand(app, path.Join(containerSnapshotDir, snapshotFile), uncompressed)
+	// The snapshot is copied out to a temp dir and renamed into db_snapshots,
+	// so an interrupted copy never leaves a partial snapshot there.
+	hostTmpDir, err := os.MkdirTemp(app.GetConfigPath(""), ".snapshot")
+	if err != nil {
+		return "", err
+	}
+	// Like db_snapshots, it needs 777 for a container user mapped to another uid.
+	if err = util.Chmod(hostTmpDir, 0777); err != nil {
+		_ = os.RemoveAll(hostTmpDir)
+		return "", err
+	}
+	containerSnapshotPath := path.Join(containerSnapshotDir, snapshotFile)
+	interruptID := util.RandString(16)
+	unregister := interrupt.OnInterrupt(func(context.Context) {
+		_, _, _ = dockerutil.Exec(GetContainerName(app, "db"), killInterruptedCmd(interruptID)+"; rm -f "+containerSnapshotPath, "")
+		_ = os.RemoveAll(hostTmpDir)
+	})
+	defer func() {
+		unregister()
+		_ = os.RemoveAll(hostTmpDir)
+	}()
+
+	c := getBackupCommand(app, containerSnapshotPath, uncompressed)
 	stdout, stderr, err := app.Exec(&ExecOpts{
-		Service: "db",
-		Cmd:     fmt.Sprintf(`set -eu -o pipefail; %s `, c),
+		Service:     "db",
+		Cmd:         fmt.Sprintf(`set -eu -o pipefail; %s `, c),
+		InterruptID: interruptID,
 	})
 
 	if err != nil {
@@ -3499,23 +3630,25 @@ func (app *DdevApp) Snapshot(snapshotName string, uncompressed bool) (string, er
 	}
 
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		// If we're not using bind-mounts, we have to copy the snapshot back into
-		// the host project's .ddev/db_snapshots directory
+		// If we're not using bind-mounts, we have to copy the snapshot back to the host
 		defer util.TimeTrackC("CopySnapshotFromContainer")()
-		// Copy snapshot back to the host
-		err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), path.Join(containerSnapshotDir, snapshotFile), app.GetConfigPath("db_snapshots"))
+		err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), containerSnapshotPath, hostTmpDir)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		// But if we are using bind-mounts (normal situation), we can copy it to where the snapshot is
-		// mounted into the db container (/mnt/ddev_config/db_snapshots)
-		c := fmt.Sprintf("cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotFile)
+		// But if we are using bind-mounts (normal situation), we can copy it to where
+		// the .ddev directory is mounted into the db container (/mnt/ddev_config)
+		c := fmt.Sprintf("cp -r %s /mnt/ddev_config/%s", containerSnapshotPath, filepath.Base(hostTmpDir))
 		uid, _, _ := dockerutil.GetContainerUser()
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
 			return "", fmt.Errorf("failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
 		}
+	}
+	err = os.Rename(filepath.Join(hostTmpDir, snapshotFile), app.GetConfigPath(filepath.Join("db_snapshots", snapshotFile)))
+	if err != nil {
+		return "", err
 	}
 
 	// Clean up the in-container dir that we used

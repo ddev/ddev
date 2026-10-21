@@ -19,6 +19,7 @@ sync:
         - "/.tarballs"
         - "/.ddev/db_snapshots"
         - "/.ddev/.importdb*"
+        - "/.ddev/.snapshot*"
         - ".DS_Store"
         - ".idea"
         {{- range $uploadDir := .UploadDirs}}

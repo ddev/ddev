@@ -1865,6 +1865,7 @@ func PrepDdevDirectory(app *DdevApp) error {
 		".env.local",
 		".homeadditions",
 		".importdb*",
+		".snapshot*",
 		".webimageBuild",
 		"apache/apache-site.conf",
 		"commands/.gitattributes",

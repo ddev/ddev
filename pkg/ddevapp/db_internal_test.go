@@ -1,12 +1,15 @@
 package ddevapp
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,5 +93,54 @@ func TestGetDBVersionFromVolumeScript(t *testing.T) {
 			require.NoError(t, err, "script output: %s", out)
 			require.Equal(t, tt.expectedOutput, strings.TrimSpace(string(out)))
 		})
+	}
+}
+
+// TestCreateDumpFileDevPath checks that a /dev/fd path backed by a regular
+// file, as with `ddev export-db -f /dev/stdout >> backup.sql`, is appended to.
+func TestCreateDumpFileDevPath(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("/dev/fd does not exist on Windows")
+	}
+	out := filepath.Join(t.TempDir(), "backup.sql")
+	require.NoError(t, os.WriteFile(out, []byte("earlier\n"), 0644))
+	redirected, err := os.OpenFile(out, os.O_WRONLY|os.O_APPEND, 0)
+	require.NoError(t, err)
+	defer redirected.Close()
+
+	f, finish, err := createDumpFile(fmt.Sprintf("/dev/fd/%d", redirected.Fd()))
+	require.NoError(t, err)
+	_, err = f.WriteString("dump\n")
+	require.NoError(t, err)
+	require.NoError(t, finish(true))
+
+	content, err := os.ReadFile(out)
+	require.NoError(t, err)
+	require.Equal(t, "earlier\ndump\n", string(content))
+	entries, err := os.ReadDir(filepath.Dir(out))
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+}
+
+// TestCreateDumpFileUnderDev checks that a regular file elsewhere under /dev
+// is created or replaced like any other dump file.
+func TestCreateDumpFileUnderDev(t *testing.T) {
+	if !fileutil.IsDirectory("/dev/shm") {
+		t.Skip("/dev/shm is not available")
+	}
+	out, err := os.MkdirTemp("/dev/shm", "ddev-test")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(out) })
+	out = filepath.Join(out, "db.sql")
+
+	for _, want := range []string{"first\n", "second\n"} {
+		f, finish, err := createDumpFile(out)
+		require.NoError(t, err)
+		_, err = f.WriteString(want)
+		require.NoError(t, err)
+		require.NoError(t, finish(true))
+		content, err := os.ReadFile(out)
+		require.NoError(t, err)
+		require.Equal(t, want, string(content))
 	}
 }

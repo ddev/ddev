@@ -66,7 +66,9 @@ var FailOnHookFailDefault = false
 
 // GoroutineLimit is the number of goroutines allowed at exit in parts of some tests
 // Can be overridden by setting DDEV_TEST_GOROUTINE_LIMIT=<somenumber>
-var GoroutineLimit = 10
+// Two of them are the interrupt handler and os/signal's loop, which last for
+// the whole process.
+var GoroutineLimit = 12
 
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.

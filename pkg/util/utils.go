@@ -20,6 +20,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -68,6 +69,7 @@ func outputOnce(format string, a []any, fn func(string, ...any)) {
 
 // Failed will print a red error message and exit with failure.
 func Failed(format string, a ...any) {
+	interrupt.WaitIfExiting()
 	format = ColorizeText(format, "red")
 	if a != nil {
 		// output.UserOut.Fatalf(format, a...)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -24,6 +25,9 @@ var MutagenLogsCmd = &cobra.Command{
 
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
+		defer signal.Stop(sigs)
+		releaseInterrupt := interrupt.Delegate(syscall.SIGTERM, syscall.SIGINT)
+		defer releaseInterrupt()
 		done := make(chan bool, 1)
 
 		go func() {
