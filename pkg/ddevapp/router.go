@@ -192,7 +192,7 @@ func StartDdevRouter() (err error) {
 			return fmt.Errorf("failed to start ddev-router: %v", err)
 		}
 	} else {
-		wait = output.StartWaitSince(fmt.Sprintf("%s already running, pushing new config...", nodeps.RouterContainer), start)
+		wait = output.StartWaitSince(fmt.Sprintf("%s already running, pushing new config", nodeps.RouterContainer), start)
 
 		// Update network aliases in place rather than recreating the container.
 		// Starting any project with a new hostname changes the router's aliases,
