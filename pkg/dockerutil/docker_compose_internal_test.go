@@ -184,6 +184,10 @@ func TestSuppressLogrusFormatterDirect(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, out)
 
+	out, err = f.Format(&logrus.Entry{Message: "No services to build"})
+	require.NoError(t, err)
+	require.Empty(t, out)
+
 	// Non-matching message: underlying formatter runs and produces output.
 	out, err = f.Format(&logrus.Entry{
 		Message: "real warning",

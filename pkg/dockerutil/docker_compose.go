@@ -378,11 +378,12 @@ func sanitizeServiceName(input string) string {
 
 // suppressedLogrusMessages are substrings that, when matched against a logrus
 // entry's Message, cause the entry to be silently dropped at format time. Used
-// to silence known-harmless compose noise (notably the project-level
-// "Warning: No resource found to remove" warning emitted by compose Down at
-// vendor/github.com/docker/compose/v5/pkg/compose/down.go:117).
+// to silence known-harmless compose noise: the project-level "Warning: No
+// resource found to remove" from compose Down, and "No services to build" from
+// compose Build, which `ddev restart -s` hits for services without `build:`.
 var suppressedLogrusMessages = []string{
 	"No resource found to remove",
+	"No services to build",
 }
 
 // suppressLogrusFormatter wraps an underlying logrus.Formatter and returns
