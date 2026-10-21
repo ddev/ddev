@@ -173,19 +173,45 @@ func GetMutagenConfigFile(app *DdevApp) string {
 	return ""
 }
 
+// isLinkLeaf reports whether the last component of path is a link that Mutagen
+// refuses as a sync root. Mutagen also refuses Windows junctions, which Go
+// reports as irregular files, and Readlink tells them apart from other reparse
+// points such as OneDrive placeholders.
+func isLinkLeaf(p string) bool {
+	fi, err := os.Lstat(p)
+	if err != nil {
+		return false
+	}
+	if fi.Mode()&os.ModeSymlink != 0 {
+		return true
+	}
+	if nodeps.IsWindows() && fi.Mode()&os.ModeIrregular != 0 {
+		_, err = os.Readlink(p)
+		return err == nil
+	}
+	return false
+}
+
 // mutagenHostRoot returns the host path to use as the Mutagen sync root.
-// Mutagen refuses a root that is itself a symlink, so that case is resolved
+// Mutagen refuses a root that is itself a link, so that case is resolved
 // to its target; any other path is returned unchanged.
 func mutagenHostRoot(appRoot string) string {
-	fi, err := os.Lstat(appRoot)
-	if err != nil || fi.Mode()&os.ModeSymlink == 0 {
-		return appRoot
+	resolved := appRoot
+	// Bound the loop so a link cycle falls back to appRoot
+	for range 16 {
+		if !isLinkLeaf(resolved) {
+			return resolved
+		}
+		target, err := os.Readlink(resolved)
+		if err != nil {
+			return appRoot
+		}
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(filepath.Dir(resolved), target)
+		}
+		resolved = target
 	}
-	resolved, err := filepath.EvalSymlinks(appRoot)
-	if err != nil {
-		return appRoot
-	}
-	return resolved
+	return appRoot
 }
 
 // mutagenSessionRootMatches reports whether the project's existing sync session
@@ -211,8 +237,11 @@ func sessionRootMatches(sessionRoot string, appRoot string) bool {
 	if err != nil {
 		return true
 	}
-	sessionFi, err := os.Lstat(sessionRoot)
-	if err != nil || sessionFi.Mode()&os.ModeSymlink != 0 {
+	if isLinkLeaf(sessionRoot) {
+		return false
+	}
+	sessionFi, err := os.Stat(sessionRoot)
+	if err != nil {
 		return false
 	}
 	return os.SameFile(sessionFi, hostFi)
