@@ -14,7 +14,8 @@ teardown() {
 @test "Grav Composer quickstart with $(ddev --version)" {
   PROJNAME=my-grav-composer-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --php-version=8.3 --omit-containers=db
 
@@ -41,7 +42,8 @@ teardown() {
 @test "Grav Git Clone quickstart with $(ddev --version)" {
   PROJNAME=my-grav-git-site
 
-  run -0 mkdir -p my-grav-git-site && cd my-grav-git-site
+  run -0 mkdir -p my-grav-git-site
+  cd my-grav-git-site
 
   run -0 git clone -b master https://github.com/getgrav/grav.git .
 

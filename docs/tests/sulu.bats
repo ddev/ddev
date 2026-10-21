@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "Sulu quickstart with $(ddev --version)" {
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
   run -0 ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
   # ddev start -y
   run -0 ddev start -y

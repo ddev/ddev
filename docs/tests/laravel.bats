@@ -14,7 +14,8 @@ teardown() {
 @test "Laravel composer based quickstart with $(ddev --version)" {
   PROJNAME=my-laravel-composer-site
 
-  run -0 mkdir -p my-laravel-composer-site && cd my-laravel-composer-site
+  run -0 mkdir -p my-laravel-composer-site
+  cd my-laravel-composer-site
 
   run -0 ddev config --project-type=laravel --docroot=public
 
@@ -41,7 +42,8 @@ teardown() {
 @test "Laravel composer (SQLite) based quickstart with $(ddev --version)" {
   PROJNAME=my-laravel-sqlite-site
 
-  run -0 mkdir -p my-laravel-sqlite-site && cd my-laravel-sqlite-site
+  run -0 mkdir -p my-laravel-sqlite-site
+  cd my-laravel-sqlite-site
 
   run -0 ddev config --project-type=laravel --docroot=public --omit-containers=db
 
@@ -68,7 +70,8 @@ teardown() {
 @test "Laravel installer quickstart with $(ddev --version)" {
   PROJNAME=my-laravel-installer-site
 
-  run -0 mkdir -p my-laravel-installer-site && cd my-laravel-installer-site
+  run -0 mkdir -p my-laravel-installer-site
+  cd my-laravel-installer-site
 
   run -0 ddev config --project-type=laravel --docroot=public
 

@@ -14,7 +14,8 @@ teardown() {
 @test "MODX Composer quickstart with $(ddev --version)" {
   PROJNAME=my-modx-composer-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=modx
 
@@ -59,7 +60,8 @@ teardown() {
 @test "MODX ZIP Download quickstart with $(ddev --version)" {
   PROJNAME=my-modx-zip-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   # MODX has no GitHub releases, so derive the latest production release ("-pl")
   # from the tags and download the traditional distribution zip.

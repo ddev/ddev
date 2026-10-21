@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "Asterios composer based quickstart with $(ddev --version)" {
-  run -0 mkdir -p my-asterios-site && cd my-asterios-site
+  run -0 mkdir -p my-asterios-site
+  cd my-asterios-site
 
   run -0 ddev config --project-type=asterios --docroot=public
 

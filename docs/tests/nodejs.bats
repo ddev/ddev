@@ -13,7 +13,8 @@ teardown() {
 
 @test "Node.js quickstart with $(ddev --version)" {
   NODEJS_SITENAME=${PROJNAME}
-  run -0 mkdir -p ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}
+  run -0 mkdir -p ${NODEJS_SITENAME}
+  cd ${NODEJS_SITENAME}
 
   run -0 ddev config --project-type=generic --webserver-type=generic
   DDEV_DEBUG=true run -0 ddev start -y

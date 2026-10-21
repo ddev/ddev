@@ -13,7 +13,8 @@ teardown() {
 
 @test "sveltekit quickstart with $(ddev --version)" {
   SVELTEKIT_SITENAME=${PROJNAME}
-  run -0 mkdir -p ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
+  run -0 mkdir -p ${SVELTEKIT_SITENAME}
+  cd ${SVELTEKIT_SITENAME}
 
   run -0 ddev config --project-type=generic --webserver-type=generic
   DDEV_DEBUG=true run -0 ddev start -y

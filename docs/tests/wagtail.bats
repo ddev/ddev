@@ -13,7 +13,8 @@ teardown() {
 
 @test "Wagtail quickstart with $(ddev --version)" {
   WAGTAIL_SITENAME=${PROJNAME}
-  run -0 mkdir -p ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
+  run -0 mkdir -p ${WAGTAIL_SITENAME}
+  cd ${WAGTAIL_SITENAME}
 
   run -0 ddev config --project-type=generic --webserver-type=generic \
     --webimage-extra-packages=python3-pip,python3-venv \

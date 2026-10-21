@@ -939,8 +939,8 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     Download and extract the latest ExpressionEngine release:
 
     ```bash
-    DOWNLOAD_URL=$(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
-    curl -o ee.zip -L "${DOWNLOAD_URL}"
+    DOWNLOAD_URL=$(curl -fsSL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+    curl -fsSL -o ee.zip "${DOWNLOAD_URL}"
     unzip ee.zip && rm -f ee.zip
     ```
 
@@ -969,8 +969,8 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir -p my-ee-zip-site && cd my-ee-zip-site
-        DOWNLOAD_URL=$(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
-        curl -o ee.zip -L "${DOWNLOAD_URL}"
+        DOWNLOAD_URL=$(curl -fsSL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+        curl -fsSL -o ee.zip "${DOWNLOAD_URL}"
         unzip ee.zip && rm -f ee.zip
         ddev config --database=mysql:8.0
         ddev start -y

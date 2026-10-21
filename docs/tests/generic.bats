@@ -13,7 +13,8 @@ teardown() {
 
 @test "Generic PHP built-in server quickstart with $(ddev --version)" {
   GENERIC_SITENAME=${PROJNAME}
-  run -0 mkdir -p ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
+  run -0 mkdir -p ${GENERIC_SITENAME}
+  cd ${GENERIC_SITENAME}
 
   run -0 ddev config --project-type=php
 

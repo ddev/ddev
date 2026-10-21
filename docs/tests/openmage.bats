@@ -14,7 +14,8 @@ teardown() {
 @test "OpenMage git based quickstart with $(ddev --version)" {
   PROJNAME=my-openmage-git-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 git clone --depth=1 https://github.com/OpenMage/magento-lts .
 
@@ -51,7 +52,8 @@ teardown() {
 @test "OpenMage composer based quickstart with $(ddev --version)" {
   PROJNAME=my-openmage-composer-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=magento --docroot=public_test --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
 

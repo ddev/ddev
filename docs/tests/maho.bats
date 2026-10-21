@@ -14,7 +14,8 @@ teardown() {
 @test "Maho Composer quickstart with $(ddev --version)" {
   PROJNAME=my-maho-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=maho --docroot=public
 

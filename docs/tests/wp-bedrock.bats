@@ -14,7 +14,8 @@ teardown() {
 @test "WordPress Bedrock quickstart with $(ddev --version)" {
   PROJNAME=my-wp-bedrock-site
 
-  run -0 mkdir -p my-wp-bedrock-site && cd my-wp-bedrock-site
+  run -0 mkdir -p my-wp-bedrock-site
+  cd my-wp-bedrock-site
 
   run -0 ddev config --project-type=wp-bedrock
 

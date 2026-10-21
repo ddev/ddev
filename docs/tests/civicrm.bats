@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "CiviCRM quickstart with $(ddev --version)" {
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=php --composer-root=core --upload-dirs=public/media
 

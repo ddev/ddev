@@ -14,7 +14,8 @@ teardown() {
 @test "Expression Engine Zip File Download quickstart with $(ddev --version)" {
   PROJNAME=my-ee-zip-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   # Download the latest version of Expression Engine
   run -0 _github_release_download "ExpressionEngine/ExpressionEngine" "^ExpressionEngine.*\\.zip$" "ee.zip"
@@ -57,7 +58,8 @@ teardown() {
 @test "Expression Engine Git Clone quickstart with $(ddev --version)" {
   PROJNAME=my-ee-git-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 git clone --depth=1 https://github.com/ExpressionEngine/ExpressionEngine .
 

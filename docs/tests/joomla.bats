@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "Joomla quickstart with $(ddev --version)" {
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   # Download the latest version of Joomla
   run -0 curl -fsSL --retry 3 --retry-all-errors -o joomla.zip "https://www.joomla.org/latest"

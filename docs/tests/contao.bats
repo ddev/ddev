@@ -14,7 +14,8 @@ teardown() {
 @test "Contao Composer quickstart with $(ddev --version)" {
   PROJNAME=my-contao-composer-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.4
 
@@ -39,7 +40,8 @@ teardown() {
 @test "Contao Manager quickstart with $(ddev --version)" {
   PROJNAME=my-contao-manager-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
   run -0 ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.4
   # set DATABASE_URL and MAILER_DSN in .env.local
   run -0 ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025

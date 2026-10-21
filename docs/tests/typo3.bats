@@ -13,7 +13,8 @@ teardown() {
 
 @test "TYPO3 v14 'ddev typo3 setup' composer test with $(ddev --version)" {
   PROJNAME=my-typo3-site
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
   run -0 ddev config --project-type=typo3 --docroot=public
   run -0 ddev start -y >/dev/null
 
@@ -47,7 +48,8 @@ teardown() {
 
 @test "TYPO3 v13 'ddev typo3 setup' composer test with $(ddev --version)" {
   PROJNAME=my-typo3-site
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
   run -0 ddev config --project-type=typo3 --docroot=public
   run -0 ddev start -y >/dev/null
   _extra_info
@@ -79,7 +81,8 @@ teardown() {
 
 @test "TYPO3 v12 'ddev typo3 setup' composer test with $(ddev --version)" {
   PROJNAME=my-typo3-site
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
   run -0 ddev config --project-type=typo3 --docroot=public --php-version=8.1
   run -0 ddev start -y >/dev/null
   _extra_info
@@ -111,7 +114,8 @@ teardown() {
 
 @test "TYPO3 v11 'web installer' composer test with $(ddev --version)" {
   PROJNAME=my-typo3-site
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
   run -0 ddev config --project-type=typo3 --docroot=public --php-version=8.1
   run -0 ddev start -y >/dev/null
   _extra_info
@@ -147,7 +151,8 @@ teardown() {
 }
 
 @test "TYPO3 XHGui composer test with $(ddev --version)" {
-  run -0 mkdir -p my-typo3-site && cd my-typo3-site
+  run -0 mkdir -p my-typo3-site
+  cd my-typo3-site
 
   run -0 ddev config --project-type=typo3 --docroot=public --xhprof-mode=xhgui
 

@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "Kirby new project quickstart with $(ddev --version)" {
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --omit-containers=db --webserver-type=apache-fpm
 
