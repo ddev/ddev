@@ -163,7 +163,8 @@ teardown() {
   assert_output --partial "Started optional compose profiles"
   assert_output --partial "xhgui"
 
-  # Ensure there's no profiling data link
+  # Ensure XHGui answers, so the grep failure below means there's no profiling data link
+  run -0 _retry ddev exec "curl -sf xhgui:80 -o /dev/null"
   run ddev exec "curl -s xhgui:80 | grep -q '<a href=\"/?server_name=${DDEV_HOSTNAME}\">'"
   assert_failure
 

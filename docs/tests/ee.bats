@@ -19,7 +19,8 @@ teardown() {
   # Download the latest version of Expression Engine
   run -0 _github_release_download "ExpressionEngine/ExpressionEngine" "^ExpressionEngine.*\\.zip$" "ee.zip"
 
-  run -0 unzip ee.zip && rm -f ee.zip
+  run -0 unzip ee.zip
+  rm -f ee.zip
 
   run -0 ddev config --database=mysql:8.0
 

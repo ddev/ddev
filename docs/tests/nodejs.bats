@@ -35,7 +35,7 @@ EOF
   run -0 ddev mutagen sync
   assert_file_exist .ddev/config.nodejs.yaml
 
-  run -0 ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
+  run -0 ddev exec curl -fsSLO --retry 3 --retry-all-errors https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
 
   DDEV_DEBUG=true run -0 ddev restart -y
 

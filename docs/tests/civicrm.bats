@@ -29,7 +29,7 @@ EOF
 
   _extra_info
 
-  run -0 ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
+  run -0 ddev exec "curl -fsSL --retry 3 --retry-all-errors https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
 
   run -0 ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
 

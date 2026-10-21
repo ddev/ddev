@@ -15,9 +15,10 @@ teardown() {
   run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
 
   # Download the latest version of Joomla
-  run -0 curl -o joomla.zip -L "https://www.joomla.org/latest"
+  run -0 curl -fsSL --retry 3 --retry-all-errors -o joomla.zip "https://www.joomla.org/latest"
 
-  run -0 unzip joomla.zip && rm -f joomla.zip
+  run -0 unzip joomla.zip
+  rm -f joomla.zip
 
   run -0 ddev config --project-type=joomla
 
