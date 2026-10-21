@@ -321,6 +321,12 @@ While DDEV can create a web server and a Docker network infrastructure for a pro
 * If DDEV detects that it can’t look up one of the hostnames assigned to your project for that or other reasons, it will try to add that to the hosts file on your computer, which requires administrative privileges (sudo or Windows UAC).
     * This technique may not work on Windows WSL2, see below.
 
+### Router Ports Not Reachable
+
+If `ddev start` warns that nothing answers on the router's host ports, the router is running but your Docker provider isn't forwarding its ports to your computer. Restarting the Docker provider often fixes it.
+
+With Lima or Colima on Linux, ports below 1024, such as 80 and 443, can't be forwarded unless your system allows it. Either allow them with `echo 'net.ipv4.ip_unprivileged_port_start=0' | sudo tee -a /etc/sysctl.d/60-rootless.conf && sudo sysctl --system` and restart Lima or Colima, or move the router to higher ports with `ddev config global --router-http-port=8080 --router-https-port=8443`.
+
 ### DNS Rebinding Prohibited (Mostly on Fritzbox Routers)
 
 You may see one of several messages:

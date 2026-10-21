@@ -1,11 +1,11 @@
 package netutil
 
 import (
+	"errors"
 	"fmt"
 	"math/rand/v2"
 	"net"
 	"net/url"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -58,22 +58,35 @@ func IsPortActive(port string) bool {
 		}
 	}
 
-	// If we get ECONNREFUSED the port is not active.
-	oe, ok := err.(*net.OpError)
-	if ok {
-		syscallErr, ok := oe.Err.(*os.SyscallError)
-
-		// On Windows, WSAECONNREFUSED (10061) results instead of ECONNREFUSED. And golang doesn't seem to have it.
-		var WSAECONNREFUSED syscall.Errno = 10061
-
-		if ok && (syscallErr.Err == syscall.ECONNREFUSED || syscallErr.Err == WSAECONNREFUSED) {
-			util.Verbose("port %s shows connection refused so not active", port)
-			return false
-		}
+	if isConnRefused(err) {
+		util.Verbose("port %s shows connection refused so not active", port)
+		return false
 	}
 	// Otherwise, hmm, something else happened. It's not a fatal but can be reported.
 	util.Warning("Unable to properly check port status for %s:%s: err=%v", dockerIP, port, err)
 	return false
+}
+
+// IsPortRefused reports whether a connection to the port on a loopback Docker
+// IP is refused, meaning nothing listens there. It returns false for anything
+// less certain, such as a timeout or a Docker host that isn't on loopback.
+func IsPortRefused(port string) bool {
+	dockerIP, err := dockerutil.GetDockerIP()
+	if parsedIP := net.ParseIP(dockerIP); err != nil || parsedIP == nil || !parsedIP.IsLoopback() {
+		return false
+	}
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(dockerIP, port), time.Second)
+	if err == nil {
+		_ = conn.Close()
+		return false
+	}
+	return isConnRefused(err)
+}
+
+// isConnRefused reports whether err is a refused connection.
+func isConnRefused(err error) bool {
+	// Windows reports WSAECONNREFUSED (10061) rather than ECONNREFUSED.
+	return errors.Is(err, syscall.ECONNREFUSED) || errors.Is(err, syscall.Errno(10061))
 }
 
 // HasLocalIP returns true if at least one of the provided IP addresses is

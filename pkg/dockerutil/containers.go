@@ -2,6 +2,7 @@ package dockerutil
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"fmt"
 	"io"
@@ -1054,7 +1055,11 @@ func GetBoundHostPorts(containerID string) ([]string, error) {
 	for k := range portMap {
 		ports = append(ports, k)
 	}
-	slices.Sort(ports)
+	slices.SortFunc(ports, func(a, b string) int {
+		x, _ := strconv.Atoi(a)
+		y, _ := strconv.Atoi(b)
+		return cmp.Compare(x, y)
+	})
 	return ports, nil
 }
 

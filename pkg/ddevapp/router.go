@@ -247,6 +247,9 @@ func StartDdevRouter() (err error) {
 	}
 	wait.Done(nil, "ready")
 	wait = nil
+	if needsRecreation {
+		warnUnreachableRouterPorts()
+	}
 
 	util.Verbose("Getting traefik error output")
 	traefikErr := GetRouterConfigErrors()
@@ -256,6 +259,31 @@ func StartDdevRouter() (err error) {
 	}
 
 	return nil
+}
+
+// warnUnreachableRouterPorts warns when a port the router publishes refuses
+// connections on the host. A healthy router can still be unreachable when the
+// Docker provider fails to forward a port, as Lima does on Linux for ports
+// below net.ipv4.ip_unprivileged_port_start.
+func warnUnreachableRouterPorts() {
+	router, err := FindDdevRouter()
+	if err != nil || router == nil {
+		return
+	}
+	ports, err := dockerutil.GetBoundHostPorts(router.ID)
+	if err != nil {
+		return
+	}
+	// Providers like Lima set up forwarding shortly after the container starts.
+	var refused []string
+	for range 10 {
+		refused = slices.DeleteFunc(slices.Clone(ports), func(p string) bool { return !netutil.IsPortRefused(p) })
+		if len(refused) == 0 {
+			return
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	util.Warning("%s is running, but nothing answers on host port(s) %s, so projects may not be reachable there. Your Docker provider may not be forwarding them; see https://docs.ddev.com/en/stable/users/usage/troubleshooting/#router-ports-not-reachable", nodeps.RouterContainer, strings.Join(refused, ", "))
 }
 
 // generateRouterCompose() generates the ~/.ddev/.router-compose.yaml and ~/.ddev/.router-compose-full.yaml
