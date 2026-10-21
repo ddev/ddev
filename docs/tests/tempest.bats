@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "Tempest composer based quickstart with $(ddev --version)" {
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=php --docroot=public --php-version=8.5 --omit-containers=db
 

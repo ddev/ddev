@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "October CMS new project quickstart with $(ddev --version)" {
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=laravel --webserver-type=apache-fpm
 

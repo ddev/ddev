@@ -14,7 +14,8 @@ teardown() {
 @test "Statamic Composer quickstart with $(ddev --version)" {
   PROJNAME=my-statamic-composer-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=laravel --docroot=public
 

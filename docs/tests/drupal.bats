@@ -14,7 +14,8 @@ teardown() {
 @test "Drupal 12 quickstart with $(ddev --version)" {
   PROJNAME=my-drupal12-site
 
-  run -0 mkdir -p my-drupal12-site && cd my-drupal12-site
+  run -0 mkdir -p my-drupal12-site
+  cd my-drupal12-site
 
   run -0 ddev config --project-type=drupal12 --docroot=web
 
@@ -46,7 +47,8 @@ teardown() {
 @test "Drupal 11 quickstart with $(ddev --version)" {
   PROJNAME=my-drupal11-site
 
-  run -0 mkdir -p my-drupal11-site && cd my-drupal11-site
+  run -0 mkdir -p my-drupal11-site
+  cd my-drupal11-site
 
   run -0 ddev config --project-type=drupal11 --docroot=web
 
@@ -72,7 +74,8 @@ teardown() {
 @test "Drupal 10 quickstart with $(ddev --version)" {
   PROJNAME=my-drupal10-site
 
-  run -0 mkdir -p my-drupal10-site && cd my-drupal10-site
+  run -0 mkdir -p my-drupal10-site
+  cd my-drupal10-site
 
   run -0 ddev config --project-type=drupal10 --docroot=web
 
@@ -125,7 +128,8 @@ teardown() {
 @test "Drupal CMS composer quickstart with $(ddev --version)" {
   PROJNAME=my-drupalcms-site
 
-  run -0 mkdir -p my-drupalcms-site && cd my-drupalcms-site
+  run -0 mkdir -p my-drupalcms-site
+  cd my-drupalcms-site
 
   run -0 ddev config --project-type=drupal11 --docroot=web
 

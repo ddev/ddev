@@ -14,7 +14,8 @@ teardown() {
 @test "WordPress wp-cli based quickstart with $(ddev --version)" {
   PROJNAME=my-wp-cli-site
 
-  run -0 mkdir -p my-wp-cli-site && cd my-wp-cli-site
+  run -0 mkdir -p my-wp-cli-site
+  cd my-wp-cli-site
 
   run -0 ddev config --project-type=wordpress
 
@@ -46,7 +47,8 @@ teardown() {
 @test "WordPress wp-cli based quickstart (different docroot) with $(ddev --version)" {
   PROJNAME=my-wp-docroot-site
 
-  run -0 mkdir -p my-wp-docroot-site && cd my-wp-docroot-site
+  run -0 mkdir -p my-wp-docroot-site
+  cd my-wp-docroot-site
 
   run -0 ddev config --project-type=wordpress --docroot=./web/wp
 
@@ -91,7 +93,8 @@ teardown() {
 @test "WordPress wp-cli based quickstart (subdirectory URL change) with $(ddev --version)" {
   PROJNAME=my-wp-subdir-site
 
-  run -0 mkdir -p my-wp-subdir-site && cd my-wp-subdir-site
+  run -0 mkdir -p my-wp-subdir-site
+  cd my-wp-subdir-site
   run -0 ddev config --project-type=wordpress
   run -0 ddev start -y
 

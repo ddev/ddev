@@ -14,7 +14,8 @@ teardown() {
 @test "Pimcore Composer quickstart with $(ddev --version)" {
   skip "Pimcore requires a license key"
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
   run -0 ddev config --project-type=php --docroot=public --webimage-extra-packages='php${DDEV_PHP_VERSION}-amqp'
   run -0 ddev start -y
 

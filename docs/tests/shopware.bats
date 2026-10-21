@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "Shopware Composer based quickstart with $(ddev --version)" {
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=shopware6 --docroot=public
 

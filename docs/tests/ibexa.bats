@@ -13,7 +13,8 @@ teardown() {
 
 @test "Ibexa DXP quickstart with $(ddev --version)" {
   # mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
   run -0 ddev config --project-type=symfony --docroot=public
   run -0 ddev start -y
   run -0 _retry ddev composer create-project ibexa/oss-skeleton

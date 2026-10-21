@@ -14,7 +14,8 @@ teardown() {
 @test "CakePHP Composer quickstart with $(ddev --version)" {
   PROJNAME=my-cakephp-composer-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=cakephp --docroot=webroot
 

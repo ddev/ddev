@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "CiviCRM quickstart with $(ddev --version)" {
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=php --composer-root=core --upload-dirs=public/media
 
@@ -29,7 +30,7 @@ EOF
 
   _extra_info
 
-  run -0 ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
+  run -0 ddev exec "curl -fsSL --retry 3 --retry-all-errors https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
 
   run -0 ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
 

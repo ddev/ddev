@@ -12,7 +12,8 @@ teardown() {
 }
 
 @test "Moodle quickstart with $(ddev --version)" {
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --docroot=public --webserver-type=apache-fpm
 

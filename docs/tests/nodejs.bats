@@ -13,7 +13,8 @@ teardown() {
 
 @test "Node.js quickstart with $(ddev --version)" {
   NODEJS_SITENAME=${PROJNAME}
-  run -0 mkdir -p ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}
+  run -0 mkdir -p ${NODEJS_SITENAME}
+  cd ${NODEJS_SITENAME}
 
   run -0 ddev config --project-type=generic --webserver-type=generic
   DDEV_DEBUG=true run -0 ddev start -y
@@ -35,7 +36,7 @@ EOF
   run -0 ddev mutagen sync
   assert_file_exist .ddev/config.nodejs.yaml
 
-  run -0 ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
+  run -0 ddev exec curl -fsSLO --retry 3 --retry-all-errors https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
 
   DDEV_DEBUG=true run -0 ddev restart -y
 

@@ -289,7 +289,7 @@ ddev start
 Download and extract CiviCRM:
 
 ```bash
-ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
+ddev exec "curl -fsSL https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
 ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
 ddev composer require civicrm/cli-tools --no-scripts
 ```
@@ -326,7 +326,7 @@ ddev launch
     mkdir -p my-civicrm-site && cd my-civicrm-site
     ddev config --project-type=php --composer-root=core --upload-dirs=public/media
     ddev start -y
-    ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
+    ddev exec "curl -fsSL https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
     ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
     ddev composer require civicrm/cli-tools --no-scripts
     ddev exec cv core:install \
@@ -939,8 +939,8 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     Download and extract the latest ExpressionEngine release:
 
     ```bash
-    DOWNLOAD_URL=$(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
-    curl -o ee.zip -L "${DOWNLOAD_URL}"
+    DOWNLOAD_URL=$(curl -fsSL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+    curl -fsSL -o ee.zip "${DOWNLOAD_URL}"
     unzip ee.zip && rm -f ee.zip
     ```
 
@@ -969,8 +969,8 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir -p my-ee-zip-site && cd my-ee-zip-site
-        DOWNLOAD_URL=$(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
-        curl -o ee.zip -L "${DOWNLOAD_URL}"
+        DOWNLOAD_URL=$(curl -fsSL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+        curl -fsSL -o ee.zip "${DOWNLOAD_URL}"
         unzip ee.zip && rm -f ee.zip
         ddev config --database=mysql:8.0
         ddev start -y
@@ -1303,7 +1303,7 @@ Create the project directory and download Joomla:
 
 ```bash
 mkdir -p my-joomla-site && cd my-joomla-site
-curl -o joomla.zip -L "https://www.joomla.org/latest"
+curl -fsSL -o joomla.zip "https://www.joomla.org/latest"
 unzip joomla.zip && rm -f joomla.zip
 ```
 
@@ -1346,7 +1346,7 @@ ddev launch /administrator
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p my-joomla-site && cd my-joomla-site
-    curl -o joomla.zip -L "https://www.joomla.org/latest"
+    curl -fsSL -o joomla.zip "https://www.joomla.org/latest"
     unzip joomla.zip && rm -f joomla.zip
     ddev config --project-type=joomla
     echo "display_errors = off" > .ddev/php/joomla.ini
@@ -2222,7 +2222,7 @@ ddev launch /manager/
           directory: /var/www/html
     EOF
 
-    ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
+    ddev exec curl -fsSLO https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
     ddev restart
     ddev launch
     ```
@@ -2582,7 +2582,8 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
 
     ```bash
     curl -LJOf https://github.com/processwire/processwire/archive/master.zip
-    unzip processwire-master.zip && rm -f processwire-master.zip && mv processwire-master/* . && mv processwire-master/.* . 2>/dev/null && rm -rf processwire-master
+    unzip processwire-master.zip && rm -f processwire-master.zip
+    cp -R processwire-master/. . && rm -rf processwire-master
     ```
 
     Configure and start DDEV:
@@ -2607,7 +2608,8 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
         set -euo pipefail
         mkdir -p my-processwire-zip-site && cd my-processwire-zip-site
         curl -LJOf https://github.com/processwire/processwire/archive/master.zip
-        unzip processwire-master.zip && rm -f processwire-master.zip && mv processwire-master/* . && mv processwire-master/.* . 2>/dev/null && rm -rf processwire-master
+        unzip processwire-master.zip && rm -f processwire-master.zip
+        cp -R processwire-master/. . && rm -rf processwire-master
         ddev config --project-type=php --webserver-type=apache-fpm
         ddev start -y
         ddev launch

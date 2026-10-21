@@ -14,7 +14,8 @@ teardown() {
 @test "Symfony Composer quickstart with $(ddev --version)" {
   PROJNAME=my-symfony-composer-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=symfony --docroot=public
 
@@ -46,7 +47,8 @@ teardown() {
 @test "Symfony CLI quickstart with $(ddev --version)" {
   PROJNAME=my-symfony-cli-site
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=symfony --docroot=public
 

@@ -16,7 +16,8 @@ teardown() {
     skip "MAGENTO2_PUBLIC_ACCESS_KEY not provided (forked PR)"
   fi
 
-  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 mkdir -p ${PROJNAME}
+  cd ${PROJNAME}
 
   run -0 ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
 

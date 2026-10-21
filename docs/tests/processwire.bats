@@ -14,9 +14,13 @@ teardown() {
 @test "processwire zipball with $(ddev --version)" {
   PROJNAME=my-processwire-zip-site
 
-  run -0 mkdir -p my-processwire-zip-site && cd my-processwire-zip-site
+  run -0 mkdir -p my-processwire-zip-site
+  cd my-processwire-zip-site
   run -0 _curl_github -LJOf https://github.com/processwire/processwire/archive/master.zip
-  run -0 unzip processwire-master.zip && rm -f processwire-master.zip && mv processwire-master/* . && mv processwire-master/.* . 2>/dev/null && rm -rf processwire-master
+  run -0 unzip processwire-master.zip
+  rm -f processwire-master.zip
+  run -0 cp -R processwire-master/. .
+  rm -rf processwire-master
   run -0 ddev config --project-type=php --webserver-type=apache-fpm
   DDEV_DEBUG=true run -0 ddev start -y
 
@@ -48,7 +52,8 @@ teardown() {
 @test "processwire composer with $(ddev --version)" {
   PROJNAME=my-processwire-composer-site
 
-  run -0 mkdir -p my-processwire-composer-site && cd my-processwire-composer-site
+  run -0 mkdir -p my-processwire-composer-site
+  cd my-processwire-composer-site
   run -0 ddev config --project-type=php --webserver-type=apache-fpm
   DDEV_DEBUG=true run -0 ddev start -y
 
