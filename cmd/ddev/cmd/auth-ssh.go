@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -60,7 +61,15 @@ var AuthSSHCommand = &cobra.Command{
 		// agent first so its warning explains why, even if no key file exists.
 		agentStarted := false
 		if globalconfig.DdevGlobalConfig.SSHAgentUpstream != "" && sshKeyFiles == nil && sshKeyDirs == nil {
-			_, upstreamErr := ddevapp.SSHAgentUpstreamSocket()
+			upstream, upstreamErr := ddevapp.SSHAgentUpstreamSocket()
+			if errors.Is(upstreamErr, ddevapp.ErrSSHAgentSocketStale) {
+				util.Failed("%v", upstreamErr)
+			}
+			if upstreamErr == nil {
+				if err := ddevapp.CheckSSHAgentUpstreamListening(upstream); err != nil {
+					util.Failed("No SSH agent is listening at %s (ssh_agent_upstream=%s): %v\nMake sure that agent is running and holds your keys.", upstream, globalconfig.DdevGlobalConfig.SSHAgentUpstream, err)
+				}
+			}
 			ensureSSHAgent()
 			if upstreamErr == nil {
 				listUpstreamSSHKeys()
@@ -144,9 +153,31 @@ func ensureSSHAgent() {
 // upstream agent ddev-ssh-agent relays to.
 func listUpstreamSSHKeys() {
 	upstream, _ := ddevapp.SSHAgentUpstreamSocket()
-	stdout, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+	// A locked agent such as 1Password waits for the user to unlock it, so
+	// allow time for that, but don't wait forever on a forwarder that hangs.
+	const listTimeout = 2 * time.Minute
+	notice := time.AfterFunc(5*time.Second, func() {
+		output.UserOut.Printf("Waiting for the SSH agent at %s; unlock it or approve the request if it asks.", upstream)
+	})
+	start := time.Now()
+	stdout, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, fmt.Sprintf("timeout %d ssh-add -l", int(listTimeout.Seconds())), "")
+	notice.Stop()
+	if err != nil && time.Since(start) >= listTimeout {
+		hint := ""
+		if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "host" && dockerutil.IsDockerDesktop() {
+			hint = "\nDocker Desktop relays the agent it found when it started; from a shell where 'ssh-add -l' works, run 'docker desktop restart'."
+			if nodeps.IsLinux() {
+				hint = "\nDocker Desktop relays the agent it found when it started; from a shell where 'ssh-add -l' works, run 'systemctl --user import-environment SSH_AUTH_SOCK && systemctl --user restart docker-desktop'."
+			}
+		}
+		util.Failed("The SSH agent at %s (ssh_agent_upstream=%s) didn't respond within %v.%s", upstream, globalconfig.DdevGlobalConfig.SSHAgentUpstream, listTimeout, hint)
+	}
 	if err != nil {
-		util.Failed("Unable to list keys from the SSH agent at %s (ssh_agent_upstream=%s): %s\nMake sure that agent is running and holds your keys.", upstream, globalconfig.DdevGlobalConfig.SSHAgentUpstream, strings.TrimSpace(stdout+stderr))
+		hint := "Make sure that agent is running and holds your keys."
+		if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "host" && dockerutil.IsColima() {
+			hint += "\nColima forwards it only when started with 'colima stop && colima start --ssh-agent'."
+		}
+		util.Failed("Unable to list keys from the SSH agent at %s (ssh_agent_upstream=%s): %s\n%s", upstream, globalconfig.DdevGlobalConfig.SSHAgentUpstream, strings.TrimSpace(stdout+stderr), hint)
 	}
 	output.UserOut.Printf("Containers use the SSH agent at %s, which holds these keys:\n%s", upstream, strings.TrimSpace(stdout))
 }

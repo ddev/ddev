@@ -44,13 +44,16 @@ func TestCheckSSHAgentUpstreamListening(t *testing.T) {
 	sock := filepath.Join(dir, "agent.sock")
 	globalconfig.DdevGlobalConfig.SSHAgentUpstream = sock
 
-	require.Error(t, checkSSHAgentUpstreamListening(sock))
+	require.Error(t, CheckSSHAgentUpstreamListening(sock))
 
 	listener, err := net.Listen("unix", sock)
 	require.NoError(t, err)
-	require.NoError(t, checkSSHAgentUpstreamListening(sock))
+	require.NoError(t, CheckSSHAgentUpstreamListening(sock))
 	require.NoError(t, listener.Close())
-	require.Error(t, checkSSHAgentUpstreamListening(sock))
+	require.Error(t, CheckSSHAgentUpstreamListening(sock))
+
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = "host"
+	require.NoError(t, CheckSSHAgentUpstreamListening(hostServicesSSHAuthSock))
 }
 
 // TestSSHAgentUpstreamSocketPaths checks the values that need no Docker provider.
@@ -77,6 +80,8 @@ func TestSSHAgentUpstreamSocketPaths(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.RemoveAll(dir)
 	})
+	dir, err = filepath.EvalSymlinks(dir)
+	require.NoError(t, err)
 	for value, expected := range map[string]string{
 		"":                               "",
 		filepath.Join(dir, "agent.sock"): filepath.Join(dir, "agent.sock"),
@@ -91,6 +96,35 @@ func TestSSHAgentUpstreamSocketPaths(t *testing.T) {
 	globalconfig.DdevGlobalConfig.SSHAgentUpstream = filepath.Join(dir, "missing", "agent.sock")
 	_, err = SSHAgentUpstreamSocket()
 	require.ErrorContains(t, err, "doesn't exist")
+
+	// The mount must use the target's directory, as VS Code's
+	// /tmp/vscode-ssh-auth-sock-* symlinks need.
+	agentDir := filepath.Join(dir, "agent")
+	require.NoError(t, os.Mkdir(agentDir, 0700))
+	target := filepath.Join(agentDir, "listener.sock")
+	listener, err := net.Listen("unix", target)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = listener.Close()
+	})
+	link := filepath.Join(dir, "vscode-ssh-auth-sock")
+	require.NoError(t, os.Symlink(target, link))
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = link
+	sock, err := SSHAgentUpstreamSocket()
+	require.NoError(t, err)
+	require.Equal(t, target, sock)
+	mount, name := sshAgentUpstreamMount(sock)
+	require.Equal(t, agentDir+":/upstream", mount)
+	require.Equal(t, "listener.sock", name)
+
+	require.NoError(t, listener.Close())
+	sock, err = SSHAgentUpstreamSocket()
+	require.NoError(t, err)
+	require.Equal(t, target, sock)
+	require.NoError(t, os.RemoveAll(agentDir))
+	_, err = SSHAgentUpstreamSocket()
+	require.ErrorIs(t, err, ErrSSHAgentSocketStale)
+	require.ErrorContains(t, err, "no longer exists")
 
 	for _, value := range []string{"relative/agent.sock", "agent.sock", "./agent.sock"} {
 		globalconfig.DdevGlobalConfig.SSHAgentUpstream = value

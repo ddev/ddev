@@ -138,10 +138,36 @@ func TestCmdAuthSSHUpstream(t *testing.T) {
 	require.Contains(t, out, "Containers use the SSH agent at "+upstreamSock)
 	require.Contains(t, out, "ddev-cmd-upstream-test")
 
+	linkDir := testcommon.CreateTmpDir(t.Name() + "-link")
+	t.Cleanup(func() {
+		_ = os.RemoveAll(linkDir)
+	})
+	link := filepath.Join(linkDir, "vscode-ssh-auth-sock")
+	require.NoError(t, os.Symlink(upstreamSock, link))
+	out, err = exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream=host")
+	require.NoError(t, err, out)
+	out, err = exec.RunHostCommand("env", "SSH_AUTH_SOCK="+link, cmd.DdevBin, "auth", "ssh")
+	require.NoError(t, err, out)
+	require.Contains(t, out, "Containers use the SSH agent at "+upstreamSock)
+	require.Contains(t, out, "ddev-cmd-upstream-test")
+
 	_, _ = exec.RunHostCommand("pkill", "-f", "ssh-agent -a "+upstreamSock)
-	out, err = exec.RunHostCommand(cmd.DdevBin, "auth", "ssh")
+	out, err = exec.RunHostCommand("env", "SSH_AUTH_SOCK="+upstreamSock, cmd.DdevBin, "auth", "ssh")
 	require.Error(t, err, out)
 	require.Contains(t, out, "Make sure that agent is running")
+	require.NotContains(t, out, "Container ddev-ssh-agent")
+
+	// A target directory that still exists means the agent may not have started yet.
+	_ = os.Remove(upstreamSock)
+	out, err = exec.RunHostCommand("env", "SSH_AUTH_SOCK="+link, cmd.DdevBin, "auth", "ssh")
+	require.Error(t, err, out)
+	require.Contains(t, out, "No SSH agent is listening at "+upstreamSock)
+
+	staleLink := filepath.Join(linkDir, "stale-ssh-auth-sock")
+	require.NoError(t, os.Symlink(filepath.Join(linkDir, "gone", "agent.sock"), staleLink))
+	out, err = exec.RunHostCommand("env", "SSH_AUTH_SOCK="+staleLink, cmd.DdevBin, "auth", "ssh")
+	require.Error(t, err, out)
+	require.Contains(t, out, "no longer exists")
 
 	// The fallback warning must appear even when ~/.ssh holds no key files.
 	out, err = exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream=host")
