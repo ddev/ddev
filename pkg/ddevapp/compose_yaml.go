@@ -306,6 +306,20 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 			}
 		}
 
+		// `ddev exec -s`, the router and `ddev describe` find containers by this name.
+		// Compose rejects a fixed container_name on a scaled service.
+		if containerName := GetContainerName(app, name); service.GetScale() <= 1 && service.ContainerName != containerName {
+			if service.ContainerName != "" {
+				util.WarningOnce("Service '%s' in project '%s' sets container_name '%s'; DDEV uses '%s' instead. Remove container_name, or set it to 'ddev-${DDEV_SITENAME}-%s' for older DDEV versions.", name, app.Name, service.ContainerName, containerName, name)
+			}
+			service.ContainerName = containerName
+		}
+		// Docker rejects hostname with container:/service: network modes, and
+		// a container whose hostname exceeds 63 characters fails to start.
+		if hostname := app.Name + "-" + name; service.Hostname == "" && service.NetworkMode == "" && len(hostname) <= 63 {
+			service.Hostname = hostname
+		}
+
 		// Set up host.docker.internal based on DDEV's standard approach
 		if hostDockerInternal.ExtraHost != "" && !sharesNetNS {
 			if service.ExtraHosts == nil {

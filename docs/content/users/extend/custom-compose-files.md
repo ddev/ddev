@@ -90,7 +90,8 @@ To better understand how DDEV parses your custom docker-compose files, run `ddev
 
 When defining additional services for your project, we recommend following these conventions to ensure DDEV handles your service the same way DDEV handles default services.
 
-* The container name should be `ddev-${DDEV_SITENAME}-<servicename>`. This ensures the auto-generated [Traefik routing configuration](./traefik-router.md#project-traefik-configuration) matches your custom service.
+* The container name should be `ddev-${DDEV_SITENAME}-<servicename>`. This ensures the auto-generated [Traefik routing configuration](./traefik-router.md#project-traefik-configuration) matches your custom service, and that commands like `ddev exec -s <servicename>` find it. Since DDEV v1.25.5, DDEV sets this name automatically and replaces any other `container_name`, except on services with more than one replica. Keep `container_name` in your files if they must also work with older DDEV versions.
+* Since DDEV v1.25.5, DDEV sets the service's hostname to `${DDEV_SITENAME}-<servicename>` when you don't set `hostname` yourself, so the prompt in `ddev ssh -s <servicename>` shows a readable name instead of a container ID.
 * Provide containers with required labels:
 
     ```yaml

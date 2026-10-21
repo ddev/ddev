@@ -1,0 +1,6 @@
+services:
+  dummy4:
+    image: busybox:stable
+    hostname: custom-hostname
+    deploy:
+      replicas: 2
