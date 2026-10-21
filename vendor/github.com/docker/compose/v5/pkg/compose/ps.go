@@ -23,7 +23,6 @@ import (
 
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/docker/compose/v5/pkg/api"
 )
@@ -43,7 +42,7 @@ func (s *composeService) Ps(ctx context.Context, projectName string, options api
 		containers = containers.filter(isService(options.Services...))
 	}
 	summary := make([]api.ContainerSummary, len(containers))
-	eg, ctx := errgroup.WithContext(ctx)
+	eg, ctx := newLimitedErrgroup(ctx, s.maxConcurrency)
 	for i, ctr := range containers {
 		eg.Go(func() error {
 			var err error
@@ -87,7 +86,7 @@ func (s *composeService) containerSummary(ctx context.Context, ctr container.Sum
 }
 
 func containerPublishers(ctr container.Summary) []api.PortPublisher {
-	sort.Slice(ctr.Ports, func(i, j int) bool {
+	sort.SliceStable(ctr.Ports, func(i, j int) bool {
 		return ctr.Ports[i].PrivatePort < ctr.Ports[j].PrivatePort
 	})
 	publishers := make([]api.PortPublisher, len(ctr.Ports))

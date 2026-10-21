@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,10 +47,13 @@ var _ client.APIClient = &DryRunClient{}
 
 // DryRunClient implements APIClient by delegating to implementation functions. This allows lazy init and per-method overrides
 type DryRunClient struct {
-	apiClient  client.APIClient
-	containers []containerType.Summary
-	execs      sync.Map
-	configFile *configfile.ConfigFile
+	apiClient client.APIClient
+	// containers caches the project's containers: seeded once from the real
+	// daemon (containersSeeded), then extended with every faked creation.
+	containers       []containerType.Summary
+	containersSeeded bool
+	execs            sync.Map
+	configFile       *configfile.ConfigFile
 }
 
 type execDetails struct {
@@ -94,13 +98,37 @@ func (d *DryRunClient) resolve(ctx context.Context, ref string) error {
 	return err
 }
 
+// matchesLabelFilters reports whether labels satisfy every requested
+// "key" or "key=value" label filter, mirroring the daemon's label filtering
+// for the faked containers the cache serves.
+func matchesLabelFilters(labels map[string]string, wanted map[string]bool) bool {
+	for f := range wanted {
+		k, v, hasValue := strings.Cut(f, "=")
+		actual, ok := labels[k]
+		if !ok || (hasValue && actual != v) {
+			return false
+		}
+	}
+	return true
+}
+
 func getCallingFunction() string {
 	pc, _, _, _ := runtime.Caller(2)
 	fullName := runtime.FuncForPC(pc).Name()
 	return fullName[strings.LastIndex(fullName, ".")+1:]
 }
 
-// All methods and functions which need to be overridden for dry run.
+// errDryRunForbidden refuses a mutating operation compose itself never
+// issues: delegating it would let future code mutate the engine under
+// --dry-run silently. The full classification of every APIClient method
+// (read-only delegated / faked / refused) is pinned by
+// TestDryRunClientClassifiesEveryMethod.
+func errDryRunForbidden(operation string) error {
+	return fmt.Errorf("%s is not allowed in dry-run mode", operation)
+}
+
+// Methods below either fake the operation for dry-run or delegate the
+// read-only ones to the real client.
 
 func (d *DryRunClient) ContainerAttach(ctx context.Context, container string, options client.ContainerAttachOptions) (client.ContainerAttachResult, error) {
 	return client.ContainerAttachResult{}, errors.New("interactive run is not supported in dry-run mode")
@@ -111,6 +139,9 @@ func (d *DryRunClient) ContainerCreate(ctx context.Context, options client.Conta
 		ID:     options.Name,
 		Names:  []string{options.Name},
 		Labels: options.Config.Labels,
+		// a container just created is in created state; listings that
+		// filter on state (listPreStartRunners) must see the faked ones
+		State: containerType.StateCreated,
 		HostConfig: struct {
 			NetworkMode string            `json:",omitempty"`
 			Annotations map[string]string `json:",omitempty"`
@@ -154,20 +185,38 @@ func (d *DryRunClient) ContainerKill(ctx context.Context, container string, opti
 func (d *DryRunClient) ContainerList(ctx context.Context, options client.ContainerListOptions) (client.ContainerListResult, error) {
 	caller := getCallingFunction()
 	switch caller {
-	case "start":
+	case "getContainers":
+		// Seed the cache from the real daemon on first use, then keep
+		// answering from it: containers faked by ContainerCreate must stay
+		// visible to the start flow, which lists through getContainers.
+		// Seeding is tracked independently of the cache's length — a faked
+		// creation may land before the first listing, and must not mask the
+		// daemon's real containers.
+		if !d.containersSeeded {
+			res, err := d.apiClient.ContainerList(ctx, options)
+			if err != nil {
+				return client.ContainerListResult{}, err
+			}
+			d.containersSeeded = true
+			d.containers = append(d.containers, res.Items...)
+		}
 		return client.ContainerListResult{
 			Items: d.containers,
 		}, nil
-	case "getContainers":
-		if len(d.containers) == 0 {
-			res, err := d.apiClient.ContainerList(ctx, options)
-			if err == nil {
-				d.containers = res.Items
+	case "listPreStartRunners":
+		// Hook runners created under dry-run exist only in the cache: answer
+		// from it, honoring the caller's label filters (project, service,
+		// hook type). The status=created filter is implicit — every faked
+		// container is in created state by construction, and a real runner
+		// seeded into the cache in any other state is discarded by the
+		// caller's own state check.
+		var items []containerType.Summary
+		for _, ctr := range d.containers {
+			if matchesLabelFilters(ctr.Labels, options.Filters["label"]) {
+				items = append(items, ctr)
 			}
-			return client.ContainerListResult{
-				Items: d.containers,
-			}, err
 		}
+		return client.ContainerListResult{Items: items}, nil
 	}
 	return d.apiClient.ContainerList(ctx, options)
 }
@@ -300,7 +349,7 @@ func (d *DryRunClient) VolumeRemove(ctx context.Context, volumeID string, option
 func (d *DryRunClient) ExecCreate(ctx context.Context, container string, config client.ExecCreateOptions) (client.ExecCreateResult, error) {
 	b := make([]byte, 32)
 	_, _ = rand.Read(b)
-	id := fmt.Sprintf("%x", b)
+	id := hex.EncodeToString(b)
 	d.execs.Store(id, execDetails{
 		container: container,
 		command:   config.Cmd,
@@ -329,19 +378,22 @@ func (d *DryRunClient) ConfigInspect(ctx context.Context, name string, options c
 }
 
 func (d *DryRunClient) ConfigCreate(ctx context.Context, options client.ConfigCreateOptions) (client.ConfigCreateResult, error) {
-	return d.apiClient.ConfigCreate(ctx, options)
+	var zero client.ConfigCreateResult
+	return zero, errDryRunForbidden("ConfigCreate")
 }
 
 func (d *DryRunClient) ConfigRemove(ctx context.Context, id string, options client.ConfigRemoveOptions) (client.ConfigRemoveResult, error) {
-	return d.apiClient.ConfigRemove(ctx, id, options)
+	var zero client.ConfigRemoveResult
+	return zero, errDryRunForbidden("ConfigRemove")
 }
 
 func (d *DryRunClient) ConfigUpdate(ctx context.Context, id string, options client.ConfigUpdateOptions) (client.ConfigUpdateResult, error) {
-	return d.apiClient.ConfigUpdate(ctx, id, options)
+	var zero client.ConfigUpdateResult
+	return zero, errDryRunForbidden("ConfigUpdate")
 }
 
 func (d *DryRunClient) ContainerCommit(ctx context.Context, container string, options client.ContainerCommitOptions) (client.ContainerCommitResult, error) {
-	return d.apiClient.ContainerCommit(ctx, container, options)
+	return client.ContainerCommitResult{ID: "dryRunId"}, nil
 }
 
 func (d *DryRunClient) ContainerDiff(ctx context.Context, container string, options client.ContainerDiffOptions) (client.ContainerDiffResult, error) {
@@ -357,7 +409,8 @@ func (d *DryRunClient) ExecInspect(ctx context.Context, execID string, options c
 }
 
 func (d *DryRunClient) ExecResize(ctx context.Context, execID string, options client.ExecResizeOptions) (client.ExecResizeResult, error) {
-	return d.apiClient.ExecResize(ctx, execID, options)
+	var zero client.ExecResizeResult
+	return zero, errDryRunForbidden("ExecResize")
 }
 
 func (d *DryRunClient) ContainerExport(ctx context.Context, container string, options client.ContainerExportOptions) (client.ContainerExportResult, error) {
@@ -369,7 +422,8 @@ func (d *DryRunClient) ContainerLogs(ctx context.Context, container string, opti
 }
 
 func (d *DryRunClient) ContainerResize(ctx context.Context, container string, options client.ContainerResizeOptions) (client.ContainerResizeResult, error) {
-	return d.apiClient.ContainerResize(ctx, container, options)
+	var zero client.ContainerResizeResult
+	return zero, errDryRunForbidden("ContainerResize")
 }
 
 func (d *DryRunClient) ContainerStatPath(ctx context.Context, container string, options client.ContainerStatPathOptions) (client.ContainerStatPathResult, error) {
@@ -385,7 +439,8 @@ func (d *DryRunClient) ContainerTop(ctx context.Context, container string, optio
 }
 
 func (d *DryRunClient) ContainerUpdate(ctx context.Context, container string, options client.ContainerUpdateOptions) (client.ContainerUpdateResult, error) {
-	return d.apiClient.ContainerUpdate(ctx, container, options)
+	var zero client.ContainerUpdateResult
+	return zero, errDryRunForbidden("ContainerUpdate")
 }
 
 func (d *DryRunClient) ContainerWait(ctx context.Context, container string, options client.ContainerWaitOptions) client.ContainerWaitResult {
@@ -393,7 +448,8 @@ func (d *DryRunClient) ContainerWait(ctx context.Context, container string, opti
 }
 
 func (d *DryRunClient) ContainerPrune(ctx context.Context, options client.ContainerPruneOptions) (client.ContainerPruneResult, error) {
-	return d.apiClient.ContainerPrune(ctx, options)
+	var zero client.ContainerPruneResult
+	return zero, errDryRunForbidden("ContainerPrune")
 }
 
 func (d *DryRunClient) DistributionInspect(ctx context.Context, imageName string, options client.DistributionInspectOptions) (client.DistributionInspectResult, error) {
@@ -401,11 +457,13 @@ func (d *DryRunClient) DistributionInspect(ctx context.Context, imageName string
 }
 
 func (d *DryRunClient) BuildCachePrune(ctx context.Context, opts client.BuildCachePruneOptions) (client.BuildCachePruneResult, error) {
-	return d.apiClient.BuildCachePrune(ctx, opts)
+	var zero client.BuildCachePruneResult
+	return zero, errDryRunForbidden("BuildCachePrune")
 }
 
 func (d *DryRunClient) BuildCancel(ctx context.Context, id string, opts client.BuildCancelOptions) (client.BuildCancelResult, error) {
-	return d.apiClient.BuildCancel(ctx, id, opts)
+	var zero client.BuildCancelResult
+	return zero, errDryRunForbidden("BuildCancel")
 }
 
 func (d *DryRunClient) ImageHistory(ctx context.Context, imageName string, options ...client.ImageHistoryOption) (client.ImageHistoryResult, error) {
@@ -417,7 +475,8 @@ func (d *DryRunClient) ImageAttestations(ctx context.Context, imageName string, 
 }
 
 func (d *DryRunClient) ImageImport(ctx context.Context, source client.ImageImportSource, ref string, options client.ImageImportOptions) (client.ImageImportResult, error) {
-	return d.apiClient.ImageImport(ctx, source, ref, options)
+	var zero client.ImageImportResult
+	return zero, errDryRunForbidden("ImageImport")
 }
 
 func (d *DryRunClient) ImageList(ctx context.Context, options client.ImageListOptions) (client.ImageListResult, error) {
@@ -425,7 +484,8 @@ func (d *DryRunClient) ImageList(ctx context.Context, options client.ImageListOp
 }
 
 func (d *DryRunClient) ImageLoad(ctx context.Context, input io.Reader, options ...client.ImageLoadOption) (client.ImageLoadResult, error) {
-	return d.apiClient.ImageLoad(ctx, input, options...)
+	var zero client.ImageLoadResult
+	return zero, errDryRunForbidden("ImageLoad")
 }
 
 func (d *DryRunClient) ImageSearch(ctx context.Context, term string, options client.ImageSearchOptions) (client.ImageSearchResult, error) {
@@ -437,11 +497,13 @@ func (d *DryRunClient) ImageSave(ctx context.Context, images []string, options .
 }
 
 func (d *DryRunClient) ImageTag(ctx context.Context, options client.ImageTagOptions) (client.ImageTagResult, error) {
-	return d.apiClient.ImageTag(ctx, options)
+	var zero client.ImageTagResult
+	return zero, errDryRunForbidden("ImageTag")
 }
 
 func (d *DryRunClient) ImagePrune(ctx context.Context, options client.ImagePruneOptions) (client.ImagePruneResult, error) {
-	return d.apiClient.ImagePrune(ctx, options)
+	var zero client.ImagePruneResult
+	return zero, errDryRunForbidden("ImagePrune")
 }
 
 func (d *DryRunClient) NodeInspect(ctx context.Context, nodeID string, options client.NodeInspectOptions) (client.NodeInspectResult, error) {
@@ -453,11 +515,13 @@ func (d *DryRunClient) NodeList(ctx context.Context, options client.NodeListOpti
 }
 
 func (d *DryRunClient) NodeRemove(ctx context.Context, nodeID string, options client.NodeRemoveOptions) (client.NodeRemoveResult, error) {
-	return d.apiClient.NodeRemove(ctx, nodeID, options)
+	var zero client.NodeRemoveResult
+	return zero, errDryRunForbidden("NodeRemove")
 }
 
 func (d *DryRunClient) NodeUpdate(ctx context.Context, nodeID string, options client.NodeUpdateOptions) (client.NodeUpdateResult, error) {
-	return d.apiClient.NodeUpdate(ctx, nodeID, options)
+	var zero client.NodeUpdateResult
+	return zero, errDryRunForbidden("NodeUpdate")
 }
 
 func (d *DryRunClient) NetworkInspect(ctx context.Context, networkName string, options client.NetworkInspectOptions) (client.NetworkInspectResult, error) {
@@ -469,7 +533,8 @@ func (d *DryRunClient) NetworkList(ctx context.Context, options client.NetworkLi
 }
 
 func (d *DryRunClient) NetworkPrune(ctx context.Context, options client.NetworkPruneOptions) (client.NetworkPruneResult, error) {
-	return d.apiClient.NetworkPrune(ctx, options)
+	var zero client.NetworkPruneResult
+	return zero, errDryRunForbidden("NetworkPrune")
 }
 
 func (d *DryRunClient) PluginList(ctx context.Context, options client.PluginListOptions) (client.PluginListResult, error) {
@@ -477,31 +542,38 @@ func (d *DryRunClient) PluginList(ctx context.Context, options client.PluginList
 }
 
 func (d *DryRunClient) PluginRemove(ctx context.Context, name string, options client.PluginRemoveOptions) (client.PluginRemoveResult, error) {
-	return d.apiClient.PluginRemove(ctx, name, options)
+	var zero client.PluginRemoveResult
+	return zero, errDryRunForbidden("PluginRemove")
 }
 
 func (d *DryRunClient) PluginEnable(ctx context.Context, name string, options client.PluginEnableOptions) (client.PluginEnableResult, error) {
-	return d.apiClient.PluginEnable(ctx, name, options)
+	var zero client.PluginEnableResult
+	return zero, errDryRunForbidden("PluginEnable")
 }
 
 func (d *DryRunClient) PluginDisable(ctx context.Context, name string, options client.PluginDisableOptions) (client.PluginDisableResult, error) {
-	return d.apiClient.PluginDisable(ctx, name, options)
+	var zero client.PluginDisableResult
+	return zero, errDryRunForbidden("PluginDisable")
 }
 
 func (d *DryRunClient) PluginInstall(ctx context.Context, name string, options client.PluginInstallOptions) (client.PluginInstallResult, error) {
-	return d.apiClient.PluginInstall(ctx, name, options)
+	var zero client.PluginInstallResult
+	return zero, errDryRunForbidden("PluginInstall")
 }
 
 func (d *DryRunClient) PluginUpgrade(ctx context.Context, name string, options client.PluginUpgradeOptions) (client.PluginUpgradeResult, error) {
-	return d.apiClient.PluginUpgrade(ctx, name, options)
+	var zero client.PluginUpgradeResult
+	return zero, errDryRunForbidden("PluginUpgrade")
 }
 
 func (d *DryRunClient) PluginPush(ctx context.Context, name string, options client.PluginPushOptions) (client.PluginPushResult, error) {
-	return d.apiClient.PluginPush(ctx, name, options)
+	var zero client.PluginPushResult
+	return zero, errDryRunForbidden("PluginPush")
 }
 
 func (d *DryRunClient) PluginSet(ctx context.Context, name string, options client.PluginSetOptions) (client.PluginSetResult, error) {
-	return d.apiClient.PluginSet(ctx, name, options)
+	var zero client.PluginSetResult
+	return zero, errDryRunForbidden("PluginSet")
 }
 
 func (d *DryRunClient) PluginInspect(ctx context.Context, name string, options client.PluginInspectOptions) (client.PluginInspectResult, error) {
@@ -509,11 +581,13 @@ func (d *DryRunClient) PluginInspect(ctx context.Context, name string, options c
 }
 
 func (d *DryRunClient) PluginCreate(ctx context.Context, createContext io.Reader, options client.PluginCreateOptions) (client.PluginCreateResult, error) {
-	return d.apiClient.PluginCreate(ctx, createContext, options)
+	var zero client.PluginCreateResult
+	return zero, errDryRunForbidden("PluginCreate")
 }
 
 func (d *DryRunClient) ServiceCreate(ctx context.Context, options client.ServiceCreateOptions) (client.ServiceCreateResult, error) {
-	return d.apiClient.ServiceCreate(ctx, options)
+	var zero client.ServiceCreateResult
+	return zero, errDryRunForbidden("ServiceCreate")
 }
 
 func (d *DryRunClient) ServiceInspect(ctx context.Context, serviceID string, options client.ServiceInspectOptions) (client.ServiceInspectResult, error) {
@@ -525,11 +599,13 @@ func (d *DryRunClient) ServiceList(ctx context.Context, options client.ServiceLi
 }
 
 func (d *DryRunClient) ServiceRemove(ctx context.Context, serviceID string, options client.ServiceRemoveOptions) (client.ServiceRemoveResult, error) {
-	return d.apiClient.ServiceRemove(ctx, serviceID, options)
+	var zero client.ServiceRemoveResult
+	return zero, errDryRunForbidden("ServiceRemove")
 }
 
 func (d *DryRunClient) ServiceUpdate(ctx context.Context, serviceID string, options client.ServiceUpdateOptions) (client.ServiceUpdateResult, error) {
-	return d.apiClient.ServiceUpdate(ctx, serviceID, options)
+	var zero client.ServiceUpdateResult
+	return zero, errDryRunForbidden("ServiceUpdate")
 }
 
 func (d *DryRunClient) ServiceLogs(ctx context.Context, serviceID string, options client.ServiceLogsOptions) (client.ServiceLogsResult, error) {
@@ -549,11 +625,13 @@ func (d *DryRunClient) TaskList(ctx context.Context, options client.TaskListOpti
 }
 
 func (d *DryRunClient) SwarmInit(ctx context.Context, options client.SwarmInitOptions) (client.SwarmInitResult, error) {
-	return d.apiClient.SwarmInit(ctx, options)
+	var zero client.SwarmInitResult
+	return zero, errDryRunForbidden("SwarmInit")
 }
 
 func (d *DryRunClient) SwarmJoin(ctx context.Context, options client.SwarmJoinOptions) (client.SwarmJoinResult, error) {
-	return d.apiClient.SwarmJoin(ctx, options)
+	var zero client.SwarmJoinResult
+	return zero, errDryRunForbidden("SwarmJoin")
 }
 
 func (d *DryRunClient) SwarmGetUnlockKey(ctx context.Context) (client.SwarmGetUnlockKeyResult, error) {
@@ -561,11 +639,13 @@ func (d *DryRunClient) SwarmGetUnlockKey(ctx context.Context) (client.SwarmGetUn
 }
 
 func (d *DryRunClient) SwarmUnlock(ctx context.Context, options client.SwarmUnlockOptions) (client.SwarmUnlockResult, error) {
-	return d.apiClient.SwarmUnlock(ctx, options)
+	var zero client.SwarmUnlockResult
+	return zero, errDryRunForbidden("SwarmUnlock")
 }
 
 func (d *DryRunClient) SwarmLeave(ctx context.Context, options client.SwarmLeaveOptions) (client.SwarmLeaveResult, error) {
-	return d.apiClient.SwarmLeave(ctx, options)
+	var zero client.SwarmLeaveResult
+	return zero, errDryRunForbidden("SwarmLeave")
 }
 
 func (d *DryRunClient) SwarmInspect(ctx context.Context, options client.SwarmInspectOptions) (client.SwarmInspectResult, error) {
@@ -573,7 +653,8 @@ func (d *DryRunClient) SwarmInspect(ctx context.Context, options client.SwarmIns
 }
 
 func (d *DryRunClient) SwarmUpdate(ctx context.Context, options client.SwarmUpdateOptions) (client.SwarmUpdateResult, error) {
-	return d.apiClient.SwarmUpdate(ctx, options)
+	var zero client.SwarmUpdateResult
+	return zero, errDryRunForbidden("SwarmUpdate")
 }
 
 func (d *DryRunClient) SecretList(ctx context.Context, options client.SecretListOptions) (client.SecretListResult, error) {
@@ -581,11 +662,13 @@ func (d *DryRunClient) SecretList(ctx context.Context, options client.SecretList
 }
 
 func (d *DryRunClient) SecretCreate(ctx context.Context, options client.SecretCreateOptions) (client.SecretCreateResult, error) {
-	return d.apiClient.SecretCreate(ctx, options)
+	var zero client.SecretCreateResult
+	return zero, errDryRunForbidden("SecretCreate")
 }
 
 func (d *DryRunClient) SecretRemove(ctx context.Context, id string, options client.SecretRemoveOptions) (client.SecretRemoveResult, error) {
-	return d.apiClient.SecretRemove(ctx, id, options)
+	var zero client.SecretRemoveResult
+	return zero, errDryRunForbidden("SecretRemove")
 }
 
 func (d *DryRunClient) SecretInspect(ctx context.Context, name string, options client.SecretInspectOptions) (client.SecretInspectResult, error) {
@@ -593,7 +676,8 @@ func (d *DryRunClient) SecretInspect(ctx context.Context, name string, options c
 }
 
 func (d *DryRunClient) SecretUpdate(ctx context.Context, id string, options client.SecretUpdateOptions) (client.SecretUpdateResult, error) {
-	return d.apiClient.SecretUpdate(ctx, id, options)
+	var zero client.SecretUpdateResult
+	return zero, errDryRunForbidden("SecretUpdate")
 }
 
 func (d *DryRunClient) Events(ctx context.Context, options client.EventsListOptions) client.EventsResult {
@@ -625,11 +709,13 @@ func (d *DryRunClient) VolumeList(ctx context.Context, opts client.VolumeListOpt
 }
 
 func (d *DryRunClient) VolumePrune(ctx context.Context, options client.VolumePruneOptions) (client.VolumePruneResult, error) {
-	return d.apiClient.VolumePrune(ctx, options)
+	var zero client.VolumePruneResult
+	return zero, errDryRunForbidden("VolumePrune")
 }
 
 func (d *DryRunClient) VolumeUpdate(ctx context.Context, volumeID string, options client.VolumeUpdateOptions) (client.VolumeUpdateResult, error) {
-	return d.apiClient.VolumeUpdate(ctx, volumeID, options)
+	var zero client.VolumeUpdateResult
+	return zero, errDryRunForbidden("VolumeUpdate")
 }
 
 func (d *DryRunClient) ClientVersion() string {
@@ -657,11 +743,13 @@ func (d *DryRunClient) Close() error {
 }
 
 func (d *DryRunClient) CheckpointCreate(ctx context.Context, container string, options client.CheckpointCreateOptions) (client.CheckpointCreateResult, error) {
-	return d.apiClient.CheckpointCreate(ctx, container, options)
+	var zero client.CheckpointCreateResult
+	return zero, errDryRunForbidden("CheckpointCreate")
 }
 
 func (d *DryRunClient) CheckpointRemove(ctx context.Context, container string, options client.CheckpointRemoveOptions) (client.CheckpointRemoveResult, error) {
-	return d.apiClient.CheckpointRemove(ctx, container, options)
+	var zero client.CheckpointRemoveResult
+	return zero, errDryRunForbidden("CheckpointRemove")
 }
 
 func (d *DryRunClient) CheckpointList(ctx context.Context, container string, options client.CheckpointListOptions) (client.CheckpointListResult, error) {

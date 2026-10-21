@@ -1,11 +1,10 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/hashicorp/go-multierror"
 )
 
 // opt = optional
@@ -128,15 +127,15 @@ func NewKeyValueRegex(keyRegex, valueRegex string) *KeyValueRegex {
 
 func (r *KeyValueRegex) FindAll(in string) ([]MatchResult, error) {
 	res := make([]MatchResult, 0)
-	var err error
+	var errs []error
 	for _, regex := range r.keyValueRegex {
-		currRes, currErr := findAll(in, regex)
+		currRes, err := findAll(in, regex)
 		res = append(res, currRes...)
-		if currErr != nil {
-			err = multierror.Append(currErr)
+		if err != nil {
+			errs = append(errs, err)
 		}
 	}
-	return res, err
+	return res, errors.Join(errs...)
 }
 
 func findAll(in string, regex *regexp.Regexp) ([]MatchResult, error) {
@@ -146,13 +145,11 @@ func findAll(in string, regex *regexp.Regexp) ([]MatchResult, error) {
 	}
 
 	res := make([]MatchResult, 0, len(submatches))
-	var err error
+	var errs []error
 	for _, submatch := range submatches {
 		if len(submatch) < 4 {
 			// This should never happen since the base key-value regex have 3 capture groups + first is the full match
-			err = multierror.Append(err,
-				fmt.Errorf("unexpected number of submatches. regex=%s, input=%s, match=%v", regex, in, submatch),
-			)
+			errs = append(errs, fmt.Errorf("unexpected number of submatches. regex=%s, input=%s, match=%v", regex, in, submatch))
 			continue
 		}
 
@@ -165,5 +162,5 @@ func findAll(in string, regex *regexp.Regexp) ([]MatchResult, error) {
 		}
 		res = append(res, result)
 	}
-	return res, err
+	return res, errors.Join(errs...)
 }

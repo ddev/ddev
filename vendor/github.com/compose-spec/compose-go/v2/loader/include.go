@@ -227,23 +227,10 @@ func ApplyInclude(ctx context.Context, workingDir string, environment types.Mapp
 
 // importResources import into model all resources defined by imported, and report error on conflict
 func importResources(source map[string]any, target map[string]any, processor PostProcessor) error {
-	if err := importResource(source, target, "services", processor); err != nil {
-		return err
-	}
-	if err := importResource(source, target, "volumes", processor); err != nil {
-		return err
-	}
-	if err := importResource(source, target, "networks", processor); err != nil {
-		return err
-	}
-	if err := importResource(source, target, "secrets", processor); err != nil {
-		return err
-	}
-	if err := importResource(source, target, "configs", processor); err != nil {
-		return err
-	}
-	if err := importResource(source, target, "models", processor); err != nil {
-		return err
+	for _, key := range []string{"services", "jobs", "volumes", "networks", "secrets", "configs", "models"} {
+		if err := importResource(source, target, key, processor); err != nil {
+			return err
+		}
 	}
 	return nil
 }

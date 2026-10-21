@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"slices"
@@ -31,7 +32,6 @@ import (
 	"github.com/docker/cli/cli-plugins/manager"
 	"github.com/moby/moby/client/pkg/versions"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/docker/compose/v5/pkg/api"
 )
@@ -48,7 +48,7 @@ func (s *composeService) ensureModels(ctx context.Context, project *types.Projec
 	defer mdlAPI.Close()
 	availableModels, err := mdlAPI.ListModels(ctx)
 
-	eg, ctx := errgroup.WithContext(ctx)
+	eg, ctx := newLimitedErrgroup(ctx, s.maxConcurrency)
 	eg.Go(func() error {
 		return mdlAPI.SetModelVariables(ctx, project)
 	})
@@ -82,7 +82,7 @@ func (s *composeService) newModelAPI(project *types.Project) (*modelAPI, error) 
 	dockerModel, err := manager.GetPlugin("model", s.dockerCli, &cobra.Command{})
 	if err != nil {
 		if errdefs.IsNotFound(err) {
-			return nil, fmt.Errorf("'models' support requires Docker Model plugin")
+			return nil, errors.New("'models' support requires Docker Model plugin")
 		}
 		return nil, err
 	}

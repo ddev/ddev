@@ -1,12 +1,11 @@
 package scanner
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
-
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/DefangLabs/secret-detector/pkg/dataformat"
 	"github.com/DefangLabs/secret-detector/pkg/secrets"
@@ -182,13 +181,15 @@ func (s *scanner) scan(in string, transformers []secrets.Transformer) (res []sec
 	return
 }
 
-func (s *scanner) scanString(in string) (res []secrets.DetectedSecret, err error) {
+func (s *scanner) scanString(in string) ([]secrets.DetectedSecret, error) {
+	var res []secrets.DetectedSecret
 	isMultiline := strings.ContainsRune(in, '\n')
+	var errs []error
 	for _, detector := range s.detectors {
 		// notice that a detector can return both results and an error
-		detectedSecrets, currErr := detector.Scan(in)
-		if currErr != nil {
-			err = multierror.Append(currErr)
+		detectedSecrets, err := detector.Scan(in)
+		if err != nil {
+			errs = append(errs, err)
 		}
 		res = append(res, detectedSecrets...)
 
@@ -197,19 +198,21 @@ func (s *scanner) scanString(in string) (res []secrets.DetectedSecret, err error
 			break
 		}
 	}
-	return
+	return res, errors.Join(errs...)
 }
 
-func (s *scanner) scanMap(keyValueMap map[string]string) (res []secrets.DetectedSecret, err error) {
+func (s *scanner) scanMap(keyValueMap map[string]string) ([]secrets.DetectedSecret, error) {
+	var res []secrets.DetectedSecret
+	var errs []error
 	for _, detector := range s.detectors {
 		// notice that a detector can return both results and an error
-		detectedSecrets, currErr := detector.ScanMap(keyValueMap)
-		if currErr != nil {
-			err = multierror.Append(currErr)
+		detectedSecrets, err := detector.ScanMap(keyValueMap)
+		if err != nil {
+			errs = append(errs, err)
 		}
 		res = append(res, detectedSecrets...)
 	}
-	return
+	return res, errors.Join(errs...)
 }
 
 func (s *scanner) validateThreshold(length int64) bool {

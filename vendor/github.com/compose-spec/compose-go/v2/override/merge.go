@@ -41,34 +41,38 @@ var mergeSpecials = map[tree.Path]merger{}
 
 func init() {
 	mergeSpecials["networks.*.ipam.config"] = mergeIPAMConfig
-	mergeSpecials["networks.*.labels"] = mergeToSequence
-	mergeSpecials["volumes.*.labels"] = mergeToSequence
-	mergeSpecials["services.*.annotations"] = mergeToSequence
-	mergeSpecials["services.*.build"] = mergeBuild
-	mergeSpecials["services.*.build.args"] = mergeToSequence
-	mergeSpecials["services.*.build.additional_contexts"] = mergeToSequence
-	mergeSpecials["services.*.build.extra_hosts"] = mergeToSequence
-	mergeSpecials["services.*.build.labels"] = mergeToSequence
-	mergeSpecials["services.*.command"] = override
-	mergeSpecials["services.*.depends_on"] = mergeDependsOn
-	mergeSpecials["services.*.deploy.labels"] = mergeToSequence
-	mergeSpecials["services.*.dns"] = mergeToSequence
-	mergeSpecials["services.*.dns_opt"] = mergeToSequence
-	mergeSpecials["services.*.dns_search"] = mergeToSequence
-	mergeSpecials["services.*.entrypoint"] = override
-	mergeSpecials["services.*.env_file"] = mergeToSequence
-	mergeSpecials["services.*.label_file"] = mergeToSequence
-	mergeSpecials["services.*.environment"] = mergeToSequence
-	mergeSpecials["services.*.extra_hosts"] = mergeToSequence
-	mergeSpecials["services.*.healthcheck.test"] = override
-	mergeSpecials["services.*.labels"] = mergeToSequence
-	mergeSpecials["services.*.volumes.*.volume.labels"] = mergeToSequence
-	mergeSpecials["services.*.logging"] = mergeLogging
-	mergeSpecials["services.*.models"] = mergeModels
-	mergeSpecials["services.*.networks"] = mergeNetworks
-	mergeSpecials["services.*.sysctls"] = mergeToSequence
-	mergeSpecials["services.*.tmpfs"] = mergeToSequence
-	mergeSpecials["services.*.ulimits.*"] = mergeUlimit
+	mergeSpecials["networks.*.labels"] = mergeKeyValueSequence
+	mergeSpecials["volumes.*.labels"] = mergeKeyValueSequence
+	mergeSpecials["secrets.*.labels"] = mergeKeyValueSequence
+	mergeSpecials["configs.*.labels"] = mergeKeyValueSequence
+	for _, prefix := range []tree.Path{"services", "jobs"} {
+		mergeSpecials[prefix+".*.annotations"] = mergeKeyValueSequence
+		mergeSpecials[prefix+".*.build"] = mergeBuild
+		mergeSpecials[prefix+".*.build.args"] = mergeKeyValueSequence
+		mergeSpecials[prefix+".*.build.additional_contexts"] = mergeKeyValueSequence
+		mergeSpecials[prefix+".*.build.extra_hosts"] = mergeToSequence
+		mergeSpecials[prefix+".*.build.labels"] = mergeKeyValueSequence
+		mergeSpecials[prefix+".*.command"] = override
+		mergeSpecials[prefix+".*.depends_on"] = mergeDependsOn
+		mergeSpecials[prefix+".*.dns"] = mergeToSequence
+		mergeSpecials[prefix+".*.dns_opt"] = mergeToSequence
+		mergeSpecials[prefix+".*.dns_search"] = mergeToSequence
+		mergeSpecials[prefix+".*.entrypoint"] = override
+		mergeSpecials[prefix+".*.env_file"] = mergeToSequence
+		mergeSpecials[prefix+".*.label_file"] = mergeToSequence
+		mergeSpecials[prefix+".*.environment"] = mergeKeyValueSequence
+		mergeSpecials[prefix+".*.extra_hosts"] = mergeToSequence
+		mergeSpecials[prefix+".*.healthcheck.test"] = override
+		mergeSpecials[prefix+".*.labels"] = mergeKeyValueSequence
+		mergeSpecials[prefix+".*.volumes.*.volume.labels"] = mergeKeyValueSequence
+		mergeSpecials[prefix+".*.logging"] = mergeLogging
+		mergeSpecials[prefix+".*.models"] = mergeModels
+		mergeSpecials[prefix+".*.networks"] = mergeNetworks
+		mergeSpecials[prefix+".*.sysctls"] = mergeKeyValueSequence
+		mergeSpecials[prefix+".*.tmpfs"] = mergeToSequence
+		mergeSpecials[prefix+".*.ulimits.*"] = mergeUlimit
+	}
+	mergeSpecials["services.*.deploy.labels"] = mergeKeyValueSequence
 }
 
 // MergeYaml merges map[string]any yaml trees handling special rules
@@ -170,11 +174,11 @@ func mergeNetworks(config any, other any, path tree.Path) (any, error) {
 }
 
 func mergeAsMapping(config, other any, defaults map[string]any, path tree.Path) (any, error) {
-	right, err := convertIntoMapping(config, defaults, path)
+	right, err := convertIntoMapping(nullAsEmpty(config), defaults, path)
 	if err != nil {
 		return nil, err
 	}
-	left, err := convertIntoMapping(other, defaults, path)
+	left, err := convertIntoMapping(nullAsEmpty(other), defaults, path)
 	if err != nil {
 		return nil, err
 	}
@@ -203,6 +207,17 @@ func appendWithoutDuplicates(base []any, override []any) []any {
 		}
 	}
 	return merged
+}
+
+// mergeKeyValueSequence merges KEY=VALUE lists by key: an override entry
+// replaces the base entry of the same key in place, new keys are appended. The
+// last entry for a key takes effect, so an override repeating a base entry
+// after another value for the same key (`[MODE=debug, MODE=release]` over
+// `[MODE=release]`) must end on the repeated one, not drop it as a duplicate.
+// Keys repeated in the base collapse the same way, so that the override never
+// leaves two identical entries behind.
+func mergeKeyValueSequence(config any, other any, path tree.Path) (any, error) {
+	return uniqueEntries(slices.Concat(convertIntoSequence(config), convertIntoSequence(other)), keyValueIndexer, path)
 }
 
 func convertIntoSequence(value any) []any {
@@ -291,6 +306,15 @@ func mergeIPAMConfig(config any, other any, path tree.Path) (any, error) {
 		}
 	}
 	return ipamConfigs, nil
+}
+
+// nullAsEmpty reads a null value as an empty mapping. An empty one rather than
+// nil, as merging into a nil map panics.
+func nullAsEmpty(value any) any {
+	if value == nil {
+		return map[string]any{}
+	}
+	return value
 }
 
 func convertIntoMapping(a any, defaultValue map[string]any, path tree.Path) (map[string]any, error) {

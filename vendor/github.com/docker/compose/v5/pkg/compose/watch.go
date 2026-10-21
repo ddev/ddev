@@ -33,7 +33,6 @@ import (
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/compose-spec/compose-go/v2/utils"
 	ccli "github.com/docker/cli/cli/command/container"
-	"github.com/go-viper/mapstructure/v2"
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/image"
@@ -77,7 +76,7 @@ func NewWatcher(project *types.Project, options api.UpOptions, w WatchFunc, cons
 		}
 	}
 	// none of the services is eligible to watch
-	return nil, fmt.Errorf("none of the selected services is configured for watch, see https://docs.docker.com/compose/how-tos/file-watch/")
+	return nil, errors.New("none of the selected services is configured for watch, see https://docs.docker.com/compose/how-tos/file-watch/")
 }
 
 // ensure state changes are atomic
@@ -129,7 +128,7 @@ func (s *composeService) getSyncImplementation(project *types.Project) (sync.Syn
 		return nil, errors.New("no available sync implementation")
 	}
 
-	return sync.NewTar(project.Name, tarDockerClient{s: s}), nil
+	return sync.NewTar(project.Name, tarDockerClient{s: s}, s.maxConcurrency), nil
 }
 
 func (s *composeService) Watch(ctx context.Context, project *types.Project, options api.WatchOptions) error {
@@ -197,6 +196,8 @@ func (s *composeService) watch(ctx context.Context, project *types.Project, opti
 	if err != nil {
 		return nil, err
 	}
+	// exactly one goroutine is ever submitted to eg (below); the real
+	// --parallel bound for watch is handleWatchBatch's per-batch fan-out.
 	eg, ctx := errgroup.WithContext(ctx)
 
 	var (
@@ -204,15 +205,7 @@ func (s *composeService) watch(ctx context.Context, project *types.Project, opti
 		paths []string
 	)
 	for serviceName, service := range project.Services {
-		config, err := loadDevelopmentConfig(service, project)
-		if err != nil {
-			return nil, err
-		}
-
-		if service.Develop != nil {
-			config = service.Develop
-		}
-
+		config := service.Develop
 		if config == nil {
 			continue
 		}
@@ -236,7 +229,7 @@ func (s *composeService) watch(ctx context.Context, project *types.Project, opti
 	}
 
 	if len(paths) == 0 {
-		return nil, fmt.Errorf("none of the selected services is configured for watch, consider setting a 'develop' section")
+		return nil, errors.New("none of the selected services is configured for watch, consider setting a 'develop' section")
 	}
 
 	watcher, err := watch.NewWatcher(paths)
@@ -305,19 +298,10 @@ func (s *composeService) watchTriggerPaths(ctx context.Context, service types.Se
 	return paths, nil
 }
 
-// initialSyncRequested tells whether a sync trigger requests an initial sync,
-// honoring the DEPRECATED x-initialSync extension attribute
+// initialSyncRequested tells whether a sync trigger requests an initial sync.
+// compose-go promotes the legacy x-initialSync extension into InitialSync at load time.
 func initialSyncRequested(trigger types.Trigger) bool {
-	if trigger.InitialSync {
-		return true
-	}
-	var legacyInitialSync bool
-	success, err := trigger.Extensions.Get("x-initialSync", &legacyInitialSync)
-	if err == nil && success && legacyInitialSync {
-		logrus.Warnf("x-initialSync is DEPRECATED, please use the official `initial_sync` attribute\n")
-		return true
-	}
-	return false
+	return trigger.InitialSync
 }
 
 func getWatchRules(config *types.DevelopConfig, service types.ServiceConfig) ([]watchRule, error) {
@@ -373,10 +357,18 @@ func isSync(trigger types.Trigger) bool {
 
 func (s *composeService) watchEvents(ctx context.Context, project *types.Project, options api.WatchOptions, watcher watch.Notify, syncer sync.Syncer, rules []watchRule) error {
 	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
 	// debounce and group filesystem events so that we capture IDE saving many files as one "batch" event
-	batchEvents := watch.BatchDebounceEvents(ctx, s.clock, watcher.Events())
+	batchEvents := watch.BatchDebounceEvents(ctx, watcher.Events())
+
+	scheduler := newRebuildScheduler(ctx, func(ctx context.Context, services []string) error {
+		return s.rebuild(ctx, project, services, options)
+	})
+	// Rebuilds run asynchronously in their own goroutine(s); cancel first so
+	// an in-flight one can unwind, then wait for it to settle so none
+	// outlive this function.
+	defer scheduler.Wait()
+	defer cancel()
 
 	for {
 		select {
@@ -406,7 +398,7 @@ func (s *composeService) watchEvents(ctx context.Context, project *types.Project
 			}
 			start := time.Now()
 			logrus.Debugf("batch start: count[%d]", len(batch))
-			err := s.handleWatchBatch(ctx, project, options, batch, rules, syncer)
+			err := s.handleWatchBatch(ctx, project, options, batch, rules, syncer, scheduler)
 			if err != nil {
 				logrus.Warnf("Error handling changed files: %v", err)
 				// If context was canceled, exit immediately
@@ -418,47 +410,6 @@ func (s *composeService) watchEvents(ctx context.Context, project *types.Project
 			logrus.Debugf("batch complete: duration[%s] count[%d]", time.Since(start), len(batch))
 		}
 	}
-}
-
-func loadDevelopmentConfig(service types.ServiceConfig, project *types.Project) (*types.DevelopConfig, error) {
-	var config types.DevelopConfig
-	y, ok := service.Extensions["x-develop"]
-	if !ok {
-		return nil, nil
-	}
-	logrus.Warnf("x-develop is DEPRECATED, please use the official `develop` attribute")
-	err := mapstructure.Decode(y, &config)
-	if err != nil {
-		return nil, err
-	}
-	baseDir, err := filepath.EvalSymlinks(project.WorkingDir)
-	if err != nil {
-		return nil, fmt.Errorf("resolving symlink for %q: %w", project.WorkingDir, err)
-	}
-
-	for i, trigger := range config.Watch {
-		if !filepath.IsAbs(trigger.Path) {
-			trigger.Path = filepath.Join(baseDir, trigger.Path)
-		}
-		if p, err := filepath.EvalSymlinks(trigger.Path); err == nil {
-			// this might fail because the path doesn't exist, etc.
-			trigger.Path = p
-		}
-		trigger.Path = filepath.Clean(trigger.Path)
-		if trigger.Path == "" {
-			return nil, errors.New("watch rules MUST define a path")
-		}
-
-		if trigger.Action == types.WatchActionRebuild && service.Build == nil {
-			return nil, fmt.Errorf("service %s doesn't have a build section, can't apply %s on watch", types.WatchActionRebuild, service.Name)
-		}
-		if trigger.Action == types.WatchActionSyncExec && len(trigger.Exec.Command) == 0 {
-			return nil, fmt.Errorf("can't watch with action %q on service %s without a command", types.WatchActionSyncExec, service.Name)
-		}
-
-		config.Watch[i] = trigger
-	}
-	return &config, nil
 }
 
 func checkIfPathAlreadyBindMounted(watchPath string, volumes []types.ServiceVolumeConfig) bool {
@@ -543,7 +494,7 @@ func (t tarDockerClient) Exec(ctx context.Context, containerID string, cmd []str
 		return errors.New("process still running")
 	}
 	if execResult.ExitCode != 0 {
-		return fmt.Errorf("exit code %d", execResult.ExitCode)
+		return errors.New("exit code " + strconv.Itoa(execResult.ExitCode))
 	}
 	return nil
 }
@@ -557,7 +508,9 @@ func (t tarDockerClient) Untar(ctx context.Context, id string, archive io.ReadCl
 	return err
 }
 
-func (s *composeService) handleWatchBatch(ctx context.Context, project *types.Project, options api.WatchOptions, batch []watch.FileEvent, rules []watchRule, syncer sync.Syncer) error {
+func (s *composeService) handleWatchBatch(ctx context.Context, project *types.Project, options api.WatchOptions,
+	batch []watch.FileEvent, rules []watchRule, syncer sync.Syncer, scheduler *rebuildScheduler,
+) error {
 	var (
 		restart   = map[string]bool{}
 		syncfiles = map[string][]*sync.PathMapping{}
@@ -590,15 +543,38 @@ func (s *composeService) handleWatchBatch(ctx context.Context, project *types.Pr
 		}
 	}
 
-	logrus.Debugf("watch actions: rebuild %d sync %d restart %d", len(rebuild), len(syncfiles), len(restart))
-
 	if len(rebuild) > 0 {
-		err := s.rebuild(ctx, project, utils.MapKeys(rebuild), options)
-		if err != nil {
-			return err
+		scheduler.Request(utils.MapKeys(rebuild))
+	}
+
+	// A rebuild already recreates and starts the service, so a separate
+	// restart is redundant at best and races the rebuild's create/start at
+	// worst. Which rebuild matters:
+	//   - pending: it will snapshot the build context after this change —
+	//     drop the restart, the rebuild converges on its own;
+	//   - in flight: its snapshot predates this change, so its outcome is
+	//     stale — fold the restart into a Request, which interrupts the
+	//     doomed run and rebuilds from a fresh snapshot (recreate + start:
+	//     the restart intent, converged).
+	for service := range restart {
+		switch {
+		case scheduler.Pending(service):
+			logrus.Debugf("skipping restart for service %q: rebuild pending", service)
+			delete(restart, service)
+		case scheduler.InFlight(service):
+			logrus.Debugf("turning restart for service %q into a rebuild: stale rebuild in flight", service)
+			scheduler.Request([]string{service})
+			delete(restart, service)
 		}
 	}
 
+	logrus.Debugf("watch actions: rebuild %d sync %d restart %d", len(rebuild), len(syncfiles), len(restart))
+
+	// A sync or exec below may still target a service whose container is
+	// being replaced by an in-flight asynchronous rebuild (from this batch or
+	// an earlier one): unlike restart, this is a conscious tradeoff, since
+	// syncer.Sync/exec resolve containers by lookup and simply fail loudly
+	// (rather than racing the container lifecycle) if the container is gone.
 	for serviceName, pathMappings := range syncfiles {
 		writeWatchSyncMessage(options.LogTo, serviceName, pathMappings)
 		err := syncer.Sync(ctx, serviceName, pathMappings)
@@ -621,7 +597,7 @@ func (s *composeService) handleWatchBatch(ctx context.Context, project *types.Pr
 			fmt.Sprintf("service(s) %q restarted", services))
 	}
 
-	eg, ctx := errgroup.WithContext(ctx)
+	eg, ctx := newLimitedErrgroup(ctx, s.maxConcurrency)
 	for service, rulesToExec := range exec {
 		slices.Sort(rulesToExec)
 		for _, i := range slices.Compact(rulesToExec) {
@@ -756,7 +732,7 @@ func (s *composeService) pruneDanglingImagesOnRebuild(ctx context.Context, proje
 		return ok
 	}
 	if _, err := s.removeDanglingImages(ctx, projectName, keep); err != nil {
-		logrus.Debugf("Failed to list images: %v", err)
+		logrus.Debugf("Failed to prune dangling images: %v", err)
 	}
 }
 

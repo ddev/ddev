@@ -23,7 +23,6 @@ import (
 	"os"
 	"os/signal"
 	"slices"
-	"strings"
 
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli"
@@ -161,7 +160,7 @@ func (s *composeService) prepareRun(ctx context.Context, project *types.Project,
 
 	// Only ensure image exists for the target service, dependencies were already handled by startDependencies
 	buildOpts := prepareBuildOptions(options)
-	if err := s.ensureImagesExists(ctx, project, buildOpts, options.QuietPull); err != nil { // all dependencies already checked, but might miss service img
+	if err := s.ensureImagesExists(ctx, project, buildOpts, options.QuietPull, false); err != nil { // all dependencies already checked, but might miss service img
 		return prepareRunResult{}, err
 	}
 
@@ -295,7 +294,7 @@ func (s *composeService) startDependencies(ctx context.Context, project *types.P
 	}
 
 	if len(project.Services) > 0 {
-		return s.start(ctx, strings.ToLower(project.Name), api.StartOptions{
+		return s.start(ctx, project.Name, api.StartOptions{
 			Project: project,
 		}, nil)
 	}

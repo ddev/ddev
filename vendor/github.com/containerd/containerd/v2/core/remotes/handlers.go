@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"slices"
 	"strings"
 	"sync"
 
@@ -155,6 +156,9 @@ func Fetch(ctx context.Context, ingester content.Ingester, fetcher Fetcher, desc
 		// into the content store. Error out here otherwise the error sent back is confusing
 		return fmt.Errorf("unable to fetch descriptor (%s) which reports content size of zero: %w", desc.Digest, errdefs.ErrInvalidArgument)
 	}
+	if desc.Size < 0 {
+		return fmt.Errorf("unable to fetch descriptor (%s) which reports negative content size (%d): %w", desc.Digest, desc.Size, errdefs.ErrInvalidArgument)
+	}
 	if ws.Offset == desc.Size {
 		// If writer is already complete, commit and return
 		err := cw.Commit(ctx, desc.Size, desc.Digest)
@@ -172,6 +176,9 @@ func Fetch(ctx context.Context, ingester content.Ingester, fetcher Fetcher, desc
 	if err != nil {
 		return err
 	}
+
+	// Keep the reader usable until Copy finishes: a writer may request a
+	// reset after EOF, including while committing the content.
 	defer rc.Close()
 
 	return content.Copy(ctx, cw, rc, desc.Size, desc.Digest)
@@ -277,8 +284,8 @@ func PushContent(ctx context.Context, pusher Pusher, desc ocispec.Descriptor, st
 	}
 
 	// Iterate in reverse order as seen, parent always uploaded after child
-	for i := len(indexStack) - 1; i >= 0; i-- {
-		err := images.Dispatch(ctx, pushHandler, limiter, indexStack[i])
+	for _, index := range slices.Backward(indexStack) {
+		err := images.Dispatch(ctx, pushHandler, limiter, index)
 		if err != nil {
 			// TODO(estesp): until we have a more complete method for index push, we need to report
 			// missing dependencies in an index/manifest list by sensing the "400 Bad Request"

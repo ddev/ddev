@@ -29,7 +29,6 @@ import (
 	"github.com/moby/go-archive"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/docker/compose/v5/pkg/api"
 )
@@ -79,37 +78,31 @@ func (s *composeService) copy(ctx context.Context, projectName string, options a
 		return err
 	}
 
-	g := errgroup.Group{}
-	for _, cont := range containers {
-		ctr := cont
-		g.Go(func() error {
-			name := getCanonicalContainerName(ctr)
-			var msg string
-			if direction == fromService {
-				msg = fmt.Sprintf("%s:%s to %s", name, srcPath, dstPath)
-			} else {
-				msg = fmt.Sprintf("%s to %s:%s", srcPath, name, dstPath)
-			}
-			s.events.On(api.Resource{
-				ID:      name,
-				Text:    api.StatusCopying,
-				Details: msg,
-				Status:  api.Working,
-			})
-			if err := copyFunc(ctx, ctr.ID, srcPath, dstPath, options); err != nil {
-				return err
-			}
-			s.events.On(api.Resource{
-				ID:      name,
-				Text:    api.StatusCopied,
-				Details: msg,
-				Status:  api.Done,
-			})
-			return nil
+	return forEachContainerConcurrent(ctx, s.maxConcurrency, containers, func(ctx context.Context, ctr container.Summary) error {
+		name := getCanonicalContainerName(ctr)
+		var msg string
+		if direction == fromService {
+			msg = fmt.Sprintf("%s:%s to %s", name, srcPath, dstPath)
+		} else {
+			msg = fmt.Sprintf("%s to %s:%s", srcPath, name, dstPath)
+		}
+		s.events.On(api.Resource{
+			ID:      name,
+			Text:    api.StatusCopying,
+			Details: msg,
+			Status:  api.Working,
 		})
-	}
-
-	return g.Wait()
+		if err := copyFunc(ctx, ctr.ID, srcPath, dstPath, options); err != nil {
+			return err
+		}
+		s.events.On(api.Resource{
+			ID:      name,
+			Text:    api.StatusCopied,
+			Details: msg,
+			Status:  api.Done,
+		})
+		return nil
+	})
 }
 
 func (s *composeService) listContainersTargetedForCopy(ctx context.Context, projectName string, options api.CopyOptions, direction copyDirection, serviceName string) (Containers, error) {
@@ -121,6 +114,9 @@ func (s *composeService) listContainersTargetedForCopy(ctx context.Context, proj
 		if err != nil {
 			return nil, err
 		}
+		if err := checkRelayTarget(ctr, serviceName, "cp"); err != nil {
+			return nil, err
+		}
 		return append(containers, ctr), nil
 	default:
 		withOneOff := oneOffExclude
@@ -130,6 +126,11 @@ func (s *composeService) listContainersTargetedForCopy(ctx context.Context, proj
 		containers, err = s.getContainers(ctx, projectName, withOneOff, true, serviceName)
 		if err != nil {
 			return nil, err
+		}
+		for _, ctr := range containers {
+			if err := checkRelayTarget(ctr, serviceName, "cp"); err != nil {
+				return nil, err
+			}
 		}
 
 		if len(containers) < 1 {
