@@ -64,13 +64,13 @@ type imagePuller struct {
 }
 
 func (s *composeService) pull(ctx context.Context, project *types.Project, opts api.PullOptions) error {
+	rootCtx := ctx
 	images, _, err := s.getLocalImagesDigests(ctx, project)
 	if err != nil {
 		return err
 	}
 
-	eg, ctx := errgroup.WithContext(ctx)
-	eg.SetLimit(s.maxConcurrency)
+	eg, ctx := newLimitedErrgroup(ctx, s.maxConcurrency)
 
 	p := &imagePuller{
 		composeService: s,
@@ -98,8 +98,20 @@ func (s *composeService) pull(ctx context.Context, project *types.Project, opts 
 		logrus.Warnf("WARNING: Some service image(s) must be built from source by running:\n    docker compose build %s", strings.Join(p.mustBuild, " "))
 	}
 
+	// provider-backed services: pull is the strong contract — the provider
+	// must ensure its runtime holds the latest version of the authority.
+	// It runs even when a regular pull failed: skipping the provider phase
+	// because an unrelated service failed would silently leave provider
+	// runtimes stale. Its error is a per-service pull error and follows
+	// their exact regime — reported below, suppressed by IgnoreFailures.
+	// rootCtx, not ctx: the errgroup context above is canceled once Wait
+	// returns, and would kill the provider on the spot.
+	p.pullErrors = append(p.pullErrors, s.ensureProviderImages(rootCtx, project, nil, providerPullPolicyAlways))
+
 	if err != nil {
-		return err
+		// fatal errgroup error: report it with whatever per-service context
+		// accumulated (provider phase included) instead of dropping it
+		return errors.Join(append(p.pullErrors, err)...)
 	}
 	if opts.IgnoreFailures {
 		return nil
@@ -180,7 +192,7 @@ func (p *imagePuller) pullHookImages(ctx context.Context) error {
 			hookPolicy = types.PullPolicyMissing
 		}
 		for _, img := range api.GetDependentImages(service, p.project.Name) {
-			pullRequired, skipReason, err := shouldPullImage(types.ServiceConfig{Name: name, Image: img, PullPolicy: hookPolicy}, p.images)
+			pullRequired, skipReason, err := shouldPullImage(types.ServiceConfig{Name: name, ContainerSpec: types.ContainerSpec{Image: img, PullPolicy: hookPolicy}}, p.images)
 			if err != nil {
 				return err
 			}
@@ -194,7 +206,7 @@ func (p *imagePuller) pullHookImages(ctx context.Context) error {
 				continue
 			}
 			p.scheduled[img] = name
-			hookService := types.ServiceConfig{Name: name, Image: img}
+			hookService := types.ServiceConfig{Name: name, ContainerSpec: types.ContainerSpec{Image: img}}
 			p.eg.Go(func() error {
 				err := p.pullServiceImage(ctx, hookService, p.opts.Quiet, p.project.Environment["DOCKER_DEFAULT_PLATFORM"])
 				if err != nil && !p.opts.IgnoreFailures {
@@ -410,8 +422,8 @@ func (s *composeService) pullRequiredImages(ctx context.Context, project *types.
 					// Hack: create a fake ServiceConfig so we pull missing volume image
 					n := fmt.Sprintf("%s:volume %d", name, i)
 					needPull[n] = types.ServiceConfig{
-						Name:  n,
-						Image: vol.Source,
+						Name:          n,
+						ContainerSpec: types.ContainerSpec{Image: vol.Source},
 					}
 					scheduled[vol.Source] = true
 				}
@@ -429,8 +441,7 @@ func (s *composeService) pullRequiredImages(ctx context.Context, project *types.
 
 	// the errgroup context is canceled as soon as Wait returns; the post-pull
 	// resolution below needs the caller's context
-	eg, pullCtx := errgroup.WithContext(ctx)
-	eg.SetLimit(s.maxConcurrency)
+	eg, pullCtx := newLimitedErrgroup(ctx, s.maxConcurrency)
 	pulled := map[string]bool{}
 	var mutex sync.Mutex
 	for name, service := range needPull {
@@ -506,7 +517,7 @@ func addPreStartHookPulls(project *types.Project, images map[string]api.ImageSum
 			hookPolicy = types.PullPolicyMissing
 		}
 		for i, img := range api.GetDependentImages(service, project.Name) {
-			pull, err := mustPull(types.ServiceConfig{Name: name, Image: img, PullPolicy: hookPolicy}, images)
+			pull, err := mustPull(types.ServiceConfig{Name: name, ContainerSpec: types.ContainerSpec{Image: img, PullPolicy: hookPolicy}}, images)
 			if err != nil {
 				return err
 			}
@@ -517,8 +528,8 @@ func addPreStartHookPulls(project *types.Project, images map[string]api.ImageSum
 			// Hack: create a fake ServiceConfig so we pull missing pre_start hook image
 			n := fmt.Sprintf("%s:pre_start %d", name, i)
 			needPull[n] = types.ServiceConfig{
-				Name:  n,
-				Image: img,
+				Name:          n,
+				ContainerSpec: types.ContainerSpec{Image: img},
 			}
 		}
 	}

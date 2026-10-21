@@ -115,7 +115,7 @@ const DockerBuildxMinVersion = "0.17.0"
 // of docker/compose, so this has no go.mod counterpart to sync against;
 // update it by hand when recommending a new buildx release.
 // This value is a recommendation, not a hard requirement
-const DockerBuildxRecommendedVersion = "0.37.1"
+const DockerBuildxRecommendedVersion = "0.38.1"
 
 // DockerMinVersion defines the recommended minimum version of Docker Engine
 // List of supported Docker versions: https://endoflife.date/docker-engine

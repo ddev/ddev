@@ -23,16 +23,21 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
+	"net/http/httputil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/containerd/errdefs"
+	"github.com/containerd/platforms"
 	"github.com/docker/cli/cli-plugins/manager"
 	"github.com/docker/cli/cli/config"
+	"github.com/moby/moby/client"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -41,7 +46,10 @@ import (
 
 type JsonMessage struct {
 	Type    string `json:"type"`
-	Message string `json:"message"`
+	Message string `json:"message,omitempty"`
+	// Platform optionally narrows a get-image request to one platform of a
+	// multi-platform image (e.g. "linux/arm64").
+	Platform string `json:"platform,omitempty"`
 }
 
 const (
@@ -50,17 +58,82 @@ const (
 	SetEnvType                = "setenv"
 	RawSetEnvType             = "rawsetenv"
 	DebugType                 = "debug"
+	PublishEndpointType       = "publish-endpoint"
 	providerMetadataDirectory = "compose/providers"
+
+	// GetServiceConfigType is a message the provider sends to receive, on
+	// its stdin, one JSON line holding the resolved canonical configuration
+	// of the service it manages — answered from the in-memory model.
+	GetServiceConfigType = "get-service-config"
+
+	// GetRelayInfoType is a message the provider sends to receive, on its
+	// stdin, one JSON line describing the project networks the relay
+	// standing in for this service would join, with each network's gateway
+	// address. Only meaningful for a provider running its service LOCALLY:
+	// the gateway is an address the host owns on the network's bridge, so
+	// an endpoint bound to it is reachable from the relay without being
+	// exposed on the LAN. A provider backing the service with a remote
+	// resource has no use for it.
+	GetRelayInfoType = "get-relay-info"
+
+	// GetImageType is a message the provider sends during its pull command
+	// to receive the service image from the local daemon: compose answers on
+	// the provider's stdin with one ImageStreamType JSON line, then — unless
+	// that line carries an error — the image tar encoded as an HTTP/1.1
+	// chunked body (see streamImageTo).
+	GetImageType = "get-image"
+
+	// ImageStreamType is the type of the JSON line answering a get-image
+	// request.
+	ImageStreamType = "image-stream"
+
+	// ComposeProviderMessagesEnv announces to the provider process, as a
+	// comma-separated list, every message type this compose accepts on the
+	// provider's stdout — so a provider can adapt to the compose it runs
+	// under instead of emitting a message that would fail the command
+	// (an unknown message type is a protocol error by design: a provider
+	// REQUIRING an unsupported message must fail rather than degrade
+	// silently).
+	ComposeProviderMessagesEnv = "COMPOSE_PROVIDER_MESSAGES"
 )
+
+// providerMessageTypes is the COMPOSE_PROVIDER_MESSAGES value: every message
+// type executePlugin's loop accepts. Keep in sync with its switch.
+var providerMessageTypes = strings.Join([]string{
+	ErrorType,
+	InfoType,
+	SetEnvType,
+	RawSetEnvType,
+	DebugType,
+	PublishEndpointType,
+	GetServiceConfigType,
+	GetRelayInfoType,
+	GetImageType,
+}, ",")
+
+// imageStreamAnswer is the stdin answer to a get-image request. On success
+// Encoding and MediaType describe the byte stream that follows the JSON line;
+// on failure Error carries the reason and no stream follows.
+type imageStreamAnswer struct {
+	Type      string `json:"type"`
+	Encoding  string `json:"encoding,omitempty"`
+	MediaType string `json:"media-type,omitempty"`
+	Error     string `json:"error,omitempty"`
+}
 
 type pluginVariables struct {
 	prefixed types.Mapping
 	raw      types.Mapping
+	// endpoints are "port=host:port" publish-endpoint messages: container
+	// port the consumers know, mapped to where the provider's resource
+	// actually listens. When present, compose deploys a relay container
+	// under the service's name on the consumers' networks.
+	endpoints map[int]string
 }
 
 var mux sync.Mutex
 
-func (s *composeService) runPlugin(ctx context.Context, project *types.Project, service types.ServiceConfig, command string) error {
+func (s *composeService) runPlugin(ctx context.Context, project *types.Project, service types.ServiceConfig, command string, extraArgs ...string) error {
 	provider := *service.Provider
 
 	plugin, err := s.getPluginBinaryPath(provider.Type)
@@ -68,7 +141,7 @@ func (s *composeService) runPlugin(ctx context.Context, project *types.Project, 
 		return err
 	}
 
-	cmd, err := s.setupPluginCommand(ctx, project, service, plugin, command)
+	cmd, err := s.setupPluginCommand(ctx, project, service, plugin, command, extraArgs...)
 	if err != nil {
 		return err
 	}
@@ -76,17 +149,25 @@ func (s *composeService) runPlugin(ctx context.Context, project *types.Project, 
 		return nil
 	}
 
-	variables, err := s.executePlugin(cmd, command, service)
+	variables, err := s.executePlugin(ctx, project, cmd, command, service)
 	if err != nil {
 		return err
 	}
 
-	if command == "stop" {
+	if command == "stop" || command == "pull" {
 		return nil
 	}
 
+	isUp := command == "up"
+	deployRelay := isUp && len(variables.endpoints) > 0
+
+	// project.Services is shared state mutated by every concurrent provider
+	// run: the env-var injection below writes it, and the relay's network
+	// selection reads it — both belong under the mutex. The Docker API work
+	// in ensureServiceRelay does not: holding the lock across it would make
+	// every concurrent provider wait on the slowest one (image pull
+	// included), so the relay is deployed after the lock is released.
 	mux.Lock()
-	defer mux.Unlock()
 	for name, s := range project.Services {
 		if _, ok := s.DependsOn[service.Name]; ok {
 			prefix := strings.ToUpper(service.Name) + "_"
@@ -102,10 +183,43 @@ func (s *composeService) runPlugin(ctx context.Context, project *types.Project, 
 			project.Services[name] = s
 		}
 	}
+	var networkKeys []string
+	if deployRelay {
+		networkKeys = relayNetworks(project, service)
+	}
+	mux.Unlock()
+
+	if isUp {
+		if deployRelay {
+			return s.ensureServiceRelay(ctx, project, service, variables.endpoints, networkKeys)
+		}
+		// The provider published no endpoint on this run — whether it never
+		// did, or stopped doing so since a previous up deployed a relay for
+		// it. Either way there is nothing to route to, so any relay left
+		// over from an earlier run must go: routing to whatever upstream it
+		// still holds would be silently wrong instead of just absent.
+		return s.removeServiceRelay(ctx, project.Name, service.Name)
+	}
 	return nil
 }
 
-func (s *composeService) executePlugin(cmd *exec.Cmd, command string, service types.ServiceConfig) (pluginVariables, error) {
+// parseEndpointMessage decodes a publish-endpoint payload: "80=host:port".
+func parseEndpointMessage(message string) (int, string, error) {
+	portPart, upstream, found := strings.Cut(message, "=")
+	if !found {
+		return 0, "", fmt.Errorf("publish-endpoint %q: want port=host:port", message)
+	}
+	port, err := strconv.Atoi(portPart)
+	if err != nil || port < 1 || port > 65535 {
+		return 0, "", fmt.Errorf("publish-endpoint %q: invalid port", message)
+	}
+	if _, _, err := net.SplitHostPort(upstream); err != nil {
+		return 0, "", fmt.Errorf("publish-endpoint %q: invalid endpoint: %w", message, err)
+	}
+	return port, upstream, nil
+}
+
+func (s *composeService) executePlugin(ctx context.Context, project *types.Project, cmd *exec.Cmd, command string, service types.ServiceConfig) (pluginVariables, error) {
 	var action string
 	switch command {
 	case "up":
@@ -117,6 +231,9 @@ func (s *composeService) executePlugin(cmd *exec.Cmd, command string, service ty
 	case "stop":
 		s.events.On(stoppingEvent(service.Name))
 		action = "stop"
+	case "pull":
+		s.events.On(newEvent(service.Name, api.Working, "Pulling"))
+		action = "pull"
 	default:
 		return pluginVariables{}, fmt.Errorf("unsupported plugin command: %s", command)
 	}
@@ -125,18 +242,59 @@ func (s *composeService) executePlugin(cmd *exec.Cmd, command string, service ty
 	if err != nil {
 		return pluginVariables{}, err
 	}
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return pluginVariables{}, err
+	}
+	// Answers are written from their own goroutine: writing a config larger
+	// than the OS pipe buffer from the read loop would deadlock against a
+	// provider that emits stdout before draining its stdin. Every answer is
+	// the same serialized service, so completion order is irrelevant; the
+	// mutex keeps individual writes atomic. Write failures are not reported
+	// from here — a provider missing its answer reads EOF once stdin closes.
+	var stdinMu sync.Mutex
+	var answers sync.WaitGroup
+	processExited := false
+	// Closing stdin on exit unblocks a provider waiting for a response the
+	// loop will never produce (e.g. a request emitted after an error). An
+	// answer dispatched but not yet written must land before the close —
+	// but only once the process has exited can a write not block forever
+	// (a dead peer turns it into EPIPE); on error paths the provider may
+	// still be alive and not reading, so close first to error the write
+	// out instead of hanging the wait.
+	defer func() {
+		if processExited {
+			answers.Wait()
+			_ = stdin.Close()
+		} else {
+			_ = stdin.Close()
+			answers.Wait()
+		}
+	}()
 
 	err = cmd.Start()
 	if err != nil {
 		return pluginVariables{}, err
 	}
+	// Error paths return before the normal cmd.Wait below and would leave
+	// the provider as a zombie (and possibly running): reap it — kill
+	// first, as it may be misbehaving or blocked, which also errors out
+	// any in-flight answer write. Runs before the stdin/answers defer
+	// above (LIFO).
+	defer func() {
+		if !processExited {
+			_ = cmd.Process.Kill()
+			_ = cmd.Wait()
+		}
+	}()
 
 	decoder := json.NewDecoder(stdout)
 	defer func() { _ = stdout.Close() }()
 
 	variables := pluginVariables{
-		prefixed: types.Mapping{},
-		raw:      types.Mapping{},
+		prefixed:  types.Mapping{},
+		raw:       types.Mapping{},
+		endpoints: map[int]string{},
 	}
 
 	for {
@@ -148,32 +306,13 @@ func (s *composeService) executePlugin(cmd *exec.Cmd, command string, service ty
 		if err != nil {
 			return pluginVariables{}, err
 		}
-		switch msg.Type {
-		case ErrorType:
-			s.events.On(newEvent(service.Name, api.Error, firstLine(msg.Message)))
-			return pluginVariables{}, errors.New(msg.Message)
-		case InfoType:
-			s.events.On(newEvent(service.Name, api.Working, firstLine(msg.Message)))
-		case SetEnvType:
-			key, val, found := strings.Cut(msg.Message, "=")
-			if !found {
-				return pluginVariables{}, fmt.Errorf("invalid response from plugin: %s", msg.Message)
-			}
-			variables.prefixed[key] = val
-		case RawSetEnvType:
-			key, val, found := strings.Cut(msg.Message, "=")
-			if !found {
-				return pluginVariables{}, fmt.Errorf("invalid response from plugin: %s", msg.Message)
-			}
-			variables.raw[key] = val
-		case DebugType:
-			logrus.Debugf("%s: %s", service.Name, msg.Message)
-		default:
-			return pluginVariables{}, fmt.Errorf("invalid response from plugin: %s", msg.Type)
+		if err := s.handlePluginMessage(ctx, project, service, msg, command, &variables, stdin, &stdinMu, &answers); err != nil {
+			return pluginVariables{}, err
 		}
 	}
 
 	err = cmd.Wait()
+	processExited = true
 	if err != nil {
 		s.events.On(errorEvent(service.Name, err.Error()))
 		return pluginVariables{}, fmt.Errorf("failed to %s service provider: %s", action, err.Error())
@@ -185,8 +324,211 @@ func (s *composeService) executePlugin(cmd *exec.Cmd, command string, service ty
 		s.events.On(removedEvent(service.Name))
 	case "stop":
 		s.events.On(stoppedEvent(service.Name))
+	case "pull":
+		s.events.On(newEvent(service.Name, api.Done, "Pulled"))
 	}
 	return variables, nil
+}
+
+// imageStreamChunkSize is the fixed buffer compose fills from the image
+// export before flushing it as one chunk of the stream.
+const imageStreamChunkSize = 1024 * 1024
+
+// streamImageTo answers a get-image request on the provider's stdin: one
+// ImageStreamType JSON line announcing the transfer, then the image tar
+// encoded as HTTP/1.1 chunked data (RFC 9112 §7.1) — every block of data
+// prefixed by its length, the zero-length chunk marking a COMPLETE
+// transfer. Length-prefixed framing needs no in-band delimiter (any
+// byte value can appear inside a tar) and is consumable with any language's
+// chunked-body reader. A stream that ends without the terminating zero chunk
+// was aborted: the provider must discard it.
+// When the image cannot be exported, the announce line carries an error
+// instead and no stream follows.
+// streamAbortedError marks a streamImageTo failure that leaves the channel
+// unresynchronizable: either the chunked body was left incomplete after the
+// success announce, or a write to w itself failed (the pipe is broken,
+// whatever was or wasn't delivered). A failure to prepare the image (an
+// invalid platform, an ImageSave error) whose error announce write
+// succeeded is reported as a plain error instead — the channel is intact
+// and the provider has a well-formed error line to read.
+type streamAbortedError struct {
+	err error
+}
+
+func (e *streamAbortedError) Error() string { return e.err.Error() }
+func (e *streamAbortedError) Unwrap() error { return e.err }
+
+func (s *composeService) streamImageTo(ctx context.Context, w io.Writer, ref, platform string) error {
+	announce := func(a imageStreamAnswer) error {
+		payload, err := json.Marshal(a)
+		if err != nil {
+			return err
+		}
+		_, err = w.Write(append(payload, '\n'))
+		return err
+	}
+
+	var opts []client.ImageSaveOption
+	if platform != "" {
+		p, err := platforms.Parse(platform)
+		if err != nil {
+			if werr := announce(imageStreamAnswer{Type: ImageStreamType, Error: fmt.Sprintf("invalid platform %q: %s", platform, err)}); werr != nil {
+				return &streamAbortedError{werr}
+			}
+			return err
+		}
+		opts = append(opts, client.ImageSaveWithPlatforms(p))
+	}
+	tar, err := s.apiClient().ImageSave(ctx, []string{ref}, opts...)
+	if err != nil {
+		if werr := announce(imageStreamAnswer{Type: ImageStreamType, Error: err.Error()}); werr != nil {
+			return &streamAbortedError{werr}
+		}
+		return err
+	}
+	defer func() { _ = tar.Close() }()
+
+	if err := announce(imageStreamAnswer{Type: ImageStreamType, Encoding: "chunked", MediaType: "application/x-tar"}); err != nil {
+		return &streamAbortedError{err}
+	}
+	cw := httputil.NewChunkedWriter(w)
+	if _, err := io.CopyBuffer(cw, struct{ io.Reader }{tar}, make([]byte, imageStreamChunkSize)); err != nil {
+		return &streamAbortedError{err}
+	}
+	// ChunkedWriter.Close writes the zero-length chunk, which ends the
+	// stream. Unlike an HTTP message there is deliberately no trailer
+	// section nor final CRLF: a stock chunked reader stops at the zero
+	// chunk without consuming either, and leftover bytes would corrupt the
+	// next JSON answer a provider requesting several images reads.
+	if err := cw.Close(); err != nil {
+		return &streamAbortedError{err}
+	}
+	return nil
+}
+
+// handlePluginMessage processes one provider message, mutating variables in
+// place; a returned error is terminal for the run (the provider is killed
+// and the command fails). An unknown message type IS such an error: a
+// provider requiring a message this compose does not support must fail
+// loudly, not degrade silently — providers adapt through the
+// COMPOSE_PROVIDER_MESSAGES announcement instead. Answer-bearing requests
+// (get-service-config, get-relay-info, get-image) are served from their own
+// goroutine — see the answers/stdinMu contract in executePlugin.
+func (s *composeService) handlePluginMessage(
+	ctx context.Context, project *types.Project, service types.ServiceConfig, msg JsonMessage, command string,
+	variables *pluginVariables, stdin io.WriteCloser, stdinMu *sync.Mutex, answers *sync.WaitGroup,
+) error {
+	switch msg.Type {
+	case ErrorType:
+		s.events.On(newEvent(service.Name, api.Error, firstLine(msg.Message)))
+		return errors.New(msg.Message)
+	case InfoType:
+		s.events.On(newEvent(service.Name, api.Working, firstLine(msg.Message)))
+	case SetEnvType:
+		key, val, found := strings.Cut(msg.Message, "=")
+		if !found {
+			return fmt.Errorf("invalid message from plugin: %s", msg.Message)
+		}
+		variables.prefixed[key] = val
+	case RawSetEnvType:
+		key, val, found := strings.Cut(msg.Message, "=")
+		if !found {
+			return fmt.Errorf("invalid message from plugin: %s", msg.Message)
+		}
+		variables.raw[key] = val
+	case GetServiceConfigType:
+		// service.Image is the YAML-declared value: empty for a build-only
+		// service (compose-go never fills it in — see api.GetImageNameOrDefault's
+		// own callers throughout this package). The provider only ever sees
+		// this response, never the model compose builds internally, so it
+		// must get the resolved name, the same one the image phase built and
+		// tagged — never the build directive itself: a provider has no
+		// builder to run it against, and by the time it asks, the image
+		// phase has already built and tagged the image this config now names.
+		resolved := service
+		resolved.Image = api.GetImageNameOrDefault(service, project.Name)
+		resolved.Build = nil
+		payload, err := json.Marshal(resolved)
+		if err != nil {
+			return fmt.Errorf("failed to answer get-service-config: %w", err)
+		}
+		answerProvider(stdin, stdinMu, answers, payload)
+	case GetRelayInfoType:
+		// resolved lazily, on request only: the network inspects cost
+		// nothing to providers that never ask (remote-resource providers),
+		// and the networks exist by the time an up runs
+		payload, err := json.Marshal(s.relayInfo(ctx, project, service))
+		if err != nil {
+			return fmt.Errorf("failed to answer get-relay-info: %w", err)
+		}
+		answerProvider(stdin, stdinMu, answers, payload)
+	case GetImageType:
+		// image distribution belongs to the pull command: answering it
+		// elsewhere would let an image export stall a down or a stop
+		if command != "pull" {
+			return fmt.Errorf("invalid message from plugin: %s is only supported during the pull command", GetImageType)
+		}
+		ref, platform := msg.Message, msg.Platform
+		answers.Add(1)
+		go func() {
+			defer answers.Done()
+			// stdinMu is deliberately held for the whole transfer: the
+			// chunked body must be contiguous on stdin, any concurrent
+			// answer interleaved into it would corrupt the framing. A
+			// provider must therefore drain the announced stream before
+			// expecting any other answer (documented contract); compose
+			// cannot hang forever on a provider that stops reading — the
+			// error path kills the process, which EPIPEs the write.
+			stdinMu.Lock()
+			defer stdinMu.Unlock()
+			if err := s.streamImageTo(ctx, stdin, ref, platform); err != nil {
+				logrus.Warnf("provider %q: get-image %q: %v", service.Name, ref, err)
+				// A failure before the success announce (invalid platform,
+				// ImageSave error) is a clean, well-formed error line: the
+				// channel is intact, and closing stdin here would needlessly
+				// kill any other independent get-image request in the same
+				// pull invocation. Only a failure after the success
+				// announce leaves the stream without its terminating chunk,
+				// with the channel unable to be resynchronized (any byte
+				// would read as chunk data) — streamImageTo reports that
+				// case as a *streamAbortedError so closing stdin here makes
+				// the truncation observable, instead of blocking forever on
+				// a stream nobody will finish.
+				var aborted *streamAbortedError
+				if errors.As(err, &aborted) {
+					_ = stdin.Close()
+				}
+			}
+		}()
+	case PublishEndpointType:
+		port, upstream, err := parseEndpointMessage(msg.Message)
+		if err != nil {
+			return fmt.Errorf("invalid message from plugin: %w", err)
+		}
+		variables.endpoints[port] = upstream
+	case DebugType:
+		logrus.Debugf("%s: %s", service.Name, msg.Message)
+	default:
+		return fmt.Errorf("invalid message from plugin: %s", msg.Type)
+	}
+	return nil
+}
+
+// answerProvider dispatches one JSON-line answer to the provider's stdin
+// from its own goroutine: writing a payload larger than the OS pipe buffer
+// from the read loop would deadlock against a provider that emits stdout
+// before draining its stdin. The mutex keeps individual writes atomic; a
+// write failure is not reported — a provider missing its answer reads EOF
+// once stdin closes.
+func answerProvider(stdin io.WriteCloser, stdinMu *sync.Mutex, answers *sync.WaitGroup, payload []byte) {
+	payload = append(payload, '\n')
+	answers.Add(1)
+	go func() {
+		defer answers.Done()
+		stdinMu.Lock()
+		defer stdinMu.Unlock()
+		_, _ = stdin.Write(payload)
+	}()
 }
 
 func (s *composeService) getPluginBinaryPath(provider string) (path string, err error) {
@@ -207,7 +549,7 @@ func (s *composeService) getPluginBinaryPath(provider string) (path string, err 
 	return path, err
 }
 
-func (s *composeService) setupPluginCommand(ctx context.Context, project *types.Project, service types.ServiceConfig, path, command string) (*exec.Cmd, error) {
+func (s *composeService) setupPluginCommand(ctx context.Context, project *types.Project, service types.ServiceConfig, path, command string, extraArgs ...string) (*exec.Cmd, error) {
 	cmdOptionsMetadata := s.getPluginMetadata(path, service.Provider.Type, project)
 	var currentCommandMetadata CommandMetadata
 	switch command {
@@ -220,6 +562,13 @@ func (s *composeService) setupPluginCommand(ctx context.Context, project *types.
 			return nil, nil
 		}
 		currentCommandMetadata = *cmdOptionsMetadata.Stop
+	case "pull":
+		// image distribution is opt-in, declared like stop by the presence
+		// of the command block in the provider metadata
+		if cmdOptionsMetadata.Pull == nil {
+			return nil, nil
+		}
+		currentCommandMetadata = *cmdOptionsMetadata.Pull
 	}
 
 	provider := *service.Provider
@@ -228,7 +577,7 @@ func (s *composeService) setupPluginCommand(ctx context.Context, project *types.
 		return nil, err
 	}
 
-	args := []string{"compose", fmt.Sprintf("--project-name=%s", project.Name), command}
+	args := []string{"compose", "--project-name=" + project.Name, command}
 	for k, v := range provider.Options {
 		for _, value := range v {
 			if _, ok := currentCommandMetadata.GetParameter(k); commandMetadataIsEmpty || ok {
@@ -236,6 +585,7 @@ func (s *composeService) setupPluginCommand(ctx context.Context, project *types.
 			}
 		}
 	}
+	args = append(args, extraArgs...)
 	args = append(args, service.Name)
 
 	cmd := exec.CommandContext(ctx, path, args...)
@@ -244,6 +594,7 @@ func (s *composeService) setupPluginCommand(ctx context.Context, project *types.
 	if err != nil {
 		return nil, err
 	}
+	cmd.Env = append(cmd.Env, ComposeProviderMessagesEnv+"="+providerMessageTypes)
 	return cmd, nil
 }
 
@@ -287,6 +638,9 @@ type ProviderMetadata struct {
 	Up          CommandMetadata  `json:"up"`
 	Down        CommandMetadata  `json:"down"`
 	Stop        *CommandMetadata `json:"stop,omitempty"`
+	// Pull declares support for the image-distribution command; like Stop,
+	// the presence of the block is what opts the provider in.
+	Pull *CommandMetadata `json:"pull,omitempty"`
 }
 
 func (p ProviderMetadata) IsEmpty() bool {

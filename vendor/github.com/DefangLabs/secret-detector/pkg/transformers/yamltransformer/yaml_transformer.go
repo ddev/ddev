@@ -2,7 +2,7 @@ package yamltransformer
 
 import (
 	"github.com/DefangLabs/secret-detector/pkg/dataformat"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/DefangLabs/secret-detector/pkg/secrets"
 	"github.com/DefangLabs/secret-detector/pkg/transformers/helpers"

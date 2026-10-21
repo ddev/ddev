@@ -23,7 +23,6 @@ import (
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/utils"
@@ -46,6 +45,14 @@ func (s *composeService) restart(ctx context.Context, projectName string, option
 		return err
 	}
 
+	// shared by every service so the dependency-order fan-out and the
+	// per-service container fan-out combined never exceed maxConcurrency
+	// concurrent per-container restarts (pre_stop hook, ContainerRestart,
+	// post_start hook) — a per-service bound alone allows as many
+	// independent services to run at once as the graph permits, each with
+	// its own maxConcurrency budget
+	limiter := newOptionalLimiter(s.maxConcurrency)
+
 	return InDependencyOrder(ctx, project, func(c context.Context, service string) error {
 		config := project.Services[service]
 		err := s.waitDependencies(ctx, project, service, config.DependsOn, containers, 0)
@@ -53,13 +60,9 @@ func (s *composeService) restart(ctx context.Context, projectName string, option
 			return err
 		}
 
-		eg, ctx := errgroup.WithContext(ctx)
-		for _, ctr := range containers.filter(isService(service)) {
-			eg.Go(func() error {
-				return s.restartContainer(ctx, project.Services[service], ctr, options)
-			})
-		}
-		return eg.Wait()
+		return forEachWithLimiter(ctx, limiter, containers.filter(isService(service)), func(ctx context.Context, ctr container.Summary) error {
+			return s.restartContainer(ctx, project.Services[service], ctr, options)
+		})
 	})
 }
 
@@ -105,12 +108,16 @@ func (s *composeService) prepareRestartProject(ctx context.Context, containers C
 }
 
 // restartContainer restarts a container, running its pre_stop and post_start
-// hooks around the restart
+// hooks around the restart — except for a relay, a shell-less scratch binary
+// standing in for the service: it has no process for a hook to act on.
 func (s *composeService) restartContainer(ctx context.Context, def types.ServiceConfig, ctr container.Summary, options api.RestartOptions) error {
-	for _, hook := range def.PreStop {
-		err := s.runHook(ctx, ctr, def, hook, nil)
-		if err != nil {
-			return err
+	relay := isRelayContainer(ctr)
+	if !relay {
+		for _, hook := range def.PreStop {
+			err := s.runHook(ctx, ctr, def, hook, nil)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	eventName := getContainerProgressName(ctr)
@@ -122,10 +129,12 @@ func (s *composeService) restartContainer(ctx context.Context, def types.Service
 		return err
 	}
 	s.events.On(newEvent(eventName, api.Done, api.StatusStarted))
-	for _, hook := range def.PostStart {
-		err := s.runHook(ctx, ctr, def, hook, nil)
-		if err != nil {
-			return err
+	if !relay {
+		for _, hook := range def.PostStart {
+			err := s.runHook(ctx, ctr, def, hook, nil)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

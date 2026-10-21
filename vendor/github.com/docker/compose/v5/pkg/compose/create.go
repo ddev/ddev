@@ -50,6 +50,11 @@ type createOptions struct {
 	AttachStdin       bool
 	UseNetworkAliases bool
 	Labels            types.Labels
+	// NoConfigHash skips the ConfigHashLabel stamp: hook runners have no
+	// spec-drift concept and must stay invisible to every listing that
+	// filters on the label's mere presence (ps/start's default listing,
+	// down's normal teardown path).
+	NoConfigHash bool
 }
 
 type createConfigs struct {
@@ -80,7 +85,7 @@ func (s *composeService) create(ctx context.Context, project *types.Project, opt
 		return err
 	}
 
-	err = s.ensureImagesExists(ctx, project, options.Build, options.QuietPull)
+	err = s.ensureImagesExists(ctx, project, options.Build, options.QuietPull, options.SkipProviders)
 	if err != nil {
 		return err
 	}
@@ -262,11 +267,13 @@ func (s *composeService) getCreateConfigs(ctx context.Context,
 	options createOptions,
 ) (createConfigs, error) {
 	labels := options.Labels
-	hash, err := ServiceHash(service)
-	if err != nil {
-		return createConfigs{}, err
+	if !options.NoConfigHash {
+		hash, err := ServiceHash(service)
+		if err != nil {
+			return createConfigs{}, err
+		}
+		labels[api.ConfigHashLabel] = hash
 	}
-	labels[api.ConfigHashLabel] = hash
 	if number > 0 {
 		// One-off containers are not indexed
 		labels[api.ContainerNumberLabel] = strconv.Itoa(number)
@@ -1229,10 +1236,6 @@ func buildContainerConfigMounts(p types.Project, s types.ServiceConfig) ([]mount
 			continue
 		}
 
-		if config.UID != "" || config.GID != "" || config.Mode != nil {
-			logrus.Warn("config `uid`, `gid` and `mode` are not supported, they will be ignored")
-		}
-
 		bindMount, err := buildMount(p, types.ServiceVolumeConfig{
 			Type:     types.VolumeTypeBind,
 			Source:   definedConfig.File,
@@ -1277,10 +1280,6 @@ func buildContainerSecretMounts(p types.Project, s types.ServiceConfig) ([]mount
 
 		if definedSecret.Environment != "" {
 			continue
-		}
-
-		if secret.UID != "" || secret.GID != "" || secret.Mode != nil {
-			logrus.Warn("secrets `uid`, `gid` and `mode` are not supported, they will be ignored")
 		}
 
 		if _, err := os.Stat(definedSecret.File); os.IsNotExist(err) {
@@ -1460,7 +1459,7 @@ func (s *composeService) createNetwork(ctx context.Context, n *types.NetworkConf
 		EnableIPv4: n.EnableIPv4,
 	}
 
-	networkEventName := fmt.Sprintf("Network %s", n.Name)
+	networkEventName := "Network " + n.Name
 	s.events.On(creatingEvent(networkEventName))
 
 	if _, err := s.apiClient().NetworkCreate(ctx, n.Name, networkCreateOptions); err != nil {
@@ -1531,7 +1530,7 @@ func (s *composeService) resolveExternalNetwork(ctx context.Context, n *types.Ne
 }
 
 func (s *composeService) createVolume(ctx context.Context, volume types.VolumeConfig) error {
-	eventName := fmt.Sprintf("Volume %s", volume.Name)
+	eventName := "Volume " + volume.Name
 	s.events.On(creatingEvent(eventName))
 	hash, err := VolumeHash(volume)
 	if err != nil {

@@ -67,7 +67,7 @@ type Options struct {
 	SkipInclude bool
 	// SkipResolveEnvironment will ignore computing `environment` for services
 	SkipResolveEnvironment bool
-	// SkipResolveLabels will ignore resolving `label_file` into `labels` for services.
+	// SkipResolveLabels will ignore resolving `label_file` into `labels` for services and their `pre_start` hooks.
 	// When set, service `labels` may be incomplete: `label_file` entries are left unresolved,
 	// so callers must not treat `labels` as authoritative.
 	SkipResolveLabels bool
@@ -79,8 +79,13 @@ type Options struct {
 	discardEnvFiles bool
 	// Set project projectName
 	projectName string
-	// Indicates when the projectName was imperatively set or guessed from path
-	projectNameImperativelySet bool
+	// Indicates when the projectName was explicitly set or guessed from path
+	projectNameExplicit bool
+	// Indicates the working dir passed to LoadConfigFiles was explicitly
+	// requested (e.g. --project-directory) rather than defaulted (e.g. the
+	// current directory), so a remote resource loader (git, oci) must not
+	// override it with the downloaded copy's own directory
+	workingDirExplicit bool
 	// Profiles set profiles to enable
 	Profiles []string
 	// SelectedServices restricts the project model to these services (and their dependencies)
@@ -100,6 +105,10 @@ type Options struct {
 	// MaxNodeVisits caps total YAML node visits during reset/override resolution.
 	// Zero means use the default. Useful for very large compose files that exceed the default cap.
 	MaxNodeVisits int
+	// UnsupportedAttributesCheck detects caller-supplied patterns identifying
+	// compose-file attributes not honored by the caller's runtime. See
+	// WithUnsupportedAttributesCheck.
+	UnsupportedAttributesCheck *UnsupportedAttributesCheck
 }
 
 var (
@@ -204,23 +213,34 @@ func (o *Options) clone() *Options {
 		Interpolate:                o.Interpolate,
 		discardEnvFiles:            o.discardEnvFiles,
 		projectName:                o.projectName,
-		projectNameImperativelySet: o.projectNameImperativelySet,
+		projectNameExplicit:        o.projectNameExplicit,
+		workingDirExplicit:         o.workingDirExplicit,
 		Profiles:                   o.Profiles,
 		SelectedServices:           o.SelectedServices,
 		PruneUnnecessaryResources:  o.PruneUnnecessaryResources,
 		ResourceLoaders:            o.ResourceLoaders,
 		KnownExtensions:            o.KnownExtensions,
 		Listeners:                  o.Listeners,
+		UnsupportedAttributesCheck: o.UnsupportedAttributesCheck,
 	}
 }
 
-func (o *Options) SetProjectName(name string, imperativelySet bool) {
+func (o *Options) SetProjectName(name string, explicit bool) {
 	o.projectName = name
-	o.projectNameImperativelySet = imperativelySet
+	o.projectNameExplicit = explicit
 }
 
 func (o Options) GetProjectName() (string, bool) {
-	return o.projectName, o.projectNameImperativelySet
+	return o.projectName, o.projectNameExplicit
+}
+
+// SetWorkingDirExplicit records whether the working dir passed to
+// LoadConfigFiles was explicitly requested by the caller (e.g.
+// --project-directory) rather than defaulted (e.g. the current directory).
+// A remote resource loader (git, oci) must not override an explicit working
+// dir with the directory of its downloaded copy.
+func (o *Options) SetWorkingDirExplicit(explicit bool) {
+	o.workingDirExplicit = explicit
 }
 
 // serviceRef identifies a reference to a service. It's used to detect cyclic
@@ -341,7 +361,7 @@ func LoadConfigFiles(ctx context.Context, configFiles []string, workingDir strin
 			if err != nil {
 				return nil, err
 			}
-			if config.WorkingDir == "" && !isLocalResourceLoader {
+			if config.WorkingDir == "" && !isLocalResourceLoader && !opts.workingDirExplicit {
 				config.WorkingDir = filepath.Dir(local)
 			}
 			abs, err := filepath.Abs(local)
@@ -490,6 +510,10 @@ func loadYamlFile(ctx context.Context,
 
 		fixEmptyNotNull(cfg)
 
+		if err := promoteAliases(cfg, tree.NewPath()); err != nil {
+			return err
+		}
+
 		// Process includes first so that extended services have all merged attributes
 		if !opts.SkipInclude {
 			included = append(included, file.Filename)
@@ -591,6 +615,14 @@ func load(ctx context.Context, configDetails types.ConfigDetails, opts *Options,
 
 	if !opts.SkipValidation && opts.projectName == "" {
 		return nil, errors.New("project name must not be empty")
+	}
+
+	// runs here, once, on the fully merged model (loadYamlModel recurses once
+	// per `include:`d file): unlike validation.Validate, this is a batch scan
+	// with no per-file/fail-fast need, so it must not ride along on
+	// loadYamlModel's recursive call site or it fires once per included file.
+	if check := opts.UnsupportedAttributesCheck; check != nil && check.Report != nil {
+		check.Report(detectUnsupportedAttributes(dict, check))
 	}
 
 	if !opts.SkipNormalization {
@@ -698,7 +730,7 @@ func projectName(details *types.ConfigDetails, opts *Options) error {
 		details.Environment[consts.ComposeProjectName] = opts.projectName
 	}()
 
-	if opts.projectNameImperativelySet {
+	if opts.projectNameExplicit {
 		if NormalizeProjectName(opts.projectName) != opts.projectName {
 			return InvalidProjectNameErr(opts.projectName)
 		}
@@ -842,6 +874,7 @@ func Transform(source interface{}, target interface{}) error {
 		),
 		Result:   target,
 		TagName:  "yaml",
+		Squash:   true,
 		Metadata: &data,
 	}
 	decoder, err := mapstructure.NewDecoder(config)
@@ -851,9 +884,9 @@ func Transform(source interface{}, target interface{}) error {
 	return decoder.Decode(source)
 }
 
-// nameServices create implicit `name` key for convenience accessing service
+// nameServices create implicit `name` key for convenience accessing service or job
 func nameServices(from reflect.Value, to reflect.Value) (interface{}, error) {
-	if to.Type() == reflect.TypeOf(types.Services{}) {
+	if to.Type() == reflect.TypeOf(types.Services{}) || to.Type() == reflect.TypeOf(types.Jobs{}) {
 		nameK := reflect.ValueOf("name")
 		iter := from.MapRange()
 		for iter.Next() {

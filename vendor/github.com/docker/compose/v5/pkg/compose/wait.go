@@ -18,6 +18,7 @@ package compose
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/moby/moby/client"
@@ -27,14 +28,36 @@ import (
 )
 
 func (s *composeService) Wait(ctx context.Context, projectName string, options api.WaitOptions) (int64, error) {
+	if s.dryRun {
+		// dry-run never starts a real container, so there is nothing for
+		// wait to observe: refuse upfront instead of racing the fake API
+		// client into a misleading "no containers" error.
+		return 0, errors.New("wait is not supported in dry-run mode")
+	}
 	containers, err := s.getContainers(ctx, projectName, oneOffInclude, false, options.Services...)
 	if err != nil {
 		return 0, err
 	}
 	if len(containers) == 0 {
+		// The condition wait observes — container no longer running — may
+		// already hold: a target that exited between up and this listing (a
+		// fast run, or a service long finished) is a SATISFIED wait, not an
+		// error; ContainerWait below returns its recorded exit code
+		// immediately. The second listing runs only when no container is
+		// running so a stale exited one-off can never short-circuit a wait
+		// that has live containers to observe.
+		containers, err = s.getContainers(ctx, projectName, oneOffInclude, true, options.Services...)
+		if err != nil {
+			return 0, err
+		}
+	}
+	if len(containers) == 0 {
 		return 0, fmt.Errorf("no containers for project %q", projectName)
 	}
 
+	// ContainerWait blocks until the container exits, so it must not be
+	// bound by --parallel: capping concurrency here would serialize waits
+	// that are meant to run together (same rationale as waitDependencies).
 	eg, waitCtx := errgroup.WithContext(ctx)
 	var statusCode int64
 	for _, ctr := range containers {
