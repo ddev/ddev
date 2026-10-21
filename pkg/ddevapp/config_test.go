@@ -1082,29 +1082,32 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	require.NoError(t, startErr, "app.Start() did not succeed: output:\n=====\n%s\n===== health:\n========= health =======\n%s\n========\n===== logs:\n========= logs =======\n%s\n========\n", stdout, health, logs)
 
+	// start prints this only with DDEV_VERBOSE under DDEV_NONINTERACTIVE, as in CI.
+	customConfig, _ := app.CheckCustomConfig(false)
+
 	for _, configFile := range []string{"mysql-collation.cnf", "php-override.ini", "web-entrypoint-dosomething.sh", "Dockerfile.something", "Dockerfile", "pre.Dockerfile.somethingelse"} {
-		require.Contains(t, stdout, configFile, "did not find %s listed in custom configuration", configFile)
+		require.Contains(t, customConfig, configFile, "did not find %s listed in custom configuration", configFile)
 	}
 
 	switch app.WebserverType {
 	case nodeps.WebserverApacheFPM:
-		require.Contains(t, stdout, "apache-site.conf")
-		require.NotContains(t, stdout, "nginx-site.conf")
-		require.NotContains(t, stdout, "nginx-snippet.conf")
+		require.Contains(t, customConfig, "apache-site.conf")
+		require.NotContains(t, customConfig, "nginx-site.conf")
+		require.NotContains(t, customConfig, "nginx-snippet.conf")
 
 	case nodeps.WebserverNginxFPM:
-		require.Contains(t, stdout, "nginx-site.conf")
-		require.Contains(t, stdout, "nginx-snippet.conf")
-		require.NotContains(t, stdout, "apache-site.conf")
+		require.Contains(t, customConfig, "nginx-site.conf")
+		require.Contains(t, customConfig, "nginx-snippet.conf")
+		require.NotContains(t, customConfig, "apache-site.conf")
 
 	default:
 		t.Fatalf("Unknown WebserverType: %s", app.WebserverType)
 	}
 
 	if app.IsMutagenEnabled() {
-		require.Contains(t, stdout, "mutagen.yml")
+		require.Contains(t, customConfig, "mutagen.yml")
 	}
-	require.Contains(t, stdout, "Custom configuration is updated")
+	require.Contains(t, customConfig, "Custom configuration is updated")
 }
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.

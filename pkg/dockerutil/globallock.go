@@ -101,7 +101,7 @@ func AcquireGlobalLock(reason string) (unlock func()) {
 
 	acquired := time.Now()
 	writeGlobalLockHolder(reason)
-	util.Debug("Acquired global ddev lock for %s", reason)
+	util.Verbose("Acquired global ddev lock for %s", reason)
 	var once sync.Once
 	return func() {
 		once.Do(func() {

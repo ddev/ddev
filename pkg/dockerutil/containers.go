@@ -384,10 +384,10 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			}
 			health, logOutput := GetContainerHealth(c)
 
-			// Log status changes and periodic updates under DDEV_DEBUG
+			// Status changes are routine (DDEV_VERBOSE); a stall is what DDEV_DEBUG should surface.
 			elapsed := time.Since(startTime).Round(time.Millisecond)
 			if health != lastStatus {
-				util.Debug("ContainerWait: %s status change: '%s' after %v", cName, health, elapsed)
+				util.Verbose("ContainerWait: %s status change: '%s' after %v", cName, health, elapsed)
 				lastStatus = health
 				lastLogTime = time.Now()
 			} else if time.Since(lastLogTime) >= 5*time.Second {
@@ -490,11 +490,11 @@ func ContainersWait(waittime int, labels map[string]string, filterServices ...st
 				allHealthy = false
 			}
 
-			// Log status changes and periodic updates under DDEV_DEBUG
+			// Status changes are routine (DDEV_VERBOSE); a stall is what DDEV_DEBUG should surface.
 			currentStatus := fmt.Sprintf("%d/%d healthy", healthyCount, totalCount)
 			elapsed := time.Since(startTime).Round(time.Millisecond)
 			if currentStatus != lastStatus {
-				util.Debug("ContainersWait: status changed to '%s' after %v", currentStatus, elapsed)
+				util.Verbose("ContainersWait: status changed to '%s' after %v", currentStatus, elapsed)
 				lastStatus = currentStatus
 				lastLogTime = time.Now()
 			} else if time.Since(lastLogTime) >= 5*time.Second {
@@ -1267,7 +1267,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return err
 	}
 
-	util.Debug("Copied %s:%s into %s in %v", srcPath, containerName, dstPath, time.Since(startTime))
+	util.Verbose("Copied %s:%s into %s in %v", srcPath, containerName, dstPath, time.Since(startTime))
 	return nil
 }
 

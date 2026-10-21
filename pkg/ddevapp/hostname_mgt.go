@@ -23,11 +23,6 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
-	if !globalconfig.IsInteractive() {
-		util.Warning("Not trying to add hostnames to hosts file because DDEV_NONINTERACTIVE=true")
-		return nil
-	}
-
 	// Each ddev-hostname run rewrites the whole hosts file, so concurrent runs can drop entries.
 	// Locked only before the first edit, so starts that resolve through DNS don't queue for it.
 	lock, unlock := lazyHostsFileLock()
@@ -63,6 +58,10 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 			util.Warning("DDEV cannot add unresolvable hostnames like `%s` to your hosts file.\nSee docs for more info, https://docs.ddev.com/en/stable/users/configuration/config/#additional_hostnames", name)
 			continue
 		}
+		if !globalconfig.IsInteractive() {
+			util.Warning("The hostname %s is not currently resolvable; not adding it to the hosts file because DDEV_NONINTERACTIVE=true", name)
+			continue
+		}
 		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
 		lock()
 		out, err := hostname.ElevateToAddHostEntry(name, dockerIP)
@@ -82,7 +81,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 // where needed.
 func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 	if !globalconfig.IsInteractive() {
-		util.Warning("Not trying to remove hostnames from hosts file because DDEV_NONINTERACTIVE=true")
+		util.Verbose("Not trying to remove hostnames from hosts file because DDEV_NONINTERACTIVE=true")
 		return nil
 	}
 

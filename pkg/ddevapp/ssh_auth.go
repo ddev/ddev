@@ -150,7 +150,7 @@ func FullRenderedSSHAuthComposeYAMLPath() string {
 func (app *DdevApp) EnsureSSHAgentContainer() error {
 	RunUpgradeCheck()
 
-	util.Debug("Ensuring ddev-ssh-agent container is running with the current image")
+	util.Verbose("Ensuring ddev-ssh-agent container is running with the current image")
 	// An unusable upstream must not block projects from starting.
 	upstream, err := SSHAgentUpstreamSocket()
 	if err != nil {
