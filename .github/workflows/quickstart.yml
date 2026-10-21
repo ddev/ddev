@@ -33,7 +33,7 @@ permissions:
 jobs:
   build:
     name: Docs Quickstart test
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # 90 was already tight for the quickstart-test suite alone; the "Wait for
     # pushed images" step can now add up to ~40 more minutes (see
     # containers/wait-for-images.sh) before the suite even starts.

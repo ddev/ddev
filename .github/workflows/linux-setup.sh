@@ -8,14 +8,36 @@ set -x
 
 DDEV_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
+# We install nothing from the runner image's Microsoft repo, and an outage
+# there fails `apt-get update`.
+sudo rm -f /etc/apt/sources.list.d/microsoft-prod.*
+
+# The runner image pins an old Docker and removes Docker's apt repo; install
+# the latest docker-ce the way we tell users to, so CI sees new Docker
+# releases (and their breakage) as soon as users do.
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt-get update -qq >/dev/null
+sudo apt-get install -y -qq build-essential expect libnss3-tools libcurl4-gnutls-dev postgresql-client >/dev/null
+sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin >/dev/null
+# The upgrade restarts dockerd
+timeout 120 bash -c 'until docker info >/dev/null 2>&1; do sleep 2; done'
+
 if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set +x
   echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
   set -x
 fi
-
-sudo apt-get update -qq >/dev/null
-sudo apt-get install -y -qq build-essential expect libnss3-tools libcurl4-gnutls-dev postgresql-client >/dev/null
 
 curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
   | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \

@@ -28,7 +28,7 @@ jobs:
   # Makefile and with image-configs.sh.
   variants:
     name: Read the db variant matrix
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       matrix: ${{ steps.variants.outputs.matrix }}
       multi_arch_images: ${{ steps.variants.outputs.multi_arch_images }}
@@ -90,7 +90,7 @@ jobs:
       fail-fast: false
       matrix:
         build: ${{ fromJson(needs.variants.outputs.matrix) }}
-    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     steps:
       - name: Determine if multi-arch build
         id: meta
@@ -182,7 +182,7 @@ jobs:
   create-manifests:
     name: create multi-arch db manifests
     needs: [variants, build-db-arch]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       MULTI_ARCH_IMAGES: ${{ needs.variants.outputs.multi_arch_images }}
       ALL_REPOS: ${{ needs.variants.outputs.all_repos }}

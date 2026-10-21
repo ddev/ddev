@@ -39,7 +39,7 @@ jobs:
   # matching versionconstants.go.
   resolve-tag:
     name: Resolve the tag to push
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
       alias: ${{ steps.tag.outputs.alias }}
@@ -87,7 +87,7 @@ jobs:
       matrix:
         arch: [amd64, arm64]
         image: ['${{ github.event.inputs.image }}']
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     outputs:
       multi_arch: ${{ steps.meta.outputs.multi_arch }}
     steps:
@@ -177,7 +177,7 @@ jobs:
   create-manifests:
     name: create multi-arch manifest
     needs: [resolve-tag, build-and-push]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     if: ${{ needs.build-and-push.outputs.multi_arch == 'true' }}
     env:
       TAG: ${{ needs.resolve-tag.outputs.tag }}

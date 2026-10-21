@@ -9,7 +9,7 @@ on:
 
 jobs:
   determine-test-eligibility:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       should_skip: ${{ steps.check.outputs.should_skip }}
     steps:

@@ -45,7 +45,7 @@ permissions:
 jobs:
   detect:
     name: Detect changed images
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       build_matrix: ${{ steps.detect.outputs.build_matrix }}
       manifest_matrix: ${{ steps.detect.outputs.manifest_matrix }}
@@ -198,7 +198,7 @@ jobs:
     name: "Approve: build and push image(s) from this fork PR"
     needs: detect
     if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true' && needs.detect.outputs.is_authorized == 'false'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: image-push
     steps:
       - name: Record approval
@@ -220,7 +220,7 @@ jobs:
       fail-fast: false
       matrix:
         build: ${{ fromJson(needs.detect.outputs.build_matrix) }}
-    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     permissions:
       contents: read
     steps:
@@ -277,7 +277,7 @@ jobs:
       fail-fast: false
       matrix:
         build: ${{ fromJson(needs.detect.outputs.build_matrix) }}
-    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -323,7 +323,7 @@ jobs:
       fail-fast: false
       matrix:
         manifest: ${{ fromJson(needs.detect.outputs.manifest_matrix) }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     steps:
@@ -448,7 +448,7 @@ jobs:
     name: Comment on the pull request
     needs: [detect, create-manifests]
     if: github.event_name == 'pull_request' && needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'false'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read

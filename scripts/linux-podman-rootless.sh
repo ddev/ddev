@@ -126,6 +126,12 @@ podman_bin_dir() {
   dirname "${podman_bin}"
 }
 
+# `podman --version` answers before podman sets up its storage, unlike `podman
+# version`, so it still works while a broken storage.conf is what is being fixed.
+podman_major_version() {
+  podman --version 2>/dev/null | awk '{split($3, v, "."); print v[1]}' || true
+}
+
 podman_is_brew() {
   case "$(command -v podman 2>/dev/null)" in
     "${BREW_PREFIX}"/*) return 0 ;;
@@ -506,24 +512,38 @@ write_containers_conf() {
   # directory selects a wrong-version netavark, or none at all.
 }
 
-# Only worth writing where something already turned the fast path off: native
-# rootless overlay (kernel 5.13+) is podman's own default, and a fuse-overlayfs
-# mount_program is what disables it.
+# Only worth writing to undo a system storage.conf: a fuse-overlayfs
+# mount_program turns off native rootless overlay (kernel 5.13+, podman's own
+# default), and a graphroot/runroot misdirects podman 6 (see below). Podman reads
+# only the first main storage.conf it finds, and the user's comes first, so any
+# user file, even this minimal one, shields podman from the system file.
 # https://github.com/containers/podman/blob/main/docs/tutorials/performance.md#choosing-a-storage-driver
 write_storage_conf() {
-  local f
+  local f override=0 podman_major
+  [ -f ~/.config/containers/storage.conf ] && return 0
+  podman_major="$(podman_major_version)"
   for f in /usr/share/containers/storage.conf /etc/containers/storage.conf; do
     [ -f "${f}" ] || continue
-    grep -Eq '^[[:space:]]*mount_program[[:space:]]*=' "${f}" || continue
-    step "Overriding the ${f} fuse-overlayfs mount_program"
-    mkdir -p ~/.config/containers
-    cat > ~/.config/containers/storage.conf <<'EOF'
+    if grep -Eq '^[[:space:]]*mount_program[[:space:]]*=' "${f}"; then
+      step "Overriding the ${f} fuse-overlayfs mount_program"
+      override=1
+    fi
+    # Podman 6 applies a system graphroot/runroot to rootless users too, so a
+    # distro podman 5's storage.conf (Ubuntu 26.04) sends Homebrew's podman 6
+    # to /var/lib/containers/storage, which it cannot write.
+    if [ "${podman_major:-0}" -ge 6 ] 2>/dev/null &&
+      grep -Eq '^[[:space:]]*(graphroot|runroot)[[:space:]]*=' "${f}"; then
+      step "Overriding the ${f} graphroot/runroot"
+      override=1
+    fi
+  done
+  [ "${override}" -eq 0 ] && return 0
+
+  mkdir -p ~/.config/containers
+  cat > ~/.config/containers/storage.conf <<'EOS'
 [storage]
 driver = "overlay"
-EOF
-    return 0
-  done
-  return 0
+EOS
 }
 
 install_policy_json() {
@@ -549,7 +569,7 @@ fix_registries_conf() {
   [ -f /etc/containers/registries.conf ] || return 0
   grep -q '^[[:space:]]*\[registries' /etc/containers/registries.conf || return 0
   local podman_major
-  podman_major="$(podman version --format '{{.Client.Version}}' 2>/dev/null | cut -d. -f1)"
+  podman_major="$(podman_major_version)"
   [ "${podman_major:-0}" -ge 6 ] 2>/dev/null || return 0
 
   if [ "${CI:-}" != "true" ]; then
@@ -787,7 +807,7 @@ check_helper_versions() {
   # Explicit pairing check, for distro installs with no bundled helpers next to
   # the podman binary. Only skew is a problem, not the paths themselves.
   local podman_major netavark_major
-  podman_major="$(podman version --format '{{.Client.Version}}' 2>/dev/null | cut -d. -f1)"
+  podman_major="$(podman_major_version)"
   netavark_major="$(printf '%s' "${netavark_ver}" | awk '{print $2}' | cut -d. -f1)"
   if [ -n "${podman_major}" ] && [ -n "${netavark_major}" ] 2>/dev/null; then
     if [ "${podman_major}" -ge 6 ] && [ "${netavark_major}" -lt 2 ]; then

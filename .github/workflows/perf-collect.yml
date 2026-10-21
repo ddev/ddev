@@ -42,7 +42,7 @@ concurrency:
 
 jobs:
   collect:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # continue-on-error so a missing BUILDKITE_API_TOKEN vault item doesn't turn
       # every nightly run red before the one-time setup below is done. collect.js
