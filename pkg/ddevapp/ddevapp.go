@@ -1190,16 +1190,23 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 // export leaves no partial dump and keeps any earlier one. A dumpFile that is
 // not a regular file is written directly.
 //
-// A path under /dev, like /dev/stdout, can resolve to a regular file the shell
-// redirected to, which it has already truncated or opened for append, so it
-// is appended to rather than replaced.
+// /dev/stdout, /dev/stderr, and /dev/fd/N can resolve to a file the shell
+// redirected to and already truncated or opened for append, so they are
+// written through ddev's own stdout or stderr, or opened for append.
 func createDumpFile(dumpFile string) (f *os.File, finish func(ok bool) error, err error) {
-	if strings.HasPrefix(dumpFile, "/dev/") {
-		f, err = os.OpenFile(dumpFile, os.O_WRONLY|os.O_APPEND, 0)
-		if err != nil {
-			return nil, nil, err
+	if !nodeps.IsWindows() {
+		switch {
+		case dumpFile == "/dev/stdout":
+			return os.Stdout, func(bool) error { return nil }, nil
+		case dumpFile == "/dev/stderr":
+			return os.Stderr, func(bool) error { return nil }, nil
+		case strings.HasPrefix(dumpFile, "/dev/fd/"):
+			f, err = os.OpenFile(dumpFile, os.O_WRONLY|os.O_APPEND, 0)
+			if err != nil {
+				return nil, nil, err
+			}
+			return f, func(bool) error { return f.Close() }, nil
 		}
-		return f, func(bool) error { return f.Close() }, nil
 	}
 	target := dumpFile
 	if resolved, err := filepath.EvalSymlinks(dumpFile); err == nil {

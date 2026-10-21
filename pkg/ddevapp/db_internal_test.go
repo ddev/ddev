@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
@@ -119,4 +120,27 @@ func TestCreateDumpFileDevPath(t *testing.T) {
 	entries, err := os.ReadDir(filepath.Dir(out))
 	require.NoError(t, err)
 	require.Len(t, entries, 1)
+}
+
+// TestCreateDumpFileUnderDev checks that a regular file elsewhere under /dev
+// is created or replaced like any other dump file.
+func TestCreateDumpFileUnderDev(t *testing.T) {
+	if !fileutil.IsDirectory("/dev/shm") {
+		t.Skip("/dev/shm is not available")
+	}
+	out, err := os.MkdirTemp("/dev/shm", "ddev-test")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(out) })
+	out = filepath.Join(out, "db.sql")
+
+	for _, want := range []string{"first\n", "second\n"} {
+		f, finish, err := createDumpFile(out)
+		require.NoError(t, err)
+		_, err = f.WriteString(want)
+		require.NoError(t, err)
+		require.NoError(t, finish(true))
+		content, err := os.ReadFile(out)
+		require.NoError(t, err)
+		require.Equal(t, want, string(content))
+	}
 }
