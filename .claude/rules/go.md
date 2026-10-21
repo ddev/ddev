@@ -17,20 +17,19 @@ filesystem — file paths, directory listings, anything passed to `os.*`. Use
 a Docker container, URLs, embedded and import paths. Using `path`, or a manual
 `"/"` join, for a host path silently produces a wrong path on Windows.
 
-**Line endings.** Anything written or edited on Windows, or produced by a
-Windows tool, can be CRLF. When parsing command output, file contents, or
-config values, trim `\r` explicitly — `strings.Trim(s, "\r\n")`, not just
-`"\n"` — and never hardcode byte or rune offsets, split counts, or substring
-lengths that assume a fixed line-ending width. `pkg/ddevapp/snapshot.go`,
-`pkg/ddevapp/addons.go`, and `pkg/nodeps/wsl.go` have the established pattern.
+**Line endings.** Windows tools can produce CRLF. When removing line endings
+from command output or text files, handle both `\r` and `\n`, for example
+`strings.TrimRight(s, "\r\n")` for trailing line endings. Preserve other
+whitespace and file contents when they are significant. Avoid offsets or
+substring lengths that assume a fixed line-ending width.
 
 When a change builds a host path or parses text by offset, check it against
 both rules before moving on.
 
 ## Comments
 
-The rules and the length budget in `.claude/rules/comments.md` apply here
-unchanged. Two Go specifics:
+The rules and the length budget in `AGENTS.md` apply here unchanged. Two Go
+specifics:
 
 Blank lines inside a doc comment are the normal way to keep a long one
 readable, but not a license to exceed the eight-line budget.

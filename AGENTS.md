@@ -1,9 +1,6 @@
 # AGENTS.md
 
-Guidance for AI agents working on the DDEV core codebase. This is the
-canonical file: Claude Code reads it directly, and
-`.github/copilot-instructions.md` is a symlink to it. Edit this file, not
-that one.
+Guidance for AI agents working on the DDEV core codebase.
 
 DDEV runs local web development environments for PHP and Node.js in Docker
 containers. For developer documentation see
@@ -12,8 +9,8 @@ rendered at [docs.ddev.com](https://docs.ddev.com/en/stable/developers/).
 
 ## Where the rest of the guidance lives
 
-Read the file that matches what you are touching. Claude Code loads these on
-its own; other agents should open them directly.
+Read the file that matches what you are touching. Claude Code loads the rules
+on its own; other agents should open them directly.
 
 | Working on | Read |
 | --- | --- |
@@ -22,47 +19,34 @@ its own; other agents should open them directly.
 | Apache/nginx config or templates | `.claude/rules/webserver-config.md` |
 | `pkg/tui` (`ddev tui`) | `.claude/rules/tui.md` |
 | A commit, PR, or issue | `.claude/skills/ddev-commit/SKILL.md` |
-| Any comment, in any file | `.claude/rules/comments.md` |
 
-Fetch files from GitHub through `raw.githubusercontent.com`; a
-`github.com/.../blob/...` page wraps the file in markup that costs tokens and
-can be summarized instead of read. DDEV's
+Fetch GitHub files through `raw.githubusercontent.com`, not
+`github.com/.../blob/...` pages, which wrap the file in markup. DDEV's
 [organization-wide patterns](https://raw.githubusercontent.com/ddev/.github/main/AGENTS.md)
-mostly restate this file, which **wins where they differ** — it is stricter
-about never pushing.
+mostly restate this file, which **wins where they differ**.
 
 ## Claude Code automation
 
-<!--
-Maintainer note, free because block-level HTML comments are stripped before
-this file reaches Claude's context: anything the harness can enforce belongs in
-.claude/settings.json, not in prose here. See .claude/README.md.
--->
+`.claude/settings.json` applies only to Claude Code; other agents follow the
+rules below by hand. With it:
 
-The harness already enforces several of the rules elsewhere in this file, so
-Claude Code should treat them as facts about the environment rather than
-reminders to restate or re-verify by hand:
-
-- `make staticrequired` runs automatically before every `git commit`.
-- `git push`, `docker push`, `go build`, and unsetting `GOTEST_SHORT` are
-  denied outright.
-- `GOTEST_SHORT=true` and `DDEV_NO_INSTRUMENTATION=true` are preset for every
-  command. Never run the full matrix locally, it is too slow.
-- `DDEV_RUN_TEST_ANYWAY=true` and the opt-in test switches CI sets
-  (`DDEV_RUN_DOWNLOAD_DDEV_TEST`, `DDEV_TEST_SHARE_CMD`,
-  `DDEV_TEST_OUTSIDE_HOME`) are preset too, so any test you name with `-run`
-  runs, against a single test site, instead of skipping.
-- Editing a `.go` or `.md` file formats it automatically.
-- `.gotmp/bin/<os>_<arch>` is already first on PATH, so the binary you just
-  built is what runs — no need to adjust PATH yourself.
-
-`.claude/rules/` files load themselves when you read a file they cover, so
-there is no need to open them by hand. Run `/ddev-commit` before writing a
-commit message, PR, or issue.
+- Every test variable in the Testing table below is preset.
+- Editing a `.go` file runs `make golangci-lint-fix` on its package, which can
+  change other files there. Editing a `.md` file lints and fixes that file.
+- Common forms of `git push`, `docker push`, `go build`, and clearing
+  `GOTEST_SHORT` are denied; the rules below still apply to any other form.
+- The PATH from `.envrc`, with the built `ddev` and the docs tools, applies to
+  every Bash call.
 
 ## Building
 
-**Always use `make`, never `go build` directly.**
+**Always use `make`, never `go build` directly.** `make` injects the version
+through `-ldflags`, refreshes the image tags the binary references, and puts
+both `ddev` and `ddev-hostname` in `.gotmp/bin/<os>_<arch>`. A bare `go build`
+leaves a binary without those in the current directory while the one on PATH
+stays stale. To check only that code compiles, run
+`go test -run '^$' ./pkg/<package>`, which compiles the package and its tests
+without running any.
 
 ```bash
 make                 # Host OS/arch. Output: .gotmp/bin/<os>_<arch>/ddev
@@ -84,9 +68,10 @@ make testcmd TESTARGS="-run TestName"     # Command tests
 make quickstart-test                      # Builds, then the Bats docs tests
 ```
 
-**Run only the tests relevant to your change.** Do not run `go test ./...` or
-`make test` to verify one thing — the suite is slow and broad, and CI covers
-the rest.
+**Run only the tests relevant to your change,** with `GOTEST_SHORT=true` and
+`DDEV_NO_INSTRUMENTATION=true`. Never clear `GOTEST_SHORT`, and do not run
+`go test ./...` or `make test` to verify one thing — the suite is slow and
+broad, and CI covers the rest.
 
 Integration tests in `pkg/ddevapp/` and `cmd/` start real projects and need
 Docker; without it they fail rather than skip. `go test -short` does nothing
@@ -97,13 +82,17 @@ here, since no test in this repo calls `testing.Short()`.
 | `DDEV_DEBUG=true` | Raise ddev's log level to Debug, so the commands it issues and Docker status changes are printed |
 | `GOTEST_SHORT=<any value>` | Cut the integration tests to a single test site. An integer picks which one, so `16` is drupal11; anything else uses the first. CI uses `16`, and leaves it unset only for the tests `.github/workflows/all-project-types-tests.sh` finds |
 | `DDEV_RUN_TEST_ANYWAY=true` | Run tests that would skip under `GOTEST_SHORT` (`testcommon.SkipIfGotestShort`) or on a platform where they are unreliable |
+| `DDEV_RUN_DOWNLOAD_DDEV_TEST`, `DDEV_TEST_SHARE_CMD`, `DDEV_TEST_OUTSIDE_HOME` | Set to `true` to opt in to tests of live downloads, sharing, and paths outside the home directory |
 | `DDEV_NO_INSTRUMENTATION=true` | Disable analytics regardless of the global config setting |
+
+Other skip conditions remain, so check the selected test's prerequisites.
 
 ## Linting
 
-**Run `make staticrequired` before committing.** It runs golangci-lint,
-markdownlint, zensical, and an image-tag check, and all must pass.
-
+**`make staticrequired` must pass before every commit, including an amend.**
+It runs golangci-lint, markdownlint, zensical, and an image-tag check. Read its
+full output, fix what it reports, and rerun it; the commit skill has the
+details.
 `make golangci-lint-fix` and `make markdownlint-fix` auto-fix what those two
 only report. `scripts/install-dev-tools.sh` installs the docs tooling; `make`
 finds it without direnv.
@@ -126,15 +115,8 @@ are not:
 - Configuration is `.ddev/config.yaml` per project and
   `~/.ddev/global_config.yaml` globally.
 
-## Go environment
-
-Go 1.27 or newer, per `go.mod`. Modules with vendored dependencies checked into
-`vendor/`, CGO disabled by default.
-
 ## Coding style
 
-- `.golangci.yml` enables errcheck, govet, ineffassign, modernize, revive,
-  staticcheck, and whitespace, plus `gofmt` as a formatter.
 - **Never leave trailing whitespace.** Blank lines must be completely empty.
 - Match the file's existing indentation and line-ending style.
 - **Prefer `require` over `assert`** in tests.
@@ -144,13 +126,20 @@ Go 1.27 or newer, per `go.mod`. Modules with vendored dependencies checked into
 - Make surgical, minimal changes that maintain compatibility.
 - Never commit secrets. Amplitude API keys are injected at build time.
 
-### Comments
+## Comments
 
-A comment earns its place only by saying something the code does not — why,
-not what — within a three-line budget inside a function or block (eight for a
-file header or an exported doc comment); longer reasoning belongs in the
-commit message. Applies in every language here. See
-`.claude/rules/comments.md` for the full rule set and a worked example.
+A comment says what the code does not: why, not what. **At most three lines
+inside a function or block, and eight for a file header or exported doc
+comment**; longer reasoning belongs in the commit message.
+
+- Do not restate the code or the function name, or explain standard language
+  or tool behavior
+- Explain a thing once, not at every call site, and not again when a linked
+  issue or commit message already does
+- Describe what is true now, not what changed: "moved from X" goes stale
+
+Reread every comment you wrote before finishing, and cut what breaks these
+rules.
 
 ## English language usage
 
@@ -161,46 +150,39 @@ comments.
 `genuine`, `genuinely`, `honest`, `honestly`, `truly`, `really` (as an
 intensifier), `perfect`, `perfectly`, `robust`, `powerful`, `effortless`,
 `production-ready`, `delve`, `elevate`, `unleash`, `to be honest`, `in all
-honesty`, `for real`.
-
-They assert sincerity or importance instead of demonstrating it: `genuinely
-useful` is not more useful than `useful`. Delete the word, and if that changes
-the meaning, the claim needed evidence rather than an intensifier. The urge is
-strongest when summarizing your own work.
+honesty`, `for real`. They assert importance instead of demonstrating it:
+delete the word, and if that changes the meaning, the claim needed evidence.
 
 - Do not compliment, flatter, or validate the reader (`You're absolutely
-  right`, `Great question`, `Perfect`, `Excellent`), and do not open by praising
-  the request. Lead with the substance.
+  right`, `Great question`, `Perfect`, `Excellent`). Lead with the substance.
 - Report results plainly. If something failed, was skipped, or is unverified,
   say so.
 
 ## Git workflow
 
-**Commit locally, never publish.** Committing whenever asked is expected, as is
-creating branches and amending local commits. **Never run `git push` or
-`docker push`, under any circumstances** — not when a PR is already open and
-waiting on the commits, and not when a CI run or a
-`raw.githubusercontent.com` URL depends on it. Do not offer to, either: finish
-at the commit, report which commits are unpushed, and say plainly when a next
-step needs a push, which is always the maintainer's action.
+**Commit locally, never publish.** Committing, branching, and amending local
+commits are expected. **Never run `git push` or `docker push`**, even when an
+open PR, a CI run, or a `raw.githubusercontent.com` URL waits on it, and do not
+offer to. Finish at the commit, report which commits are unpushed, and say when
+a next step needs the maintainer to push.
 
-Branch names are `YYYYMMDD_<username>_<short_description>`, for example
-`20250108_rfay_fix_networking`. Create one from upstream rather than from a
-possibly-stale local `main`, and compare against the same base:
+When creating a branch, use `YYYYMMDD_<username>_<short_description>`, for
+example `20250108_rfay_fix_networking`. Create one from upstream rather than
+from a possibly-stale local `main`, and compare against the same base:
 
 ```bash
 git fetch upstream && git checkout -b <branch_name> upstream/main --no-track
 git diff upstream/main...HEAD
 ```
 
-If there is no `upstream` remote, fall back to `origin/main`.
+If there is no `upstream` remote, fetch `origin` and use `origin/main`.
+Keep an existing task branch and preserve the user's uncommitted changes.
 
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/):
 `<type>[optional scope][optional !]: <description>[, fixes #<issue>]`, where
 type is one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`,
-`refactor`, `style`, or `test`. Message discipline, the PR and issue templates,
-and how to drive `gh` are in `.claude/skills/ddev-commit/SKILL.md`. Read it
-before writing any of them.
+`refactor`, `style`, or `test`. Read the commit skill before writing a commit
+message, PR, or issue.
 
 ## Environment
 

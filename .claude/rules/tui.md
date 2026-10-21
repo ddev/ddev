@@ -5,10 +5,11 @@ paths:
 
 # Check TUI changes in tmux
 
-Tests don't show how a key behaves on a real screen, so run the built binary
-in tmux (`send-keys`, `capture-pane`) against a test project, with
-`DDEV_XDG_CONFIG_HOME` set so no real project is listed.
+For interactive behavior or layout changes, run the built binary's `ddev tui`
+command in tmux (`send-keys`, `capture-pane`) against a test project, with
+`DDEV_XDG_CONFIG_HOME` pointing to an isolated directory. Register only the
+test project there. Report if tmux or Docker is unavailable.
 
-Never let it open the user's browser: start the session with
-`env PATH=<dir with a logging fake xdg-open>:$PATH ddev`, since tmux ignores
-`-e PATH=`, and check the fake's log.
+For actions that launch a browser, put a logging fake of the platform's browser
+opener (`xdg-open` on Linux, `open` on macOS) first on PATH inside the tmux
+command, and check its log. Avoid launching the user's browser.

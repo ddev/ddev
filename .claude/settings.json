@@ -43,6 +43,8 @@
       "Bash(docker push *)",
       "Bash(go build *)",
       "Bash(GOTEST_SHORT= *)",
+      "Bash(env -u GOTEST_SHORT *)",
+      "Bash(env --unset=GOTEST_SHORT *)",
       "Bash(unset GOTEST_SHORT*)",
       "Bash(find * -delete)",
       "Bash(find * -delete *)",
@@ -55,19 +57,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "if": "Bash(git commit *)",
-            "command": "make -C \"$CLAUDE_PROJECT_DIR\" staticrequired"
+            "command": "bash",
+            "args": [
+              "-c",
+              "cd \"$CLAUDE_PROJECT_DIR\" && source .envrc && printf 'export PATH=%q\\n' \"$PATH\" >> \"$CLAUDE_ENV_FILE\""
+            ]
           }
         ]
       }
@@ -78,7 +72,23 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-edited-file.sh"
+            "if": "Edit(/**/*.go)",
+            "command": "f=$(jq -er .tool_input.file_path) || exit 1; make -C \"$CLAUDE_PROJECT_DIR\" golangci-lint-fix DDEV_GO_FILES=\"${f%/*}\" >&2"
+          },
+          {
+            "type": "command",
+            "if": "Write(/**/*.go)",
+            "command": "f=$(jq -er .tool_input.file_path) || exit 1; make -C \"$CLAUDE_PROJECT_DIR\" golangci-lint-fix DDEV_GO_FILES=\"${f%/*}\" >&2"
+          },
+          {
+            "type": "command",
+            "if": "Edit(/**/*.md)",
+            "command": "f=$(jq -er .tool_input.file_path) || exit 1; make -C \"$CLAUDE_PROJECT_DIR\" markdownlint-fix DDEV_MD_FILES=\"$f\" >&2"
+          },
+          {
+            "type": "command",
+            "if": "Write(/**/*.md)",
+            "command": "f=$(jq -er .tool_input.file_path) || exit 1; make -C \"$CLAUDE_PROJECT_DIR\" markdownlint-fix DDEV_MD_FILES=\"$f\" >&2"
           }
         ]
       }
