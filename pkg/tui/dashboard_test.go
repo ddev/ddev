@@ -113,7 +113,7 @@ func TestDashboardStates(t *testing.T) {
 	require.Equal(t, "? more • q quit", strings.TrimSpace(lastLine(screen(empty))), "and no keys that act on projects")
 
 	one := send(t, m, projectsLoadedMsg{projects: sampleProjects()[1:2], warning: "Project 'gone' was removed"})
-	require.Regexp(t, `(?m)^  1 project +$`, screen(one), "a single stopped project, none running")
+	require.Regexp(t, `(?m)^  1 project *$`, screen(one), "a single stopped project, none running")
 	require.Contains(t, screen(one), "Project 'gone' was removed", "what ddevapp logged while loading shows in the status line")
 	require.False(t, one.statusIsErr, "as a message that asks nothing of the user")
 	require.Empty(t, send(t, one, statusExpiredMsg{id: one.statusID}).status, "and clears itself")
@@ -228,7 +228,7 @@ func TestAllStoppedHint(t *testing.T) {
 	}
 	m := newModel(t, 120, 24, stopped...)
 	require.Contains(t, screen(m), "All projects are stopped. Press s to start the selected one, a to start all.")
-	require.Regexp(t, `\n  3 projects +\n`, screen(m), "no running count when none run")
+	require.Regexp(t, `\n  3 projects *\n`, screen(m), "no running count when none run")
 
 	// A refresh can leave an applied filter without matches.
 	m = keys(t, typeText(t, keys(t, newModel(t, 120, 24, sampleProjects()...), "/"), "running"), "enter")
@@ -243,7 +243,7 @@ func TestListScrolls(t *testing.T) {
 		projects = append(projects, ProjectInfo{Name: fmt.Sprintf("p%02d", i), Status: ddevapp.SiteStopped, Type: "php", AppRoot: fmt.Sprintf("/home/user/p%02d", i)})
 	}
 	m := newModel(t, 80, 16, projects...)
-	rows := m.dashboard.vp.Height()
+	rows := m.dashboard.height
 	require.Contains(t, screen(m), "  30 projects")
 	require.Regexp(t, `^┃+│+$`, strings.TrimSpace(listScrollbar(m)))
 
@@ -280,7 +280,7 @@ func TestListScrolls(t *testing.T) {
 func listScrollbar(m AppModel) string {
 	lines := strings.Split(screen(m), "\n")
 	var bar []rune
-	for _, line := range lines[3 : 3+m.dashboard.vp.Height()] {
+	for _, line := range lines[3 : 3+m.dashboard.height] {
 		r := []rune(line)
 		bar = append(bar, r[len(r)-1])
 	}

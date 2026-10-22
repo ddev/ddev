@@ -81,7 +81,10 @@ func (m AppModel) Init() tea.Cmd {
 func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	wasBusy := m.busy()
 	m, cmd := m.update(msg)
-	m.layout()
+	// Only what View renders shows the spinner, and a frame adds no line.
+	if _, tick := msg.(spinner.TickMsg); !tick {
+		m.layout()
+	}
 	if !wasBusy && m.busy() {
 		cmd = tea.Batch(cmd, m.spinner.Tick)
 	}
@@ -246,7 +249,7 @@ func (m AppModel) busy() bool {
 
 // streaming reports whether the logs are still followed.
 func (m AppModel) streaming() bool {
-	return m.view == viewStream && !m.stream.done
+	return m.view == viewStream && !m.stream.done && m.stream.follow
 }
 
 // reload refreshes the project list, and the detail when it is showing or

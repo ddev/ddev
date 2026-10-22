@@ -108,10 +108,7 @@ func (s *streamView) append(lines ...string) {
 		s.rewrap()
 		return
 	}
-	s.vp.SetContentLines(s.wrapped)
-	if s.follow {
-		s.vp.GotoBottom()
-	}
+	s.setContent()
 }
 
 func (s *streamView) resize(width, height int) {
@@ -134,7 +131,20 @@ func (s *streamView) rewrap() {
 	for _, line := range s.lines {
 		s.wrapped = append(s.wrapped, s.wrap(line)...)
 	}
-	s.vp.SetContentLines(s.wrapped)
+	s.setContent()
+}
+
+// blankLines backs the log viewport's lines. The viewport never writes to a
+// line without a line break, so every log view shares it.
+var blankLines []string
+
+// setContent gives the viewport, which only scrolls, a blank line for each
+// wrapped one, since it measures every line it gets on every batch.
+func (s *streamView) setContent() {
+	if len(s.wrapped) > len(blankLines) {
+		blankLines = make([]string, 2*len(s.wrapped))
+	}
+	s.vp.SetContentLines(blankLines[:len(s.wrapped)])
 	if s.follow {
 		s.vp.GotoBottom()
 	}
@@ -167,7 +177,7 @@ func (s *streamView) wrap(line string) []string {
 // Other control characters and escape sequences, such as the cursor
 // movement of progress output, would draw outside the line.
 func cleanLine(line string) string {
-	line = strings.ReplaceAll(line, "\t", "    ")
+	line = expandTabs(line)
 	if i := strings.LastIndexByte(line, '\r'); i >= 0 {
 		line = line[i+1:]
 	}

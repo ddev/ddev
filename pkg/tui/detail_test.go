@@ -168,6 +168,16 @@ func TestDetailXdebugKeepsItsPlace(t *testing.T) {
 	require.Equal(t, 1, changed, "only the Xdebug line changes when its state arrives")
 }
 
+// A tab is laid out as the four spaces it is shown as, so it cannot push
+// the right column past the width.
+func TestDetailTab(t *testing.T) {
+	tab, spaces := sampleDetail(), sampleDetail()
+	tab.Docroot, spaces.Docroot = "web\tpublic", "web    public"
+	for w := 20; w <= 90; w++ {
+		require.Equal(t, screen(detailModel(t, w, 30, spaces)), screen(detailModel(t, w, 30, tab)), "width %d", w)
+	}
+}
+
 func TestDetailServicesWhenNarrow(t *testing.T) {
 	m := detailModel(t, 50, 60, sampleDetail())
 	var trimmed []string

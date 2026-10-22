@@ -49,7 +49,7 @@ func (m AppModel) helpKeys() help.KeyMap {
 // layout sizes the active view to the space between the header and footer.
 func (m *AppModel) layout() {
 	m.help.SetWidth(m.width)
-	h := m.bodyHeight()
+	h := m.bodyHeight(m.header(), m.footer())
 	// Every view keeps the last column for its scrollbar.
 	w := max(1, m.width-1)
 	switch m.view {
@@ -62,8 +62,8 @@ func (m *AppModel) layout() {
 	}
 }
 
-func (m AppModel) bodyHeight() int {
-	return max(1, m.height-lipgloss.Height(m.header())-lipgloss.Height(m.footer()))
+func (m AppModel) bodyHeight(header, footer string) int {
+	return max(1, m.height-lipgloss.Height(header)-lipgloss.Height(footer))
 }
 
 // header is the active view's title, the shared containers' health on the
@@ -75,7 +75,7 @@ func (m AppModel) header() string {
 	case viewDetail:
 		title, busy = m.detail.title(u), busy || m.detail.loading
 	case viewStream:
-		title, busy = m.stream.title(u), !m.stream.done
+		title, busy = m.stream.title(u), m.streaming()
 	}
 	if busy {
 		title += " " + u.spinner
@@ -93,7 +93,7 @@ func (m AppModel) body() string {
 	case viewDetail:
 		return m.detail.body(u)
 	case viewStream:
-		return scrollable(m.styles, m.stream.vp)
+		return scrollView(m.styles, m.stream.vp, m.stream.wrapped)
 	}
 	return m.dashboard.body(u)
 }
@@ -195,40 +195,67 @@ func (m AppModel) divider() string {
 
 // View renders the TUI on the alternate screen, cut to the window size.
 func (m AppModel) View() tea.View {
-	bodyH := m.bodyHeight()
-	body := lipgloss.NewStyle().Height(bodyH).MaxHeight(bodyH).Render(m.body())
-	content := m.header() + "\n" + body + "\n" + m.footer()
+	header, footer := m.header(), m.footer()
+	bodyH := m.bodyHeight(header, footer)
+	body := strings.Split(m.body(), "\n")
+	lines := strings.Split(header, "\n")
+	lines = append(lines, body[:min(len(body), bodyH)]...)
+	lines = append(lines, make([]string, max(0, bodyH-len(body)))...)
+	lines = append(lines, strings.Split(footer, "\n")...)
 	if m.width > 0 && m.height > 0 {
-		content = lipgloss.NewStyle().MaxWidth(m.width).MaxHeight(m.height).Render(content)
+		lines = lines[:min(len(lines), m.height)]
+		for i, line := range lines {
+			if ansi.StringWidth(line) > m.width {
+				lines[i] = ansi.Truncate(line, m.width, "")
+			}
+		}
 	}
-	v := tea.NewView(content)
+	v := tea.NewView(strings.Join(lines, "\n"))
 	v.AltScreen = true
 	v.WindowTitle = "DDEV"
 	return v
 }
 
-// scrollable renders vp with a scrollbar in the column to its right, which
-// the views keep free so that the bar appearing does not rewrap the content.
-func scrollable(s Styles, vp viewport.Model) string {
-	lines := strings.Split(vp.View(), "\n")
-	total, h := vp.TotalLineCount(), len(lines)
-	thumb, top := h, 0
-	if total > h {
-		thumb = max(1, h*h/total)
-		top = int(math.Round(vp.ScrollPercent() * float64(h-thumb)))
+// scrollView renders the lines of content that vp shows, with a scrollbar.
+func scrollView(s Styles, vp viewport.Model, content []string) string {
+	top := min(vp.YOffset(), len(content))
+	shown := content[top:min(len(content), top+vp.Height())]
+	return scrollable(s, shown, top, len(content), vp.Width(), vp.Height())
+}
+
+// scrollable renders shown, the lines from top of total lines, as height
+// lines of width with a scrollbar in the column to their right, which the
+// views keep free so that the bar appearing does not rewrap the content.
+func scrollable(s Styles, shown []string, top, total, width, height int) string {
+	thumb, thumbTop := height, 0
+	if total > height {
+		thumb = max(1, height*height/total)
+		percent := min(1, float64(top)/float64(total-height))
+		thumbTop = int(math.Round(percent * float64(height-thumb)))
 	}
-	for i, line := range lines {
+	lines := make([]string, height)
+	for i := range lines {
 		bar := " "
 		switch {
-		case total <= h:
-		case i >= top && i < top+thumb:
+		case total <= height:
+		case i >= thumbTop && i < thumbTop+thumb:
 			bar = s.Selected.Render("┃")
 		default:
 			bar = s.Muted.Render("│")
 		}
-		lines[i] = fit(line, vp.Width()) + bar
+		line := ""
+		if i < len(shown) {
+			line = expandTabs(shown[i])
+		}
+		lines[i] = fit(line, width) + bar
 	}
 	return strings.Join(lines, "\n")
+}
+
+// expandTabs turns each tab in s into four spaces, since a tab has no width
+// when measured and would make the line wider than laid out.
+func expandTabs(s string) string {
+	return strings.ReplaceAll(s, "\t", "    ")
 }
 
 // newViewport returns a viewport with the TUI's scroll keys.
