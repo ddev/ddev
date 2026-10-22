@@ -173,6 +173,86 @@ func GetMutagenConfigFile(app *DdevApp) string {
 	return ""
 }
 
+// isLinkLeaf reports whether the last component of path is a link that Mutagen
+// refuses as a sync root. Mutagen also refuses Windows junctions, which Go
+// reports as irregular files, and Readlink tells them apart from other reparse
+// points such as OneDrive placeholders.
+func isLinkLeaf(p string) bool {
+	fi, err := os.Lstat(p)
+	if err != nil {
+		return false
+	}
+	if fi.Mode()&os.ModeSymlink != 0 {
+		return true
+	}
+	if nodeps.IsWindows() && fi.Mode()&os.ModeIrregular != 0 {
+		_, err = os.Readlink(p)
+		return err == nil
+	}
+	return false
+}
+
+// mutagenHostRoot returns the host path to use as the Mutagen sync root.
+// Mutagen refuses a root that is itself a link, so that case is resolved
+// to its target; any other path is returned unchanged.
+func mutagenHostRoot(appRoot string) string {
+	resolved := appRoot
+	// Bound the loop so a link cycle falls back to appRoot
+	for range 16 {
+		if !isLinkLeaf(resolved) {
+			return resolved
+		}
+		target, err := os.Readlink(resolved)
+		if err != nil {
+			return appRoot
+		}
+		if !filepath.IsAbs(target) {
+			// The OS resolves a relative target from the parent's real location,
+			// so a symlinked parent has to be resolved before joining
+			dir, err := filepath.EvalSymlinks(filepath.Dir(resolved))
+			if err != nil {
+				return appRoot
+			}
+			target = filepath.Join(dir, target)
+		}
+		resolved = target
+	}
+	return appRoot
+}
+
+// mutagenSessionRootMatches reports whether the project's existing sync session
+// syncs the directory the project is in now. A session can point elsewhere when
+// a symlinked project root is repointed or replaced, or was created before the
+// symlink was resolved for Mutagen.
+func mutagenSessionRootMatches(app *DdevApp) bool {
+	_, _, session, _ := app.MutagenStatus()
+	alpha, _ := session["alpha"].(map[string]any)
+	sessionRoot, _ := alpha["path"].(string)
+	return sessionRootMatches(sessionRoot, app.AppRoot)
+}
+
+// sessionRootMatches compares a sync session's host path with appRoot. It
+// reports a match whenever it can't tell, so a session is only recreated when
+// the project's directory exists and is not the one being synced.
+func sessionRootMatches(sessionRoot string, appRoot string) bool {
+	hostRoot := mutagenHostRoot(appRoot)
+	if sessionRoot == "" || sessionRoot == hostRoot {
+		return true
+	}
+	hostFi, err := os.Stat(hostRoot)
+	if err != nil {
+		return true
+	}
+	if isLinkLeaf(sessionRoot) {
+		return false
+	}
+	sessionFi, err := os.Stat(sessionRoot)
+	if err != nil {
+		return false
+	}
+	return os.SameFile(sessionFi, hostFi)
+}
+
 // CreateOrResumeMutagenSync creates or resumes a sync session
 // It detects problems with the sync and errors if there are problems.
 // lineEnded reports whether the sync monitor's output ended the caller's line.
@@ -233,7 +313,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) (lineEnded bool, err error) {
 			return false, fmt.Errorf("mutagen requires a working docker CLI to connect to containers, but: %v\nInstall docker CLI and ensure it is in PATH, then retry", cliErr)
 		}
 		// TODO: Consider using a function to specify the Docker beta
-		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", containerRef), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
+		args := []string{"sync", "create", mutagenHostRoot(app.AppRoot), fmt.Sprintf("docker:/%s/var/www/html", containerRef), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
 		if configFile != "" {
 			args = append(args, fmt.Sprintf(`--configuration-file=%s`, configFile))
 		}
@@ -849,6 +929,8 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 	switch {
 	case configFileHashLabel != calculatedConfigFileHash:
 		return false, volumeExists, "Calculated mutagen.yml hash does not equal session label"
+	case mutagenSyncExists && !mutagenSessionRootMatches(app):
+		return false, volumeExists, "Mutagen sync session does not sync the project's current directory"
 	// If there is no volume, everything is fine, proceed.
 	case !volumeExists:
 		return true, volumeExists, "No Docker volume exists, so compatible"
@@ -1001,8 +1083,9 @@ func CheckMutagenIgnorePatterns(app *DdevApp) (issues []string, warnings []strin
 	}
 
 	// Find all node_modules directories in the project
-	nodeModulesDirs := findNodeModulesDirectories(app.AppRoot)
-	docrootPath := filepath.Join(app.AppRoot, app.Docroot)
+	appRoot := mutagenHostRoot(app.AppRoot)
+	nodeModulesDirs := findNodeModulesDirectories(appRoot)
+	docrootPath := filepath.Join(appRoot, app.Docroot)
 
 	if len(nodeModulesDirs) > 0 {
 		// Check if any node_modules pattern is in ignore patterns
@@ -1032,7 +1115,7 @@ func CheckMutagenIgnorePatterns(app *DdevApp) (issues []string, warnings []strin
 	}
 
 	// Check for .tarballs directory (single location check)
-	tarballsPath := filepath.Join(app.AppRoot, ".tarballs")
+	tarballsPath := filepath.Join(appRoot, ".tarballs")
 	if !strings.Contains(content, ".tarballs") && fileutil.FileExists(tarballsPath) {
 		relPath, err := filepath.Rel(docrootPath, tarballsPath)
 		if err != nil {
@@ -1102,11 +1185,12 @@ func CheckLargeFilesInSync(app *DdevApp) (warnings []string) {
 
 	// Get upload_dirs - files in these directories are not synced to the container
 	// upload_dirs are relative to the docroot, not the project root
+	appRoot := mutagenHostRoot(app.AppRoot)
 	uploadDirs := app.GetUploadDirs()
 	uploadDirPaths := make(map[string]bool)
 	for _, dir := range uploadDirs {
 		// Build full path: AppRoot/Docroot/upload_dir
-		fullPath := filepath.Join(app.AppRoot, app.Docroot, dir)
+		fullPath := filepath.Join(appRoot, app.Docroot, dir)
 		uploadDirPaths[fullPath] = true
 	}
 
@@ -1117,7 +1201,7 @@ func CheckLargeFilesInSync(app *DdevApp) (warnings []string) {
 		inUploadDir bool
 	}{}
 
-	err := filepath.Walk(app.AppRoot, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(appRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Skip files we can't access
 		}
@@ -1159,7 +1243,7 @@ func CheckLargeFilesInSync(app *DdevApp) (warnings []string) {
 	// Report large files that are being synced (not in upload_dirs)
 	for _, file := range largeFiles {
 		if !file.inUploadDir {
-			relPath, err := filepath.Rel(app.AppRoot, file.path)
+			relPath, err := filepath.Rel(appRoot, file.path)
 			if err != nil {
 				relPath = file.path
 			}
