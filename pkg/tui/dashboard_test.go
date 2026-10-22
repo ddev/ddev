@@ -262,8 +262,10 @@ func TestListScrolls(t *testing.T) {
 	m = keys(t, m, "G")
 	require.Equal(t, 29, m.dashboard.cursor)
 	require.Regexp(t, `^│+┃+$`, strings.TrimSpace(listScrollbar(m)))
-	// A mouse wheel sends several arrows a notch, which overshoot the end.
-	require.Equal(t, 29, keys(t, m, "j", "j", "j").dashboard.cursor, "the selection stops at the last project")
+	wrapped := keys(t, m, "j")
+	require.Equal(t, 0, wrapped.dashboard.cursor, "the selection wraps to the first project")
+	require.Contains(t, screen(wrapped), "> p00 ")
+	require.Equal(t, 29, keys(t, wrapped, "k").dashboard.cursor, "and back to the last")
 	require.Equal(t, 2, keys(t, newModel(t, 80, 16, sampleProjects()...), "pgdown").dashboard.cursor, "pgdown reaches the last project when all fit")
 	require.Contains(t, screen(keys(t, m, "g")), "> p00 ", "the view follows the selection back up")
 	m = keys(t, m, "pgup", "pgup", "pgup", "pgup")
@@ -330,8 +332,8 @@ func TestStatusChangeKeepsOrder(t *testing.T) {
 func TestNavigation(t *testing.T) {
 	m := newModel(t, 80, 24, sampleProjects()...)
 	require.Equal(t, "beta", keys(t, m, "j").dashboard.selected().Name)
-	require.Equal(t, "gamma", keys(t, m, "down", "down", "down").dashboard.selected().Name, "the cursor stops at the last project")
-	require.Equal(t, "alpha", keys(t, m, "j", "k", "up").dashboard.selected().Name, "and at the first")
+	require.Equal(t, "alpha", keys(t, m, "down", "down", "down").dashboard.selected().Name, "the cursor wraps from the last project to the first")
+	require.Equal(t, "gamma", keys(t, m, "j", "k", "up").dashboard.selected().Name, "and from the first to the last")
 	require.Equal(t, "gamma", keys(t, m, "G").dashboard.selected().Name)
 	require.Equal(t, "alpha", keys(t, m, "G", "g").dashboard.selected().Name)
 }

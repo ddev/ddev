@@ -274,9 +274,9 @@ func (v dashboardView) update(msg tea.KeyPressMsg, k KeyMap) (dashboardView, tea
 	case key.Matches(msg, k.Refresh):
 		return v, nil, refreshAction{}
 	case key.Matches(msg, k.Up):
-		v.moveTo(v.cursor - 1)
+		v.step(-1)
 	case key.Matches(msg, k.Down):
-		v.moveTo(v.cursor + 1)
+		v.step(1)
 	case key.Matches(msg, k.Home):
 		v.moveTo(0)
 	case key.Matches(msg, k.End):
@@ -326,6 +326,13 @@ func (v dashboardView) updateFilter(msg tea.Msg) (dashboardView, tea.Cmd) {
 		v.moveTo(0)
 	}
 	return v, cmd
+}
+
+// step moves the selection a row, wrapping around at either end of the list.
+func (v *dashboardView) step(rows int) {
+	if n := len(v.visible); n > 0 {
+		v.moveTo((v.cursor + rows + n) % n)
+	}
 }
 
 // page moves the selection and the view by rows.
