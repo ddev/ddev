@@ -42,6 +42,14 @@ func TestMutagenHostRoot(t *testing.T) {
 	require.NoError(t, os.Symlink(linkRoot, chained))
 	require.Equal(t, realRoot, mutagenHostRoot(chained))
 
+	// A relative target below a symlinked parent resolves from the parent's real location
+	sitesReal := filepath.Join(tmpDir, "ext", "sites-real", "site")
+	require.NoError(t, os.MkdirAll(sitesReal, 0o755))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpDir, "ext", "projects"), 0o755))
+	require.NoError(t, os.Symlink(filepath.Join("..", "sites-real", "site"), filepath.Join(tmpDir, "ext", "projects", "site")))
+	require.NoError(t, os.Symlink(filepath.Join("ext", "projects"), filepath.Join(tmpDir, "projects")))
+	require.Equal(t, sitesReal, mutagenHostRoot(filepath.Join(tmpDir, "projects", "site")))
+
 	cycleA := filepath.Join(tmpDir, "cycle-a")
 	cycleB := filepath.Join(tmpDir, "cycle-b")
 	require.NoError(t, os.Symlink(cycleB, cycleA))

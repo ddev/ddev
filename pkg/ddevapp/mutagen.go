@@ -207,7 +207,13 @@ func mutagenHostRoot(appRoot string) string {
 			return appRoot
 		}
 		if !filepath.IsAbs(target) {
-			target = filepath.Join(filepath.Dir(resolved), target)
+			// The OS resolves a relative target from the parent's real location,
+			// so a symlinked parent has to be resolved before joining
+			dir, err := filepath.EvalSymlinks(filepath.Dir(resolved))
+			if err != nil {
+				return appRoot
+			}
+			target = filepath.Join(dir, target)
 		}
 		resolved = target
 	}
