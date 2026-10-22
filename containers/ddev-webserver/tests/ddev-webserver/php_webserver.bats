@@ -147,8 +147,11 @@ extension_is_packaged() {
 }
 
 @test "verify phpstatus endpoint for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  run -0 curl -s 127.0.0.1:$HOST_HTTP_PORT/phpstatus
+  run -0 docker exec ${CONTAINER_NAME} curl -s --fail 127.0.0.1/phpstatus
   assert_output --regexp "idle processes|php is working"
+  # Only the in-container healthcheck may reach php-fpm through /phpstatus
+  run -0 curl -s -o /dev/null -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/phpstatus
+  assert_output "403"
 }
 
 @test "verify error conditions for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
@@ -350,10 +353,10 @@ extension_is_packaged() {
     run -0 docker exec ${CONTAINER_NAME} nginx -s reload
   fi
   sleep 2
-  # Make sure we can hit /phpstatus without auth
-  run -0 curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
+  # Make sure the healthcheck can hit /phpstatus without auth
+  run -0 docker exec ${CONTAINER_NAME} curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1/phpstatus
   assert_output "200"
-  run -0 curl --fail -s http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
+  run -0 docker exec ${CONTAINER_NAME} curl --fail -s http://127.0.0.1/phpstatus
   assert_output --regexp "idle processes|php is working"
   # Make sure the auth requirement is actually working
   run curl --fail -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
