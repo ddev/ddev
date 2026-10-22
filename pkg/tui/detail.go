@@ -261,7 +261,7 @@ func (v detailView) content(s Styles, w int) string {
 	}
 	var lines []string
 	add := func(line string) {
-		lines = append(lines, ansi.Truncate(line, w, "…"))
+		lines = append(lines, ansi.Truncate(expandTabs(line), w, "…"))
 	}
 	section := func(title, note string) {
 		title = s.Section.Render(title) + note
@@ -289,7 +289,7 @@ func (v detailView) content(s Styles, w int) string {
 		label("Webserver") + value(d.WebserverType), label("Node.js") + value(d.NodeJSVersion),
 	}
 	right := []string{
-		label("Docroot") + cmp.Or(d.Docroot, "(project root)"), label("Perf mode") + perf,
+		label("Docroot") + cmp.Or(expandTabs(d.Docroot), "(project root)"), label("Perf mode") + perf,
 		label("Xdebug") + fit(value(v.xdebugText(s)), 3), label("XHProf mode") + value(d.XHProfMode),
 	}
 	leftW, rightW := 0, 0

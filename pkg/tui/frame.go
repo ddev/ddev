@@ -245,12 +245,17 @@ func scrollable(s Styles, shown []string, top, total, width, height int) string 
 		}
 		line := ""
 		if i < len(shown) {
-			// A tab, which a detail value may hold, has no width.
-			line = strings.ReplaceAll(shown[i], "\t", "    ")
+			line = expandTabs(shown[i])
 		}
 		lines[i] = fit(line, width) + bar
 	}
 	return strings.Join(lines, "\n")
+}
+
+// expandTabs turns each tab in s into four spaces, since a tab has no width
+// when measured and would make the line wider than laid out.
+func expandTabs(s string) string {
+	return strings.ReplaceAll(s, "\t", "    ")
 }
 
 // newViewport returns a viewport with the TUI's scroll keys.
