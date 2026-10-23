@@ -100,6 +100,13 @@ ENV COMPOSER_PROCESS_TIMEOUT=2000
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
+# Keep systemd's and php-fpm's postinst from resetting /var/log and /run/php
+RUN mkdir -p /etc/tmpfiles.d && \
+    ln -s /dev/null /etc/tmpfiles.d/var.conf && \
+    for v in $(yq '... comments="" | keys | .[]' /etc/php-packages.yaml); do \
+        ln -s /dev/null "/etc/tmpfiles.d/${v:0:4}.${v:4}-fpm.conf"; \
+    done
+
 RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-install-suggests -y \
     apache2 \
     file \
@@ -138,26 +145,10 @@ RUN for v in ${PHP_VERSIONS}; do \
 done
 RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 
-# Same "arbitrary UID" technique for /var/log itself: some setups (custom
-# supervisord daemons, app loggers) write files directly into /var/log, which
-# relied on /var/log being world-writable before #8379 hardened it. Rather
-# than reverting to world-writable, make the top-level directory group-0
-# writable so any per-project user (a group-0 member) can create files there,
-# without loosening perms on subdirectories that already have narrower,
-# explicit permissions (e.g. /var/log/nginx, /var/log/apache2 below).
-# This must run after the PHP-FPM installs above: installing php-fpm pulls in
-# the `systemd` package for the first time, and systemd's postinst runs a
-# global `systemd-tmpfiles --create`, which resets /var/log back to its
-# packaged 0755 root:root default (see /usr/lib/tmpfiles.d/var.conf) and
-# would silently undo this fix if applied any earlier.
-# See https://github.com/ddev/ddev/issues/8574
-RUN chgrp 0 /var/log && chmod g+rwX,o-w /var/log
-RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
-    touch /var/log/php-fpm.log && \
-    chmod ugo+rw /var/log/php-fpm.log && \
-    touch /var/log/nginx/access.log && \
-    touch /var/log/nginx/error.log && \
-    chmod -R ugo+rw /var/log/nginx/ && \
+RUN mkdir -p /etc/nginx/sites-enabled /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
+    touch /var/log/php-fpm.log /var/log/supervisord.log /var/log/nginx/access.log /var/log/nginx/error.log && \
+    chmod ugo+rw /var/log/php-fpm.log /var/log/supervisord.log && \
+    chmod -R ugo+rwX /var/log/apache2 /var/log/nginx && \
     chmod ugo+rx /usr/local/bin/* && \
     ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
@@ -177,10 +168,17 @@ RUN curl -L --fail -o /usr/local/bin/composer -sSL https://getcomposer.org/compo
 ADD ddev-php-files /
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
-RUN mkdir -p /run/php && \
-    chown www-data:www-data /run/php && chmod 755 /run/php && \
+
+# Writable for the per-project user, a group-0 member, so nothing is chowned
+# per project; run dirs stay owned by www-data for the image run as uid 33.
+# Statoverrides stop ca-certificates and nginx-common resetting their dirs on upgrade.
+RUN mkdir -p /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
+    chown www-data:root /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
+    chmod 775 /var/log /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /etc/alternatives /var/lib/dpkg/alternatives /usr/local/bin/composer && \
+    chmod 777 /var/lib/php/sessions /etc/ssl/certs && \
+    dpkg-statoverride --update --add root root 777 /usr/local/share/ca-certificates && \
+    dpkg-statoverride --update --add root adm 777 /var/log/nginx && \
     ln -sf /run/php/php-fpm.sock /run/php-fpm.sock
-RUN chmod 777 /var/lib/php/sessions
 ### -------------------------END ddev-php-base------------------------------------
 
 ### ---------------------------ddev-webserver-base--------------------------------
@@ -329,11 +327,6 @@ fi
 EOF
 RUN locale-gen
 
-# Composer may need to be updated by composer self-update
-RUN chmod -f ugo+rx /usr/local/bin && \
-    chgrp www-data /usr/local/bin/composer && \
-    chmod g+rwx,o-w /usr/local/bin/composer
-
 # Install older mariadb client and mariadb-dump into /usr/local/mariadb-old/bin
 # to solve variety of problems with newer mariadb-dump.
 RUN <<EOF
@@ -460,34 +453,16 @@ RUN <<EOF
     chmod 755 /usr/local/bin/acli
 EOF
 
-RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin /opt/phpstorm-coverage && \
+RUN mkdir -p /opt/phpstorm-coverage && \
     chmod a+rw /opt/phpstorm-coverage && \
-    touch /var/log/php-fpm.log && \
-    chmod ugo+rw /var/log/php-fpm.log && \
-    touch /var/log/supervisord.log && \
-    chmod ugo+rw /var/log/supervisord.log && \
-    touch /var/log/nginx/access.log && \
-    touch /var/log/nginx/error.log && \
-    chmod -R ugo+rwX /var/log/apache2 /var/log/nginx && \
-    chmod ugo+rx /usr/local/bin && \
     chmod ugo+rx /usr/local/bin/* && \
     update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
 # we need to create the /var/cache/nginx and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /mnt/ddev-global-cache ${CAROOT} /mnt/ddev-project-cache /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
-    chown www-data:www-data /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
-    chmod 755 /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
-    ln -sf /run/php/php-fpm.sock /run/php-fpm.sock && \
+RUN mkdir -p /mnt/ddev-global-cache ${CAROOT} /mnt/ddev-project-cache /run/blackfire /var/cache/nginx /var/lib/nginx && \
+    chown www-data:root /run/blackfire && chmod 775 /run/blackfire && \
     chmod -R ugo+rw /mnt/ddev-global-cache/ ${CAROOT} /mnt/ddev-project-cache/ && \
     ln -s ${CAROOT} /mnt/ddev-global-cache/mkcert
-
-RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
-    chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
-
-# Reapply the /var/log group-0-writable fix (see the comment near its first
-# application in the ddev-php-base stage above): further package installs in
-# this stage may pull in `systemd` for the first time and reset it again.
-RUN chgrp 0 /var/log && chmod g+rwX,o-w /var/log
 
 RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
@@ -499,22 +474,11 @@ RUN COMPOSER_HOME=/tmp/composer composer global require perftools/php-profiler -
     rm -rf /tmp/composer && \
     chmod -R ugo+rw /usr/local/xhgui.collector
 
-RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
-    chmod ugo+rw /var/log/php-fpm.log && \
-    chmod -R ugo+rwX /var/log/apache2 /var/log/nginx
-
 RUN a2dismod mpm_event && a2enmod ssl headers expires
 
 # scripts added last because they're most likely place to make changes, speeds up build
 COPY ddev-webserver-base-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
-
-# Composer, etc may need to be updated by composer self-update
-RUN chmod -f ugo+rx /usr/local/bin /usr/local/bin/* && \
-    chgrp www-data /usr/local/bin/composer && \
-    chmod g+rwx,o-w /usr/local/bin/composer
-
-RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
@@ -567,38 +531,14 @@ RUN apt-get -qq update && \
 COPY ddev-webserver-prod-files /
 RUN phpdismod blackfire xhprof
 
-RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
-    touch /var/log/php-fpm.log && \
-    chmod ugo+rw /var/log/php-fpm.log && \
-    touch /var/log/supervisord.log && \
-    chmod ugo+rw /var/log/supervisord.log && \
-    touch /var/log/nginx/access.log && \
-    touch /var/log/nginx/error.log && \
-    chmod -R ugo+rwX /var/log/apache2 /var/log/nginx && \
-    chmod ugo+rx /usr/local/bin/* && \
-    update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
+RUN update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
 # we need to create the /var/cache/linux and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /mnt/ddev-global-cache ${CAROOT} /mnt/ddev-project-cache /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
-    chown www-data:www-data /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
-    chmod 755 /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
-    ln -sf /run/php/php-fpm.sock /run/php-fpm.sock && \
+RUN mkdir -p /mnt/ddev-global-cache ${CAROOT} /mnt/ddev-project-cache /var/cache/nginx /var/lib/nginx && \
     chmod -R ugo+rw /home /mnt/ddev-global-cache/ ${CAROOT} /mnt/ddev-project-cache/ && \
     ln -s ${CAROOT} /mnt/ddev-global-cache/mkcert
 
-RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
-    chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
-
-# Reapply the /var/log group-0-writable fix (see the comment near its first
-# application in the ddev-php-base stage above): further package installs in
-# this stage may pull in `systemd` for the first time and reset it again.
-RUN chgrp 0 /var/log && chmod g+rwX,o-w /var/log
-
 RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
-
-RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
-    chmod ugo+rw /var/log/php-fpm.log && \
-    chmod -R ugo+rwX /var/log/apache2 /var/log/nginx
 
 RUN a2dismod mpm_event && a2enmod ssl headers expires
 
@@ -607,8 +547,6 @@ COPY ddev-webserver-prod-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
 
 RUN /sbin/mkhomedir_helper www-data
-
-RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
