@@ -112,6 +112,13 @@ It’s probably easiest, however, to shut down one before using the other.
 
 For example, if you use Lando for one project, do a `lando poweroff` before using DDEV, and then run [`ddev poweroff`](../usage/commands.md#poweroff) before using Lando again. If you run nginx or Apache locally, stop them before using DDEV. The [troubleshooting](troubleshooting.md) section goes into more detail about identifying and resolving port conflicts.
 
+### Can AI assistants read the DDEV docs?
+
+Yes. The docs are also published as Markdown for AI assistants and coding agents:
+
+* [`llms.txt`](../../llms.txt) lists every page, with a link to its Markdown version.
+* [`llms-full.txt`](../../llms-full.txt) contains all pages in one file.
+
 ## Performance & Troubleshooting
 
 ### How can I get the best performance?
