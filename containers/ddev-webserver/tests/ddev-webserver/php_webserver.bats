@@ -152,6 +152,10 @@ extension_is_packaged() {
   # Only the in-container healthcheck may reach php-fpm through /phpstatus
   run -0 curl -s -o /dev/null -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/phpstatus
   assert_output "403"
+  # Apache's `Require local` admits the container's own IP; on rootless Podman
+  # that let requests from the host reach /phpstatus.
+  run -0 docker exec ${CONTAINER_NAME} bash -c 'curl -s -o /dev/null -w "%{http_code}" "http://$(hostname -i | cut -d" " -f1)/phpstatus"'
+  assert_output "403"
 }
 
 @test "verify error conditions for ${WEBSERVER_TYPE} php${PHP_VERSION}" {

@@ -245,7 +245,7 @@ When you run [`ddev restart`](../usage/commands.md#restart) using `apache-fpm`, 
 - Add your configuration changes.
 - Save your configuration file and run [`ddev restart`](../usage/commands.md#restart). If you encounter issues with your configuration or the project fails to start, use [`ddev logs`](../usage/commands.md#logs) to inspect the logs for possible Apache configuration errors.
 - Use `ddev exec apachectl -t` to do a general Apache syntax check.
-- The health check script needs the alias `Alias "/phpstatus" "/var/www/phpstatus.php"` and its `<Location "/phpstatus">` block in `apache-site.conf`. Keep `Require local` in that block: only the health check inside the container needs `/phpstatus`. Other virtual hosts, such as a second docroot, do not need them.
+- The health check script needs the alias `Alias "/phpstatus" "/var/www/phpstatus.php"` and its `<Location "/phpstatus">` block in `apache-site.conf`. Keep `Require ip 127.0.0.1` in that block: only the health check inside the container needs `/phpstatus`. Other virtual hosts, such as a second docroot, do not need them.
 - Any errors in your configuration may cause the `web` container to fail. If you see that behavior, use `ddev logs` to diagnose.
 
 !!!warning "Important!"
