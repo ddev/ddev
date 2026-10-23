@@ -117,6 +117,8 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     display_startup_errors = Off
     ```
 
+* While a project is stopped or restarting, visitors see DDEV's page for unmatched hostnames, which reveals that the site runs on DDEV. To show your own maintenance page instead, see [Custom Maintenance Page](../extend/traefik-router.md#custom-maintenance-page).
+
 ## Troubleshooting
 
 * `docker logs -f ddev-router` is a great way to see what's going on with the router, including all requests and attempts at getting certificates from Let's Encrypt.
