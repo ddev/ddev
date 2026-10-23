@@ -387,7 +387,13 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	const inContainerTraefikDir = "/mnt/ddev-global-cache/traefik"
 	router, err := FindDdevRouter()
 	routerRunning := err == nil && router != nil && router.State == "running"
-	if routerRunning {
+	if dockerutil.UseBindGlobalCache() {
+		// Global cache is a host directory; copy on the host. Copying a directory
+		// into a container is not supported on apple container/socktainer.
+		if err = copyIntoGlobalCache(globalTraefikDir, "traefik", uid, "custom-global-config", false); err != nil {
+			return fmt.Errorf("failed to copy global Traefik config into %s: %v", dockerutil.GlobalCacheSource(), err)
+		}
+	} else if routerRunning {
 		// Router is running - copy directly to it using container name without leading slash
 		// This triggers fsnotify reliably because changes happen inside the container that's watching
 		containerName := strings.TrimPrefix(router.Names[0], "/")
@@ -407,7 +413,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		util.Verbose("Copied global Traefik config in %s directly to router container %s", globalTraefikDir, containerName)
 	} else {
 		// Router not running yet - copy to volume as fallback
-		err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "custom-global-config", false)
+		err = copyIntoGlobalCache(globalTraefikDir, "traefik", uid, "custom-global-config", false)
 		if err != nil {
 			return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
 		}
@@ -415,14 +421,15 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	}
 
 	// Remove stale project configs and certs. Through the running router this
-	// is an exec; otherwise each list or remove starts a helper container.
+	// is an exec; otherwise each list or remove starts a helper container,
+	// or with a bind-mounted global cache works on the host directly.
 	listFiles := func(subdir string) ([]string, error) {
-		return dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/"+subdir)
+		return listGlobalCacheFiles("traefik/" + subdir)
 	}
 	removeFiles := func(subdir string, files []string) error {
-		return dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/"+subdir, files)
+		return removeGlobalCacheFiles("traefik/"+subdir, files)
 	}
-	if routerRunning {
+	if routerRunning && !dockerutil.UseBindGlobalCache() {
 		listFiles = func(subdir string) ([]string, error) {
 			stdout, stderr, err := dockerutil.Exec(router.ID, fmt.Sprintf(`ls -1 "%s/%s" 2>/dev/null || true`, inContainerTraefikDir, subdir), "0")
 			if err != nil {
@@ -470,7 +477,33 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		}
 	}
 
+	NotifyRouterOfTraefikConfigChange()
+
 	return nil
+}
+
+// NotifyRouterOfTraefikConfigChange makes Traefik re-read its dynamic configuration
+// after the files were changed from outside the router container.
+//
+// Traefik watches /mnt/ddev-global-cache/traefik for changes, but with the global
+// cache bind-mounted (apple container) a write from the host or from another
+// container raises no event inside the router, so a project added or removed since
+// the router started stays invisible to it until the router is recreated. Touching
+// the files from inside the router does raise one, and Traefik then re-reads the
+// whole directory. No-op everywhere else, where the writes already happen against
+// a Docker volume the router sees directly.
+func NotifyRouterOfTraefikConfigChange() {
+	if !dockerutil.UseBindGlobalCache() {
+		return
+	}
+	router, err := FindDdevRouter()
+	if err != nil || router == nil || router.State != "running" {
+		return
+	}
+	cmd := "touch /mnt/ddev-global-cache/traefik/config/* /mnt/ddev-global-cache/traefik/certs/* 2>/dev/null || true"
+	if stdout, stderr, err := dockerutil.Exec(router.ID, cmd, "0"); err != nil {
+		util.Debug("Failed to notify router of Traefik config change (stdout=%s, stderr=%s): %v", stdout, stderr, err)
+	}
 }
 
 // CleanupGlobalTraefikStaging removes staging files from ~/.ddev/traefik/{config,certs}

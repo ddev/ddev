@@ -43,7 +43,7 @@ services:
       # hosts, $dockerIP is the remote IP which cannot be used as a bind address
       - "127.0.0.1:{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
     volumes:
-      - ddev-global-cache:/mnt/ddev-global-cache:rw
+      - {{ .GlobalCacheMount }}:rw
     environment:
       - TRAEFIK_MONITOR_PORT={{ .TraefikMonitorPort }}
       - TZ={{ .Timezone }}
@@ -65,7 +65,9 @@ networks:
   ddev_default:
     name: ddev_default
     external: true
+{{ if not .BindGlobalCache }}
 volumes:
   ddev-global-cache:
     name: ddev-global-cache
     external: true
+{{ end }}{{/* end if not .BindGlobalCache */}}
