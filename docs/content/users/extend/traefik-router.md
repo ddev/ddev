@@ -96,12 +96,43 @@ The default Docker Compose configuration for the router container is found in `$
 You can create a `$HOME/.ddev/router-compose.*.yaml`. For example, as `$HOME/.ddev/router-compose.cloudflare.yaml` might contain environment variables like this:
 
 ```yaml
+# $HOME/.ddev/router-compose.cloudflare.yaml
 services:
   ddev-router:
     environment:
       - CLOUDFLARE_EMAIL=you@example.com
       - CLOUDFLARE_API_KEY=some-key
 ```
+
+### Custom Maintenance Page
+
+When a request reaches the router for a hostname that no running project serves, for example while a project is stopped or restarting, the router answers with a DDEV page explaining why. If you [host with DDEV](../topics/hosting.md), you can replace it with your own maintenance page using `configs` in a `$HOME/.ddev/router-compose.maintenance.yaml`:
+
+```yaml
+# $HOME/.ddev/router-compose.maintenance.yaml
+services:
+  ddev-router:
+    configs:
+      - source: unmatched-route.html
+        target: /var/www/ddev-router-fallback/unmatched-route.html
+        mode: "0444"
+      - source: ddev-router-fallback-responder.sh
+        target: /usr/local/bin/ddev-router-fallback-responder.sh
+        mode: "0755"
+
+configs:
+  unmatched-route.html:
+    content: |
+      <h1>Under maintenance</h1>
+      <p>We'll be back shortly.</p>
+  ddev-router-fallback-responder.sh:
+    content: |
+      #!/bin/sh
+      printf 'HTTP/1.1 503 Service Unavailable\r\nContent-Type: text/html; charset=utf-8\r\nRetry-After: 60\r\nConnection: close\r\n\r\n'
+      cat /var/www/ddev-router-fallback/unmatched-route.html
+```
+
+Run `ddev poweroff` and `ddev start` to recreate the router. The page is served with a `503` status instead of DDEV's `404`, and without DDEV's `X-Ddev-404-Source` header. To change only the page, keep just the `unmatched-route.html` config. In `content`, write each `$` as `$$` so that Docker Compose doesn't treat it as a variable.
 
 ## Troubleshooting Traefik Routing
 
