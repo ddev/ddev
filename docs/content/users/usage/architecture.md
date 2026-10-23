@@ -218,12 +218,10 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 | Directory | Scope | Contents |
 | --- | --- | --- |
-| `bashhistory/<project>-db`, `bashhistory/<project>-web` | Per project | Bash history |
 | `composer` | Shared | Composer cache |
 | `corepack` | Shared | Package managers installed by `corepack` |
 | `global-commands` | Shared | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
 | `mkcert` | Shared | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
-| `mysqlhistory/<project>-db`, `mysqlhistory/<project>-web` | Per project | MySQL client history |
 | `n_prefix/<project>-web` | Per project | Node.js versions downloaded by `n` |
 | `npm` | Shared | npm cache |
 | `pip` | Shared | pip cache, created only if you install pip, for example with [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages) |
@@ -233,9 +231,17 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 [`ddev delete`](commands.md#delete) removes the project's own directories and router files. To keep your own files in this volume, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
 
-To clear the volume, for example to free Docker provider disk space, remove it. (Any stored global cache for all projects will be lost, but will be rebuilt as needed.) This also removes the Bash and MySQL history of every project. DDEV creates the volume again on the next [`ddev start`](commands.md#start):
+To clear the volume, for example to free Docker provider disk space, remove it. (Any stored global cache for all projects will be lost, but will be rebuilt as needed.) DDEV creates the volume again on the next [`ddev start`](commands.md#start):
 
 ```bash
 ddev poweroff
 docker volume rm ddev-global-cache
 ```
+
+## Shell and Client History
+
+Each service keeps its history in its own directory on the host, `.ddev/.history/<service>`, mounted at `/mnt/ddev-history`. Bash, MySQL and MariaDB, `psql`, `redis-cli`, `sqlite3`, the Node.js `REPL`, and Python 3.13 and later all write their history there. Because it's in the project directory, it survives [`ddev delete`](commands.md#delete), `docker system prune --volumes`, and switching Docker providers. DDEV adds a `.gitignore` to `.ddev/.history`, so the history, which can hold passwords and tokens, stays out of Git.
+
+DDEV only mounts the directory where the files written there will belong to you on the host. On Linux and WSL2 that means services that run as your user, which includes `web` and `db` but usually not third-party services that run as `root`. With rootless Docker it's the reverse, since `root` in a container is your user on the host, so only `web` and services that run as `root` keep history. Otherwise on Linux, a `root` shell in the `web` container keeps its history in the container instead. To leave a service out, set [`x-ddev.omit-history: true`](../extend/custom-docker-services.md#x-ddev-extension).
+
+With [`no_bind_mounts`](../configuration/config.md#no_bind_mounts), DDEV doesn't keep history.

@@ -141,6 +141,7 @@ type XDdevExtension struct {
 	DescribeInfo    string   `mapstructure:"describe-info"`
 	DescribeURLPort string   `mapstructure:"describe-url-port"`
 	OmitDdevLabels  bool     `mapstructure:"omit-ddev-labels"`
+	OmitHistory     bool     `mapstructure:"omit-history"`
 	PullImages      []string `mapstructure:"pull-images"`
 	SSHShell        string   `mapstructure:"ssh-shell"`
 }
@@ -380,6 +381,11 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 					service.User = "0:0"
 				}
 			}
+		}
+
+		// Runs after the user namespace is settled, which decides who owns history files
+		if err := app.addHistoryMount(name, &service); err != nil {
+			return project, err
 		}
 
 		if isPodman {

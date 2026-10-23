@@ -1902,6 +1902,10 @@ func (app *DdevApp) start(o StartOptions) error {
 			chownCmd = fmt.Sprintf("%s /var/lib/mysql", chownCmd)
 		}
 	}
+	if historyMount, historyCmd, ok := app.historyChownArgs(); ok {
+		volumeMounts = append(volumeMounts, historyMount)
+		chownCmd = fmt.Sprintf("%s; %s", chownCmd, historyCmd)
+	}
 
 	// Run chown concurrently with config/build steps below.
 	// chown operates on volumes, compose build operates on images — independent.
@@ -3797,6 +3801,17 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
+		}
+		// History stays with the project, so leave none of it unremovable without sudo
+		if historyMount, historyCmd, ok := app.historyChownArgs(); ok {
+			labels := map[string]string{`com.ddev.site-name`: ""}
+			if dockerutil.UseKeepID() {
+				labels["com.ddev.userns"] = "keep-id"
+			}
+			_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "chown-history-"+util.RandString(6), []string{"sh", "-c", historyCmd}, []string{}, []string{}, []string{historyMount}, "", true, false, labels, nil, nil)
+			if err != nil {
+				util.Warning("Unable to repair ownership of %s with command '%s': %v; output='%s'", app.GetHistoryDir(), historyCmd, err, out)
+			}
 		}
 	}
 
