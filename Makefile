@@ -25,7 +25,6 @@ BUILD_BASE_DIR ?= $(PWD)
 GOTMP=.gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
-GOFILES = $(shell find $(SRC_DIRS) -name "*.go" ! -path "*/testdata/*")
 GORACE = "halt_on_error=1"
 CGO_ENABLED = 0
 SIGNING_TOOLS_REVISION ?= main
@@ -143,7 +142,11 @@ wsl_arm64: $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe $(GOTMP)/bin/wsl_arm64/mkcer
 completions: $(GOTMP)/bin/completions.tar.gz
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev-hostname $(GOTMP)/bin/linux_arm64/ddev-hostname $(GOTMP)/bin/darwin_amd64/ddev-hostname $(GOTMP)/bin/darwin_arm64/ddev-hostname $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe
-$(TARGETS): $(GOFILES)
+# Always hand the build to go, whose cache decides what changed. Make's own
+# timestamps miss //go:embed assets and the git-derived VERSION in LDFLAGS.
+.PHONY: FORCE
+FORCE:
+$(TARGETS): FORCE
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)); \
 	if [[ "$@" == *ddev-hostname.exe ]]; then \
