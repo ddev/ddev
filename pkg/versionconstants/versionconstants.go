@@ -67,10 +67,10 @@ var BaseDBTagBranch = "20261019_rfay_podman_image_build"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "5089986640" // 20261019_rfay_podman_image_build-5089986640
+var TraefikRouterTag = "936cf537be" // 20261014_rfay_router_volume-936cf537be
 
 // TraefikRouterTagBranch is the branch TraefikRouterTag's content was built from.
-var TraefikRouterTagBranch = "20261019_rfay_podman_image_build"
+var TraefikRouterTagBranch = "20261014_rfay_router_volume"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
