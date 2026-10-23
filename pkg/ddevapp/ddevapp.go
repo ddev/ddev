@@ -1790,6 +1790,20 @@ func (app *DdevApp) start(o StartOptions) error {
 			volumesNeeded = append(volumesNeeded, app.GetMariaDBVolumeName())
 		}
 	}
+	historyServices := []string{"web"}
+	if !app.IsDBOmitted() {
+		historyServices = append(historyServices, "db")
+	}
+	// A history volume created now is seeded below from the history the
+	// container used to keep in ddev-global-cache.
+	var newHistoryServices []string
+	for _, s := range historyServices {
+		v := app.GetHistoryVolumeName(s)
+		if !dockerutil.VolumeExists(v) {
+			newHistoryServices = append(newHistoryServices, s)
+		}
+		volumesNeeded = append(volumesNeeded, v)
+	}
 	for _, v := range volumesNeeded {
 		util.Verbose("creating docker volume %s", v)
 		labels := map[string]string{}
@@ -1902,6 +1916,17 @@ func (app *DdevApp) start(o StartOptions) error {
 			chownCmd = fmt.Sprintf("%s /var/lib/mysql", chownCmd)
 		}
 	}
+
+	var seedCmd strings.Builder
+	for _, s := range historyServices {
+		historyDir := "/mnt/ddev-history-" + s
+		volumeMounts = append(volumeMounts, app.GetHistoryVolumeName(s)+":"+historyDir)
+		chownCmd = fmt.Sprintf("%s %s", chownCmd, historyDir)
+		if slices.Contains(newHistoryServices, s) {
+			fmt.Fprintf(&seedCmd, "cp -p /mnt/ddev-global-cache/bashhistory/%[1]s-%[2]s/bash_history /mnt/ddev-global-cache/mysqlhistory/%[1]s-%[2]s/mysql_history %[3]s/ 2>/dev/null; ", app.Name, s, historyDir)
+		}
+	}
+	chownCmd = seedCmd.String() + chownCmd
 
 	// Run chown concurrently with config/build steps below.
 	// chown operates on volumes, compose build operates on images — independent.
@@ -3831,7 +3856,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		if err = app.RemoveHostsEntriesIfNeeded(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
-		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app)}
+		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app), app.GetHistoryVolumeName("web"), app.GetHistoryVolumeName("db")}
 		// app.Name-ddev-config has already been deleted by Cleanup()
 		var heldVolumes []string
 		for _, volName := range vols {
@@ -4272,6 +4297,13 @@ func (app *DdevApp) GetMariaDBVolumeName() string {
 // For historical reasons this isn't lowercased.
 func (app *DdevApp) GetPostgresVolumeName() string {
 	return app.Name + "-postgres"
+}
+
+// GetHistoryVolumeName returns the name of the volume holding a container's
+// shell and database client history, mounted at /mnt/ddev-history. Each
+// container gets its own so that no other container writes to it.
+func (app *DdevApp) GetHistoryVolumeName(service string) string {
+	return "ddev-" + app.Name + "-" + service + "-history"
 }
 
 // GetComposeProjectName returns the name of the docker-compose project
