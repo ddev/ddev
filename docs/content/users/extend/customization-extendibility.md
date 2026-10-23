@@ -212,7 +212,7 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 - The configuration is copied into the container during restart. Therefore it is not possible to edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example, run [`ddev ssh`](../usage/commands.md#ssh) to get into the container.)
 - You can run `ddev exec nginx -t` to test whether your configuration inside the container is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
 - You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or editing the configuration inside the container at `/etc/nginx/sites-enabled/` and running `ddev exec nginx -s reload` on the host system (inside the container run `nginx -s reload`).
-- The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
+- The health check script needs the line `include /etc/nginx/monitoring.conf;` in `nginx-site.conf`. It serves `/phpstatus` only to requests from `127.0.0.1` inside the container.
 
 ### Multiple Docroots in nginx (Advanced)
 
@@ -245,7 +245,7 @@ When you run [`ddev restart`](../usage/commands.md#restart) using `apache-fpm`, 
 - Add your configuration changes.
 - Save your configuration file and run [`ddev restart`](../usage/commands.md#restart). If you encounter issues with your configuration or the project fails to start, use [`ddev logs`](../usage/commands.md#logs) to inspect the logs for possible Apache configuration errors.
 - Use `ddev exec apachectl -t` to do a general Apache syntax check.
-- The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
+- The health check script needs the alias `Alias "/phpstatus" "/var/www/phpstatus.php"` and its `<Location "/phpstatus">` block in `apache-site.conf`. Keep `Require ip 127.0.0.1` in that block: only the health check inside the container needs `/phpstatus`. Other virtual hosts, such as a second docroot, do not need them.
 - Any errors in your configuration may cause the `web` container to fail. If you see that behavior, use `ddev logs` to diagnose.
 
 !!!warning "Important!"

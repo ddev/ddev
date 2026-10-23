@@ -4623,9 +4623,21 @@ func TestWebserverPhpstatusUnderMutagen(t *testing.T) {
 			t.Fatalf("app.Start() failure for WebserverType=%s: err=%v, health:\n%s\n\nlogs:\n=====\n%s\n=====\n", webserverType, startErr, health, appLogs)
 		}
 
-		out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/phpstatus")
-		require.NoError(t, err, "for WebserverType=%s expected /phpstatus to succeed under Mutagen, got body:\n%s", webserverType, out)
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd: "curl -sS --fail 127.0.0.1/phpstatus",
+		})
+		require.NoError(t, err, "for WebserverType=%s expected /phpstatus to succeed under Mutagen, stdout=%s, stderr=%s", webserverType, out, stderr)
 		require.Regexp(t, "idle processes|php is working", out, "for WebserverType=%s expected /phpstatus content", webserverType)
+
+		// Only the in-container healthcheck may reach php-fpm through /phpstatus.
+		out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/phpstatus", testcommon.WithExpectStatus(403))
+		require.NoError(t, err, "for WebserverType=%s expected /phpstatus to be forbidden from outside the container, got body:\n%s", webserverType, out)
+
+		out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: `curl -s -o /dev/null -w '%{http_code}' "http://$(hostname -i | cut -d' ' -f1)/phpstatus"`,
+		})
+		require.NoError(t, err, "stdout=%s, stderr=%s", out, stderr)
+		require.Equal(t, "403", out, "for WebserverType=%s expected /phpstatus to be forbidden from the container's own IP", webserverType)
 
 		err = app.Stop(true, false)
 		require.NoError(t, err)
