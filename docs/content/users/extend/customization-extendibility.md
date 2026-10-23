@@ -212,7 +212,7 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 - The configuration is copied into the container during restart. Therefore it is not possible to edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example, run [`ddev ssh`](../usage/commands.md#ssh) to get into the container.)
 - You can run `ddev exec nginx -t` to test whether your configuration inside the container is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
 - You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or editing the configuration inside the container at `/etc/nginx/sites-enabled/` and running `ddev exec nginx -s reload` on the host system (inside the container run `nginx -s reload`).
-- The health check script needs the line `include /etc/nginx/monitoring.conf;` in `nginx-site.conf`. It serves `/phpstatus` to requests from inside the container only.
+- The health check script needs the line `include /etc/nginx/monitoring.conf;` in `nginx-site.conf`. It serves `/phpstatus` only to requests from `127.0.0.1` inside the container.
 
 ### Multiple Docroots in nginx (Advanced)
 

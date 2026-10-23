@@ -4633,8 +4633,6 @@ func TestWebserverPhpstatusUnderMutagen(t *testing.T) {
 		out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/phpstatus", testcommon.WithExpectStatus(403))
 		require.NoError(t, err, "for WebserverType=%s expected /phpstatus to be forbidden from outside the container, got body:\n%s", webserverType, out)
 
-		// Apache's `Require local` admits the container's own IP; on rootless
-		// Podman that let requests from the host reach /phpstatus.
 		out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 			Cmd: `curl -s -o /dev/null -w '%{http_code}' "http://$(hostname -i | cut -d' ' -f1)/phpstatus"`,
 		})

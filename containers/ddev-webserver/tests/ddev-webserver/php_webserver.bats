@@ -44,7 +44,7 @@ teardown() {
   assert_output --partial "HTTP_HOST=hosttest.ddev.site:8443"
 }
 
-@test "http and https phpstatus access work inside and outside container for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+@test "http and https phptest.php access works inside and outside container for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   run -0 curl -sSL --fail http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
   if [ "${OS:-$(uname)}" != "Windows_NT" ] ; then
     # TODO: Why doesn't this work on Windows?
@@ -152,8 +152,6 @@ extension_is_packaged() {
   # Only the in-container healthcheck may reach php-fpm through /phpstatus
   run -0 curl -s -o /dev/null -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/phpstatus
   assert_output "403"
-  # Apache's `Require local` admits the container's own IP; on rootless Podman
-  # that let requests from the host reach /phpstatus.
   run -0 docker exec ${CONTAINER_NAME} bash -c 'curl -s -o /dev/null -w "%{http_code}" "http://$(hostname -i | cut -d" " -f1)/phpstatus"'
   assert_output "403"
 }
