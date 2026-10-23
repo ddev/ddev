@@ -1355,10 +1355,8 @@ ARG gid
 ARG DDEV_PHP_VERSION
 ARG DDEV_DATABASE
 RUN getent group tty || groupadd tty
-# Group 0 (root) is added here so this user can read/write directories that are
-# baked group-writable-by-root in the base image (e.g. /usr/local/n, /var/log,
-# see containers/ddev-webserver/Dockerfile) without a per-project chgrp/chmod
-# of those directories. See the note near the chmod -R below, and
+# Group 0 lets this user write the group-0-writable paths of the base image
+# (e.g. /usr/local/n, /var/log, /run/php) without a per-project chown. See
 # https://developers.redhat.com/blog/2020/10/26/adapting-docker-and-kubernetes-containers-to-run-on-red-hat-openshift-container-platform
 RUN (groupadd --gid "$gid" "$username" || groupadd "$username" || true) && \
     (useradd -G tty,0 -l -m -s "/bin/bash" --gid "$username" --comment '' --uid "$uid" "$username" || \
@@ -1468,9 +1466,6 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 ### DDEV-injected php default version setting
 RUN update-alternatives --set php /usr/bin/php%s
 RUN update-alternatives --install /usr/sbin/php-fpm php-fpm /usr/sbin/php-fpm%s 99 && update-alternatives --set php-fpm /usr/sbin/php-fpm%s
-RUN chmod ugo+rw /var/log/php-fpm.log && mkdir -p /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && chown "$uid:$gid" /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && chmod 755 /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && if [ -d /run/blackfire ]; then chown "$uid:$gid" /run/blackfire && chmod 755 /run/blackfire; fi
-RUN mkdir -p /tmp/xhprof
-RUN chmod -fR ugo+w /etc/php /var/lib/php/modules /tmp/xhprof
 RUN phpdismod blackfire xdebug xhprof
 `, app.PHPVersion, app.PHPVersion, app.PHPVersion)
 		}
@@ -1579,23 +1574,12 @@ EOF
 		}
 	}
 
-	// Some packages have default folder/file permissions described in /usr/lib/tmpfiles.d/*.conf files.
-	// For example, when you upgrade systemd, it sets 755 for /var/log.
-	// This may cause problems with previously set permissions when installing/upgrading packages.
-	// Place this at the very end of the Dockerfile.
 	if strings.Contains(fullpath, "webimageBuild") {
+		// PHP config and module state added as root by the project build must stay
+		// writable for phpenmod/phpdismod at runtime.
 		contents = contents + `
-### DDEV-injected folders permission fix
-RUN mkdir -p /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && chown "$uid:$gid" /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && chmod 755 /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && if [ -d /run/blackfire ]; then chown "$uid:$gid" /run/blackfire && chmod 755 /run/blackfire; fi && \
-    mkdir -p /var/log/nginx /var/log/apache2 && \
-    touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log /var/log/supervisord.log && \
-    chmod ugo+rw /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log /var/log/supervisord.log && \
-    chmod ugo+rwX /var/log/nginx /var/log/apache2 && \
-    chgrp -R "$gid" /etc/alternatives /var/lib/dpkg/alternatives && \
-    chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives && \
-    chmod -f ugo+rx /usr/local/bin /usr/local/bin/* && \
-    chgrp "$gid" /usr/local/bin/composer && chmod g+rwx,o-w /usr/local/bin/composer && \
-    mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
+### DDEV-injected PHP config permissions
+RUN chmod -fR ugo+w /etc/php /var/lib/php/modules
 `
 		// The ddev-keep-root.so shim is only used to run Apache as root, which
 		// happens with apache-fpm on Docker rootless + bind mounts (the web

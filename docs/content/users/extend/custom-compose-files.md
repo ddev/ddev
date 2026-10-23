@@ -79,7 +79,7 @@ services:
       dockerfile_inline: |
         FROM ddev-webserver
         RUN apt-get update && apt-get install -y custom-package
-        COPY custom-script.sh /usr/local/bin/
+        COPY --chmod=755 custom-script.sh /usr/local/bin/
 ```
 
 ## Confirming docker-compose Configurations
