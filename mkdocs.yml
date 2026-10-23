@@ -47,6 +47,7 @@ theme:
       primary: indigo
       accent: indigo
   features:
+    - content.action.copy
     - content.action.edit
     - content.code.copy
     #- content.tabs.link
@@ -66,17 +67,49 @@ theme:
   logo: logo.svg
 
 # Plugins https://zensical.org/compatibility/plugins/
-# 2026-05-21, the only supported plugin is search
 plugins:
   - search
   - privacy:
-      enabled: !ENV [ READTHEDOCS, '' ]
+      enabled: !ENV [ READTHEDOCS, false ]
+      # Skip unused theme libraries and the ad SDKs they pull in
+      assets_include:
+        - fonts.googleapis.com/*
+        - fonts.gstatic.com/*
   - redirects:
       redirect_maps:
   - minify:
       minify_html: true
+  # Not supported by zensical 0.0.72
   - git-revision-date-localized:
       fallback_to_build_date: true
+  - social:
+      # Square logo, cards crop a wide one
+      cards_layout_options:
+        logo: docs/social-logo.svg
+  # Unmatched pages get no Markdown copy or "Copy as Markdown" button
+  - llmstxt:
+      full_output: llms-full.txt
+      sections:
+        'Getting Started':
+          - index.md
+          - users/install/*
+          - users/project.md
+          - users/quickstart.md
+        'Usage':
+          - users/usage/*
+          - users/support.md
+          - users/code-of-conduct.md
+        'Configuration':
+          - users/configuration/*
+        'Extending':
+          - users/extend/*
+        'Debugging and Profiling':
+          - users/debugging-profiling/*
+        'Hosting and Deployment':
+          - users/topics/*
+          - users/providers/*
+        'Development':
+          - developers/*
 
 # Files in not_in_nav are part of the repo but intentionally excluded from the
 # docs navigation (e.g. temporary developer guides used by automation tools).
