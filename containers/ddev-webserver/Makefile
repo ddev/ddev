@@ -22,5 +22,5 @@ $(DEFAULT_IMAGES):
 test: images
 	set -eu -o pipefail; \
 	for item in $(DEFAULT_IMAGES); do \
-		if [ -x tests/$$item/test.sh ]; then tests/$$item/test.sh $(DOCKER_ORG)/$$item:$(VERSION); fi; \
+		tests/ddev-webserver/test.sh $(DOCKER_ORG)/$$item:$(VERSION); \
 	done

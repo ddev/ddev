@@ -8,7 +8,7 @@ if [ $# != "1" ]; then echo "docker image spec must be \$1"; exit 1; fi
 export DOCKER_IMAGE=$1
 export IS_HARDENED=false
 DOCKER_REPO=${DOCKER_IMAGE%:*}
-if [[ "${DOCKER_REPO}" == "*prod*" ]]; then
+if [[ "${DOCKER_REPO}" == *prod* ]]; then
   IS_HARDENED=true
 fi
 
@@ -76,10 +76,10 @@ trap finalcleanup EXIT
 cleanup
 
 # We have to push the CA into the test volume so it will be respected
-docker run --rm -v "$(mkcert -CAROOT):/mnt/mkcert" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" "${DOCKER_IMAGE}" bash -c "mkdir -p /mnt/ddev-global-cache/{mkcert,bashhistory,terminus} && cp -R /mnt/mkcert /mnt/ddev-global-cache/ && chown -Rf ${MOUNTUID}:${MOUNTGID} /mnt/ddev-global-cache/* && chmod -Rf ugo+w /mnt/ddev-global-cache/*"
+docker run --rm -v "$(mkcert -CAROOT):/mnt/mkcert" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" "${DOCKER_IMAGE}" bash -c "mkdir -p /mnt/ddev-global-cache/{mkcert,bashhistory,terminus} && cp -R /mnt/mkcert /mnt/ddev-global-cache/ && chown -Rf ${MOUNTUID}:${MOUNTGID} /mnt/ddev-global-cache && chmod -Rf ugo+w /mnt/ddev-global-cache/*"
 
 # Run general tests with a default container
-docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name "$CONTAINER_NAME" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" -d "$DOCKER_IMAGE" >/dev/null
+docker run -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name "$CONTAINER_NAME" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" -d "$DOCKER_IMAGE" >/dev/null
 if ! containerwait; then
   echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
   exit 100
@@ -91,7 +91,7 @@ cleanup
 for PHP_VERSION in 8.2 8.3 8.4 8.5 8.6; do
   for WEBSERVER_TYPE in nginx-fpm apache-fpm; do
     export PHP_VERSION WEBSERVER_TYPE DOCKER_IMAGE
-    docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name "$CONTAINER_NAME" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" -d "$DOCKER_IMAGE" >/dev/null
+    docker run -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name "$CONTAINER_NAME" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" -d "$DOCKER_IMAGE" >/dev/null
     if ! containerwait; then
       echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
       exit 101
@@ -105,7 +105,7 @@ done
 for project_type in backdrop craftcms drupal drupal7 drupal10 drupal11 laravel magento magento2 maho modx symfony typo3 wordpress default; do
   export PHP_VERSION="8.4"
   export project_type
-  docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" --name "$CONTAINER_NAME" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" -d "$DOCKER_IMAGE" >/dev/null
+  docker run -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" --name "$CONTAINER_NAME" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" -d "$DOCKER_IMAGE" >/dev/null
   if ! containerwait; then
     echo "=============== Failed containerwait after docker run with  DDEV_PROJECT_TYPE=${project_type} DDEV_PHP_VERSION=$PHP_VERSION ==================="
     exit 103
@@ -115,14 +115,14 @@ for project_type in backdrop craftcms drupal drupal7 drupal10 drupal11 laravel m
   cleanup
 done
 
-docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" --name "$CONTAINER_NAME" -d "$DOCKER_IMAGE" >/dev/null
+docker run -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" --name "$CONTAINER_NAME" -d "$DOCKER_IMAGE" >/dev/null
 containerwait
 
 bats tests/ddev-webserver/custom_config.bats
 
 cleanup
 
-docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" --name "$CONTAINER_NAME" -d "$DOCKER_IMAGE" >/dev/null
+docker run -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" --name "$CONTAINER_NAME" -d "$DOCKER_IMAGE" >/dev/null
 containerwait
 bats tests/ddev-webserver/imagemagick.bats
 

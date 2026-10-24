@@ -16,7 +16,6 @@ on:
     paths:
       - "pkg/ddevapp/config.go"
       - "pkg/ddevapp/app_compose_template.yaml"
-      - "containers/ddev-php-base/Dockerfile"
       - "containers/ddev-webserver/Dockerfile"
       - "scripts/compare-start-perf.sh"
       - ".github/workflows/perf-start-time.yml"
@@ -25,7 +24,6 @@ on:
     paths:
       - "pkg/ddevapp/config.go"
       - "pkg/ddevapp/app_compose_template.yaml"
-      - "containers/ddev-php-base/Dockerfile"
       - "containers/ddev-webserver/Dockerfile"
       - "scripts/compare-start-perf.sh"
   schedule:

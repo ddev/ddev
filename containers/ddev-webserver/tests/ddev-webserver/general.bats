@@ -119,10 +119,42 @@ teardown() {
   # Simulates the supplementary-group-0 membership that WriteBuildDockerfile
   # adds for every project user (useradd -G tty,0), which is how a non-root,
   # non-www-data user gets write access to these directories.
-  for dir in /usr/local/n /var/log; do
+  for dir in /usr/local/n /var/log /run/php /var/run/supervisor /etc/alternatives; do
     run docker run --rm -u "$MOUNTUID:$MOUNTGID" --group-add 0 "$DOCKER_IMAGE" bash -c "touch '$dir/ddev-group0-write-test' && rm -f '$dir/ddev-group0-write-test'"
     assert_success
   done
+}
+
+# Paths the per-project user writes to
+EXPECTED_PERMS="root:root 775 /var/log
+root:adm 777 /var/log/nginx
+root:adm 777 /var/log/apache2
+root:root 777 /var/lib/php/sessions
+root:root 777 /etc/ssl/certs
+root:root 777 /usr/local/share/ca-certificates
+root:root 775 /etc/alternatives
+root:root 775 /var/lib/dpkg/alternatives
+root:root 775 /run/php
+root:root 775 /var/run/nginx
+root:root 775 /var/run/supervisor
+root:root 775 /var/run/apache2
+root:root 775 /var/lock/apache2
+root:root 775 /usr/local/bin/composer"
+
+@test "Verify paths the project user writes to have the expected owner and mode" {
+  run docker run --rm "$DOCKER_IMAGE" stat -c '%U:%G %a %n' $(awk '{print $3}' <<<"$EXPECTED_PERMS")
+  assert_success
+  assert_output "$EXPECTED_PERMS"
+}
+
+@test "Verify owner and mode survive the maintainer scripts and tmpfiles that reset them on upgrade" {
+  # What an `apt-get upgrade` runs, offline
+  run docker run --rm -u root "$DOCKER_IMAGE" bash -c "
+    dpkg-reconfigure -f noninteractive ca-certificates nginx-common php-common >/dev/null 2>&1 &&
+    systemd-tmpfiles --create var.conf \$(cd /usr/lib/tmpfiles.d && echo php*-fpm.conf) &&
+    stat -c '%U:%G %a %n' $(awk '{print $3}' <<<"$EXPECTED_PERMS" | xargs)"
+  assert_success
+  assert_output "$EXPECTED_PERMS"
 }
 
 @test "verify that xdebug is disabled by default when using start.sh to start" {
@@ -144,6 +176,7 @@ teardown() {
 }
 
 @test "verify that PHP assertions are enabled by default" {
+  if [ "${IS_HARDENED}" == "true" ]; then skip "Skipping because IS_HARDENED==true"; fi
   run docker exec "$CONTAINER_NAME" php -r 'echo ini_get("zend.assertions");'
   assert_success
   assert_output "1"

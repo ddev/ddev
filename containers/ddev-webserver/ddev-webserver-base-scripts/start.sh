@@ -106,7 +106,6 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
-sudo chown -R "$(id -u):$(id -g)" /var/lib/php
 
 # The global cache is already chowned by a privileged utility container in
 # app.Start() before this container ever starts (see chownCmd in ddevapp.go),

@@ -105,6 +105,7 @@ extension_is_packaged() {
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  if [ "${IS_HARDENED}" == "true" ]; then skip "Skipping because the hardened image has no XHGui collector (php-profiler)"; fi
   run docker exec -t $CONTAINER_NAME enable_xhprof
   if extension_is_packaged xhprof; then
     assert_success
