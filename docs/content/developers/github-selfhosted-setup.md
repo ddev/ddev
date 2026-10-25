@@ -16,7 +16,7 @@ We are using GitHub Self-Hosted Agents for Windows and macOS testing. The build 
 4. After restart, in administrative Git Bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1`.
 5. Now download and run [windows_github_agent_setup.sh](scripts/windows_github_agent_setup.sh).
 6. Launch Docker. It may require you to take further actions.
-7. Log into Chrome with the user `ddevtestbot` and enable Chrome Remote Desktop.
+7. Set up [remote access with Tailscale](buildkite-testmachine-setup.md#remote-access-with-tailscale). As a fallback, log into Chrome with the user `ddevtestbot` and enable Chrome Remote Desktop.
 8. Enable `gd`, `fileinfo`, and `curl` extensions in `/c/tools/php*/php.ini`.
 9. If a laptop, set the “lid closing” setting in settings to do nothing.
 10. Set the “Sleep after time” setting in settings to never.
