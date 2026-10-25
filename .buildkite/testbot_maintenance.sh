@@ -37,16 +37,15 @@ fi
 
 # Install gotestsum if it's not there. WSL2 bots report GOOS=linux and
 # already have Homebrew (see test.sh's linuxbrew PATH export), so they take
-# the same path as darwin here; native Windows has no package for it.
+# the same path as darwin here; native Windows has no package for it, and
+# installs into %USERPROFILE%\go\bin, which the Go installer puts on PATH.
 if ! command -v gotestsum >/dev/null; then
     case $os in
     darwin | linux)
         brew install gotestsum
         ;;
     windows)
-        curl -fsSL "https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_windows_amd64.tar.gz" -o /tmp/gotestsum.tar.gz
-        tar -C /c/ProgramData/chocolatey/bin -xzf /tmp/gotestsum.tar.gz gotestsum.exe
-        rm /tmp/gotestsum.tar.gz
+        go install "gotest.tools/gotestsum@v${GOTESTSUM_VERSION}"
         ;;
     esac
 fi
@@ -57,14 +56,11 @@ darwin)
     brew pin buildkite-agent@4
     brew upgrade -y
     brew uninstall -f mysql-client || true
-    for item in coreutils curl ddev/ddev/ddev golang golangci-lint libpq mkcert mysql-client@8.0; do
+    for item in coreutils curl golang golangci-lint libpq mkcert mysql-client@8.0; do
         brew install $item || true
     done
     brew link --force libpq
     brew link mysql-client@8.0
-    ;;
-windows)
-    (yes | choco upgrade -y ddev golang nodejs markdownlint-cli mkcert postgresql) || true
     ;;
 esac
 

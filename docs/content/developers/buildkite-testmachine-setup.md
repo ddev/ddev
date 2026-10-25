@@ -54,7 +54,12 @@ to run again) and restart the agent afterward:
 3. (WSL2/Docker Desktop and traditional Windows only): Install either [Docker Desktop for Windows](https://docs.docker.com/desktop/release-notes/) (from the release notes page, which is best maintained) or [Rancher Desktop](https://rancherdesktop.io/). With Rancher Desktop, turn off Kubernetes. (Rancher Desktop on Windows appears to be too unreliable to use at this point in its history.)
 4. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "Unrestricted"`.
 5. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) with `curl <url> -O windows_buildkite_start.ps1`.
-6. Install items as needed; `git`, `jq`, `mysql-cli`, `golang`, `make`, `nodejs-lts` are only required for a traditional Windows test machine. `choco install -y git jq mysql-cli golang make mkcert netcat zip nodejs-lts`.
+6. Install items as needed with `winget` as the testbot user. Everything but `mkcert` is only required for a traditional Windows test machine, which also needs `nc.exe` (netcat) on the `PATH`; it has no `winget` package. Don't use Chocolatey, which needs an administrator for upgrades that the unprivileged test jobs can't do. Don't install DDEV either: the test jobs build and use the DDEV under test.
+
+    ```powershell
+    winget install -e --accept-package-agreements --accept-source-agreements Git.Git jqlang.jq Oracle.MySQL GoLang.Go ezwinports.make FiloSottile.mkcert GnuWin32.Zip OpenJS.NodeJS.LTS Ngrok.Ngrok
+    ```
+
 7. After restart, in **administrative** Git Bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`.
 8. (Traditional Windows test runner only): Download and run [windows_buildkite_setup.sh](scripts/windows_buildkite_setup.sh).
 9. If using Rancher Desktop, adjust the /c/buildkite-agent/buildkite-agent.cfg file to set `rancher-desktop=true` in the tags instead of `docker-desktop`. If using Docker Desktop, set `docker-desktop=true`. While editing that file, also add `git-mirrors-path` (see [Git Mirrors](#git-mirrors-all-platforms)): `echo 'git-mirrors-path="C:\buildkite-agent\git-mirrors"' >> /c/buildkite-agent/buildkite-agent.cfg`.
@@ -74,7 +79,7 @@ to run again) and restart the agent afterward:
 19. (Traditional Windows test runner only): Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/main/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 20. (Traditional Windows test runner only): Run `.buildkite/sanetestbot.sh` to check your work.
 21. (Traditional Windows test runner only): Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
-22. (Traditional Windows test runner only): Verify that `go`, `ddev`, `git-bash` are in the path.
+22. (Traditional Windows test runner only): Verify that `go`, `git-bash`, and `%USERPROFILE%\go\bin` are in the path.
 23. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
 24. Turn off the settings that cause the "windows experience" prompts after new upgrades:
 ![disable_windows_experience](../images/disable_windows_experience.png)
@@ -102,7 +107,7 @@ to run again) and restart the agent afterward:
 7. **Before running the setup script**, configure mkcert CAROOT on Windows (PowerShell as the testbot user). This must happen first so that `mkcert -install` in WSL2 installs the Windows CA (not a separate Linux-local one) into the Linux trust store:
 
     ```powershell
-    choco install mkcert -y   # if not already installed
+    winget install -e FiloSottile.mkcert   # if not already installed
     mkcert -install
     setx CAROOT (mkcert -CAROOT)
     setx WSLENV "CAROOT/up"
@@ -218,7 +223,7 @@ directly without changing the system default:
   exists). This is the same state the docker-ce installer case wants.
 * `ps1-docker-desktop` → `ddev-test-ubuntu-desktop`, which must have Docker
   Desktop running with WSL integration **enabled**.
-* `mkcert.exe` must be on the Windows PATH (already installed via choco above).
+* `mkcert.exe` must be on the Windows PATH (already installed with `winget` above).
 
 Run one manually with:
 
@@ -311,7 +316,7 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 10. `sudo mkdir -p /usr/local/bin && sudo chown -R testbot /usr/local/bin`
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
-13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent@4 bats-core composer ddev/ddev/ddev git golang jq mysql-client@8.0 mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
+13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent@4 bats-core composer git golang jq mysql-client@8.0 mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
 14. Run `ngrok authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
@@ -426,7 +431,7 @@ Add `node` to the `brew install` list in step 13 of the macOS setup above.
 
 ### Traditional (native) Windows testbots
 
-Install Node.js via `choco install -y nodejs-lts` (see step 6 of Windows Test
+Install Node.js with `winget install -e OpenJS.NodeJS.LTS` (see step 6 of Windows Test
 Agent Setup above). Confirmed working, including headless Chrome launching
 from the NSSM-installed `buildkite-agent` service context.
 
