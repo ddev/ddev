@@ -3,8 +3,10 @@ package globalconfig_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"testing"
@@ -99,6 +101,119 @@ func TestReadProjectListDropsRemovedProjects(t *testing.T) {
 
 	require.NoError(t, globalconfig.ReadProjectList())
 	require.Equal(t, map[string]*globalconfig.ProjectInfo{"kept": {AppRoot: "/kept"}}, globalconfig.DdevProjectList)
+}
+
+// TestUpdateProjectListKeepsOtherProcessChanges checks that a change is made
+// to the list on disk, not to this process's startup copy.
+func TestUpdateProjectListKeepsOtherProcessChanges(t *testing.T) {
+	origList := globalconfig.DdevProjectList
+	t.Setenv("DDEV_XDG_CONFIG_HOME", t.TempDir())
+	t.Cleanup(func() { globalconfig.DdevProjectList = origList })
+	appRoot := t.TempDir()
+
+	require.NoError(t, os.WriteFile(globalconfig.GetProjectListPath(), []byte("a:\n  approot: /a\n"), 0644))
+	require.NoError(t, globalconfig.ReadProjectList())
+	require.NoError(t, os.WriteFile(globalconfig.GetProjectListPath(), []byte("a:\n  approot: /a\nb:\n  approot: /b\n"), 0644))
+
+	require.NoError(t, globalconfig.SetProjectAppRoot("c", appRoot))
+	require.NoError(t, globalconfig.ReadProjectList())
+	require.Equal(t, map[string]*globalconfig.ProjectInfo{
+		"a": {AppRoot: "/a"},
+		"b": {AppRoot: "/b"},
+		"c": {AppRoot: appRoot},
+	}, globalconfig.DdevProjectList)
+
+	require.NoError(t, os.WriteFile(globalconfig.GetProjectListPath(), []byte("a:\n  approot: /a\nc:\n  approot: "+appRoot+"\nd:\n  approot: /d\n"), 0644))
+	require.NoError(t, globalconfig.RemoveProjectInfo("a"))
+	require.NoError(t, globalconfig.ReadProjectList())
+	require.Equal(t, map[string]*globalconfig.ProjectInfo{
+		"c": {AppRoot: appRoot},
+		"d": {AppRoot: "/d"},
+	}, globalconfig.DdevProjectList)
+}
+
+// TestConcurrentProjectListWriters registers projects from several processes
+// at once and checks that none is lost.
+func TestConcurrentProjectListWriters(t *testing.T) {
+	const writers, perWriter = 4, 10
+	if prefix := os.Getenv("DDEV_TEST_PROJECT_LIST_WRITER"); prefix != "" {
+		appRoot := t.TempDir()
+		for i := range perWriter {
+			require.NoError(t, globalconfig.UpdateProject(prefix+strconv.Itoa(i), appRoot, []string{}))
+		}
+		return
+	}
+
+	origList := globalconfig.DdevProjectList
+	xdg := t.TempDir()
+	t.Setenv("DDEV_XDG_CONFIG_HOME", xdg)
+	t.Cleanup(func() { globalconfig.DdevProjectList = origList })
+	require.NoError(t, os.WriteFile(globalconfig.GetProjectListPath(), nil, 0644))
+
+	errs := make(chan error, writers)
+	for w := range writers {
+		go func() {
+			cmd := exec.Command(os.Args[0], "-test.run=^TestConcurrentProjectListWriters$")
+			cmd.Env = append(os.Environ(), "DDEV_XDG_CONFIG_HOME="+xdg, "DDEV_TEST_PROJECT_LIST_WRITER=w"+strconv.Itoa(w)+"-")
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				err = fmt.Errorf("writer %d: %v\n%s", w, err, out)
+			}
+			errs <- err
+		}()
+	}
+	for range writers {
+		require.NoError(t, <-errs)
+	}
+
+	require.NoError(t, globalconfig.ReadProjectList())
+	require.Len(t, globalconfig.DdevProjectList, writers*perWriter)
+}
+
+// TestProjectListEmptyName checks that an entry with an empty name, as
+// `ddev config` used to write with omit_project_name_by_default, is neither
+// written nor kept.
+func TestProjectListEmptyName(t *testing.T) {
+	origList := globalconfig.DdevProjectList
+	t.Setenv("DDEV_XDG_CONFIG_HOME", t.TempDir())
+	t.Cleanup(func() { globalconfig.DdevProjectList = origList })
+	appRoot := t.TempDir()
+
+	require.Error(t, globalconfig.SetProjectAppRoot("", appRoot))
+	require.Error(t, globalconfig.ReservePorts("", []string{}))
+
+	require.NoError(t, os.WriteFile(globalconfig.GetProjectListPath(), []byte(`"":\n  approot: `+appRoot+"\n"), 0644))
+	require.NoError(t, globalconfig.ReadProjectList())
+	require.Empty(t, globalconfig.DdevProjectList)
+
+	require.NoError(t, globalconfig.SetProjectAppRoot("real", appRoot))
+	content, err := os.ReadFile(globalconfig.GetProjectListPath())
+	require.NoError(t, err)
+	require.NotContains(t, string(content), `""`)
+}
+
+// TestUpdateGlobalConfigKeepsOtherProcessChanges checks that a field change
+// is made to global_config.yaml as it is on disk, not to the startup copy.
+func TestUpdateGlobalConfigKeepsOtherProcessChanges(t *testing.T) {
+	origConfig := globalconfig.DdevGlobalConfig
+	t.Setenv("DDEV_XDG_CONFIG_HOME", t.TempDir())
+	t.Cleanup(func() { globalconfig.DdevGlobalConfig = origConfig })
+
+	globalconfig.DdevGlobalConfig = globalconfig.New()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+
+	other := globalconfig.New()
+	other.TableStyle = "bright"
+	require.NoError(t, globalconfig.WriteGlobalConfig(other))
+
+	require.NoError(t, globalconfig.UpdateGlobalConfig(func(config *globalconfig.GlobalConfig) {
+		config.XdebugIDELocation = "wsl2"
+	}))
+
+	globalconfig.DdevGlobalConfig = globalconfig.New()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	require.Equal(t, "bright", globalconfig.DdevGlobalConfig.TableStyle)
+	require.Equal(t, "wsl2", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 }
 
 type internetActiveNetResolverStub struct {

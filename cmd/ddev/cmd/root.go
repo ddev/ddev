@@ -261,12 +261,11 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 		return nil
 	}
 
+	allowStats := false
+
 	if !skipConfirmation {
 		if !output.JSONOutput && semver.Compare(versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) != 0 && !globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation {
-			allowStats := util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://docs.ddev.com/en/stable/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
-			if allowStats {
-				globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
-			}
+			allowStats = util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://docs.ddev.com/en/stable/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
 		}
 
 		// If they have a new version (but not first-timer) then prompt to poweroff
@@ -296,9 +295,12 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 
 	// Record the new version even when confirmation was skipped; otherwise `-y`
 	// users are asked about the same upgrade by every later command.
-	globalconfig.DdevGlobalConfig.LastStartedVersion = versionconstants.DdevVersion
-
-	return globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	return globalconfig.UpdateGlobalConfig(func(config *globalconfig.GlobalConfig) {
+		if allowStats {
+			config.InstrumentationOptIn = true
+		}
+		config.LastStartedVersion = versionconstants.DdevVersion
+	})
 }
 
 // addCommandIfNotExists adds cmdToAdd to rootCmd if a command with the same name does not already exist.

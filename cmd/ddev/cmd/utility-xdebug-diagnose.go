@@ -633,8 +633,9 @@ func runInteractiveXdebugDiagnose() int {
 	if xdebugIDELocation != "" && !(isWSL2Env && xdebugIDELocation == "wsl2") {
 		output.UserOut.Printf("✗ xdebug_ide_location is set to '%s' (almost always should be empty)\n", xdebugIDELocation)
 		if util.Confirm("Clear it and restart project?") {
-			globalconfig.DdevGlobalConfig.XdebugIDELocation = ""
-			if err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig); err != nil {
+			if err := globalconfig.UpdateGlobalConfig(func(config *globalconfig.GlobalConfig) {
+				config.XdebugIDELocation = ""
+			}); err != nil {
 				output.UserOut.Printf("Failed: %v\n", err)
 			} else {
 				output.UserOut.Println("✓ Cleared, restarting...")
@@ -706,8 +707,9 @@ func runInteractiveXdebugDiagnose() int {
 	if needsWSL2Setting && xdebugIDELocation != "wsl2" {
 		output.UserOut.Printf("✗ %s requires xdebug_ide_location=wsl2\n", setupDescription)
 		if util.Confirm("Set it now?") {
-			globalconfig.DdevGlobalConfig.XdebugIDELocation = "wsl2"
-			if err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig); err != nil {
+			if err := globalconfig.UpdateGlobalConfig(func(config *globalconfig.GlobalConfig) {
+				config.XdebugIDELocation = "wsl2"
+			}); err != nil {
 				output.UserOut.Printf("Failed: %v\n", err)
 				output.UserOut.Println("Run: ddev config global --xdebug-ide-location=wsl2")
 			} else {
