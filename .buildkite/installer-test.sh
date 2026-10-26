@@ -95,17 +95,28 @@ fi
 echo
 echo "buildkite installer test ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER:-unknown} INSTALLER_CASE=${INSTALLER_CASE:-<all>} in ${PWD} golang=$(go version | awk '{print $3}')"
 
-# testbot_maintenance.sh is intentionally NOT run for the installer pipeline.
-# Its 'docker rm -f $(docker ps -aq)' kills Docker Desktop's internal containers,
-# disrupting WSL2 integration. The installer tests manage their own cleanup;
-# the heavy-handed Docker/volume pruning in testbot_maintenance.sh is both
-# unnecessary and harmful here.
+# testbot_maintenance.sh is intentionally NOT run for the installer pipeline:
+# its image and volume pruning is unnecessary here, and its package upgrades
+# are slow. The installer tests manage their own cleanup.
 
 # Start Docker Desktop if this case uses it (provider setup), before sanetestbot.sh
 # checks it. sanetestbot.sh only checks; it does not start Docker Desktop. No-op
 # for docker-ce-inside cases.
 echo "--- ensuring Docker Desktop is started (if this case uses it)"
 ${TIMEOUT} 4m bash "$(dirname "$0")/start-docker-desktop.sh" || true
+
+# Another pipeline on this machine (ddev-windows-mutagen, perf) can leave a
+# ddev-router running in the host Docker Desktop. Through WSL2 localhost
+# forwarding it holds 80/443/10999, which fails every case, docker-ce included.
+if command -v docker.exe >/dev/null 2>&1; then
+    echo "--- removing leftover host Docker containers"
+    host_containers=$(${TIMEOUT} 30s docker.exe ps -aq 2>/dev/null || true)
+    if [ -n "${host_containers}" ]; then
+        docker.exe ps -a --format '{{.Names}} ({{.Image}})' 2>/dev/null || true
+        # shellcheck disable=SC2086
+        ${TIMEOUT} 2m docker.exe rm -f ${host_containers} >/dev/null || true
+    fi
+fi
 
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"

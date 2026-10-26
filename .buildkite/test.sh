@@ -69,7 +69,7 @@ fi
 provider_bringup
 
 echo
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER:-unknown} for OS=${os:-} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT:-notset} golang=$(go version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}')"
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER:-unknown} for OS=${os:-} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT:-notset} golang=$(go version | awk '{print $3}')"
 
 echo
 case ${DOCKER_TYPE:-none} in
@@ -113,12 +113,6 @@ esac
 
 echo "Docker version:"
 docker version
-if command -v ddev >/dev/null ; then
-  echo "ddev version:"
-  ddev version
-else
-  echo "ddev not installed"
-fi
 echo
 
 export DDEV_NONINTERACTIVE=true
@@ -137,6 +131,14 @@ if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ]; then
   fi
 
 fi
+
+# Every ddev this job runs, including testbot_maintenance.sh's cleanup and the
+# final poweroff, is HEAD. A testbot's installed ddev can be missing (the
+# installer tests uninstall it) or stale, which leaves containers running.
+echo "--- Building ddev"
+make build
+export PATH="$PWD/.gotmp/bin/$(go env GOOS)_$(go env GOARCH):$PATH"
+ddev version
 
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"

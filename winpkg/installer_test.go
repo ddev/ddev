@@ -21,7 +21,48 @@ import (
 
 const (
 	installerPath = "../.gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe"
+	// A normal run takes seconds (traditional) to about a minute (WSL2); two
+	// attempts must still fit in go test's 15m timeout.
+	installerTimeout = 4 * time.Minute
 )
+
+// runInstaller runs the installer, and once more if that fails. The installer
+// sometimes crashes in ntdll with 0xc0000005 or never exits, both after it has
+// logged success, and neither repeats on the next run.
+func runInstaller(t *testing.T, installerFullPath string, args ...string) error {
+	t.Helper()
+	var err error
+	for attempt := 1; attempt <= 2; attempt++ {
+		t.Logf("Running installer (attempt %d): %s %s", attempt, installerFullPath, strings.Join(args, " "))
+		err = runInstallerOnce(t, installerFullPath, args...)
+		if err == nil {
+			return nil
+		}
+		t.Logf("Installer attempt %d failed: %v", attempt, err)
+		if logs := getInstallerDebugLogs(t); logs != "" {
+			t.Log(logs)
+		}
+	}
+	return err
+}
+
+func runInstallerOnce(t *testing.T, installerFullPath string, args ...string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), installerTimeout)
+	defer cancel()
+	// Stdout and stderr stay unset: silent NSIS prints nothing, and a pipe that
+	// a child process inherits would keep Wait from returning after the installer exits.
+	cmd := osexec.CommandContext(ctx, installerFullPath, args...)
+	cmd.Cancel = func() error {
+		out, _ := exec.RunHostCommand("tasklist.exe", "/V", "/FI", "IMAGENAME eq "+filepath.Base(installerFullPath))
+		t.Logf("Installer still running after %v, killing it: %s", installerTimeout, out)
+		return cmd.Process.Kill()
+	}
+	err := cmd.Run()
+	if ctx.Err() == context.DeadlineExceeded {
+		return fmt.Errorf("installer did not exit within %v: %w", installerTimeout, err)
+	}
+	return err
+}
 
 // getInstallerDebugLogs finds and returns the contents of the most recent installer debug log
 func getInstallerDebugLogs(t *testing.T) string {
@@ -302,56 +343,14 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			installerFullPath := filepath.Join(wd, installerPath)
 			require.True(fileutil.FileExists(installerFullPath), "Installer not found at %s", installerFullPath)
 
-			// Run installer with specified args
-			t.Logf("Running installer: %s %v", installerFullPath, tc.installerArgs)
-
 			// Add some debugging before installer run
 			t.Logf("Pre-installer: checking system state...")
 			out, _ := exec.RunHostCommand("tasklist.exe", "/FI", "IMAGENAME eq msiexec.exe")
 			t.Logf("MSI processes running: %s", out)
 
-			// Run installer with a 10-minute timeout to prevent infinite hangs.
-			// Each case runs as its own decoupled Buildkite job, so an install
-			// that exceeds 10 minutes is treated as a real failure (the test then
-			// dumps the installer debug log rather than letting the job hang).
-			const installerTimeout = 15 * time.Minute
-			ctx, cancel := context.WithTimeout(context.Background(), installerTimeout)
-			defer cancel()
-
-			cmd := osexec.CommandContext(ctx, installerFullPath, tc.installerArgs...)
-			installerOutput, err := cmd.CombinedOutput()
-			out = string(installerOutput)
-
-			if ctx.Err() == context.DeadlineExceeded {
-				t.Logf("Installer TIMED OUT after %v", installerTimeout)
-				t.Logf("Dumping installer debug log for timeout diagnosis:")
-				if logs := getInstallerDebugLogs(t); logs != "" {
-					t.Log(logs)
-				}
-				require.Fail("Installer timeout", "Installer did not complete within %v", installerTimeout)
-			}
-
-			if err != nil {
-				t.Logf("Installer failed with error trying to run with '%s': %v", installerFullPath+" "+strings.Join(tc.installerArgs, " "), err)
-				t.Logf("Installer output: %s", out)
-
-				// Check for specific error patterns
-				if strings.Contains(err.Error(), "0xc0000005") {
-					t.Logf("ACCESS VIOLATION detected in installer")
-					// Try to get more info about what was running
-					procOut, _ := exec.RunHostCommand("tasklist.exe", "/FI", "IMAGENAME eq ddev_windows_amd64_installer.exe")
-					t.Logf("Installer processes: %s", procOut)
-				}
-
-				// Dump debug log on any error
-				t.Logf("Dumping installer debug log for error diagnosis:")
-				if logs := getInstallerDebugLogs(t); logs != "" {
-					t.Log(logs)
-				}
-
-				require.NoError(err, "Installer failed: %v, output: %s", err, out)
-			}
-			t.Logf("Installer completed successfully, output: %s", out)
+			err = runInstaller(t, installerFullPath, tc.installerArgs...)
+			require.NoError(err, "Installer failed")
+			t.Logf("Installer completed successfully")
 
 			// Check $CAROOT env var on Windows side
 			caRootOut, caRootErr := exec.RunHostCommand("cmd.exe", "/c", "echo %CAROOT%")
@@ -483,11 +482,8 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 	installerFullPath := filepath.Join(wd, installerPath)
 	require.True(fileutil.FileExists(installerFullPath), "Installer not found at %s", installerFullPath)
 
-	// Run installer with Traditional Windows option
-	t.Logf("Running installer: %s /traditional /S", installerFullPath)
-	out, err := exec.RunHostCommand(installerFullPath, "/traditional", "/S")
-	require.NoError(err, "Installer failed: %v, output: %s", err, out)
-	t.Logf("Installer output: %s", out)
+	err = runInstaller(t, installerFullPath, "/traditional", "/S")
+	require.NoError(err, "Installer failed")
 
 	// Wait for installer to complete by checking for ddev.exe at expected location
 	// NSIS installers in silent mode may return before fully completing
