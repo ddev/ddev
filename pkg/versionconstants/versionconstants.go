@@ -49,46 +49,46 @@ func IsUnreleasedDdevVersion(version string) bool {
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "50dba842c7" // 20261024_rfay_disable_upload_progress-50dba842c7
+var WebTag = "3f9fdba839" // 20261025_v1.25.5_images-3f9fdba839
 
 // WebTagBranch is the branch WebTag's content was built from.
-var WebTagBranch = "20261024_rfay_disable_upload_progress"
+var WebTagBranch = "v1.25.5"
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "b7c555301a" // 20261019_rfay_podman_image_build-b7c555301a
+var BaseDBTag = "4c5477115a" // 20261025_v1.25.5_images-4c5477115a
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
-var BaseDBTagBranch = "20261019_rfay_podman_image_build"
+var BaseDBTagBranch = "v1.25.5"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "5089986640" // 20261019_rfay_podman_image_build-5089986640
+var TraefikRouterTag = "ce1c55b924" // 20261025_v1.25.5_images-ce1c55b924
 
 // TraefikRouterTagBranch is the branch TraefikRouterTag's content was built from.
-var TraefikRouterTagBranch = "20261019_rfay_podman_image_build"
+var TraefikRouterTagBranch = "v1.25.5"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "4151598764" // 20261019_rfay_podman_image_build-4151598764
+var SSHAuthTag = "fa039f46c3" // 20261025_v1.25.5_images-fa039f46c3
 
 // SSHAuthTagBranch is the branch SSHAuthTag's content was built from.
-var SSHAuthTagBranch = "20261019_rfay_podman_image_build"
+var SSHAuthTagBranch = "v1.25.5"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "7f384788a0" // 20261019_rfay_podman_image_build-7f384788a0
+var XhguiTag = "2ee77bbcd8" // 20261025_v1.25.5_images-2ee77bbcd8
 
 // XhguiTagBranch is the branch XhguiTag's content was built from.
-var XhguiTagBranch = "20261019_rfay_podman_image_build"
+var XhguiTagBranch = "v1.25.5"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"
