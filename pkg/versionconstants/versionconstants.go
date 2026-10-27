@@ -67,7 +67,7 @@ var BaseDBTagBranch = "20261027_rfay_xtrabackup_repack_curl_dev"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "936cf537be" // 20261014_rfay_router_volume-936cf537be
+var TraefikRouterTag = "ef72c327c5" // 20261014_rfay_router_volume-ef72c327c5
 
 // TraefikRouterTagBranch is the branch TraefikRouterTag's content was built from.
 var TraefikRouterTagBranch = "20261014_rfay_router_volume"
