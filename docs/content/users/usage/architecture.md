@@ -218,7 +218,7 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 | Directory | Contents |
 | --- | --- |
-| `global-commands` | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
+| `global-commands` | [Global commands](../extend/custom-commands.md#global-commands), copied from the host. `web` and `db` run them from their [project cache volumes](#project-cache-volumes), and custom services run them from here |
 | `mkcert` | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
 | `traefik` | Router configuration and certificates, with files for each project |
 
@@ -235,14 +235,14 @@ docker volume rm ddev-global-cache
 
 ## Project Cache Volumes
 
-Each project has two more volumes, `<project>-web-cache` for the `web` container and `<project>-db-cache` for the `db` container. Each is mounted at `/mnt/ddev-project-cache` in its own container, so only one container writes to it. They survive [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff), and [`ddev delete`](commands.md#delete) removes them.
+Each project has two more volumes, `ddev-<project>-web-cache` for the `web` container and `ddev-<project>-db-cache` for the `db` container. Each is mounted at `/mnt/ddev-project-cache` in its own container, so only one container writes to it. They survive [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff), and [`ddev delete`](commands.md#delete) removes them.
 
 | Directory | Volume | Contents |
 | --- | --- | --- |
 | `composer` | `web` | Composer cache |
 | `corepack` | `web` | Package managers installed by `corepack` |
-| `global-commands` | `db` | The `db` [global commands](../extend/custom-commands.md#global-commands), copied from `ddev-global-cache` at each start |
-| `history` | `web`, `db` | History of Bash, the MySQL and MariaDB client, `psql`, and, in `web`, the Node.js REPL, Python 3.13 and later, `redis-cli`, and `sqlite3` |
+| `global-commands` | `web`, `db` | The container's [global commands](../extend/custom-commands.md#global-commands), copied from `ddev-global-cache` at each start |
+| `history` | `web`, `db` | History of Bash, the MySQL and MariaDB client, `psql`, and, in `web`, the Node.js `REPL`, Python 3.13 and later, `redis-cli`, and `sqlite3` |
 | `n_prefix` | `web` | Node.js versions downloaded by `n` |
 | `npm` | `web` | npm cache |
 | `pip` | `web` | pip cache, created only if you install pip, for example with [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages) |
@@ -255,5 +255,5 @@ To clear a project's caches without deleting the project, remove its volume:
 
 ```bash
 ddev stop
-docker volume rm <project>-web-cache
+docker volume rm ddev-<project>-web-cache
 ```

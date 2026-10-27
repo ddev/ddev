@@ -321,7 +321,7 @@ volumes:
     name: "{{ if eq .DBType "postgres" }}{{ .PostgresVolumeName }}{{ else }}{{ .MariaDBVolumeName }}{{ end }}"
     external: true
   db-cache:
-    name: ${DDEV_SITENAME}-db-cache
+    name: ddev-${DDEV_SITENAME}-db-cache
     external: true
   {{ end }} {{/* end if not .OmitDB */}}
 
@@ -333,7 +333,7 @@ volumes:
     name: ddev-global-cache
     external: true
   web-cache:
-    name: ${DDEV_SITENAME}-web-cache
+    name: ddev-${DDEV_SITENAME}-web-cache
     external: true
   {{ if .NoBindMounts }}
   ddev-config:

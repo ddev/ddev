@@ -1929,10 +1929,8 @@ func (app *DdevApp) start(o StartOptions) error {
 		if slices.Contains(newCacheServices, s) {
 			fmt.Fprintf(&prepCmd, "cp -p /mnt/ddev-global-cache/bashhistory/%[1]s-%[2]s/bash_history /mnt/ddev-global-cache/mysqlhistory/%[1]s-%[2]s/mysql_history %[3]s/history/ 2>/dev/null; ", app.Name, s, cacheDir)
 		}
-		// db doesn't mount ddev-global-cache, so it gets its own copy of its global commands
-		if s == "db" {
-			fmt.Fprintf(&prepCmd, "rm -rf %[1]s/global-commands; cp -a /mnt/ddev-global-cache/global-commands/db %[1]s/global-commands 2>/dev/null; ", cacheDir)
-		}
+		// ddev-global-cache keeps the staged copy for add-on services
+		fmt.Fprintf(&prepCmd, "rm -rf %[1]s/global-commands; cp -a /mnt/ddev-global-cache/global-commands/%[2]s %[1]s/global-commands 2>/dev/null; ", cacheDir, s)
 		chownCmd = fmt.Sprintf("%s %s", chownCmd, cacheDir)
 	}
 	chownCmd = prepCmd.String() + chownCmd
@@ -4310,7 +4308,7 @@ func (app *DdevApp) GetPostgresVolumeName() string {
 // /mnt/ddev-project-cache in a service, holding its history and, for web,
 // the package manager caches. Each service gets its own so it has one writer.
 func (app *DdevApp) GetProjectCacheVolumeName(service string) string {
-	return app.Name + "-" + service + "-cache"
+	return "ddev-" + app.Name + "-" + service + "-cache"
 }
 
 // projectCacheServices returns the services that mount a project cache volume.
