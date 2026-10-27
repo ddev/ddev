@@ -115,7 +115,7 @@ func globalCommandsArchive(sourceDir string) ([]byte, []string, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	util.Debug("globalCommandsArchive: %d files from %s for services %v:\n%s", len(files), sourceDir, services, strings.Join(files, "\n"))
+	util.Verbose("globalCommandsArchive: %d files from %s for services %v: %s", len(files), sourceDir, services, strings.Join(files, " "))
 	if err = tw.Close(); err != nil {
 		return nil, nil, err
 	}
