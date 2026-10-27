@@ -17,35 +17,27 @@ teardown() {
   cd ${WAGTAIL_SITENAME}
 
   run -0 ddev config --project-type=generic --webserver-type=generic \
-    --webimage-extra-packages=python3-pip,python3-venv \
+    --webimage-extra-packages=python3-venv \
     --web-environment-add=DJANGO_SETTINGS_MODULE=mysite.settings.dev \
     --omit-containers=db
 
-  cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.python-venv
-RUN for file in /etc/bash.bashrc /etc/bash.nointeractive.bashrc; do \
-        echo '[ -s "$DDEV_APPROOT/env/bin/activate" ] && source "$DDEV_APPROOT/env/bin/activate"' >> "$file"; \
-    done
-DOCKERFILEEND
-  run -0 ddev mutagen sync
-  assert_file_exist .ddev/web-build/Dockerfile.python-venv
-
-  run -0 ddev start -y
-
-  run -0 ddev exec python -m venv env
-
-  run -0 ddev exec pip install wagtail
-
-  run -0 ddev exec wagtail start mysite .
-
-  run -0 ddev exec pip install -r requirements.txt
-
-  run -0 ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
-
-  run -0 ddev exec python manage.py migrate --noinput
-
-  # Create superuser non-interactively
-  run -0 ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
-
+  echo wagtail > requirements.txt
+  mkdir -p mysite/settings
+  echo 'SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")' > mysite/settings/local.py
+  cat <<'EOF' > .ddev/docker-compose.wagtail.yaml
+services:
+  web:
+    build:
+      additional_contexts:
+        project: ${DDEV_APPROOT}
+EOF
+  cat <<'EOF' > .ddev/web-build/Dockerfile.wagtail
+COPY --from=project --chmod=644 requirements.txt /tmp/requirements.txt
+RUN install -d -o "$username" /opt/wagtail \
+    && runuser -u "$username" -- python3 -m venv /opt/wagtail \
+    && runuser -u "$username" -- /opt/wagtail/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
+    && echo 'export PATH="/opt/wagtail/bin:$PATH"' > /etc/bashrc/wagtail.bashrc
+EOF
   cat <<'EOF' > .ddev/config.wagtail.yaml
 web_extra_daemons:
     - name: "wagtail"
@@ -57,14 +49,29 @@ web_extra_exposed_ports:
       http_port: 80
       https_port: 443
 EOF
-  run -0 ddev mutagen sync
+  assert_file_exist requirements.txt
+  assert_file_exist mysite/settings/local.py
+  assert_file_exist .ddev/docker-compose.wagtail.yaml
+  assert_file_exist .ddev/web-build/Dockerfile.wagtail
   assert_file_exist .ddev/config.wagtail.yaml
+
+  run -0 ddev start -y
+
+  run -0 ddev exec "rm -f requirements.txt && wagtail start mysite ."
+
+  run -0 ddev exec python manage.py migrate --noinput
+
+  # Create superuser non-interactively
+  run -0 ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
 
   run -0 ddev restart
 
-  # web_extra_exposed_ports only takes effect after this restart, so the
-  # generic webserver has no primary URL to report until now (see
-  # GetPrimaryRouterHTTP(S)Port in pkg/ddevapp/ddevapp.go).
+  run -0 ddev exec command -v python
+  assert_output "/opt/wagtail/bin/python"
+
+  # The virtual environment belongs to the user, so temporary installs work
+  run -0 ddev exec pip install --no-cache-dir django-debug-toolbar
+
   _extra_info
 
   # ddev launch /admin
@@ -82,4 +89,12 @@ EOF
   # Check if we can access the admin page (should redirect to login)
   run -0 curl -sfL ${PRIMARY_URL}/admin
   assert_output --partial "Sign in - Wagtail"
+
+  # Logging in over HTTPS passes Django's CSRF origin check only with SECURE_PROXY_SSL_HEADER
+  cookies=${tmpdir}/cookies.txt
+  run -0 curl -sf -c ${cookies} ${PRIMARY_URL}/admin/login/
+  csrftoken=$(awk '$6 == "csrftoken" {print $7}' ${cookies})
+  run -0 curl -sfL -b ${cookies} -c ${cookies} -H "Origin: ${PRIMARY_URL}" -H "Referer: ${PRIMARY_URL}/admin/login/" \
+    -d "csrfmiddlewaretoken=${csrftoken}&username=admin&password=admin" ${PRIMARY_URL}/admin/login/
+  assert_output --partial "Dashboard - Wagtail"
 }
