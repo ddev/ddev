@@ -198,6 +198,49 @@ RUN npm install -g gatsby-cli@${GATSBY_CLI_VERSION}
 
 The `.ddev/*-build` directory is the Docker "context", so if a file named `file.txt` exists in `.ddev/web-build`, you can use `COPY file.txt /` in the Dockerfile.
 
+### Python Packages from `requirements.txt`
+
+If you add `python3-pip` to the web image, `pip install` fails with this error:
+
+```text
+error: externally-managed-environment
+
+× This environment is externally managed
+```
+
+Debian manages the image’s Python packages. Instead, build a virtual environment in the image from the project’s `requirements.txt`. The build reads files only from `.ddev/web-build`, so add the project root as another build context in `.ddev/docker-compose.python.yaml`:
+
+```yaml
+# .ddev/docker-compose.python.yaml
+services:
+  web:
+    build:
+      additional_contexts:
+        project: ${DDEV_APPROOT}
+```
+
+Add `python3-venv` to [`webimage_extra_packages`](#adding-extra-debian-packages-with-webimage_extra_packages-and-dbimage_extra_packages), for example in `.ddev/config.python.yaml`:
+
+```yaml
+# .ddev/config.python.yaml
+webimage_extra_packages: [python3-venv]
+```
+
+Then create `.ddev/web-build/Dockerfile.python`. The `COPY` source is relative to the project root, so for a file in `docs/`, use `docs/requirements.txt`. `--chmod=644` lets the user read the file even if only its owner can, as with files that Mutagen syncs from the container:
+
+```dockerfile
+# .ddev/web-build/Dockerfile.python
+COPY --from=project --chmod=644 requirements.txt /tmp/requirements.txt
+RUN install -d -o "$username" /opt/venv \
+    && runuser -u "$username" -- python3 -m venv /opt/venv \
+    && runuser -u "$username" -- /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
+    && echo 'export PATH="/opt/venv/bin:$PATH"' > /etc/bashrc/python-venv.bashrc
+```
+
+The virtual environment goes first in `PATH`, so `python` runs it rather than the image’s `/usr/bin/python`, which doesn’t have the packages.
+
+`ddev restart` rebuilds the virtual environment when `requirements.txt` changes. To get newer releases within a version range like `wagtail>=7.2,<7.3`, run `ddev restart --no-cache`. A package added with `ddev exec pip install` lasts until the next restart, so add the ones you want to keep to `requirements.txt`.
+
 ### Examples
 
 This `.ddev/web-build/Dockerfile.phpcs` installs `phpcs` and `phpcbf` globally, with the Drupal coding standards from [`drupal/coder`](https://packagist.org/packages/drupal/coder):

@@ -3275,7 +3275,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
 ## Wagtail (Python, Generic)
 
-[Wagtail](https://wagtail.org/) is a popular, open-source content management system built on the Django web framework. This quickstart demonstrates how to set up a new Wagtail project using DDEV with Python and a virtual environment.
+[Wagtail](https://wagtail.org/) is a popular, open-source content management system built on the Django web framework. This quickstart installs Wagtail into the web image, as described in [Python Packages from `requirements.txt`](./extend/customizing-images.md#python-packages-from-requirementstxt), and runs the Django development server.
 
 Create the project directory and configure DDEV:
 
@@ -3283,57 +3283,31 @@ Create the project directory and configure DDEV:
 export WAGTAIL_SITENAME=my-wagtail-site
 mkdir -p ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
 ddev config --project-type=generic --webserver-type=generic \
-    --webimage-extra-packages=python3-pip,python3-venv \
+    --webimage-extra-packages=python3-venv \
     --web-environment-add=DJANGO_SETTINGS_MODULE=mysite.settings.dev \
     --omit-containers=db
 ```
 
-Configure the container to automatically activate the Python virtual environment:
+Add a placeholder `requirements.txt` that installs Wagtail so it can create the project, a Django setting to detect HTTPS behind the [Traefik](./extend/traefik-router.md) router, and the DDEV configuration:
 
 ```bash
-cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.python-venv
-RUN for file in /etc/bash.bashrc /etc/bash.nointeractive.bashrc; do \
-        echo '[ -s "$DDEV_APPROOT/env/bin/activate" ] && source "$DDEV_APPROOT/env/bin/activate"' >> "$file"; \
-    done
-DOCKERFILEEND
-```
-
-Start DDEV (this may take a minute):
-
-```bash
-ddev start
-```
-
-Create a Python virtual environment and install Wagtail:
-
-```bash
-ddev exec python -m venv env
-ddev exec pip install wagtail
-```
-
-Initialize the Wagtail project:
-
-```bash
-ddev exec wagtail start mysite .
-ddev exec pip install -r requirements.txt
-```
-
-Configure Django to detect HTTPS behind the [Traefik](./extend/traefik-router.md) router:
-
-```bash
-ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
-```
-
-Run database migrations and create a superuser:
-
-```bash
-ddev exec python manage.py migrate --noinput
-ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
-```
-
-Configure DDEV to run the Wagtail development server:
-
-```bash
+echo wagtail > requirements.txt
+mkdir -p mysite/settings
+echo 'SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")' > mysite/settings/local.py
+cat <<'EOF' > .ddev/docker-compose.wagtail.yaml
+services:
+  web:
+    build:
+      additional_contexts:
+        project: ${DDEV_APPROOT}
+EOF
+cat <<'EOF' > .ddev/web-build/Dockerfile.wagtail
+COPY --from=project --chmod=644 requirements.txt /tmp/requirements.txt
+RUN install -d -o "$username" /opt/wagtail \
+    && runuser -u "$username" -- python3 -m venv /opt/wagtail \
+    && runuser -u "$username" -- /opt/wagtail/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
+    && echo 'export PATH="/opt/wagtail/bin:$PATH"' > /etc/bashrc/wagtail.bashrc
+EOF
 cat <<'EOF' > .ddev/config.wagtail.yaml
 web_extra_daemons:
     - name: "wagtail"
@@ -3347,7 +3321,26 @@ web_extra_exposed_ports:
 EOF
 ```
 
-Restart DDEV to apply the configuration:
+Start DDEV (this may take a minute):
+
+```bash
+ddev start
+```
+
+Create the Wagtail project, which replaces the placeholder with its own `requirements.txt`:
+
+```bash
+ddev exec "rm -f requirements.txt && wagtail start mysite ."
+```
+
+Run database migrations and create a superuser:
+
+```bash
+ddev exec python manage.py migrate --noinput
+ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
+```
+
+Restart DDEV to rebuild the virtual environment from Wagtail's `requirements.txt` and start the server:
 
 ```bash
 ddev restart
@@ -3369,22 +3362,26 @@ ddev launch /admin
     export WAGTAIL_SITENAME=my-wagtail-site
     mkdir -p ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
     ddev config --project-type=generic --webserver-type=generic \
-        --webimage-extra-packages=python3-pip,python3-venv \
+        --webimage-extra-packages=python3-venv \
         --web-environment-add=DJANGO_SETTINGS_MODULE=mysite.settings.dev \
         --omit-containers=db
-    cat <<'INNEREOF' >.ddev/web-build/Dockerfile.python-venv
-    RUN for file in /etc/bash.bashrc /etc/bash.nointeractive.bashrc; do \
-            echo '[ -s "$DDEV_APPROOT/env/bin/activate" ] && source "$DDEV_APPROOT/env/bin/activate"' >> "$file"; \
-        done
+    echo wagtail > requirements.txt
+    mkdir -p mysite/settings
+    echo 'SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")' > mysite/settings/local.py
+    cat <<'INNEREOF' > .ddev/docker-compose.wagtail.yaml
+    services:
+      web:
+        build:
+          additional_contexts:
+            project: ${DDEV_APPROOT}
     INNEREOF
-    ddev start -y
-    ddev exec python -m venv env
-    ddev exec pip install wagtail
-    ddev exec wagtail start mysite .
-    ddev exec pip install -r requirements.txt
-    ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
-    ddev exec python manage.py migrate --noinput
-    ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
+    cat <<'INNEREOF' > .ddev/web-build/Dockerfile.wagtail
+    COPY --from=project --chmod=644 requirements.txt /tmp/requirements.txt
+    RUN install -d -o "$username" /opt/wagtail \
+        && runuser -u "$username" -- python3 -m venv /opt/wagtail \
+        && runuser -u "$username" -- /opt/wagtail/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
+        && echo 'export PATH="/opt/wagtail/bin:$PATH"' > /etc/bashrc/wagtail.bashrc
+    INNEREOF
     cat <<'INNEREOF' > .ddev/config.wagtail.yaml
     web_extra_daemons:
         - name: "wagtail"
@@ -3396,6 +3393,10 @@ ddev launch /admin
           http_port: 80
           https_port: 443
     INNEREOF
+    ddev start -y
+    ddev exec "rm -f requirements.txt && wagtail start mysite ."
+    ddev exec python manage.py migrate --noinput
+    ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
     ddev restart
     ddev launch /admin
     EOF
