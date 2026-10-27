@@ -33,6 +33,7 @@ services:
       {{ if .SeedSnapshotMountDir }}
       - {{ .SeedSnapshotMountDir }}:{{ .SeedSnapshotMountTarget }}:ro
       {{ end }}
+      - ddev-global-cache:/mnt/ddev-global-cache:ro
       - db-cache:/mnt/ddev-project-cache
     restart: "no"
 

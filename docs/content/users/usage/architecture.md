@@ -214,11 +214,11 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 ## The `ddev-global-cache` Volume
 
-`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` and `ddev-router` containers use it, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
+`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` and `ddev-router` containers use it, the `db` container mounts it read-only, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
 
 | Directory | Contents |
 | --- | --- |
-| `global-commands` | [Global commands](../extend/custom-commands.md#global-commands), copied from the host. `web` and `db` run them from their [project cache volumes](#project-cache-volumes), and custom services run them from here |
+| `global-commands` | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
 | `mkcert` | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
 | `traefik` | Router configuration and certificates, with files for each project |
 
@@ -226,7 +226,7 @@ Add-ons may keep their own directories here too. DDEV doesn't change the ownersh
 
 [`ddev delete`](commands.md#delete) removes the project's router files.
 
-To clear the volume, for example to free Docker provider disk space, remove it. DDEV creates the volume again on the next [`ddev start`](commands.md#start). Versions of DDEV before v1.25.6 also kept package caches and shell history here, so removing it also frees that space:
+To clear the volume, for example to free Docker provider disk space, remove it. DDEV creates the volume again on the next [`ddev start`](commands.md#start). Versions of DDEV before v1.26.0 also kept package caches and shell history here, so removing it also frees that space:
 
 ```bash
 ddev poweroff
@@ -241,7 +241,6 @@ Each project has two more volumes, `ddev-<project>-web-cache` for the `web` cont
 | --- | --- | --- |
 | `composer` | `web` | Composer cache |
 | `corepack` | `web` | Package managers installed by `corepack` |
-| `global-commands` | `web`, `db` | The container's [global commands](../extend/custom-commands.md#global-commands), copied from `ddev-global-cache` at each start |
 | `history` | `web`, `db` | History of Bash, the MySQL and MariaDB client, `psql`, and, in `web`, the Node.js `REPL`, Python 3.13 and later, `redis-cli`, and `sqlite3` |
 | `n_prefix` | `web` | Node.js versions downloaded by `n` |
 | `npm` | `web` | npm cache |

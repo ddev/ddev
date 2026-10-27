@@ -49,12 +49,8 @@ func TestProjectCacheVolumes(t *testing.T) {
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: `echo "db-history" >> "$HISTFILE"`})
 	require.NoError(t, err)
-	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "grep -q ' /mnt/ddev-global-cache ' /proc/mounts"})
-	require.Error(t, err, "db shouldn't mount ddev-global-cache")
-	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "test -x /mnt/ddev-project-cache/global-commands/mysql"})
-	require.NoError(t, err, "db's global commands should be copied into its project cache")
-	_, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "test -x /mnt/ddev-project-cache/global-commands/drush"})
-	require.NoError(t, err, "web's global commands should be copied into its project cache")
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "touch /mnt/ddev-global-cache/should-fail"})
+	require.Error(t, err, "db should mount ddev-global-cache read-only")
 
 	require.NoError(t, app.Restart())
 	out, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: `cat "$HISTFILE"`})

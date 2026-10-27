@@ -1893,12 +1893,6 @@ func (app *DdevApp) start(o StartOptions) error {
 		}
 	}
 
-	// The prep container below copies db's global commands from here
-	err = PopulateGlobalCustomCommandFiles()
-	if err != nil {
-		util.Warning("Failed to populate global custom command files: %v", err)
-	}
-
 	// Build list of volume mounts and their target paths for chown
 	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
 	// ddev-global-cache is shared by every project and user, so it is never
@@ -1929,8 +1923,6 @@ func (app *DdevApp) start(o StartOptions) error {
 		if slices.Contains(newCacheServices, s) {
 			fmt.Fprintf(&prepCmd, "cp -p /mnt/ddev-global-cache/bashhistory/%[1]s-%[2]s/bash_history /mnt/ddev-global-cache/mysqlhistory/%[1]s-%[2]s/mysql_history %[3]s/history/ 2>/dev/null; ", app.Name, s, cacheDir)
 		}
-		// ddev-global-cache keeps the staged copy for add-on services
-		fmt.Fprintf(&prepCmd, "rm -rf %[1]s/global-commands; cp -a /mnt/ddev-global-cache/global-commands/%[2]s %[1]s/global-commands 2>/dev/null; ", cacheDir, s)
 		chownCmd = fmt.Sprintf("%s %s", chownCmd, cacheDir)
 	}
 	chownCmd = prepCmd.String() + chownCmd
@@ -2266,6 +2258,11 @@ func (app *DdevApp) start(o StartOptions) error {
 		routerWg.Go(func() {
 			routerErr = StartDdevRouter()
 		})
+	}
+
+	err = PopulateGlobalCustomCommandFiles()
+	if err != nil {
+		util.Warning("Failed to populate global custom command files: %v", err)
 	}
 
 	util.Verbose("Testing to see if /mnt/ddev_config is properly mounted")
