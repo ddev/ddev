@@ -83,12 +83,12 @@ RUN <<EOF
         case ${DB_MAJOR_VERSION} in
             "8.0")
                 percona-release setup pxb80
-                apt-get update && apt-get -qq install -y percona-xtrabackup-80
+                pxb_pkg=percona-xtrabackup-80
                 ;;
 
             "8.4")
                 percona-release setup pxb84lts
-                apt-get update && apt-get -qq install -y percona-xtrabackup-84
+                pxb_pkg=percona-xtrabackup-84
                 ;;
 
             "9.7")
@@ -97,7 +97,7 @@ RUN <<EOF
                 # entry, so it mis-derives the repo name). "enable" with the full
                 # repo name works and matches Percona's own install docs.
                 percona-release enable pxb-97-lts
-                apt-get update && apt-get -qq install -y percona-xtrabackup-97
+                pxb_pkg=percona-xtrabackup-97
                 ;;
             # Older versions of mysql and a few mariadb use pxb24
             *)
@@ -105,6 +105,20 @@ RUN <<EOF
                 apt-get update && apt-get install -qq -y percona-xtrabackup-24
                 ;;
         esac
+
+        # The DHI-based versions' packages have an unneeded libcurl4-openssl-dev
+        # dependency, whose -dev chain must exactly match the base image's runtime
+        # libs and breaks the build whenever DHI's repo drifts (#8925).
+        if [ -n "${pxb_pkg:-}" ]; then
+            apt-get -qq update
+            mkdir /tmp/pxb && chown _apt /tmp/pxb && cd /tmp/pxb
+            apt-get -qq download ${pxb_pkg}
+            dpkg-deb -R ${pxb_pkg}_*.deb pxb
+            sed -i -E '/^Depends:/ { s/, *libcurl4-openssl-dev[^,]*//; s/libcurl4-openssl-dev[^,]*, *// }' pxb/DEBIAN/control
+            dpkg-deb -Znone -b pxb pxb.deb >/dev/null
+            apt-get -qq install -y ./pxb.deb
+            cd / && rm -rf /tmp/pxb
+        fi
     fi
 EOF
 
