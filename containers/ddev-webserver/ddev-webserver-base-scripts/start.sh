@@ -102,30 +102,31 @@ phpenmod assert
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-# Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
+# Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-project-cache/terminus/cache) exists
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
-sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
+sudo mkdir -p /mnt/ddev-project-cache/{history,n_prefix,npm,yarn/classic,yarn/berry,corepack}
 sudo chown -R "$(id -u):$(id -g)" /var/lib/php
 
-# The global cache is already chowned by a privileged utility container in
+# The project cache is already chowned by a privileged utility container in
 # app.Start() before this container ever starts (see chownCmd in ddevapp.go),
 # so this is normally a no-op. On some bind-mounted filesystems (e.g. virtiofs
 # on Apple Container/socktainer) chown fails even when ownership already
 # matches, which would otherwise kill this container outright under `set -e`.
-sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ || true
+# ddev-global-cache is shared by every project and user, so it is never chowned.
+sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-project-cache/ || true
 
-# The following ensures a persistent and shared "global" cache for
+# The following ensures a persistent per-project cache for
 # yarn classic (frozen v1) and yarn berry (active). In the case of berry, the global cache
 # will only be used if the project is configured to use it through it's own
 # enableGlobalCache configuration option. Assumes ~/.yarn/berry as the default
 # global folder.
 (if cd ~ || (echo "unable to cd to home directory"; exit 22); then
-  timeout 1 yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic >/dev/null || echo 'cache-folder "/mnt/ddev-global-cache/yarn/classic"' >> ~/.yarnrc || true
+  timeout 1 yarn config set cache-folder /mnt/ddev-project-cache/yarn/classic >/dev/null || echo 'cache-folder "/mnt/ddev-project-cache/yarn/classic"' >> ~/.yarnrc || true
 fi)
 # ensure default yarn berry global folder is there to symlink cache afterwards
 mkdir -p ~/.yarn/berry
-ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
+ln -sf /mnt/ddev-project-cache/yarn/berry ~/.yarn/berry/cache
 
 # /mnt/ddev_config/.homeadditions may be either
 # a bind-mount, or a volume mount, but we don't care,

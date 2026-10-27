@@ -190,7 +190,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
-ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+ENV TERMINUS_CACHE_DIR=/mnt/ddev-project-cache/terminus/cache
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 
 # TARGETPLATFORM is Docker buildx's target platform (e.g. linux/arm64)
@@ -473,11 +473,11 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
     update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
 # we need to create the /var/cache/nginx and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
+RUN mkdir -p /mnt/ddev-global-cache/mkcert /mnt/ddev-project-cache /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
     chown www-data:www-data /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
     chmod 755 /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
     ln -sf /run/php/php-fpm.sock /run/php-fpm.sock && \
-    chmod -R ugo+rw /mnt/ddev-global-cache/
+    chmod -R ugo+rw /mnt/ddev-global-cache/ /mnt/ddev-project-cache/
 
 RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
     chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
@@ -529,11 +529,11 @@ FROM scratch AS ddev-webserver
 ENV PHP_DEFAULT_VERSION="8.4"
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
-ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+ENV TERMINUS_CACHE_DIR=/mnt/ddev-project-cache/terminus/cache
 ENV TERMINUS_HIDE_UPDATE_MESSAGE=1
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV COMPOSER_ALLOW_SUPERUSER=1
-ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
+ENV COMPOSER_CACHE_DIR=/mnt/ddev-project-cache/composer
 ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=xterm
@@ -577,11 +577,11 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
     update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
 # we need to create the /var/cache/linux and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
+RUN mkdir -p /mnt/ddev-global-cache/mkcert /mnt/ddev-project-cache /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
     chown www-data:www-data /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
     chmod 755 /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
     ln -sf /run/php/php-fpm.sock /run/php-fpm.sock && \
-    chmod -R ugo+rw /home /mnt/ddev-global-cache/
+    chmod -R ugo+rw /home /mnt/ddev-global-cache/ /mnt/ddev-project-cache/
 
 RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
     chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
@@ -621,11 +621,11 @@ FROM scratch AS ddev-webserver-prod
 ENV PHP_DEFAULT_VERSION="8.4"
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
-ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+ENV TERMINUS_CACHE_DIR=/mnt/ddev-project-cache/terminus/cache
 ENV TERMINUS_HIDE_UPDATE_MESSAGE=1
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV COMPOSER_ALLOW_SUPERUSER=1
-ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
+ENV COMPOSER_CACHE_DIR=/mnt/ddev-project-cache/composer
 ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8

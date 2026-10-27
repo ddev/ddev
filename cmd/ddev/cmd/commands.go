@@ -336,6 +336,10 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			containerBasePath := path.Join("/mnt/ddev_config", filepath.Base(filepath.Dir(serviceDirOnHost)), service)
 			if strings.HasPrefix(serviceDirOnHost, globalconfig.GetGlobalDdevDir()) {
 				containerBasePath = path.Join("/mnt/ddev-global-cache/global-commands/", service)
+				// db doesn't mount ddev-global-cache; start copies its commands into its project cache
+				if service == "db" {
+					containerBasePath = "/mnt/ddev-project-cache/global-commands"
+				}
 			}
 			inContainerFullPath := path.Join(containerBasePath, commandName)
 			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative, mutagenSync)

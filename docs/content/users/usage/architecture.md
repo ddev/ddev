@@ -214,31 +214,46 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 ## The `ddev-global-cache` Volume
 
-`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` and `db` containers use it, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
+`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` and `ddev-router` containers use it, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
 
-| Directory | Scope | Contents |
-| --- | --- | --- |
-| `bashhistory/<project>-db`, `bashhistory/<project>-web` | Per project | Bash history |
-| `composer` | Shared | Composer cache |
-| `corepack` | Shared | Package managers installed by `corepack` |
-| `global-commands` | Shared | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
-| `mkcert` | Shared | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
-| `mysqlhistory/<project>-db`, `mysqlhistory/<project>-web` | Per project | MySQL client history |
-| `n_prefix/<project>-web` | Per project | Node.js versions downloaded by `n` |
-| `npm` | Shared | npm cache |
-| `pip` | Shared | pip cache, created only if you install pip, for example with [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages) |
-| `terminus/cache` | Shared | Terminus cache |
-| `yarn/berry`, `yarn/classic` | Shared | Yarn caches |
+| Directory | Contents |
+| --- | --- |
+| `global-commands` | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
+| `mkcert` | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
+| `traefik` | Router configuration and certificates, with files for each project |
 
-[`ddev delete`](commands.md#delete) removes the project's own directories here and its files in [`ddev-router-traefik`](#the-ddev-router-traefik-volume). To keep your own files in this volume, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
+Add-ons may keep their own directories here too. DDEV doesn't change the ownership of anything in this volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead.
 
-To clear the volume, for example to free Docker provider disk space, remove it. (Any stored global cache for all projects will be lost, but will be rebuilt as needed.) This also removes the Bash and MySQL history of every project. DDEV creates the volume again on the next [`ddev start`](commands.md#start):
+[`ddev delete`](commands.md#delete) removes the project's router files.
+
+To clear the volume, for example to free Docker provider disk space, remove it. DDEV creates the volume again on the next [`ddev start`](commands.md#start). Versions of DDEV before v1.25.6 also kept package caches and shell history here, so removing it also frees that space:
 
 ```bash
 ddev poweroff
 docker volume rm ddev-global-cache
 ```
 
-## The `ddev-router-traefik` Volume
+## Project Cache Volumes
 
-`ddev-router-traefik` holds the router's Traefik configuration and certificates, with files for each project, and `acme.json` when you use [Let's Encrypt](../topics/hosting.md). Only `ddev-router` mounts it, at `/mnt/ddev-global-cache/traefik`, the path Traefik configuration refers to. DDEV fills it from the host on each [`ddev start`](commands.md#start), so removing it loses only `acme.json`, and Let's Encrypt then issues new certificates.
+Each project has two more volumes, `<project>-web-cache` for the `web` container and `<project>-db-cache` for the `db` container. Each is mounted at `/mnt/ddev-project-cache` in its own container, so only one container writes to it. They survive [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff), and [`ddev delete`](commands.md#delete) removes them.
+
+| Directory | Volume | Contents |
+| --- | --- | --- |
+| `composer` | `web` | Composer cache |
+| `corepack` | `web` | Package managers installed by `corepack` |
+| `global-commands` | `db` | The `db` [global commands](../extend/custom-commands.md#global-commands), copied from `ddev-global-cache` at each start |
+| `history` | `web`, `db` | History of Bash, the MySQL and MariaDB client, `psql`, and, in `web`, the Node.js REPL, Python 3.13 and later, `redis-cli`, and `sqlite3` |
+| `n_prefix` | `web` | Node.js versions downloaded by `n` |
+| `npm` | `web` | npm cache |
+| `pip` | `web` | pip cache, created only if you install pip, for example with [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages) |
+| `terminus/cache` | `web` | Terminus cache, including its login session |
+| `yarn/berry`, `yarn/classic` | `web` | Yarn caches |
+
+Because caches aren't shared between projects, the first Composer or npm install in a project downloads everything again. To keep your own files in the `web` volume, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
+
+To clear a project's caches without deleting the project, remove its volume:
+
+```bash
+ddev stop
+docker volume rm <project>-web-cache
+```
