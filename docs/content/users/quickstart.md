@@ -2239,7 +2239,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
 
     ```bash
     mkdir -p my-openmage-composer-site && cd my-openmage-composer-site
-    ddev config --project-type=magento --docroot=public_test --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+    ddev config --project-type=magento --docroot=public_test --php-version=8.3 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
     ```
 
     Start DDEV (this may take a minute):
@@ -2252,14 +2252,15 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
 
     ```bash
     ddev composer init --name "openmage/composer-test" --description "OpenMage starter project" --type "project" -l "OSL-3.0" -s "dev" -q
+    ddev composer config prefer-stable true
+    ddev composer config policy.advisories.block false
     ddev composer config extra.magento-root-dir "public_test"
-    ddev composer config extra.enable-patching true
     ddev composer config extra.magento-core-package-type "magento-source"
-    ddev composer config allow-plugins.cweagans/composer-patches true
+    ddev composer config allow-plugins.vaimo/composer-patches true
     ddev composer config allow-plugins.magento-hackathon/magento-composer-installer true
     ddev composer config allow-plugins.aydin-hassan/magento-core-composer-installer true
     ddev composer config allow-plugins.openmage/composer-plugin true
-    ddev composer require --no-update "aydin-hassan/magento-core-composer-installer":"^2.1.0" "openmage/magento-lts":"^20.13"
+    ddev composer require --no-update "aydin-hassan/magento-core-composer-installer":"^2.1.0" "openmage/magento-lts":"^20.19"
     ```
 
     Download the OpenMage install command and install dependencies:
@@ -2292,17 +2293,18 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir -p my-openmage-composer-site && cd my-openmage-composer-site
-        ddev config --project-type=magento --docroot=public_test --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+        ddev config --project-type=magento --docroot=public_test --php-version=8.3 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
         ddev start -y
         ddev composer init --name "openmage/composer-test" --description "OpenMage starter project" --type "project" -l "OSL-3.0" -s "dev" -q
+        ddev composer config prefer-stable true
+        ddev composer config policy.advisories.block false
         ddev composer config extra.magento-root-dir "public_test"
-        ddev composer config extra.enable-patching true
         ddev composer config extra.magento-core-package-type "magento-source"
-        ddev composer config allow-plugins.cweagans/composer-patches true
+        ddev composer config allow-plugins.vaimo/composer-patches true
         ddev composer config allow-plugins.magento-hackathon/magento-composer-installer true
         ddev composer config allow-plugins.aydin-hassan/magento-core-composer-installer true
         ddev composer config allow-plugins.openmage/composer-plugin true
-        ddev composer require --no-update "aydin-hassan/magento-core-composer-installer":"^2.1.0" "openmage/magento-lts":"^20.13"
+        ddev composer require --no-update "aydin-hassan/magento-core-composer-installer":"^2.1.0" "openmage/magento-lts":"^20.19"
         ddev exec wget -O .ddev/commands/web/openmage-install https://raw.githubusercontent.com/OpenMage/magento-lts/refs/heads/main/.ddev/commands/web/openmage-install
         ddev composer install
         ddev openmage-install -q
@@ -2324,7 +2326,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
     Configure and start DDEV:
 
     ```bash
-    ddev config --project-type=magento --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+    ddev config --project-type=magento --php-version=8.3 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
     ddev start
     ```
 
@@ -2357,7 +2359,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
         set -euo pipefail
         mkdir -p my-openmage-git-site && cd my-openmage-git-site
         git clone https://github.com/OpenMage/magento-lts .
-        ddev config --project-type=magento --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+        ddev config --project-type=magento --php-version=8.3 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
         ddev start -y
         ddev composer install
         ddev openmage-install -q
