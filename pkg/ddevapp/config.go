@@ -328,6 +328,10 @@ func (app *DdevApp) WriteConfig() error {
 // Checks that configured host ports are not already
 // reserved by another project
 func (app *DdevApp) UpdateGlobalProjectList() error {
+	// `ddev config` clears the name to omit it from config.yaml, then registers the real one.
+	if app.Name == "" {
+		return nil
+	}
 	portsToReserve := []string{}
 	if app.HostDBPort != "" {
 		portsToReserve = append(portsToReserve, app.HostDBPort)
@@ -339,22 +343,7 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 		portsToReserve = append(portsToReserve, app.HostHTTPSPort)
 	}
 
-	if len(portsToReserve) > 0 {
-		err := globalconfig.CheckHostPortsAvailable(app.Name, portsToReserve)
-		if err != nil {
-			return err
-		}
-	}
-	err := globalconfig.ReservePorts(app.Name, portsToReserve)
-	if err != nil {
-		return err
-	}
-	err = globalconfig.SetProjectAppRoot(app.Name, app.AppRoot)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return globalconfig.UpdateProject(app.Name, app.AppRoot, portsToReserve)
 }
 
 // ReadConfig reads project configuration from the config.yaml file

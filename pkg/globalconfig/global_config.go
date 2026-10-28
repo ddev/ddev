@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
@@ -17,6 +18,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/settings"
+	"github.com/gofrs/flock"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -669,6 +671,18 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	return nil
 }
 
+// UpdateGlobalConfig rereads global_config.yaml, applies change, and writes
+// it, so a command that waited on the user doesn't revert a change another
+// ddev process made in the meantime.
+func UpdateGlobalConfig(change func(config *GlobalConfig)) error {
+	DdevGlobalConfig = New()
+	if err := ReadGlobalConfig(); err != nil {
+		return err
+	}
+	change(&DdevGlobalConfig)
+	return WriteGlobalConfig(DdevGlobalConfig)
+}
+
 // ReadProjectList reads the global projects file into DdevProjectList
 // Or creates the file
 func ReadProjectList() error {
@@ -706,41 +720,14 @@ func ReadProjectList() error {
 		return err
 	}
 
-	source, err := os.ReadFile(globalProjectsFile)
+	unlock := lockProjectList()
+	projects, err := loadProjectListFile()
+	unlock()
 	if err != nil {
-		return fmt.Errorf("could not read global projects file %s: %v", globalProjectsFile, err)
+		return err
 	}
-
-	// A fresh map drops projects removed from the file since the last read.
-	// An unparseable list is set aside rather than blocking every command,
-	// since projects re-register on `ddev start`.
-	projects := map[string]*ProjectInfo{}
-	err = yaml.Unmarshal(source, &projects)
-	if err != nil {
-		badFile := globalProjectsFile + ".bad"
-		DdevProjectList = make(map[string]*ProjectInfo)
-		if renameErr := os.Rename(globalProjectsFile, badFile); renameErr != nil {
-			// Another ddev process, such as the TUI, may have set it aside first.
-			if os.IsNotExist(renameErr) {
-				return nil
-			}
-			return fmt.Errorf("unable to move unparseable global projects file %s to %s: %v", globalProjectsFile, badFile, renameErr)
-		}
-		output.UserErr.Warningf("Unable to parse global projects file %s, moved it to %s and started with an empty project list: %v", globalProjectsFile, badFile, err)
-		return WriteProjectList(DdevProjectList)
-	}
-	if projects == nil {
-		projects = make(map[string]*ProjectInfo)
-	}
+	dropIncompleteProjects(projects, true)
 	DdevProjectList = projects
-
-	// Sanitize the project list
-	for name, project := range DdevProjectList {
-		if project == nil || project.AppRoot == "" {
-			output.UserErr.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)
-			delete(DdevProjectList, name)
-		}
-	}
 
 	// Clean up the deprecated DdevGlobalConfig.ProjectList if it not nil,
 	// but only if the new one DdevProjectList is not nil (for safe migration).
@@ -752,6 +739,104 @@ func ReadProjectList() error {
 	}
 
 	return nil
+}
+
+const projectListLockTimeout = 30 * time.Second
+
+// projectListLockGaveUp is set once this process times out on the lock, so
+// that one ddev command pays the timeout once, not on every list access.
+var projectListLockGaveUp atomic.Bool
+
+// lockProjectList serializes reads and read-modify-write cycles of the
+// project list across ddev processes. It is held only for file I/O, never
+// across hooks or prompts, so a long wait means a stopped holder; after
+// projectListLockTimeout it warns and continues unlocked.
+func lockProjectList() (unlock func()) {
+	noop := func() {}
+	// A lock file created by root would lock out the user's own ddev.
+	if os.Geteuid() == 0 || projectListLockGaveUp.Load() {
+		return noop
+	}
+	fl := flock.New(GetProjectListPath() + ".lock")
+	ctx, cancel := context.WithTimeout(context.Background(), projectListLockTimeout)
+	defer cancel()
+	locked, err := fl.TryLockContext(ctx, 20*time.Millisecond)
+	if err != nil || !locked {
+		_ = fl.Close()
+		projectListLockGaveUp.Store(true)
+		output.UserErr.Warningf("Unable to lock %s, continuing without it: %v", fl.Path(), err)
+		return noop
+	}
+	return func() {
+		_ = fl.Unlock()
+		_ = fl.Close()
+	}
+}
+
+// loadProjectListFile reads the project list from disk with the lock held.
+// An unparseable list is set aside rather than blocking every command,
+// since projects re-register on `ddev start`.
+func loadProjectListFile() (map[string]*ProjectInfo, error) {
+	globalProjectsFile := GetProjectListPath()
+	source, err := os.ReadFile(globalProjectsFile)
+	if os.IsNotExist(err) {
+		return map[string]*ProjectInfo{}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("could not read global projects file %s: %v", globalProjectsFile, err)
+	}
+
+	projects := map[string]*ProjectInfo{}
+	err = yaml.Unmarshal(source, &projects)
+	if err != nil {
+		badFile := globalProjectsFile + ".bad"
+		projects = map[string]*ProjectInfo{}
+		if renameErr := os.Rename(globalProjectsFile, badFile); renameErr != nil {
+			// Another ddev process may have set it aside while we ran unlocked.
+			if os.IsNotExist(renameErr) {
+				return projects, nil
+			}
+			return nil, fmt.Errorf("unable to move unparseable global projects file %s to %s: %v", globalProjectsFile, badFile, renameErr)
+		}
+		output.UserErr.Warningf("Unable to parse global projects file %s, moved it to %s and started with an empty project list: %v", globalProjectsFile, badFile, err)
+		return projects, WriteProjectList(projects)
+	}
+	if projects == nil {
+		projects = map[string]*ProjectInfo{}
+	}
+	return projects, nil
+}
+
+// updateProjectList applies change to the list as it is on disk now, not to
+// the copy this process loaded at startup, so that concurrent ddev commands
+// don't drop each other's projects. DdevProjectList is refreshed either way.
+func updateProjectList(change func(projects map[string]*ProjectInfo) error) error {
+	unlock := lockProjectList()
+	defer unlock()
+	projects, err := loadProjectListFile()
+	if err != nil {
+		return err
+	}
+	// ReadProjectList already warned about these at startup.
+	dropIncompleteProjects(projects, false)
+	DdevProjectList = projects
+	if err = change(projects); err != nil {
+		return err
+	}
+	return WriteProjectList(projects)
+}
+
+// dropIncompleteProjects removes entries without a name or approot, which
+// no ddev command can use.
+func dropIncompleteProjects(projects map[string]*ProjectInfo, warn bool) {
+	for name, project := range projects {
+		if name == "" || project == nil || project.AppRoot == "" {
+			if warn {
+				output.UserErr.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)
+			}
+			delete(projects, name)
+		}
+	}
 }
 
 // WriteProjectList writes the global projects list into ~/.ddev.
@@ -933,35 +1018,38 @@ func CheckHostPortsAvailable(projectName string, ports []string) error {
 	return nil
 }
 
-// ReservePorts adds the ProjectInfo if necessary and assigns the reserved ports
-func ReservePorts(projectName string, ports []string) error {
-	// If the project doesn't exist, add it.
-	_, ok := DdevProjectList[projectName]
-	if !ok {
-		DdevProjectList[projectName] = &ProjectInfo{}
-	}
-	DdevProjectList[projectName].UsedHostPorts = ports
-	err := WriteProjectList(DdevProjectList)
-	return err
-}
-
 // SetProjectAppRoot sets the approot in the ProjectInfo of global config
 func SetProjectAppRoot(projectName string, appRoot string) error {
-	// If the project doesn't exist, add it.
-	_, ok := DdevProjectList[projectName]
-	if !ok {
-		DdevProjectList[projectName] = &ProjectInfo{}
+	return UpdateProject(projectName, appRoot, nil)
+}
+
+// UpdateProject registers a project's approot and, when ports is not nil,
+// its reserved host ports, failing if another project already holds the
+// approot's name with a different approot or holds one of the ports.
+func UpdateProject(projectName string, appRoot string, ports []string) error {
+	if projectName == "" {
+		return fmt.Errorf("cannot register project root %s with an empty project name", appRoot)
 	}
 	// Can't use fileutil.FileExists because of import cycle.
 	if _, err := os.Stat(appRoot); err != nil {
 		return fmt.Errorf("project %s project root %s does not exist", projectName, appRoot)
 	}
-	if DdevProjectList[projectName].AppRoot != "" && DdevProjectList[projectName].AppRoot != appRoot {
-		return fmt.Errorf("project %s project root is already set to %s, refusing to change it to %s; you can `ddev stop --unlist %s` and start again if the listed project root is in error", projectName, DdevProjectList[projectName].AppRoot, appRoot, projectName)
-	}
-	DdevProjectList[projectName].AppRoot = appRoot
-	err := WriteProjectList(DdevProjectList)
-	return err
+	return updateProjectList(func(projects map[string]*ProjectInfo) error {
+		if p := projects[projectName]; p != nil && p.AppRoot != appRoot {
+			return fmt.Errorf("project %s project root is already set to %s, refusing to change it to %s; you can `ddev stop --unlist %s` and start again if the listed project root is in error", projectName, p.AppRoot, appRoot, projectName)
+		}
+		if err := CheckHostPortsAvailable(projectName, ports); err != nil {
+			return err
+		}
+		if projects[projectName] == nil {
+			projects[projectName] = &ProjectInfo{}
+		}
+		projects[projectName].AppRoot = appRoot
+		if ports != nil {
+			projects[projectName].UsedHostPorts = ports
+		}
+		return nil
+	})
 }
 
 // GetProject returns a project given name provided,
@@ -976,12 +1064,10 @@ func GetProject(projectName string) *ProjectInfo {
 
 // RemoveProjectInfo removes the ProjectInfo line for a project
 func RemoveProjectInfo(projectName string) error {
-	_, ok := DdevProjectList[projectName]
-	if ok {
-		delete(DdevProjectList, projectName)
-	}
-	err := WriteProjectList(DdevProjectList)
-	return err
+	return updateProjectList(func(projects map[string]*ProjectInfo) error {
+		delete(projects, projectName)
+		return nil
+	})
 }
 
 // GetGlobalProjectList returns the global project list map

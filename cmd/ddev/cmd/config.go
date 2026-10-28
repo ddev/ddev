@@ -199,6 +199,7 @@ func runConfig(cmd *cobra.Command, args []string, app *ddevapp.DdevApp, prompt b
 
 		// If omit_project_name_by_default is set, only omit the name if it
 		// matches the directory-based default (user didn't customize it)
+		originalName := app.Name
 		if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault {
 			pwd, err := os.Getwd()
 			if err == nil {
@@ -212,6 +213,12 @@ func runConfig(cmd *cobra.Command, args []string, app *ddevapp.DdevApp, prompt b
 		err = app.WriteConfig()
 		if err != nil {
 			util.Failed("Failed to write config: %v", err)
+		}
+		if app.Name == "" {
+			app.Name = originalName
+			if err = app.UpdateGlobalProjectList(); err != nil {
+				util.Failed("Failed to update the global project list: %v", err)
+			}
 		}
 	}
 
@@ -798,10 +805,8 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp, 
 		return fmt.Errorf("could not write DDEV config file %s: %v", app.ConfigPath, err)
 	}
 
-	// Restore the name and update global project list with correct name
+	// WriteConfig doesn't register an empty name, so register the real one.
 	if omitName && originalName != "" {
-		// Remove the empty-name entry that was added by WriteConfig
-		_ = globalconfig.RemoveProjectInfo("")
 		app.Name = originalName
 		if err := app.UpdateGlobalProjectList(); err != nil {
 			return err
