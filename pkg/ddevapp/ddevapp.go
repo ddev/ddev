@@ -2071,7 +2071,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		}
 
 		// If TLS supported and using Traefik, create cert/key in project's .ddev/traefik
-		// The actual push to ddev-global-cache happens in PushGlobalTraefikConfig
+		// The actual push to the router volume happens in PushGlobalTraefikConfig
 		err = configureTraefikForApp(app)
 		if err != nil {
 			return err

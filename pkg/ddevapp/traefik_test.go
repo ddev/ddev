@@ -16,6 +16,9 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/moby/moby/api/types/mount"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -66,6 +69,11 @@ func TestTraefikSimple(t *testing.T) {
 	app.AdditionalFQDNs = []string{"onefullurl.ddev.site", "twofullurl.ddev.site", "*.wild.fqdn"}
 	err = app.WriteConfig()
 	require.NoError(t, err)
+
+	// A widened acme.json mode should be reset to 600 when the router starts
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, t.Name()+"-acme-"+util.RandString(6), []string{"sh", "-c", "touch /mnt/t/acme.json && chmod 644 /mnt/t/acme.json"}, nil, nil, []string{ddevapp.RouterTraefikVolume + ":/mnt/t"}, "0", true, false, nil, nil, nil)
+	require.NoError(t, err, "failed to plant acme.json, output='%s'", out)
+
 	err = app.StartAndWait(5)
 	require.NoError(t, err)
 
@@ -75,8 +83,22 @@ func TestTraefikSimple(t *testing.T) {
 	desc, err := app.Describe(false)
 	assert.Equal(desc["router"].(string), types.RouterTypeTraefik)
 
+	router, err := dockerutil.InspectContainer("ddev-router")
+	require.NoError(t, err)
+	var volumes []string
+	for _, m := range router.Mounts {
+		if m.Type == mount.TypeVolume {
+			volumes = append(volumes, m.Name)
+		}
+	}
+	require.Equal(t, []string{ddevapp.RouterTraefikVolume}, volumes, "ddev-router should mount only %s", ddevapp.RouterTraefikVolume)
+
+	stdout, _, err := dockerutil.Exec("ddev-router", "stat -c %a /mnt/ddev-global-cache/traefik/acme.json", "")
+	require.NoError(t, err)
+	require.Equal(t, "600", strings.TrimSpace(stdout), "acme.json should be mode 600 in the router")
+
 	// Verify default_config.yaml exists in the router volume
-	stdout, _, err := dockerutil.Exec("ddev-router", "cat /mnt/ddev-global-cache/traefik/config/default_config.yaml", "")
+	stdout, _, err = dockerutil.Exec("ddev-router", "cat /mnt/ddev-global-cache/traefik/config/default_config.yaml", "")
 	require.NoError(t, err, "default_config.yaml should exist in router volume")
 	require.Contains(t, stdout, "defaultCertificate", "default_config.yaml should contain default certificate configuration")
 

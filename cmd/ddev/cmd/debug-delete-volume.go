@@ -19,7 +19,6 @@ var deleteVolumeYes bool
 // by one, so deleting them here would affect projects other than the active one.
 var sharedVolumeNames = map[string]bool{
 	"ddev-global-cache":         true,
-	"ddev-router-traefik":       true,
 	"ddev-ssh-agent_socket_dir": true,
 }
 
