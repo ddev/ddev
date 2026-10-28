@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
@@ -725,15 +726,8 @@ func ReadProjectList() error {
 	if err != nil {
 		return err
 	}
+	dropIncompleteProjects(projects)
 	DdevProjectList = projects
-
-	// Sanitize the project list
-	for name, project := range DdevProjectList {
-		if name == "" || project == nil || project.AppRoot == "" {
-			output.UserErr.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)
-			delete(DdevProjectList, name)
-		}
-	}
 
 	// Clean up the deprecated DdevGlobalConfig.ProjectList if it not nil,
 	// but only if the new one DdevProjectList is not nil (for safe migration).
@@ -747,8 +741,11 @@ func ReadProjectList() error {
 	return nil
 }
 
-// projectListLockTimeout is a var so tests can shorten it.
-var projectListLockTimeout = 30 * time.Second
+const projectListLockTimeout = 30 * time.Second
+
+// projectListLockGaveUp is set once this process times out on the lock, so
+// that one ddev command pays the timeout once, not on every list access.
+var projectListLockGaveUp atomic.Bool
 
 // lockProjectList serializes reads and read-modify-write cycles of the
 // project list across ddev processes. It is held only for file I/O, never
@@ -757,7 +754,7 @@ var projectListLockTimeout = 30 * time.Second
 func lockProjectList() (unlock func()) {
 	noop := func() {}
 	// A lock file created by root would lock out the user's own ddev.
-	if os.Geteuid() == 0 {
+	if os.Geteuid() == 0 || projectListLockGaveUp.Load() {
 		return noop
 	}
 	fl := flock.New(GetProjectListPath() + ".lock")
@@ -766,6 +763,7 @@ func lockProjectList() (unlock func()) {
 	locked, err := fl.TryLockContext(ctx, 20*time.Millisecond)
 	if err != nil || !locked {
 		_ = fl.Close()
+		projectListLockGaveUp.Store(true)
 		output.UserErr.Warningf("Unable to lock %s, continuing without it: %v", fl.Path(), err)
 		return noop
 	}
@@ -819,17 +817,23 @@ func updateProjectList(change func(projects map[string]*ProjectInfo) error) erro
 	if err != nil {
 		return err
 	}
-	// Entries without an approot stay, since ReservePorts writes them.
-	for name, project := range projects {
-		if name == "" || project == nil {
-			delete(projects, name)
-		}
-	}
+	dropIncompleteProjects(projects)
 	DdevProjectList = projects
 	if err = change(projects); err != nil {
 		return err
 	}
 	return WriteProjectList(projects)
+}
+
+// dropIncompleteProjects removes entries without a name or approot, which
+// no ddev command can use.
+func dropIncompleteProjects(projects map[string]*ProjectInfo) {
+	for name, project := range projects {
+		if name == "" || project == nil || project.AppRoot == "" {
+			output.UserErr.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)
+			delete(projects, name)
+		}
+	}
 }
 
 // WriteProjectList writes the global projects list into ~/.ddev.
@@ -1011,20 +1015,6 @@ func CheckHostPortsAvailable(projectName string, ports []string) error {
 	return nil
 }
 
-// ReservePorts adds the ProjectInfo if necessary and assigns the reserved ports
-func ReservePorts(projectName string, ports []string) error {
-	if projectName == "" {
-		return fmt.Errorf("cannot reserve ports for a project with an empty name")
-	}
-	return updateProjectList(func(projects map[string]*ProjectInfo) error {
-		if projects[projectName] == nil {
-			projects[projectName] = &ProjectInfo{}
-		}
-		projects[projectName].UsedHostPorts = ports
-		return nil
-	})
-}
-
 // SetProjectAppRoot sets the approot in the ProjectInfo of global config
 func SetProjectAppRoot(projectName string, appRoot string) error {
 	return UpdateProject(projectName, appRoot, nil)
@@ -1042,7 +1032,7 @@ func UpdateProject(projectName string, appRoot string, ports []string) error {
 		return fmt.Errorf("project %s project root %s does not exist", projectName, appRoot)
 	}
 	return updateProjectList(func(projects map[string]*ProjectInfo) error {
-		if p := projects[projectName]; p != nil && p.AppRoot != "" && p.AppRoot != appRoot {
+		if p := projects[projectName]; p != nil && p.AppRoot != appRoot {
 			return fmt.Errorf("project %s project root is already set to %s, refusing to change it to %s; you can `ddev stop --unlist %s` and start again if the listed project root is in error", projectName, p.AppRoot, appRoot, projectName)
 		}
 		if err := CheckHostPortsAvailable(projectName, ports); err != nil {

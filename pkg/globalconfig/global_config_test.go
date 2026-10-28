@@ -72,13 +72,6 @@ func TestSetProjectAppRoot(t *testing.T) {
 	p3 := globalconfig.GetProject(t.Name())
 	assert.Nil(p3)
 
-	// ReservePorts will create the project, but without an approot
-	err = globalconfig.ReservePorts(t.Name(), []string{})
-	assert.NoError(err)
-	project = globalconfig.GetProject(t.Name())
-	require.NotNil(t, project)
-	assert.Empty(project.AppRoot)
-
 	err = globalconfig.SetProjectAppRoot(t.Name(), tmpDir)
 	assert.NoError(err)
 
@@ -180,9 +173,8 @@ func TestProjectListEmptyName(t *testing.T) {
 	appRoot := t.TempDir()
 
 	require.Error(t, globalconfig.SetProjectAppRoot("", appRoot))
-	require.Error(t, globalconfig.ReservePorts("", []string{}))
 
-	require.NoError(t, os.WriteFile(globalconfig.GetProjectListPath(), []byte(`"":\n  approot: `+appRoot+"\n"), 0644))
+	require.NoError(t, os.WriteFile(globalconfig.GetProjectListPath(), []byte("\"\":\n  approot: "+appRoot+"\n"), 0644))
 	require.NoError(t, globalconfig.ReadProjectList())
 	require.Empty(t, globalconfig.DdevProjectList)
 
