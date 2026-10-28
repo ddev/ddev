@@ -21,6 +21,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/docker/compose/v5/cmd/display"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/moby/moby/api/types/container"
@@ -34,6 +35,15 @@ const (
 	RouterComposeProjectName = "ddev-router"
 	MinRouterSubstitutePort  = 30000
 	MaxRouterSubstitutePort  = 32000
+)
+
+// RouterTraefikVolume holds the router's Traefik config, certs and acme.json.
+// Only the router mounts it, so nothing that writes to ddev-global-cache can
+// change acme.json's mode. RouterTraefikDir is where the router mounts it, the
+// path that predates the volume and that users' Traefik config refers to.
+const (
+	RouterTraefikVolume = "ddev-router-traefik"
+	RouterTraefikDir    = "/mnt/ddev-global-cache/traefik"
 )
 
 // RouterSubstitutePortsAssigned is used when we have assigned a substitute port
@@ -284,6 +294,50 @@ func warnUnreachableRouterPorts() {
 		time.Sleep(500 * time.Millisecond)
 	}
 	util.Warning("%s is running, but nothing answers on host port(s) %s, so projects may not be reachable there. Your Docker provider may not be forwarding them; see https://docs.ddev.com/en/stable/users/usage/troubleshooting/#router-ports-not-reachable", nodeps.RouterContainer, strings.Join(refused, ", "))
+}
+
+// ensureRouterTraefikVolume creates RouterTraefikVolume if missing, seeding it
+// from ddev-global-cache/traefik so an existing acme.json keeps its
+// Let's Encrypt certificates. A failed seed removes the volume so the next
+// router start tries again.
+func ensureRouterTraefikVolume() error {
+	if dockerutil.VolumeExists(RouterTraefikVolume) {
+		return nil
+	}
+	if _, err := dockerutil.CreateVolume(RouterTraefikVolume, "local", nil, nil); err != nil {
+		return fmt.Errorf("failed to create volume %s: %v", RouterTraefikVolume, err)
+	}
+	if !dockerutil.VolumeExists("ddev-global-cache") {
+		return nil
+	}
+
+	uid, gid, _ := dockerutil.GetContainerUser()
+	c := fmt.Sprintf(`set -eu
+if [ -d /mnt/old/traefik ]; then cp -a /mnt/old/traefik/. /mnt/new/; fi
+chown -R %[1]s:%[2]s /mnt/new
+if [ -f /mnt/new/acme.json ]; then chmod 600 /mnt/new/acme.json; fi`, uid, gid)
+	labels := map[string]string{}
+	if dockerutil.UseKeepID() {
+		labels["com.ddev.userns"] = "keep-id"
+	}
+	binds := []string{"ddev-global-cache:/mnt/old:ro", RouterTraefikVolume + ":/mnt/new"}
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "seed-router-traefik-"+util.RandString(6), []string{"bash", "-c", c}, nil, nil, binds, "0", true, false, labels, nil, nil)
+	if err != nil {
+		_ = dockerutil.RemoveVolume(RouterTraefikVolume)
+		return fmt.Errorf("failed to copy ddev-global-cache/traefik into volume %s: %v; output='%s'", RouterTraefikVolume, err, out)
+	}
+	util.Debug("Seeded volume %s from ddev-global-cache/traefik", RouterTraefikVolume)
+	return nil
+}
+
+// routerTraefikBinds mounts RouterTraefikVolume at RouterTraefikDir for a
+// cleanup container. It mounts nothing when the volume is missing, because
+// mounting would create it empty and skip the seeding in ensureRouterTraefikVolume.
+func routerTraefikBinds() []string {
+	if !dockerutil.VolumeExists(RouterTraefikVolume) {
+		return nil
+	}
+	return []string{RouterTraefikVolume + ":" + RouterTraefikDir}
 }
 
 // generateRouterCompose() generates the ~/.ddev/.router-compose.yaml and ~/.ddev/.router-compose-full.yaml

@@ -2071,7 +2071,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		}
 
 		// If TLS supported and using Traefik, create cert/key in project's .ddev/traefik
-		// The actual push to ddev-global-cache happens in PushGlobalTraefikConfig
+		// The actual push to the router volume happens in PushGlobalTraefikConfig
 		err = configureTraefikForApp(app)
 		if err != nil {
 			return err
@@ -3780,11 +3780,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// Remove the merged traefik config yaml files on stop, but don't delete certs
 	// Certs may want to remain for Let's Encrypt, for example, and should do no harm
 	// for stopped project
-	c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
-	util.Verbose("Removing merged config for project with command '%s'", c)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
-	if err != nil {
-		util.Warning("Unable to remove project merged traefik yaml: %v, output='%s'", err, out)
+	if traefikBinds := routerTraefikBinds(); traefikBinds != nil {
+		c := fmt.Sprintf("rm -rf %s/config/%s_merged.yaml", RouterTraefikDir, app.Name)
+		util.Debug("Removing merged config for project with command '%s'", c)
+		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, traefikBinds, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+		if err != nil {
+			util.Warning("Unable to remove project merged traefik yaml: %v, output='%s'", err, out)
+		}
 	}
 
 	// If removedata, clean up any data taht was in the ddev-global-cache, including
@@ -3794,7 +3796,8 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		// This would not remove extra certs that they had put in certs directory.
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db} /mnt/ddev-global-cache/traefik/*/%[1]s.{crt,key} /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 		util.Verbose("Cleaning ddev-global-cache with command '%s'", c)
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+		binds := append([]string{"ddev-global-cache:/mnt/ddev-global-cache"}, routerTraefikBinds()...)
+		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, binds, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
 		}

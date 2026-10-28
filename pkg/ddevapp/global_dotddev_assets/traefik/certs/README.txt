@@ -3,7 +3,7 @@
 This ~/.ddev/traefik/certs directory is a STAGING DIRECTORY ONLY.
 
 DDEV uses this directory to stage SSL/TLS certificates before copying them
-into the ddev-global-cache Docker volume. Certificates are generated during
+into the ddev-router-traefik Docker volume. Certificates are generated during
 `ddev start` and then copied to the volume.
 
 DO NOT manually edit files in this directory. They will be overwritten.

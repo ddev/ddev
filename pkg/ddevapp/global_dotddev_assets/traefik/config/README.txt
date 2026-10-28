@@ -3,7 +3,7 @@
 This ~/.ddev/traefik/config directory is a STAGING DIRECTORY ONLY.
 
 DDEV uses this directory to temporarily stage Traefik configuration files
-before copying them into the ddev-global-cache Docker volume. Files in this
+before copying them into the ddev-router-traefik Docker volume. Files in this
 directory are generated during `ddev start` and then copied to the volume.
 
 After being copied to the volume, these staging files are automatically

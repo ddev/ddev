@@ -5061,7 +5061,7 @@ func TestCustomCerts(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.RemoveAll(certDir)
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/custom_certs/%s* /mnt/ddev-global-cache/traefik/certs/%s.*", app.GetHostname(), app.Name),
+			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/custom_certs/%s*", app.GetHostname()),
 		})
 		assert.NoError(err)
 		err = app.Stop(true, false)
