@@ -222,7 +222,7 @@ Here’s a basic diagram of how it works inside the Docker network:
 | `mkcert` | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
 | `traefik` | Router configuration and certificates, with files for each project |
 
-Add-ons may keep their own directories here too. DDEV doesn't change the ownership of anything in this volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead.
+Add-ons may keep their own directories here too. DDEV doesn’t chown the whole volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead.
 
 [`ddev delete`](commands.md#delete) removes the project's router files.
 
@@ -250,9 +250,10 @@ Each project has two more volumes, `ddev-<project>-web-cache` for the `web` cont
 
 Because caches aren't shared between projects, the first Composer or npm install in a project downloads everything again. To keep your own files in the `web` volume, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
 
-To clear a project's caches without deleting the project, remove its volume:
+To clear a project’s caches without deleting the project, delete its volume with [`ddev utility delete-volume`](commands.md#utility-delete-volume), which stops the project first:
 
 ```bash
-ddev stop
-docker volume rm ddev-<project>-web-cache
+ddev utility delete-volume web-cache
 ```
+
+If the project was used with a version of DDEV before v1.26.0, the next `ddev start` copies its old history from `ddev-global-cache` into the new volume again. History written since the upgrade is lost.
