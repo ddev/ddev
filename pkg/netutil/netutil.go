@@ -86,7 +86,8 @@ func IsPortUnreachable(port string) bool {
 func isHTTPPortUnreachable(addr string) bool {
 	conn, err := net.DialTimeout("tcp", addr, time.Second)
 	if err != nil {
-		return isConnRefused(err)
+		// Linux can report a reset from connect when it arrives right after the handshake.
+		return isConnRefused(err) || isConnDropped(err)
 	}
 	defer util.CheckClose(conn)
 	_ = conn.SetDeadline(time.Now().Add(2 * time.Second))
@@ -100,7 +101,7 @@ func isHTTPPortUnreachable(addr string) bool {
 // isConnDropped reports whether err is a closed or reset connection.
 func isConnDropped(err error) bool {
 	// Windows reports WSAECONNRESET (10054) rather than ECONNRESET.
-	return errors.Is(err, io.EOF) || errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.Errno(10054))
+	return errors.Is(err, io.EOF) || errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.Errno(10054))
 }
 
 // isConnRefused reports whether err is a refused connection.
