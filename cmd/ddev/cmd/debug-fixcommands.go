@@ -10,17 +10,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugFixCommandsCmd fixes up global container commands without having to do a ddev start
+// DebugFixCommandsCmd copies global container commands into running containers
 var DebugFixCommandsCmd = &cobra.Command{
 	Use:   "fix-commands",
 	Short: "Copy global container commands into running containers",
 	Long:  "Copy global container commands into the current project's running containers, or into those of every running project when run outside a project, so changes to them take effect without a restart.",
 	Run: func(_ *cobra.Command, _ []string) {
-		apps := ddevapp.GetActiveProjects()
-		inProject := false
-		if app, err := ddevapp.GetActiveApp(""); err == nil {
-			apps = []*ddevapp.DdevApp{app}
-			inProject = true
+		app, err := ddevapp.GetActiveApp("")
+		inProject := err == nil
+		apps := []*ddevapp.DdevApp{app}
+		if !inProject {
+			apps = ddevapp.GetActiveProjects()
 		}
 		sourceDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
 		refreshed := false

@@ -4,6 +4,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -37,13 +39,22 @@ func TestPopulateGlobalCustomCommandFiles(t *testing.T) {
 	})
 	t.Setenv("DDEV_XDG_CONFIG_HOME", xdgDir)
 	commandsDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
-	files := map[string]string{
-		"web/test-web-cmd":   "#!/usr/bin/env bash\necho web\n",
-		"db/test-db-cmd":     "#!/usr/bin/env bash\necho db\n",
-		"host/test-host-cmd": "#!/usr/bin/env bash\necho host\n",
+	// db is a symlink to a directory elsewhere, as when commands live in a
+	// dotfiles repository.
+	dbDir := filepath.Join(commandsDir, "db")
+	if !nodeps.IsWindows() {
+		dbDir = filepath.Join(xdgDir, "dotfiles-db")
+		require.NoError(t, os.MkdirAll(commandsDir, 0755))
+		require.NoError(t, os.Symlink(dbDir, filepath.Join(commandsDir, "db")))
 	}
-	for name, content := range files {
-		p := filepath.Join(commandsDir, name)
+	files := map[string]string{
+		filepath.Join(commandsDir, "web", "test-web-cmd"):     "#!/usr/bin/env bash\necho web\n",
+		filepath.Join(commandsDir, "web", "test-removed-cmd"): "#!/usr/bin/env bash\necho removed\n",
+		filepath.Join(dbDir, "test-db-cmd"):                   "#!/usr/bin/env bash\necho db\n",
+		filepath.Join(commandsDir, "host", "test-host-cmd"):   "#!/usr/bin/env bash\necho host\n",
+		filepath.Join(commandsDir, ".git", "HEAD"):            "ref: refs/heads/main\n",
+	}
+	for p, content := range files {
 		require.NoError(t, os.MkdirAll(filepath.Dir(p), 0755))
 		require.NoError(t, os.WriteFile(p, []byte(content), 0644))
 	}
@@ -51,6 +62,7 @@ func TestPopulateGlobalCustomCommandFiles(t *testing.T) {
 		target := filepath.Join(xdgDir, "linked-target")
 		require.NoError(t, os.WriteFile(target, []byte("#!/usr/bin/env bash\necho linked\n"), 0644))
 		require.NoError(t, os.Symlink(target, filepath.Join(commandsDir, "web", "test-linked-cmd")))
+		require.NoError(t, os.Symlink("..", filepath.Join(commandsDir, "web", "loop")))
 	}
 
 	services, err := ddevapp.PopulateGlobalCustomCommandFiles(app)
@@ -63,11 +75,30 @@ func TestPopulateGlobalCustomCommandFiles(t *testing.T) {
 	out, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: path.Join(ddevapp.GlobalCommandsContainerDir, "db", "test-db-cmd")})
 	require.NoError(t, err)
 	require.Equal(t, "db\n", out)
-	_, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "test ! -e " + path.Join(ddevapp.GlobalCommandsContainerDir, "host")})
-	require.NoError(t, err, "host commands must not be copied into containers")
+	for _, dir := range []string{"host", ".git"} {
+		_, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "test ! -e " + path.Join(ddevapp.GlobalCommandsContainerDir, dir)})
+		require.NoError(t, err, "%s must not be copied into containers", dir)
+	}
+	info, err := os.Stat(filepath.Join(commandsDir, "web", "test-web-cmd"))
+	require.NoError(t, err)
+	out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "stat -c %Y " + path.Join(ddevapp.GlobalCommandsContainerDir, "web", "test-web-cmd")})
+	require.NoError(t, err)
+	require.Equal(t, strconv.FormatInt(info.ModTime().Unix(), 10), strings.TrimSpace(out))
 	if !nodeps.IsWindows() {
 		out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: path.Join(ddevapp.GlobalCommandsContainerDir, "web", "test-linked-cmd")})
 		require.NoError(t, err)
 		require.Equal(t, "linked\n", out)
 	}
+
+	require.NoError(t, os.Remove(filepath.Join(commandsDir, "web", "test-removed-cmd")))
+	_, err = ddevapp.PopulateGlobalCustomCommandFiles(app)
+	require.NoError(t, err)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "test ! -e " + path.Join(ddevapp.GlobalCommandsContainerDir, "web", "test-removed-cmd")})
+	require.NoError(t, err, "a removed command must be removed from the container")
+
+	err = app.RecreateServices([]string{"db"})
+	require.NoError(t, err)
+	out, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: path.Join(ddevapp.GlobalCommandsContainerDir, "db", "test-db-cmd")})
+	require.NoError(t, err)
+	require.Equal(t, "db\n", out)
 }

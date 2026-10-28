@@ -1925,7 +1925,7 @@ ddev utility download-images --all
 
 ### `utility fix-commands`
 
-Copies [global container commands](../extend/custom-commands.md#global-commands) into the current project’s running containers, so changes to them take effect without a [`ddev restart`](#restart). Outside a project directory, it copies them into every running project.
+Copies [global container commands](../extend/custom-commands.md#global-commands) into the current project’s running containers, so changes to them take effect without a [`ddev start`](#start). Outside a project directory, it copies them into every running project.
 
 Example:
 

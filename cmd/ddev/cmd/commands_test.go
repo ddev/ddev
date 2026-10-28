@@ -342,7 +342,7 @@ func TestCustomCommands(t *testing.T) {
 	for _, f := range []string{".gitattributes", "db/mysqldump.example", "db/README.txt", "web/README.txt"} {
 		filePathInContainer := path.Join(ddevapp.GlobalCommandsContainerDir, f)
 		out, err = exec.RunHostCommand(DdevBin, "exec", "[ -f "+filePathInContainer+" ] && exit 0 || exit 1")
-		assert.NoError(err, filePathInContainer+" does not exist, output=%s", out)
+		require.NoError(t, err, filePathInContainer+" does not exist, output=%s", out)
 	}
 
 	// Make sure that the non-command stuff we installed is in project commands dir

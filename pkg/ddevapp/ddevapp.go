@@ -1898,9 +1898,9 @@ func (app *DdevApp) start(o StartOptions) error {
 	// ddev-global-cache is shared by every project and user, so it is never
 	// chowned; the sticky bit lets add-ons create their own directories in it.
 	chownCmd := fmt.Sprintf("chmod 1777 /mnt/ddev-global-cache; chown -R %s:%s", uid, gid)
-	// Global commands no longer live in the volume. Remove them only while the
-	// old cache key exists, which FixObsolete deletes below, so a downgraded DDEV
-	// without the key copies them again.
+	// Older DDEV versions skip their volume copy while this key matches.
+	// FixObsolete deletes it below, so the copy is removed once, and a
+	// downgraded DDEV copies it again.
 	if fileutil.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), legacyGlobalCommandsHashFile)) {
 		chownCmd = "rm -rf /mnt/ddev-global-cache/global-commands; " + chownCmd
 	}
@@ -2078,13 +2078,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		return err
 	}
 
-	// Copy global commands while the steps below wait for the containers to
-	// become ready.
-	globalCommandsErr := make(chan error, 1)
-	go func() {
-		_, err := PopulateGlobalCustomCommandFiles(app)
-		globalCommandsErr <- err
-	}()
+	waitForGlobalCommands := app.populateGlobalCommandsInBackground()
 
 	if !IsRouterDisabled(app) {
 		if _, caRootErr := globalconfig.ReadCAROOTDetails(); caRootErr != nil {
@@ -2274,10 +2268,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		})
 	}
 
-	err = <-globalCommandsErr
-	if err != nil {
-		util.Warning("Failed to populate global custom command files: %v", err)
-	}
+	waitForGlobalCommands()
 
 	util.Verbose("Testing to see if /mnt/ddev_config is properly mounted")
 	_, _, err = app.Exec(&ExecOpts{
@@ -2423,6 +2414,7 @@ func (app *DdevApp) startProfileServices(project *composeTypes.Project) error {
 	if err := composeUp(project, api.CreateOptions{}); err != nil {
 		return err
 	}
+	defer app.populateGlobalCommandsInBackground()()
 
 	if !IsRouterDisabled(app) {
 		util.Debug("Starting %s if necessary...", nodeps.RouterContainer)
@@ -2573,6 +2565,7 @@ func (app *DdevApp) recreateServices(services []string, build *api.BuildOptions)
 	if err != nil {
 		return err
 	}
+	defer app.populateGlobalCommandsInBackground()()
 
 	// A service without DDEV labels can't be found to wait on, as in start().
 	var waitServices []string
