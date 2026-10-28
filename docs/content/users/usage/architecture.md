@@ -221,7 +221,7 @@ Here’s a basic diagram of how it works inside the Docker network:
 | `global-commands` | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
 | `mkcert` | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
 
-Add-ons may keep their own directories here too. DDEV doesn’t chown the whole volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead.
+Add-ons may keep their own directories here too. DDEV doesn’t `chown` the whole volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead.
 
 [`ddev delete`](commands.md#delete) removes the project's files in [`ddev-router-traefik`](#the-ddev-router-traefik-volume).
 
