@@ -257,7 +257,9 @@ func StartDdevRouter() (err error) {
 	}
 	wait.Done(nil, "ready")
 	wait = nil
-	if needsRecreation {
+	// Reconnecting the router to update its aliases can leave Docker Desktop
+	// forwarding its ports to a stale target, just as recreating it can.
+	if needsRecreation || hostnamesChanged {
 		warnUnreachableRouterPorts()
 	}
 
@@ -271,10 +273,11 @@ func StartDdevRouter() (err error) {
 	return nil
 }
 
-// warnUnreachableRouterPorts warns when a port the router publishes refuses
-// connections on the host. A healthy router can still be unreachable when the
+// warnUnreachableRouterPorts warns when a port the router publishes doesn't
+// answer on the host. A healthy router can still be unreachable when the
 // Docker provider fails to forward a port, as Lima does on Linux for ports
-// below net.ipv4.ip_unprivileged_port_start.
+// below net.ipv4.ip_unprivileged_port_start, and as Docker Desktop on macOS
+// sometimes does after the router's network endpoint changes.
 func warnUnreachableRouterPorts() {
 	router, err := FindDdevRouter()
 	if err != nil || router == nil {
@@ -285,15 +288,15 @@ func warnUnreachableRouterPorts() {
 		return
 	}
 	// Providers like Lima set up forwarding shortly after the container starts.
-	var refused []string
+	var unreachable []string
 	for range 10 {
-		refused = slices.DeleteFunc(slices.Clone(ports), func(p string) bool { return !netutil.IsPortRefused(p) })
-		if len(refused) == 0 {
+		unreachable = slices.DeleteFunc(slices.Clone(ports), func(p string) bool { return !netutil.IsPortUnreachable(p) })
+		if len(unreachable) == 0 {
 			return
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
-	util.Warning("%s is running, but nothing answers on host port(s) %s, so projects may not be reachable there. Your Docker provider may not be forwarding them; see https://docs.ddev.com/en/stable/users/usage/troubleshooting/#router-ports-not-reachable", nodeps.RouterContainer, strings.Join(refused, ", "))
+	util.Warning("%s is running, but nothing answers on host port(s) %s, so projects may not be reachable there. Your Docker provider may not be forwarding them; see https://docs.ddev.com/en/stable/users/usage/troubleshooting/#router-ports-not-reachable", nodeps.RouterContainer, strings.Join(unreachable, ", "))
 }
 
 // ensureRouterTraefikVolume creates RouterTraefikVolume if missing, seeding it
