@@ -214,17 +214,16 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 ## The `ddev-global-cache` Volume
 
-`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` and `ddev-router` containers use it, the `db` container mounts it read-only, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
+`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` container uses it, the `db` container mounts it read-only, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
 
 | Directory | Contents |
 | --- | --- |
 | `global-commands` | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
 | `mkcert` | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
-| `traefik` | Router configuration and certificates, with files for each project |
 
 Add-ons may keep their own directories here too. DDEV doesn’t chown the whole volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead.
 
-[`ddev delete`](commands.md#delete) removes the project's router files.
+[`ddev delete`](commands.md#delete) removes the project's files in [`ddev-router-traefik`](#the-ddev-router-traefik-volume).
 
 To clear the volume, for example to free Docker provider disk space, remove it. DDEV creates the volume again on the next [`ddev start`](commands.md#start). Versions of DDEV before v1.26.0 also kept package caches and shell history here, so removing it also frees that space:
 
@@ -257,3 +256,7 @@ ddev utility delete-volume web-cache
 ```
 
 If the project was used with a version of DDEV before v1.26.0, the next `ddev start` copies its old history from `ddev-global-cache` into the new volume again. History written since the upgrade is lost.
+
+## The `ddev-router-traefik` Volume
+
+`ddev-router-traefik` holds the router's Traefik configuration and certificates, with files for each project, and `acme.json` when you use [Let's Encrypt](../topics/hosting.md). Only `ddev-router` mounts it, at `/mnt/ddev-global-cache/traefik`, the path Traefik configuration refers to. DDEV fills it from the host on each [`ddev start`](commands.md#start), so removing it loses only `acme.json`, and Let's Encrypt then issues new certificates.
