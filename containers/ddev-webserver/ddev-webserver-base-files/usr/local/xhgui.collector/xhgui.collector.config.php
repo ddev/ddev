@@ -24,8 +24,8 @@ return [
   ],
   'save.handler.upload' => [
     'url' => 'http://xhgui/run/import',
-    // The timeout option is in seconds and defaults to 3 if unspecified.
-    'timeout' => 3,
+    // Seconds; large profiles take several seconds to import.
+    'timeout' => 30,
     // The token must match 'upload.token' config in XHGui.
     'token' => getenv('XHGUI_UPLOAD_TOKEN', 'token'),
   ],
