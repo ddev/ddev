@@ -726,7 +726,7 @@ func ReadProjectList() error {
 	if err != nil {
 		return err
 	}
-	dropIncompleteProjects(projects)
+	dropIncompleteProjects(projects, true)
 	DdevProjectList = projects
 
 	// Clean up the deprecated DdevGlobalConfig.ProjectList if it not nil,
@@ -817,7 +817,8 @@ func updateProjectList(change func(projects map[string]*ProjectInfo) error) erro
 	if err != nil {
 		return err
 	}
-	dropIncompleteProjects(projects)
+	// ReadProjectList already warned about these at startup.
+	dropIncompleteProjects(projects, false)
 	DdevProjectList = projects
 	if err = change(projects); err != nil {
 		return err
@@ -827,10 +828,12 @@ func updateProjectList(change func(projects map[string]*ProjectInfo) error) erro
 
 // dropIncompleteProjects removes entries without a name or approot, which
 // no ddev command can use.
-func dropIncompleteProjects(projects map[string]*ProjectInfo) {
+func dropIncompleteProjects(projects map[string]*ProjectInfo, warn bool) {
 	for name, project := range projects {
 		if name == "" || project == nil || project.AppRoot == "" {
-			output.UserErr.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)
+			if warn {
+				output.UserErr.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)
+			}
 			delete(projects, name)
 		}
 	}
