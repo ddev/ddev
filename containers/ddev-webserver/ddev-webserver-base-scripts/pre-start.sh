@@ -6,6 +6,8 @@
 set -x
 set -eu -o pipefail
 
+rm -f /tmp/healthy
+
 # Kill process 1 + process group if this exist or fails
 trap "trap - SIGTERM && kill -- -1" SIGINT SIGTERM EXIT SIGHUP SIGQUIT
 
