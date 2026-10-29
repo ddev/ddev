@@ -140,29 +140,29 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 
 The `web` container is created again from its image after every [`ddev restart`](../usage/commands.md#restart), [`ddev stop`](../usage/commands.md#stop), or [`ddev poweroff`](../usage/commands.md#poweroff). Project files and databases are kept, but other changes in the container are lost, including everything in the home directory. `homeadditions` only copies files into the container, never back out.
 
-By default, only the [`ddev-global-cache` volume](../usage/architecture.md#the-ddev-global-cache-volume) survives outside the project. This is where DDEV keeps caches and shell history.
+By default, only the project's [cache volume](../usage/architecture.md#project-cache-volumes), mounted at `/mnt/ddev-project-cache`, and the shared [`ddev-global-cache` volume](../usage/architecture.md#the-ddev-global-cache-volume) survive outside the project. The project cache volume is where DDEV keeps package caches and shell history.
 
 | Change made in the container | How to keep it |
 | --- | --- |
-| `composer global require` | [Keep `~/.composer` in `ddev-global-cache`](#persisting-home-subdirectories-in-ddev-global-cache), or install the tool with a [custom Dockerfile](customizing-images.md#examples) |
+| `composer global require` | [Keep `~/.composer` in the project cache](#persisting-home-subdirectories-in-the-project-cache), or install the tool with a [custom Dockerfile](customizing-images.md#examples) |
 | `composer self-update` | [`composer_version`](../configuration/config.md#composer_version) |
 | `n install <version>` | [`nodejs_version`](../configuration/config.md#nodejs_version) |
 | `npm install -g` | `RUN npm install -g` in a [custom Dockerfile](customizing-images.md#examples) |
 | `sudo apt-get install` | [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages) |
 | Edited dotfiles, like `~/.bashrc` | [`homeadditions`](#using-homeadditions-to-customize-in-container-home-directory) |
-| Files a tool writes, like `~/.config/gh` | [Keep the directory in `ddev-global-cache`](#persisting-home-subdirectories-in-ddev-global-cache) |
+| Files a tool writes, like `~/.config/gh` | [Keep the directory in the project cache](#persisting-home-subdirectories-in-the-project-cache) |
 
-### Persisting Home Subdirectories in `ddev-global-cache`
+### Persisting Home Subdirectories in the Project Cache
 
-To persist a subdirectory from your `ddev-webserver` home directory, move it to `ddev-global-cache` and leave a symlink in its place. This script does that each time the `web` container starts:
+To persist a subdirectory from your `ddev-webserver` home directory, move it to the project cache volume and leave a symlink in its place. This script does that each time the `web` container starts:
 
 ```bash
 # .ddev/web-entrypoint.d/persist.sh
-# Keep these home subdirectories in ddev-global-cache so they survive restarts.
+# Keep these home subdirectories in the project cache so they survive restarts.
 # Files from the image and homeadditions replace the stored copies at each start.
 (
   for dir in .composer; do
-    target="/mnt/ddev-global-cache/persist/${HOSTNAME}/${dir}"
+    target="/mnt/ddev-project-cache/persist/${dir}"
     mkdir -p "${target}" "$(dirname ~/"${dir}")" &&
       if [ -d ~/"${dir}" ] && [ ! -L ~/"${dir}" ]; then
         cp -a ~/"${dir}"/. "${target}"/ && rm -rf ~/"${dir}"
@@ -174,9 +174,9 @@ To persist a subdirectory from your `ddev-webserver` home directory, move it to 
 ```
 
 - Add directories to the `for` line, relative to the home directory, for example `for dir in .composer .config/gh; do`. They must be owned by your user, not `root`. If the script can't move a directory, it leaves it in place and prints a warning in `ddev logs -s web`.
-- Each project gets its own copy in `/mnt/ddev-global-cache/persist/<project>-web`. You can rename `persist` to anything DDEV doesn't [already use](../usage/architecture.md#the-ddev-global-cache-volume), but keep `${HOSTNAME}` directly under it, because `ddev delete` doesn't look deeper.
+- You can rename `persist` to anything DDEV doesn't [already use](../usage/architecture.md#project-cache-volumes).
 - At each start, files from the image and from `homeadditions` replace their stored copies. Files that exist only in the stored copy, like the packages you installed, are kept.
-- DDEV runs `chown -R` on the whole `ddev-global-cache` volume at every start of every project, so keeping a directory with many files, like `node_modules`, makes every start slower.
+- DDEV runs `chown -R` on the project cache volume at every start, so keeping a directory with many files, like `node_modules`, makes every start slower.
 
 For `.composer`, also add Composer's global `bin` directory to `$PATH` with a `homeadditions` script:
 
@@ -191,11 +191,9 @@ export PATH="$PATH:$HOME/.composer/vendor/bin"
 [`ddev delete`](../usage/commands.md#delete) removes the stored directories. To remove them without deleting the project:
 
 ```bash
-ddev exec 'rm -rf /mnt/ddev-global-cache/persist/${HOSTNAME}'
+ddev exec rm -rf /mnt/ddev-project-cache/persist
 ddev restart
 ```
-
-Use single quotes, so `${HOSTNAME}` expands inside the container.
 
 ### Keeping a Directory in a Docker Volume
 

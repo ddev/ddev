@@ -33,7 +33,8 @@ services:
       {{ if .SeedSnapshotMountDir }}
       - {{ .SeedSnapshotMountDir }}:{{ .SeedSnapshotMountTarget }}:ro
       {{ end }}
-      - ddev-global-cache:/mnt/ddev-global-cache
+      - ddev-global-cache:/mnt/ddev-global-cache:ro
+      - db-cache:/mnt/ddev-project-cache
     restart: "no"
 
     user: '$DDEV_UID:$DDEV_GID'
@@ -63,9 +64,10 @@ services:
       - DDEV_USER
       - DDEV_VERSION
       - DOCKER_IP={{ .DockerIP }}
+      - HISTFILE=/mnt/ddev-project-cache/history/bash_history
       - IS_DDEV_PROJECT=true
       - LINES
-      - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-db/mysql_history
+      - MYSQL_HISTFILE=/mnt/ddev-project-cache/history/mysql_history
       - PGDATABASE=db
       - PGHOST=127.0.0.1
       - PGPASSWORD=db
@@ -73,6 +75,7 @@ services:
       - POSTGRES_PASSWORD=db
       - POSTGRES_USER=db
       - POSTGRES_DB=db
+      - PSQL_HISTORY=/mnt/ddev-project-cache/history/psql_history
       {{- if ne (env "DDEV_PAGER") "" }}
       - PAGER=${DDEV_PAGER}
       {{- end }}
@@ -153,6 +156,7 @@ services:
         {{- end }} {{- /* end if .MutagenEnabled */}}
       {{- end }} {{- /* end else of if .NoBindMounts */}}
       - ddev-global-cache:/mnt/ddev-global-cache
+      - web-cache:/mnt/ddev-project-cache
       {{- if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{- end }}
@@ -186,7 +190,7 @@ services:
     environment:
     - COLUMNS
     - COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-    - COREPACK_HOME=/mnt/ddev-global-cache/corepack
+    - COREPACK_HOME=/mnt/ddev-project-cache/corepack
     - DOCROOT=${DDEV_DOCROOT}
     - DDEV_APPROOT=/var/www/html
     - DDEV_COMPOSER_ROOT
@@ -236,11 +240,12 @@ services:
     {{ end }}
     - IS_DDEV_PROJECT=true
     - LINES
-    - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
+    - MYSQL_HISTFILE=/mnt/ddev-project-cache/history/mysql_history
     - N_PREFIX=/usr/local/n
-    - N_CACHE_PREFIX=/mnt/ddev-global-cache/n_prefix/${DDEV_SITENAME}-web
+    - N_CACHE_PREFIX=/mnt/ddev-project-cache/n_prefix
     - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
-    - npm_config_cache=/mnt/ddev-global-cache/npm
+    - NODE_REPL_HISTORY=/mnt/ddev-project-cache/history/node_repl_history
+    - npm_config_cache=/mnt/ddev-project-cache/npm
     {{- if ne (env "DDEV_PAGER") "" }}
     - PAGER=${DDEV_PAGER}
     {{- end }}
@@ -249,6 +254,10 @@ services:
     - PGPASSWORD=db
     - PGUSER=db
     - PHP_IDE_CONFIG=serverName={{ .Name | lower }}.${DDEV_TLD}
+    - PSQL_HISTORY=/mnt/ddev-project-cache/history/psql_history
+    - PYTHON_HISTORY=/mnt/ddev-project-cache/history/python_history
+    - REDISCLI_HISTFILE=/mnt/ddev-project-cache/history/rediscli_history
+    - SQLITE_HISTORY=/mnt/ddev-project-cache/history/sqlite_history
     - SSH_AUTH_SOCK=/home/.ssh-agent/socket
     - TZ={{ .Timezone }}
     - USER={{ .Username }}
@@ -312,6 +321,9 @@ volumes:
   database:
     name: "{{ if eq .DBType "postgres" }}{{ .PostgresVolumeName }}{{ else }}{{ .MariaDBVolumeName }}{{ end }}"
     external: true
+  db-cache:
+    name: ddev-${DDEV_SITENAME}-db-cache
+    external: true
   {{ end }} {{/* end if not .OmitDB */}}
 
   {{ if not .OmitSSHAgent }}
@@ -320,6 +332,9 @@ volumes:
   {{ end }}{{/* end if not .OmitSSHAgent */}}
   ddev-global-cache:
     name: ddev-global-cache
+    external: true
+  web-cache:
+    name: ddev-${DDEV_SITENAME}-web-cache
     external: true
   {{ if .NoBindMounts }}
   ddev-config:

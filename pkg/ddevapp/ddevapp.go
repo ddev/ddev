@@ -1790,6 +1790,15 @@ func (app *DdevApp) start(o StartOptions) error {
 			volumesNeeded = append(volumesNeeded, app.GetMariaDBVolumeName())
 		}
 	}
+	// Project cache volumes created now get their history seeded below
+	var newCacheServices []string
+	for _, s := range app.projectCacheServices() {
+		v := app.GetProjectCacheVolumeName(s)
+		if !dockerutil.VolumeExists(v) {
+			newCacheServices = append(newCacheServices, s)
+		}
+		volumesNeeded = append(volumesNeeded, v)
+	}
 	for _, v := range volumesNeeded {
 		util.Verbose("creating docker volume %s", v)
 		labels := map[string]string{}
@@ -1886,7 +1895,9 @@ func (app *DdevApp) start(o StartOptions) error {
 
 	// Build list of volume mounts and their target paths for chown
 	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
-	chownCmd := fmt.Sprintf("chown -R %s:%s /mnt/ddev-global-cache", uid, gid)
+	// ddev-global-cache is shared by every project and user, so it is never
+	// chowned; the sticky bit lets add-ons create their own directories in it.
+	chownCmd := fmt.Sprintf("chmod 1777 /mnt/ddev-global-cache; chown -R %s:%s", uid, gid)
 	labels := map[string]string{}
 	if dockerutil.UseKeepID() {
 		labels["com.ddev.userns"] = "keep-id"
@@ -1902,6 +1913,19 @@ func (app *DdevApp) start(o StartOptions) error {
 			chownCmd = fmt.Sprintf("%s /var/lib/mysql", chownCmd)
 		}
 	}
+
+	var prepCmd strings.Builder
+	for _, s := range app.projectCacheServices() {
+		cacheDir := "/mnt/ddev-project-cache-" + s
+		volumeMounts = append(volumeMounts, app.GetProjectCacheVolumeName(s)+":"+cacheDir)
+		fmt.Fprintf(&prepCmd, "mkdir -p %s/history; ", cacheDir)
+		// Copy history from where older DDEV versions kept it, keyed by container hostname
+		if slices.Contains(newCacheServices, s) {
+			fmt.Fprintf(&prepCmd, "cp -p /mnt/ddev-global-cache/bashhistory/%[1]s-%[2]s/bash_history /mnt/ddev-global-cache/mysqlhistory/%[1]s-%[2]s/mysql_history %[3]s/history/ 2>/dev/null; ", app.Name, s, cacheDir)
+		}
+		chownCmd = fmt.Sprintf("%s %s", chownCmd, cacheDir)
+	}
+	chownCmd = prepCmd.String() + chownCmd
 
 	// Run chown concurrently with config/build steps below.
 	// chown operates on volumes, compose build operates on images — independent.
@@ -3834,7 +3858,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		if err = app.RemoveHostsEntriesIfNeeded(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
-		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app)}
+		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app), app.GetProjectCacheVolumeName("web"), app.GetProjectCacheVolumeName("db")}
 		// app.Name-ddev-config has already been deleted by Cleanup()
 		var heldVolumes []string
 		for _, volName := range vols {
@@ -4275,6 +4299,21 @@ func (app *DdevApp) GetMariaDBVolumeName() string {
 // For historical reasons this isn't lowercased.
 func (app *DdevApp) GetPostgresVolumeName() string {
 	return app.Name + "-postgres"
+}
+
+// GetProjectCacheVolumeName returns the name of the volume mounted at
+// /mnt/ddev-project-cache in a service, holding its history and, for web,
+// the package manager caches. Each service gets its own so it has one writer.
+func (app *DdevApp) GetProjectCacheVolumeName(service string) string {
+	return "ddev-" + app.Name + "-" + service + "-cache"
+}
+
+// projectCacheServices returns the services that mount a project cache volume.
+func (app *DdevApp) projectCacheServices() []string {
+	if app.IsDBOmitted() {
+		return []string{"web"}
+	}
+	return []string{"web", "db"}
 }
 
 // GetComposeProjectName returns the name of the docker-compose project
