@@ -357,6 +357,54 @@ func TestCustomCommands(t *testing.T) {
 	}
 }
 
+// TestCustomCommandModePreserved verifies that a ddev invocation leaves the
+// mode of an already executable custom command alone, so group-write and ACLs
+// survive. See https://github.com/ddev/ddev/issues/9031.
+func TestCustomCommandModePreserved(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("Windows has no executable permission bits")
+	}
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+	testDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(testDir)
+	})
+	err = os.Chdir(testDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(testDir, true)
+	require.NoError(t, err)
+	app.Name = strings.ToLower(t.Name())
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	commandDir := app.GetConfigPath(filepath.Join("commands", "host"))
+	err = os.MkdirAll(commandDir, 0755)
+	require.NoError(t, err)
+	commandPath := filepath.Join(commandDir, "testmode")
+	err = os.WriteFile(commandPath, []byte("#!/usr/bin/env bash\n\necho test\n"), 0644)
+	require.NoError(t, err)
+	err = os.Chmod(commandPath, 0775)
+	require.NoError(t, err)
+	nonExecutablePath := filepath.Join(commandDir, "testmodeexec")
+	err = os.WriteFile(nonExecutablePath, []byte("#!/usr/bin/env bash\n\necho test\n"), 0644)
+	require.NoError(t, err)
+	err = os.Chmod(nonExecutablePath, 0644)
+	require.NoError(t, err)
+
+	_, err = exec.RunHostCommand(DdevBin, "version")
+	require.NoError(t, err)
+
+	si, err := os.Stat(commandPath)
+	require.NoError(t, err)
+	require.Equal(t, os.FileMode(0775), si.Mode().Perm(), "an already executable command must keep its mode")
+	si, err = os.Stat(nonExecutablePath)
+	require.NoError(t, err)
+	require.Equal(t, os.FileMode(0755), si.Mode().Perm(), "a non-executable command must still become executable")
+}
+
 // TestCustomCommandContainerUser verifies that a custom command targeting a
 // service with x-ddev.container-user configured runs as that user by default,
 // matching `ddev ssh` and `ddev exec`.

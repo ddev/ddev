@@ -123,10 +123,12 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			continue
 		}
 
-		// Any command we find will want to be executable on Linux
-		// Note that this only affects host commands and project-level commands.
+		// Any command we find will want to be executable on Linux. Files that
+		// already have owner-exec keep their mode, so group-write and ACLs survive.
 		// Global container commands are made executable on `ddev start` instead.
-		_ = util.Chmod(onHostFullPath, 0755)
+		if si, err := os.Stat(onHostFullPath); err == nil && si.Mode()&0100 == 0 {
+			_ = util.Chmod(onHostFullPath, 0755)
+		}
 		if hasCR, _ := fileutil.FgrepStringInFile(onHostFullPath, "\r\n"); hasCR {
 			util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 			continue
