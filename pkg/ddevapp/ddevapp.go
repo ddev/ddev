@@ -1898,12 +1898,6 @@ func (app *DdevApp) start(o StartOptions) error {
 	// ddev-global-cache is shared by every project and user, so it is never
 	// chowned; the sticky bit lets add-ons create their own directories in it.
 	chownCmd := fmt.Sprintf("chmod 1777 /mnt/ddev-global-cache; chown -R %s:%s", uid, gid)
-	// Older DDEV versions skip their volume copy while this key matches.
-	// FixObsolete deletes it below, so the copy is removed once, and a
-	// downgraded DDEV copies it again.
-	if fileutil.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), legacyGlobalCommandsHashFile)) {
-		chownCmd = "rm -rf /mnt/ddev-global-cache/global-commands; " + chownCmd
-	}
 	labels := map[string]string{}
 	if dockerutil.UseKeepID() {
 		labels["com.ddev.userns"] = "keep-id"
