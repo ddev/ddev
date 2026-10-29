@@ -31,5 +31,5 @@ hand-wrapped prose: a lone newline in an ordinary paragraph renders as
 whitespace. Docs use Zensical's Python-Markdown extensions; preserve their
 admonition, tab, and list syntax, including four-space list indentation.
 
-Issue, PR, and comment **bodies** invert that rule. See
-`.claude/skills/ddev-commit/SKILL.md` before writing one.
+Issue, PR, and comment **bodies** invert that rule: GitHub shows each line
+break inside a paragraph as `<br>`, so write each paragraph on one line.

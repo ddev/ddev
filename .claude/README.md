@@ -31,8 +31,8 @@ so each tool and file type gets its own entry. The leading `/` anchors a
 pattern to the project, so edits outside it are not formatted.
 
 There is no commit hook. Matching `git commit` in Bash text either misses
-forms like `git -C dir commit` or catches read-only commands, so the commit
-skill runs `make staticrequired` instead.
+forms like `git -C dir commit` or catches read-only commands, so `AGENTS.md`
+makes `make staticrequired` a step before every commit instead.
 
 SessionStart writes PATH to `$CLAUDE_ENV_FILE`, which Claude Code sources
 before each Bash command. PATH cannot go in the `env` block, whose values are
