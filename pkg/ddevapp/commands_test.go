@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -83,7 +84,8 @@ func TestPopulateGlobalCustomCommandFiles(t *testing.T) {
 	require.NoError(t, err)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "stat -c %Y " + path.Join(ddevapp.GlobalCommandsContainerDir, "web", "test-web-cmd")})
 	require.NoError(t, err)
-	require.Equal(t, strconv.FormatInt(info.ModTime().Unix(), 10), strings.TrimSpace(out))
+	// archive/tar rounds ModTime to the nearest second.
+	require.Equal(t, strconv.FormatInt(info.ModTime().Round(time.Second).Unix(), 10), strings.TrimSpace(out))
 	if !nodeps.IsWindows() {
 		out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: path.Join(ddevapp.GlobalCommandsContainerDir, "web", "test-linked-cmd")})
 		require.NoError(t, err)
