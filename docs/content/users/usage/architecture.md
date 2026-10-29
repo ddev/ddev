@@ -214,13 +214,11 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 ## The `ddev-global-cache` Volume
 
-`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` container uses it, the `db` container mounts it read-only, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
+`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` container uses it and the `db` container mounts it read-only. Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
 
-| Directory | Scope | Contents |
-| --- | --- | --- |
-| `bashhistory/<project>-db`, `bashhistory/<project>-web` | Per project | Bash history |
-| `composer` | Shared | Composer cache |
-| `corepack` | Shared | Package managers installed by `corepack` |
+| Directory | Contents |
+| --- | --- |
+| `mkcert` | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
 
 Add-ons may keep their own directories here too. DDEV doesn’t `chown` the whole volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead.
 
