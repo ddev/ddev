@@ -18,7 +18,7 @@ on its own; other agents should open them directly.
 | Docs or any Markdown | `.claude/rules/docs.md` |
 | Apache/nginx config or templates | `.claude/rules/webserver-config.md` |
 | `pkg/tui` (`ddev tui`) | `.claude/rules/tui.md` |
-| A commit, PR, or issue | `.claude/skills/ddev-commit/SKILL.md` |
+| A commit, PR, or issue | `/ddev:commit`, see [Git workflow](#git-workflow) |
 
 Fetch GitHub files through `raw.githubusercontent.com`, not
 `github.com/.../blob/...` pages, which wrap the file in markup. DDEV's
@@ -89,13 +89,21 @@ Other skip conditions remain, so check the selected test's prerequisites.
 
 ## Linting
 
-**`make staticrequired` must pass before every commit, including an amend.**
-It runs golangci-lint, markdownlint, zensical, and an image-tag check. Read its
-full output, fix what it reports, and rerun it; the commit skill has the
-details.
-`make golangci-lint-fix` and `make markdownlint-fix` auto-fix what those two
-only report. `scripts/install-dev-tools.sh` installs the docs tooling; `make`
-finds it without direnv.
+**`make staticrequired` must pass before every commit command, including an
+amend, squash, or reword.** It runs golangci-lint, markdownlint, zensical, and
+an image-tag check.
+
+- Read its full output. Never pipe it through `tail`, `head`, or `grep`.
+- Fix every failure without asking first, even in changes you didn't write,
+  and even when asked to commit only what is staged.
+  `make golangci-lint-fix` and `make markdownlint-fix` fix much of it. Stage
+  the fixes, and name them when you report the commit.
+- Run it again. The last run before the commit must pass, with no file changed
+  since, even when an earlier run passed on the same tree. Never commit past a
+  failing run, and never offer to.
+
+`scripts/install-dev-tools.sh` installs the docs tooling; `make` finds it
+without direnv.
 
 IDE diagnostics from gopls can be stale — trust `make`/`go test` instead.
 
@@ -181,8 +189,11 @@ Keep an existing task branch and preserve the user's uncommitted changes.
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/):
 `<type>[optional scope][optional !]: <description>[, fixes #<issue>]`, where
 type is one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`,
-`refactor`, `style`, or `test`. Read the commit skill before writing a commit
-message, PR, or issue.
+`refactor`, `style`, or `test`. Write a commit message, PR, or issue with the
+`/ddev:commit` skill from [ddev/agent-skills](https://github.com/ddev/agent-skills).
+Install it in Claude Code with
+`claude plugin install ddev --marketplace ddev/agent-skills`. Without it,
+follow the organization patterns linked above.
 
 ## Environment
 
