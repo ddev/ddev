@@ -381,28 +381,36 @@ func TestCustomCommandModePreserved(t *testing.T) {
 	require.NoError(t, err)
 
 	commandDir := app.GetConfigPath(filepath.Join("commands", "host"))
-	err = os.MkdirAll(commandDir, 0755)
+	err = os.MkdirAll(filepath.Join(commandDir, "autocomplete"), 0755)
 	require.NoError(t, err)
-	commandPath := filepath.Join(commandDir, "testmode")
-	err = os.WriteFile(commandPath, []byte("#!/usr/bin/env bash\n\necho test\n"), 0644)
-	require.NoError(t, err)
-	err = os.Chmod(commandPath, 0775)
-	require.NoError(t, err)
-	nonExecutablePath := filepath.Join(commandDir, "testmodeexec")
-	err = os.WriteFile(nonExecutablePath, []byte("#!/usr/bin/env bash\n\necho test\n"), 0644)
-	require.NoError(t, err)
-	err = os.Chmod(nonExecutablePath, 0644)
-	require.NoError(t, err)
+	files := []struct {
+		name       string
+		mode, want os.FileMode
+	}{
+		{"testmode775", 0775, 0775},
+		{"testmode664", 0664, 0775},
+		{"testmode644", 0644, 0755},
+		{"testmode700", 0700, 0700},
+		{"testmode000", 0000, 0500},
+		{filepath.Join("autocomplete", "testmode775"), 0775, 0775},
+	}
+	for _, f := range files {
+		p := filepath.Join(commandDir, f.name)
+		err = os.WriteFile(p, []byte("#!/usr/bin/env bash\n\necho test\n"), 0644)
+		require.NoError(t, err)
+		// WriteFile applies the umask, Chmod does not.
+		err = os.Chmod(p, f.mode)
+		require.NoError(t, err)
+	}
 
 	_, err = exec.RunHostCommand(DdevBin, "version")
 	require.NoError(t, err)
 
-	si, err := os.Stat(commandPath)
-	require.NoError(t, err)
-	require.Equal(t, os.FileMode(0775), si.Mode().Perm(), "an already executable command must keep its mode")
-	si, err = os.Stat(nonExecutablePath)
-	require.NoError(t, err)
-	require.Equal(t, os.FileMode(0755), si.Mode().Perm(), "a non-executable command must still become executable")
+	for _, f := range files {
+		si, err := os.Stat(filepath.Join(commandDir, f.name))
+		require.NoError(t, err)
+		require.Equal(t, f.want, si.Mode().Perm(), "mode of %s, was %o", f.name, f.mode)
+	}
 }
 
 // TestCustomCommandContainerUser verifies that a custom command targeting a
