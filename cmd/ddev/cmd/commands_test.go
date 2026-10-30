@@ -357,9 +357,9 @@ func TestCustomCommands(t *testing.T) {
 	}
 }
 
-// TestCustomCommandModePreserved verifies that a ddev invocation leaves the
-// mode of an already executable custom command alone, so group-write and ACLs
-// survive. See https://github.com/ddev/ddev/issues/9031.
+// TestCustomCommandModePreserved verifies that a ddev invocation makes custom
+// commands executable without dropping group-write or ACLs.
+// See https://github.com/ddev/ddev/issues/9031.
 func TestCustomCommandModePreserved(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("Windows has no executable permission bits")
