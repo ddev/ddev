@@ -1,6 +1,7 @@
 FROM xhgui/xhgui:0.23 AS ddev-xhgui
 
-RUN apk add --no-cache bash curl tzdata
+# Upstream rebuilds its tags rarely, so pick up Alpine security fixes here
+RUN apk upgrade --no-cache && apk add --no-cache bash curl tzdata
 ADD /var /var
 ADD /etc /etc
 RUN echo 'memory_limit=-1' >> $PHP_INI_DIR/conf.d/99-memory-limit.ini

@@ -85,10 +85,10 @@ var SSHAuthTagBranch = "v1.25.5"
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "e0675a31b3" // 20261028_rfay_xhgui_body_size-e0675a31b3
+var XhguiTag = "070c6ecc03" // 20261028_rfay_xhgui_apk_upgrade-070c6ecc03
 
 // XhguiTagBranch is the branch XhguiTag's content was built from.
-var XhguiTagBranch = "20261028_rfay_xhgui_body_size"
+var XhguiTagBranch = "20261028_rfay_xhgui_apk_upgrade"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"
