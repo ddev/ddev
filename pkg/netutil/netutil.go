@@ -3,6 +3,7 @@ package netutil
 import (
 	"errors"
 	"fmt"
+	"io"
 	"math/rand/v2"
 	"net"
 	"net/url"
@@ -67,20 +68,40 @@ func IsPortActive(port string) bool {
 	return false
 }
 
-// IsPortRefused reports whether a connection to the port on a loopback Docker
-// IP is refused, meaning nothing listens there. It returns false for anything
-// less certain, such as a timeout or a Docker host that isn't on loopback.
-func IsPortRefused(port string) bool {
+// IsPortUnreachable reports whether an HTTP port on a loopback Docker IP is
+// unreachable: the connection is refused, or it is accepted and then closed or
+// reset before any response, as Docker Desktop's port forwarding does when its
+// target is stale. It returns false for anything less certain, such as a
+// timeout or a Docker host that isn't on loopback.
+func IsPortUnreachable(port string) bool {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if parsedIP := net.ParseIP(dockerIP); err != nil || parsedIP == nil || !parsedIP.IsLoopback() {
 		return false
 	}
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort(dockerIP, port), time.Second)
-	if err == nil {
-		_ = conn.Close()
-		return false
+	return isHTTPPortUnreachable(net.JoinHostPort(dockerIP, port))
+}
+
+// isHTTPPortUnreachable sends a minimal HTTP request to addr. Any response byte,
+// even an HTTP error or a plaintext rejection from a TLS port, means reachable.
+func isHTTPPortUnreachable(addr string) bool {
+	conn, err := net.DialTimeout("tcp", addr, time.Second)
+	if err != nil {
+		// Linux can report a reset from connect when it arrives right after the handshake.
+		return isConnRefused(err) || isConnDropped(err)
 	}
-	return isConnRefused(err)
+	defer util.CheckClose(conn)
+	_ = conn.SetDeadline(time.Now().Add(2 * time.Second))
+	if _, err = conn.Write([]byte("GET / HTTP/1.0\r\n\r\n")); err != nil {
+		return isConnDropped(err)
+	}
+	n, err := conn.Read(make([]byte, 1))
+	return n == 0 && isConnDropped(err)
+}
+
+// isConnDropped reports whether err is a closed or reset connection.
+func isConnDropped(err error) bool {
+	// Windows reports WSAECONNRESET (10054) rather than ECONNRESET.
+	return errors.Is(err, io.EOF) || errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.Errno(10054))
 }
 
 // isConnRefused reports whether err is a refused connection.

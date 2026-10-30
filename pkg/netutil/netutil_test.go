@@ -39,18 +39,47 @@ func TestIsHostPortFree(t *testing.T) {
 	require.True(t, netutil.IsHostPortFree("127.0.0.1", port))
 }
 
-func TestIsPortRefused(t *testing.T) {
+func TestIsPortUnreachable(t *testing.T) {
 	if dockerIP, err := dockerutil.GetDockerIP(); err != nil || !net.ParseIP(dockerIP).IsLoopback() {
-		t.Skip("Skipping: IsPortRefused only checks a loopback Docker IP")
+		t.Skip("Skipping: IsPortUnreachable only checks a loopback Docker IP")
 	}
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = l.Close() })
-	port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+	// serve starts a listener that handles each connection with handle and returns its port
+	serve := func(handle func(c *net.TCPConn)) (*net.TCPListener, string) {
+		l, err := net.ListenTCP("tcp", &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1)})
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = l.Close() })
+		go func() {
+			for {
+				c, err := l.AcceptTCP()
+				if err != nil {
+					return
+				}
+				handle(c)
+			}
+		}()
+		return l, strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+	}
 
-	require.False(t, netutil.IsPortRefused(port))
-	require.NoError(t, l.Close())
-	require.True(t, netutil.IsPortRefused(port))
+	answering, port := serve(func(c *net.TCPConn) {
+		_, _ = c.Read(make([]byte, 64))
+		_, _ = c.Write([]byte("HTTP/1.0 404 Not Found\r\n\r\n"))
+		_ = c.Close()
+	})
+	require.False(t, netutil.IsPortUnreachable(port))
+	require.NoError(t, answering.Close())
+	require.True(t, netutil.IsPortUnreachable(port), "refused")
+
+	_, port = serve(func(c *net.TCPConn) {
+		_ = c.SetLinger(0)
+		_ = c.Close()
+	})
+	require.True(t, netutil.IsPortUnreachable(port), "reset")
+
+	_, port = serve(func(c *net.TCPConn) {
+		_, _ = c.Read(make([]byte, 64))
+		_ = c.Close()
+	})
+	require.True(t, netutil.IsPortUnreachable(port), "closed without answering")
 }
 
 func TestAllocateHostPort(t *testing.T) {
