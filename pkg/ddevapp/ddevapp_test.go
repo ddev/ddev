@@ -4061,9 +4061,7 @@ func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
 			t.Logf("%s failed at first (err=%v) and recovered; a known Docker Desktop port-forwarding delay", u, err)
 			continue
 		}
-		testcommon.AssertLocalHTTPContent(t, u+"/testfile.html", want,
-			testcommon.WithMessagef("every reported URL should serve the project"),
-		)
+		t.Errorf("every reported URL should serve the project: %s err=%v body=%.200s", u, err, body)
 	}
 }
 
@@ -4086,7 +4084,12 @@ func logRouterDiagnostics(t *testing.T, projectName string, rawURL string, want 
 	t.Logf("router diagnostics: last router log lines (err=%v):\n%s", err, logs)
 	ports, err := exec.RunHostCommand("docker", "port", router.ID)
 	t.Logf("router diagnostics: router published ports (err=%v):\n%s", err, ports)
-	for _, netMode := range []string{dockerutil.NetName, "host"} {
+	netModes := []string{dockerutil.NetName, "host"}
+	// On ddev_default, a loopback URL points at the curl container itself.
+	if parsed, err := url.Parse(rawURL); err == nil && (parsed.Hostname() == "localhost" || net.ParseIP(parsed.Hostname()).IsLoopback()) {
+		netModes = []string{"host"}
+	}
+	for _, netMode := range netModes {
 		out, err := exec.RunHostCommand("docker", "run", "--rm", "--network", netMode, ddevImages.GetWebImage(),
 			"curl", "-sSk", "-o", "/dev/null", "-w", "%{http_code}", "--max-time", "5", rawURL)
 		t.Logf("router diagnostics: curl %s from a container on network %s: %s (err=%v)", rawURL, netMode, out, err)
