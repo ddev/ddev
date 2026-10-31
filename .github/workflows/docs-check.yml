@@ -57,7 +57,7 @@ jobs:
           textlint_flags: "{README.md,docs/**}"
       - name: Setup upterm session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-        uses: owenthereal/action-upterm@v1
+        uses: owenthereal/action-upterm@v2
         with:
           limit-access-to-actor: true
       - name: Run linkspector to check external links
