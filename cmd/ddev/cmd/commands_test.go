@@ -357,6 +357,62 @@ func TestCustomCommands(t *testing.T) {
 	}
 }
 
+// TestCustomCommandModePreserved verifies that a ddev invocation makes custom
+// commands executable without dropping group-write or ACLs.
+// See https://github.com/ddev/ddev/issues/9031.
+func TestCustomCommandModePreserved(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("Windows has no executable permission bits")
+	}
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+	testDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(testDir)
+	})
+	err = os.Chdir(testDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(testDir, true)
+	require.NoError(t, err)
+	app.Name = strings.ToLower(t.Name())
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	commandDir := app.GetConfigPath(filepath.Join("commands", "host"))
+	err = os.MkdirAll(filepath.Join(commandDir, "autocomplete"), 0755)
+	require.NoError(t, err)
+	files := []struct {
+		name       string
+		mode, want os.FileMode
+	}{
+		{"testmode775", 0775, 0775},
+		{"testmode664", 0664, 0775},
+		{"testmode644", 0644, 0755},
+		{"testmode700", 0700, 0700},
+		{"testmode000", 0000, 0500},
+		{filepath.Join("autocomplete", "testmode775"), 0775, 0775},
+	}
+	for _, f := range files {
+		p := filepath.Join(commandDir, f.name)
+		err = os.WriteFile(p, []byte("#!/usr/bin/env bash\n\necho test\n"), 0644)
+		require.NoError(t, err)
+		// WriteFile applies the umask, Chmod does not.
+		err = os.Chmod(p, f.mode)
+		require.NoError(t, err)
+	}
+
+	_, err = exec.RunHostCommand(DdevBin, "version")
+	require.NoError(t, err)
+
+	for _, f := range files {
+		si, err := os.Stat(filepath.Join(commandDir, f.name))
+		require.NoError(t, err)
+		require.Equal(t, f.want, si.Mode().Perm(), "mode of %s, was %o", f.name, f.mode)
+	}
+}
+
 // TestCustomCommandContainerUser verifies that a custom command targeting a
 // service with x-ddev.container-user configured runs as that user by default,
 // matching `ddev ssh` and `ddev exec`.

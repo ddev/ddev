@@ -123,10 +123,8 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			continue
 		}
 
-		// Any command we find will want to be executable on Linux
-		// Note that this only affects host commands and project-level commands.
 		// Global container commands are made executable on `ddev start` instead.
-		_ = util.Chmod(onHostFullPath, 0755)
+		makeExecutable(onHostFullPath)
 		if hasCR, _ := fileutil.FgrepStringInFile(onHostFullPath, "\r\n"); hasCR {
 			util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 			continue
@@ -322,7 +320,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName, mutagenSync)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
-				_ = util.Chmod(autocompletePathOnHost, 0755)
+				makeExecutable(autocompletePathOnHost)
 				if hasCR, _ := fileutil.FgrepStringInFile(autocompletePathOnHost, "\r\n"); hasCR {
 					util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 					continue
@@ -341,7 +339,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative, mutagenSync)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
-				_ = util.Chmod(autocompletePathOnHost, 0755)
+				makeExecutable(autocompletePathOnHost)
 				if hasCR, _ := fileutil.FgrepStringInFile(autocompletePathOnHost, "\r\n"); hasCR {
 					util.Warning("Autocomplete script for command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, autocompletePathOnHost)
 					continue
@@ -385,6 +383,16 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		commandsAdded[commandName] = 1
 	}
 	return nil
+}
+
+// makeExecutable adds an exec bit wherever the file has a read bit, so a
+// custom command runs without losing group-write or the POSIX ACL mask.
+// The owner always gets read, since DDEV parses the file's directives.
+func makeExecutable(filePath string) {
+	if si, err := os.Stat(filePath); err == nil {
+		m := si.Mode().Perm() | 0400
+		_ = util.Chmod(filePath, m|(m&0444)>>2)
+	}
 }
 
 // isCustomCommandInArgs checks if the command is the first arg passed to the "ddev" command.
