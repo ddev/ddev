@@ -43,7 +43,8 @@ There are cases like access to hosting provider integrations that have essential
 * **Buildkite**: Maintainers should be added to the [DDEV Buildkite organization](https://buildkite.com/organizations/ddev/users) with "maintainer" privileges. This gives access to the Buildkite pipelines and the ability to add new pipelines. Do not require "SSO" or people won't be able to get in.
 * **Google Workspace**: Maintainers should usually be added to the Admin Console, have their own email `@ddev.com`, and be added to various email groups.
 * **YouTube**: Channel credentials are stored in 1Password.
-* **Chrome Remote Desktop**: This is the test runner login ("DDEV buildkite test-runners - remotedesktop.google.com") from 1Password, but it will need to be authorized via 2FA or a backup code from 1Password.
+* **Tailscale**: Add the maintainer's login name (`<github-username>@github`) to `group:ddev-admins` in the test runner tailnet's access policy, see [Remote Access with Tailscale](buildkite-testmachine-setup.md#remote-access-with-tailscale).
+* **Chrome Remote Desktop**: Fallback access to test runners. This is the test runner login ("DDEV buildkite test-runners - remotedesktop.google.com") from 1Password, but it will need to be authorized via 2FA or a backup code from 1Password.
 * **CircleCI**: Maintainers automatically have some access via their GitHub team membership, but should probably get more.
 * **developer.apple.com**: Add to the DDEV team there so certificates can be managed.
 * **hub.docker.com**: Add user to owners team in DDEV org.
