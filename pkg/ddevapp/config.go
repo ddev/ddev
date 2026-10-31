@@ -227,12 +227,23 @@ func (app *DdevApp) GetProcessedProjectConfigYAML(omitKeys ...string) ([]byte, e
 
 // WriteConfig writes the app configuration into the .ddev folder.
 func (app *DdevApp) WriteConfig() error {
+	return app.writeConfig(false)
+}
+
+// WriteConfigOmittingName writes the app configuration without the `name`
+// field, for omit_project_name_by_default. The project is still registered
+// under app.Name.
+func (app *DdevApp) WriteConfigOmittingName() error {
+	return app.writeConfig(true)
+}
+
+func (app *DdevApp) writeConfig(omitName bool) error {
 	// Work against a copy of the DdevApp, since we don't want to actually change it.
 	appcopy := *app
 
 	// If the app name has been changed by `config.*.yaml`,
 	// remove it from the main config.yaml file.
-	if hasConfigNameOverride, _ := app.HasConfigNameOverride(); hasConfigNameOverride {
+	if hasConfigNameOverride, _ := app.HasConfigNameOverride(); hasConfigNameOverride || omitName {
 		appcopy.Name = ""
 	}
 
@@ -328,10 +339,6 @@ func (app *DdevApp) WriteConfig() error {
 // Checks that configured host ports are not already
 // reserved by another project
 func (app *DdevApp) UpdateGlobalProjectList() error {
-	// `ddev config` clears the name to omit it from config.yaml, then registers the real one.
-	if app.Name == "" {
-		return nil
-	}
 	portsToReserve := []string{}
 	if app.HostDBPort != "" {
 		portsToReserve = append(portsToReserve, app.HostDBPort)
