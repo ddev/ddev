@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
@@ -56,19 +54,6 @@ func TestLocalfilePull(t *testing.T) {
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	// This not only shows us the version but also populates the project's
-	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
-	// This matters when --no-bind-mount=true
-	out, err := exec.RunHostCommand("ddev", "--version")
-	assert.NoError(err)
-	t.Logf("ddev --version=%v", out)
-
-	// Recreate the CI path where the host-side hash persists but the shared
-	// ddev-global-cache volume has been deleted between runs.
-	ddevapp.PowerOff()
-	err = dockerutil.RemoveVolume("ddev-global-cache")
-	require.NoError(t, err)
-
 	testcommon.ClearDockerEnv()
 
 	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
@@ -102,7 +87,7 @@ func TestLocalfilePull(t *testing.T) {
 	for _, hook := range []string{"pre-import-db", "post-import-db", "pre-import-files", "post-import-files"} {
 		require.FileExists(t, filepath.Join(app.GetAppRoot(), "hello-"+hook+"-"+app.Name), "%s hook did not run", hook)
 	}
-	out, _, err = app.Exec(&ddevapp.ExecOpts{
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd:     fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s -N`, app.GetDBClientCommand()),
 		Service: "db",
 	})

@@ -1925,12 +1925,12 @@ ddev utility download-images --all
 
 ### `utility fix-commands`
 
-Refreshes [custom command](../extend/custom-commands.md) definitions without running [`ddev start`](#start).
+Copies [global container commands](../extend/custom-commands.md#global-commands) into the current project’s running containers, so changes to them take effect without a [`ddev start`](#start). Outside a project directory, it copies them into every running project.
 
 Example:
 
 ```shell
-# Refresh the current project’s custom commands
+# Refresh the current project’s global container commands
 ddev utility fix-commands
 ```
 

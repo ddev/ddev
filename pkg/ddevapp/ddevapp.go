@@ -2072,6 +2072,8 @@ func (app *DdevApp) start(o StartOptions) error {
 		return err
 	}
 
+	waitForGlobalCommands := app.populateGlobalCommandsInBackground()
+
 	if !IsRouterDisabled(app) {
 		if _, caRootErr := globalconfig.ReadCAROOTDetails(); caRootErr != nil {
 			util.Warning("%v", caRootErr)
@@ -2260,10 +2262,7 @@ func (app *DdevApp) start(o StartOptions) error {
 		})
 	}
 
-	err = PopulateGlobalCustomCommandFiles()
-	if err != nil {
-		util.Warning("Failed to populate global custom command files: %v", err)
-	}
+	waitForGlobalCommands()
 
 	util.Verbose("Testing to see if /mnt/ddev_config is properly mounted")
 	_, _, err = app.Exec(&ExecOpts{
@@ -2409,6 +2408,7 @@ func (app *DdevApp) startProfileServices(project *composeTypes.Project) error {
 	if err := composeUp(project, api.CreateOptions{}); err != nil {
 		return err
 	}
+	defer app.populateGlobalCommandsInBackground()()
 
 	if !IsRouterDisabled(app) {
 		util.Debug("Starting %s if necessary...", nodeps.RouterContainer)
@@ -2559,6 +2559,7 @@ func (app *DdevApp) recreateServices(services []string, build *api.BuildOptions)
 	if err != nil {
 		return err
 	}
+	defer app.populateGlobalCommandsInBackground()()
 
 	// A service without DDEV labels can't be found to wait on, as in start().
 	var waitServices []string

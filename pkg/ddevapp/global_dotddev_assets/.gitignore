@@ -7,7 +7,6 @@
 /.amplitude.cache
 /.env.*.local
 /.env.local
-/.global-commands-hash
 /.global.lock
 /.global.lock.info
 /.remote-config

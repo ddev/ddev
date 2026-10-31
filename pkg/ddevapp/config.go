@@ -816,6 +816,15 @@ func (app *DdevApp) FixObsolete() {
 		}
 	}
 
+	// Remove old ~/.ddev/.global-commands-hash file which is no longer used
+	legacyGlobalCommandsHash := filepath.Join(globalconfig.GetGlobalDdevDir(), legacyGlobalCommandsHashFile)
+	if fileutil.FileExists(legacyGlobalCommandsHash) {
+		err := os.Remove(legacyGlobalCommandsHash)
+		if err != nil {
+			util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", legacyGlobalCommandsHash, err)
+		}
+	}
+
 	// Remove old global traefik configuration.
 	for _, f := range []string{"static_config.yaml"} {
 		traefikGlobalConfigPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
