@@ -1779,6 +1779,13 @@ func (app *DdevApp) start(o StartOptions) error {
 	}
 
 	volumesNeeded := []string{"ddev-global-cache"}
+	if dockerutil.UseBindGlobalCache() {
+		// The global cache is a host directory instead of a volume, so make sure it exists.
+		volumesNeeded = []string{}
+		if err = os.MkdirAll(dockerutil.GlobalCacheSource(), 0755); err != nil {
+			return fmt.Errorf("unable to create global cache directory %s: %v", dockerutil.GlobalCacheSource(), err)
+		}
+	}
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		volumesNeeded = append(volumesNeeded, app.Name+"-ddev-config")
 	}
@@ -1894,7 +1901,7 @@ func (app *DdevApp) start(o StartOptions) error {
 	}
 
 	// Build list of volume mounts and their target paths for chown
-	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
+	volumeMounts := []string{dockerutil.GlobalCacheMount()}
 	// ddev-global-cache is shared by every project and user, so it is never
 	// chowned; the sticky bit lets add-ons create their own directories in it.
 	chownCmd := fmt.Sprintf("chmod 1777 /mnt/ddev-global-cache; chown -R %s:%s", uid, gid)
@@ -1903,7 +1910,10 @@ func (app *DdevApp) start(o StartOptions) error {
 		labels["com.ddev.userns"] = "keep-id"
 	}
 
-	if !app.IsDBOmitted() {
+	// Skip each volume whose container is already running: its ownership was set on an
+	// earlier start, and mounting it here as well is a second writer, which apple
+	// container refuses outright.
+	if !app.IsDBOmitted() && !app.isServiceRunning("db") {
 		if app.Database.Type == nodeps.Postgres {
 			postgresDataDir := app.GetPostgresDataDir()
 			volumeMounts = append(volumeMounts, app.GetPostgresVolumeName()+":"+postgresDataDir)
@@ -1916,6 +1926,9 @@ func (app *DdevApp) start(o StartOptions) error {
 
 	var prepCmd strings.Builder
 	for _, s := range app.projectCacheServices() {
+		if app.isServiceRunning(s) {
+			continue
+		}
 		cacheDir := "/mnt/ddev-project-cache-" + s
 		volumeMounts = append(volumeMounts, app.GetProjectCacheVolumeName(s)+":"+cacheDir)
 		fmt.Fprintf(&prepCmd, "mkdir -p %s/history; ", cacheDir)
@@ -2087,7 +2100,7 @@ func (app *DdevApp) start(o StartOptions) error {
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
 				uid, _, _ := dockerutil.GetContainerUser()
-				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
+				err = copyIntoGlobalCache(caRoot, "mkcert", uid)
 				if err != nil {
 					util.Warning("Failed to copy root CA into Docker volume ddev-global-cache/mkcert: %v", err)
 				} else {
@@ -3807,22 +3820,21 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// for stopped project
 	if traefikBinds := routerTraefikBinds(); traefikBinds != nil {
 		c := fmt.Sprintf("rm -rf %s/config/%s_merged.yaml", RouterTraefikDir, app.Name)
-		util.Debug("Removing merged config for project with command '%s'", c)
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, traefikBinds, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
-		if err != nil {
-			util.Warning("Unable to remove project merged traefik yaml: %v, output='%s'", err, out)
+		if removeData {
+			// Also remove the official certs; extra certs the user put there stay
+			c = fmt.Sprintf("rm -rf %[2]s/config/%[1]s_merged.yaml %[2]s/*/%[1]s.crt %[2]s/*/%[1]s.key", app.Name, RouterTraefikDir)
+		}
+		util.Debug("Cleaning router Traefik files for project with command '%s'", c)
+		if out, err := runInRouterTraefikVolume("clean-router-traefik", c, traefikBinds); err != nil {
+			util.Warning("Unable to clean up router Traefik files with command '%s': %v, output='%s'", c, err, out)
 		}
 	}
 
-	// If removedata, clean up any data taht was in the ddev-global-cache, including
-	// merged traefik config and certs.
+	// If removedata, clean up history that older DDEV versions kept in ddev-global-cache
 	if removeData {
-		// If removing data, we want to get rid of the official certs and merged traefik config
-		// This would not remove extra certs that they had put in certs directory.
-		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db} /mnt/ddev-global-cache/traefik/*/%[1]s.{crt,key} /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
+		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db}", app.Name)
 		util.Verbose("Cleaning ddev-global-cache with command '%s'", c)
-		binds := append([]string{"ddev-global-cache:/mnt/ddev-global-cache"}, routerTraefikBinds()...)
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, binds, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{dockerutil.GlobalCacheMount()}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
 		}
@@ -4432,4 +4444,44 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	}
 
 	return nil
+}
+
+// copyIntoGlobalCache copies the files in sourcePath into targetSubdir of the
+// global cache. With the global cache bind-mounted (UseBindGlobalCache) the copy
+// happens on the host, with no helper container holding the mount.
+func copyIntoGlobalCache(sourcePath string, targetSubdir string, uid string) error {
+	if !dockerutil.UseBindGlobalCache() {
+		return dockerutil.CopyIntoVolume(sourcePath, dockerutil.GlobalCacheSource(), targetSubdir, uid, "", false)
+	}
+	target := filepath.Join(dockerutil.GlobalCacheSource(), targetSubdir)
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(sourcePath)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if !entry.Type().IsRegular() {
+			continue
+		}
+		// Remove first: the CA key is read-only, so it can't be overwritten in place
+		dst := filepath.Join(target, entry.Name())
+		if err = os.RemoveAll(dst); err != nil {
+			return err
+		}
+		if err = fileutil.CopyFile(filepath.Join(sourcePath, entry.Name()), dst); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// isServiceRunning reports whether the project's container for service is running.
+// Callers use it to avoid attaching that container's volumes a second time: apple
+// container backs each volume with a block device that takes one writer or any
+// number of readers, never a mix.
+func (app *DdevApp) isServiceRunning(service string) bool {
+	c, err := app.FindContainerByType(service)
+	return err == nil && c != nil && c.State == "running"
 }

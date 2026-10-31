@@ -343,6 +343,19 @@ func routerTraefikBinds() []string {
 	return []string{RouterTraefikVolume + ":" + RouterTraefikDir}
 }
 
+// runInRouterTraefikVolume runs the shell command cmd against RouterTraefikDir,
+// inside the router when it is running and otherwise in a helper container with
+// binds. A helper beside a running router would be a second writer to its volume,
+// which apple container refuses.
+func runInRouterTraefikVolume(name string, cmd string, binds []string) (string, error) {
+	if router, err := FindDdevRouter(); err == nil && router != nil && router.State == "running" {
+		stdout, stderr, err := dockerutil.Exec(router.ID, cmd, "0")
+		return stdout + stderr, err
+	}
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, name+"-"+util.RandString(6), []string{"bash", "-c", cmd}, nil, nil, binds, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+	return out, err
+}
+
 // generateRouterCompose() generates the ~/.ddev/.router-compose.yaml and ~/.ddev/.router-compose-full.yaml
 func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 	exposedPorts := determineRouterPorts(activeApps)

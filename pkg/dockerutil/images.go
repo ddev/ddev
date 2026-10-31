@@ -158,7 +158,22 @@ func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]image.Su
 	if err != nil {
 		return nil, err
 	}
-	return images.Items, nil
+	// socktainer ignores the label filter and lists every image; callers delete
+	// what this returns, so check the labels here as well.
+	var matched []image.Summary
+	for _, img := range images.Items {
+		ok := true
+		for k, v := range labels {
+			if got, exists := img.Labels[k]; !exists || (v != "" && got != v) {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			matched = append(matched, img)
+		}
+	}
+	return matched, nil
 }
 
 // RemoveImage removes an image with force
