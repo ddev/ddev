@@ -19,6 +19,8 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/moby/moby/client"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1310,4 +1312,46 @@ func TestPausedProjectsExcludedFromRouter(t *testing.T) {
 	// Verify project2 is still accessible
 	status, _ = app2.SiteStatus()
 	require.Equal(t, ddevapp.SiteRunning, status, "Project2 should be running")
+}
+
+// TestRouterTraefikVolumeSeededBeforeWeb checks that start seeds
+// RouterTraefikVolume from ddev-global-cache/traefik before it creates the web
+// container, which then holds ddev-global-cache.
+func TestRouterTraefikVolumeSeededBeforeWeb(t *testing.T) {
+	ddevapp.PowerOff()
+	projectDir := testcommon.CreateTmpDir(t.Name())
+	app, err := ddevapp.NewApp(projectDir, true)
+	require.NoError(t, err)
+	app.Name = t.Name()
+	app.Type = nodeps.AppTypePHP
+	require.NoError(t, app.WriteConfig())
+
+	marker := "seed-marker-" + util.RandString(6)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, t.Name()+"-plant-"+util.RandString(6), []string{"sh", "-c", "mkdir -p /mnt/g/traefik && touch /mnt/g/traefik/" + marker}, nil, nil, []string{"ddev-global-cache:/mnt/g"}, "0", true, false, nil, nil, nil)
+	require.NoError(t, err, "output='%s'", out)
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(projectDir)
+		_, _, _ = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, t.Name()+"-unplant-"+util.RandString(6), []string{"rm", "-f", "/mnt/g/traefik/" + marker}, nil, nil, []string{"ddev-global-cache:/mnt/g"}, "0", true, false, nil, nil, nil)
+		_, _, _ = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, t.Name()+"-unplant-"+util.RandString(6), []string{"rm", "-f", "/mnt/t/" + marker}, nil, nil, []string{ddevapp.RouterTraefikVolume + ":/mnt/t"}, "0", true, false, nil, nil, nil)
+	})
+	require.NoError(t, dockerutil.RemoveVolume(ddevapp.RouterTraefikVolume))
+
+	require.NoError(t, app.Start())
+
+	stdout, _, err := dockerutil.Exec(nodeps.RouterContainer, "ls "+ddevapp.RouterTraefikDir, "")
+	require.NoError(t, err)
+	require.Contains(t, stdout, marker, "the router volume should be seeded from ddev-global-cache/traefik")
+
+	ctx, apiClient, err := dockerutil.GetDockerClient()
+	require.NoError(t, err)
+	vol, err := apiClient.VolumeInspect(ctx, ddevapp.RouterTraefikVolume, client.VolumeInspectOptions{})
+	require.NoError(t, err)
+	volCreated, err := time.Parse(time.RFC3339, vol.Volume.CreatedAt)
+	require.NoError(t, err)
+	web, err := dockerutil.InspectContainer(ddevapp.GetContainerName(app, "web"))
+	require.NoError(t, err)
+	webCreated, err := time.Parse(time.RFC3339Nano, web.Created)
+	require.NoError(t, err)
+	require.True(t, volCreated.Before(webCreated), "volume created %s, web created %s", volCreated, webCreated)
 }

@@ -1810,6 +1810,13 @@ func (app *DdevApp) start(o StartOptions) error {
 			return fmt.Errorf("unable to create Docker volume %s: %v", v, err)
 		}
 	}
+	// Seed the router volume before web holds ddev-global-cache, since some
+	// providers refuse to attach a volume another container holds read-write.
+	if !IsRouterDisabled(app) {
+		if err = ensureRouterTraefikVolume(); err != nil {
+			util.Warning("%v", err)
+		}
+	}
 
 	err = app.CheckExistingAppInApproot()
 	if err != nil {
