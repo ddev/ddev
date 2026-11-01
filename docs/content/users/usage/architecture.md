@@ -214,13 +214,22 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 ## The `ddev-global-cache` Volume
 
-`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` container uses it and the `db` container mounts it read-only. Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
+`ddev-global-cache` is a Docker volume shared by all projects. Add-on services mount it at `/mnt/ddev-global-cache`. Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
 
 | Directory | Contents |
 | --- | --- |
 | `mkcert` | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
 
-Add-ons may keep their own directories here too. DDEV doesn’t `chown` the whole volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead.
+The `web` and `db` containers don’t mount it. On each [`ddev start`](commands.md#start), DDEV copies the mkcert certificate authority into the `web` container at `/mnt/ddev-global-cache/mkcert`, the path `CAROOT` names.
+
+Add-ons may keep their own directories here too. DDEV doesn’t `chown` the whole volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead. An add-on that writes here from the `web` container mounts the volume itself, in its `docker-compose.*.yaml`:
+
+```yaml
+services:
+  web:
+    volumes:
+      - ddev-global-cache:/mnt/ddev-global-cache
+```
 
 [`ddev delete`](commands.md#delete) removes the project's files in [`ddev-router-traefik`](#the-ddev-router-traefik-volume).
 

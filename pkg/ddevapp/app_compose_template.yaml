@@ -33,7 +33,6 @@ services:
       {{ if .SeedSnapshotMountDir }}
       - {{ .SeedSnapshotMountDir }}:{{ .SeedSnapshotMountTarget }}:ro
       {{ end }}
-      - ddev-global-cache:/mnt/ddev-global-cache:ro
       - db-cache:/mnt/ddev-project-cache
     restart: "no"
 
@@ -155,7 +154,6 @@ services:
           {{- end }} {{- /* end if .GitDirMount */}}
         {{- end }} {{- /* end if .MutagenEnabled */}}
       {{- end }} {{- /* end else of if .NoBindMounts */}}
-      - ddev-global-cache:/mnt/ddev-global-cache
       - web-cache:/mnt/ddev-project-cache
       {{- if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
@@ -238,6 +236,7 @@ services:
     - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILPIT_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPPorts }}
     - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILPIT_HTTPS_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPSPorts }}
     {{ end }}
+    - DDEV_WAIT_FOR_CAROOT={{ .WaitForCAROOT }}
     - IS_DDEV_PROJECT=true
     - LINES
     - MYSQL_HISTFILE=/mnt/ddev-project-cache/history/mysql_history

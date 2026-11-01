@@ -2084,6 +2084,9 @@ func (app *DdevApp) start(o StartOptions) error {
 	if err != nil {
 		return err
 	}
+	if err = app.copyCAROOTIntoWeb(); err != nil {
+		util.Warning("%v", err)
+	}
 
 	waitForGlobalCommands := app.populateGlobalCommandsInBackground()
 
