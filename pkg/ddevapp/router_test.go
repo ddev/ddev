@@ -1311,3 +1311,50 @@ func TestPausedProjectsExcludedFromRouter(t *testing.T) {
 	status, _ = app2.SiteStatus()
 	require.Equal(t, ddevapp.SiteRunning, status, "Project2 should be running")
 }
+
+// TestStopRemovesRouterFiles checks that stop removes the project's merged
+// config from the running router and keeps its certs, and that removing data
+// also removes the certs.
+func TestStopRemovesRouterFiles(t *testing.T) {
+	ddevapp.PowerOff()
+	projectDir := testcommon.CreateTmpDir(t.Name())
+	app, err := ddevapp.NewApp(projectDir, true)
+	require.NoError(t, err)
+	app.Name = t.Name()
+	app.Type = nodeps.AppTypePHP
+	require.NoError(t, app.WriteConfig())
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(projectDir)
+	})
+
+	routerFiles := func() string {
+		stdout, _, err := dockerutil.Exec(nodeps.RouterContainer, "ls "+ddevapp.RouterTraefikDir+"/config "+ddevapp.RouterTraefikDir+"/certs", "")
+		require.NoError(t, err)
+		return stdout
+	}
+
+	require.NoError(t, app.Start())
+	require.Contains(t, routerFiles(), app.Name+"_merged.yaml")
+	require.Contains(t, routerFiles(), app.Name+".crt")
+
+	// A second project keeps the router running after the first stops
+	other, err := ddevapp.NewApp(testcommon.CreateTmpDir(t.Name()+"_other"), true)
+	require.NoError(t, err)
+	other.Name = t.Name() + "-other"
+	other.Type = nodeps.AppTypePHP
+	require.NoError(t, other.WriteConfig())
+	t.Cleanup(func() {
+		_ = other.Stop(true, false)
+		_ = os.RemoveAll(other.AppRoot)
+	})
+	require.NoError(t, other.Start())
+
+	require.NoError(t, app.Stop(false, false))
+	files := routerFiles()
+	require.NotContains(t, files, app.Name+"_merged.yaml")
+	require.Contains(t, files, app.Name+".crt", "stop keeps certs")
+
+	require.NoError(t, app.Stop(true, false))
+	require.NotContains(t, routerFiles(), app.Name+".crt")
+}
