@@ -72,7 +72,10 @@ function cleanup_provider {
   docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
   docker system prune -a --volumes --force || true
   docker volume prune -a -f || true
-  docker builder prune -a -f || true
+  # Podman's Docker API has no build cache endpoint.
+  if [ "${DOCKER_TYPE}" != "podman-rootless" ]; then
+    docker builder prune -a -f || true
+  fi
   provider_fstrim "${DOCKER_TYPE}" || true
 
   local used

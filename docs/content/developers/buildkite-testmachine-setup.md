@@ -385,12 +385,32 @@ tags="os=macos,architecture=arm64,osvariant=sonoma,...,podman-rootless=true"
 
 The `test.sh` script uses `podman machine start` and `docker context use podman-rootless` to activate the provider, then stops the machine in the cleanup trap on exit.
 
+## Additional Apple Container (socktainer) macOS Setup
+
+[socktainer](https://github.com/socktainer/socktainer) serves the Docker API on top of Apple's [`container`](https://github.com/apple/container), which runs each container in its own lightweight VM. It needs macOS 26 or later on Apple Silicon.
+
+1. `brew install container socktainer`
+2. `container system start --enable-kernel-install` to install the recommended kernel once, then `container system stop`.
+3. Don't run either as a `brew services` service; test jobs start and stop them like the other providers.
+4. Verify:
+
+    ```bash
+    container system start
+    socktainer &
+    docker --context socktainer run --rm alpine echo ok
+    kill %1 && container system stop
+    ```
+
+    socktainer creates the `socktainer` Docker context the first time it runs.
+
+Then the Buildkite agent must be configured with tag `socktainer=true`.
+
 ## macOS Disk Space Cleanup
 
 Each provider on a shared macOS testbot keeps its own VM disk, which grows to its high-water mark and keeps every image it has pulled. Two things keep this in check:
 
 * `testbot_maintenance.sh`, run around every job, removes dangling images, returns freed blocks to the host with `fstrim`, deletes orphaned Mutagen caches and old `buildx` refs, and prunes all unused images when less than `LOW_DISK_GB` (40) GB is free.
-* `testbot_disk_cleanup.sh`, run weekly by the `testbot-disk-cleanup.yml` pipeline, starts each provider in turn, removes everything it holds, and recreates a Podman or Lima VM whose container storage is still more than 70% full.
+* `testbot_disk_cleanup.sh`, run weekly by the `testbot-disk-cleanup.yml` pipeline, starts each provider in turn, removes everything it holds, and recreates a Podman or Lima VM whose container storage is still more than 70% full. It also prunes Apple Container's own storage with the `container` CLI.
 
 To target one machine, the scheduled pipeline needs a `testbot=<hostname>` tag on each agent, for example `tags="...,testbot=tb-macos-arm64-5"`. Configure the pipeline in the Buildkite dashboard pointed at `.buildkite/testbot-disk-cleanup.yml`, with a weekly Scheduled Build.
 
