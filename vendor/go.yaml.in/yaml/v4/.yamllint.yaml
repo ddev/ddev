@@ -3,7 +3,10 @@
 
 extends: default
 
-ignore: /**/testdata/  # ignore testdata files that are not relevant for linting
+ignore: |
+  /.cache/
+  /repos/
+  /**/testdata/
 
 rules:
   brackets:
