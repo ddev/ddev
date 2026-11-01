@@ -19,7 +19,8 @@ function provider_fstrim {
   case "${1:-}" in
     colima_vz) colima ssh -p vz -- sudo fstrim -av ;;
     lima) limactl shell lima-vz sudo fstrim -av ;;
-    rancher-desktop) ~/.rd/bin/rdctl shell sudo fstrim -av ;;
+    # Rancher Desktop's Alpine VM has BusyBox fstrim, which has no -a.
+    rancher-desktop) ~/.rd/bin/rdctl shell sudo sh -c 'for m in $(awk "\$3 ~ /^(ext4|xfs|btrfs)\$/ {print \$2}" /proc/mounts); do fstrim -v "$m"; done' ;;
     podman-rootless) podman machine ssh 'sudo fstrim -av' ;;
   esac
 }

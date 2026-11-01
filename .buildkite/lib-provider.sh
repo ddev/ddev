@@ -169,7 +169,9 @@ function provider_bringup {
         podman machine start
         docker context use podman-rootless
 
-        if ! try_cleanup_containers_via_ssh podman machine ssh; then
+        # podman machine ssh joins its arguments into one string, which breaks
+        # the bash -lc script in try_cleanup_containers_via_ssh.
+        if ! try_cleanup_containers_native; then
           echo "ERROR: Containers remain after podman machine start; aborting" >&2
           docker ps -a >&2 || true
           exit 1
