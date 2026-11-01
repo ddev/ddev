@@ -429,7 +429,7 @@ jobs:
           if [ "${cgo}" != "0" ]; then echo "CGO_ENABLED=${cgo} but it must be 0 in released binary" && exit 10; fi
 
       - name: Setup upterm session
-        uses: owenthereal/action-upterm@v1
+        uses: owenthereal/action-upterm@v2
         with:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}

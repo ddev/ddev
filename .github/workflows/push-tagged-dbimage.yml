@@ -135,7 +135,7 @@ jobs:
           echo "Cleaning up stale tag for ${ORG_IMAGE}:${TAG}-${{ matrix.build.arch }}"
           curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-${{ matrix.build.arch }}/" >/dev/null || true
       - name: Setup upterm session
-        uses: owenthereal/action-upterm@v1
+        uses: owenthereal/action-upterm@v2
         with:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
