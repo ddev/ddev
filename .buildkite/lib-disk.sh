@@ -14,7 +14,8 @@ function free_gb {
 
 # provider_fstrim returns blocks freed inside a provider's VM to the host;
 # without it the VM's sparse disk file stays at its high-water mark.
-# OrbStack and Docker Desktop trim on their own.
+# OrbStack and Docker Desktop trim on their own. stdin is /dev/null because
+# under gtimeout, a VM shell that touches the terminal stops until the timeout.
 function provider_fstrim {
   case "${1:-}" in
     colima_vz) colima ssh -p vz -- sudo fstrim -av ;;
@@ -22,7 +23,7 @@ function provider_fstrim {
     # Rancher Desktop's Alpine VM has BusyBox fstrim, which has no -a.
     rancher-desktop) ~/.rd/bin/rdctl shell sudo sh -c 'for m in $(awk "\$3 ~ /^(ext4|xfs|btrfs)\$/ {print \$2}" /proc/mounts); do fstrim -v "$m"; done' ;;
     podman-rootless) podman machine ssh 'sudo fstrim -av' ;;
-  esac
+  esac </dev/null
 }
 
 # host_disk_cleanup removes host-side leftovers that no test needs.
