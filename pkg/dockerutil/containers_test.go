@@ -351,6 +351,36 @@ func TestContainerWait(t *testing.T) {
 	require.NoError(t, err, "output=%s", out)
 }
 
+// TestVolumesHeldByRunningContainers checks that only a running container
+// holds a volume, and only the volumes it mounts.
+func TestVolumesHeldByRunningContainers(t *testing.T) {
+	held := "test-volume-held-" + util.RandString(6)
+	free := "test-volume-free-" + util.RandString(6)
+	labels := map[string]string{"test": "volumesheld"}
+	_ = dockerutil.RemoveContainersByLabels(labels)
+	cID, _, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, t.Name()+"-"+util.RandString(5), []string{"sleep", "120"}, nil, nil, []string{held + ":/mnt/held"}, "0", false, true, labels, nil, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = dockerutil.RemoveContainer(cID)
+		_ = dockerutil.RemoveVolume(held)
+		_ = dockerutil.RemoveVolume(free)
+	})
+	_, err = dockerutil.CreateVolume(free, "local", nil, nil)
+	require.NoError(t, err)
+
+	got, err := dockerutil.VolumesHeldByRunningContainers([]string{held, free})
+	require.NoError(t, err)
+	require.Equal(t, map[string]bool{held: true}, got)
+
+	ctx, apiClient, err := dockerutil.GetDockerClient()
+	require.NoError(t, err)
+	_, err = apiClient.ContainerStop(ctx, cID, client.ContainerStopOptions{})
+	require.NoError(t, err)
+	got, err = dockerutil.VolumesHeldByRunningContainers([]string{held, free})
+	require.NoError(t, err)
+	require.Empty(t, got, "a stopped container holds no volume")
+}
+
 func TestContainerWaitShowsLogsInCI(t *testing.T) {
 	origDebug := globalconfig.DdevDebug
 	globalconfig.DdevDebug = false

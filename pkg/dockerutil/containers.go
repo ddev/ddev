@@ -27,6 +27,7 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/moby/moby/api/pkg/stdcopy"
 	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/mount"
 	"github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
 	"github.com/moby/term"
@@ -323,6 +324,29 @@ func FindContainersByVolume(volumeName string) ([]container.Summary, error) {
 		return nil, err
 	}
 	return containers.Items, nil
+}
+
+// VolumesHeldByRunningContainers returns which of volumeNames a running
+// container mounts. A helper container must not attach those, because some
+// providers, like Apple container, refuse a second read-write attachment.
+func VolumesHeldByRunningContainers(volumeNames []string) (map[string]bool, error) {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return nil, err
+	}
+	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	held := map[string]bool{}
+	for _, c := range containers.Items {
+		for _, m := range c.Mounts {
+			if m.Type == mount.TypeVolume && slices.Contains(volumeNames, m.Name) {
+				held[m.Name] = true
+			}
+		}
+	}
+	return held, nil
 }
 
 // FindContainersWithLabel returns all containers with the given label

@@ -1894,44 +1894,73 @@ func (app *DdevApp) start(o StartOptions) error {
 	}
 
 	// Build list of volume mounts and their target paths for chown
-	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
-	// ddev-global-cache is shared by every project and user, so it is never
-	// chowned; the sticky bit lets add-ons create their own directories in it.
-	chownCmd := fmt.Sprintf("chmod 1777 /mnt/ddev-global-cache; chown -R %s:%s", uid, gid)
+	type chownVolume struct{ name, path, prep string }
+	var chownVolumes []chownVolume
+	if !app.IsDBOmitted() {
+		if app.Database.Type == nodeps.Postgres {
+			chownVolumes = append(chownVolumes, chownVolume{name: app.GetPostgresVolumeName(), path: app.GetPostgresDataDir()})
+		} else {
+			chownVolumes = append(chownVolumes, chownVolume{name: app.GetMariaDBVolumeName(), path: "/var/lib/mysql"})
+		}
+	}
+	for _, s := range app.projectCacheServices() {
+		cacheDir := "/mnt/ddev-project-cache-" + s
+		prep := fmt.Sprintf("mkdir -p %s/history; ", cacheDir)
+		// Copy history from where older DDEV versions kept it, keyed by container hostname
+		if slices.Contains(newCacheServices, s) {
+			prep += fmt.Sprintf("cp -p /mnt/ddev-global-cache/bashhistory/%[1]s-%[2]s/bash_history /mnt/ddev-global-cache/mysqlhistory/%[1]s-%[2]s/mysql_history %[3]s/history/ 2>/dev/null; ", app.Name, s, cacheDir)
+		}
+		chownVolumes = append(chownVolumes, chownVolume{name: app.GetProjectCacheVolumeName(s), path: cacheDir, prep: prep})
+	}
+
+	// A volume a running container holds was chowned when that container
+	// started, and attaching it again fails on some providers.
+	volumeNames := []string{"ddev-global-cache"}
+	for _, v := range chownVolumes {
+		volumeNames = append(volumeNames, v.name)
+	}
+	held, err := dockerutil.VolumesHeldByRunningContainers(volumeNames)
+	if err != nil {
+		return fmt.Errorf("failed to list volumes held by running containers: %v", err)
+	}
+
+	var volumeMounts, chownPaths []string
+	var prepCmd strings.Builder
+	for _, v := range chownVolumes {
+		if held[v.name] {
+			util.Debug("Not chowning volume %s, which a running container holds", v.name)
+			continue
+		}
+		volumeMounts = append(volumeMounts, v.name+":"+v.path)
+		chownPaths = append(chownPaths, v.path)
+		prepCmd.WriteString(v.prep)
+	}
+	if !held["ddev-global-cache"] {
+		volumeMounts = append(volumeMounts, "ddev-global-cache:/mnt/ddev-global-cache")
+		// ddev-global-cache is shared by every project and user, so it is never
+		// chowned; the sticky bit lets add-ons create their own directories in it.
+		prepCmd.WriteString("chmod 1777 /mnt/ddev-global-cache; ")
+	} else if len(newCacheServices) > 0 {
+		// Only to read the old history
+		volumeMounts = append(volumeMounts, "ddev-global-cache:/mnt/ddev-global-cache:ro")
+	}
+	chownCmd := prepCmd.String()
+	if len(chownPaths) > 0 {
+		chownCmd += fmt.Sprintf("chown -R %s:%s %s", uid, gid, strings.Join(chownPaths, " "))
+	}
 	labels := map[string]string{}
 	if dockerutil.UseKeepID() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
-
-	if !app.IsDBOmitted() {
-		if app.Database.Type == nodeps.Postgres {
-			postgresDataDir := app.GetPostgresDataDir()
-			volumeMounts = append(volumeMounts, app.GetPostgresVolumeName()+":"+postgresDataDir)
-			chownCmd = fmt.Sprintf("%s %s", chownCmd, postgresDataDir)
-		} else {
-			volumeMounts = append(volumeMounts, app.GetMariaDBVolumeName()+":/var/lib/mysql")
-			chownCmd = fmt.Sprintf("%s /var/lib/mysql", chownCmd)
-		}
-	}
-
-	var prepCmd strings.Builder
-	for _, s := range app.projectCacheServices() {
-		cacheDir := "/mnt/ddev-project-cache-" + s
-		volumeMounts = append(volumeMounts, app.GetProjectCacheVolumeName(s)+":"+cacheDir)
-		fmt.Fprintf(&prepCmd, "mkdir -p %s/history; ", cacheDir)
-		// Copy history from where older DDEV versions kept it, keyed by container hostname
-		if slices.Contains(newCacheServices, s) {
-			fmt.Fprintf(&prepCmd, "cp -p /mnt/ddev-global-cache/bashhistory/%[1]s-%[2]s/bash_history /mnt/ddev-global-cache/mysqlhistory/%[1]s-%[2]s/mysql_history %[3]s/history/ 2>/dev/null; ", app.Name, s, cacheDir)
-		}
-		chownCmd = fmt.Sprintf("%s %s", chownCmd, cacheDir)
-	}
-	chownCmd = prepCmd.String() + chownCmd
 
 	// Run chown concurrently with config/build steps below.
 	// chown operates on volumes, compose build operates on images — independent.
 	var chownErr error
 	var chownWg sync.WaitGroup
 	chownWg.Go(func() {
+		if len(volumeMounts) == 0 {
+			return
+		}
 		util.Verbose("Exec %s", chownCmd)
 		_, chownOut, cErr := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, labels, nil, nil)
 		if cErr != nil {
