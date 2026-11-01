@@ -23,7 +23,7 @@ services:
         volume:
           nocopy: true
       {{ if .NoBindMounts }}
-      - ddev-config:/mnt/ddev_config
+      - ddev-config:/mnt/ddev_config:ro
       - snapshots:/mnt/snapshots
       {{ else }} {{/* if (not) .NoBindMounts */}}
       # On db container ddev_config is mounted rw so we can create snapshots
@@ -140,7 +140,7 @@ services:
       {{- end }}
 
       {{- if .NoBindMounts }}
-      - ddev-config:/mnt/ddev_config
+      - ddev-config:/mnt/ddev_config:ro
       {{- else }}
       - .:/mnt/ddev_config:ro
       {{- if eq .XHProfMode "prepend" }}

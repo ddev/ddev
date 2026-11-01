@@ -1882,10 +1882,8 @@ func (app *DdevApp) start(o StartOptions) error {
 	// inside the container
 	uid, gid, _ := dockerutil.GetContainerUser()
 
-	// On the web container, we can use mutagen to sync
-	// anything that changes in the .ddev folder by
-	// making /mnt/ddev_config a symlink to
-	// /var/www/html/.ddev
+	// Without bind mounts, web and db read the project .ddev directory
+	// read-only from this volume
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		err = dockerutil.CopyIntoVolume(app.GetConfigPath(""), app.Name+"-ddev-config", "", uid, "db_snapshots", true)
 		if err != nil {
@@ -2148,17 +2146,6 @@ func (app *DdevApp) start(o StartOptions) error {
 		err = fileutil.TemplateStringToFile(`#ddev-generated`, nil, app.GetConfigPath("mutagen/.start-synced"))
 		if err != nil {
 			util.Warning("Could not create file %s: %v", app.GetConfigPath("mutagen/.start-synced"), err)
-		}
-	}
-
-	// If NoBindMounts we'll use symlink in container for /mnt/ddev_config
-	// since it's not mounted.
-	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		stdout, stderr, err := app.Exec(&ExecOpts{
-			Cmd: `ln -sf /var/www/html/.ddev /mnt/ddev_config`,
-		})
-		if err != nil {
-			util.Warning("Unable to symlink /mnt/ddev_config, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 		}
 	}
 
