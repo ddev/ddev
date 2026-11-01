@@ -77,7 +77,7 @@ In the Tailscale admin console under **Access controls**:
     {
       "src": ["group:ddev-admins"],
       "dst": ["tag:ddev-runner"],
-      "ip":  ["tcp:22", "tcp:5900"],
+      "ip":  ["tcp:22", "tcp:3389", "tcp:5900"],
     },
   ],
 
@@ -99,7 +99,9 @@ In the Tailscale admin console under **Access controls**:
 * Use a group, not `autogroup:admin`, as the `ssh` rule source.
 * The `ssh` block applies only to runners using Tailscale SSH (macOS). It has no
   effect on Windows.
-* Add `tcp:3389` to `ip` only if a Windows runner is reached with RDP.
+* `ip` lists SSH (22), RDP for Windows (3389), and Screen Sharing for macOS
+  (5900). The tailnet silently drops other ports, so a working SSH login
+  doesn't show that the screen sharing port is allowed.
 * The **Preview rules** tab shows what a policy allows before you save it.
 
 ### Joining a Runner
@@ -127,31 +129,28 @@ as a secret.
 
 * SSH works through Tailscale SSH and through regular Remote Login (step 7 of
   [macOS setup](#macos-docker-desktop-test-agent-setup-apple-silicon)).
-* For screen sharing, enable **Screen Sharing** in **System Settings** →
-  **General** → **Sharing**, then connect to `vnc://<runner-name>`.
+* For screen sharing, run
+  [macos_screen_sharing.sh](scripts/macos_screen_sharing.sh) with `sudo`, then
+  connect to `vnc://<runner-name>` with the built-in Screen Sharing app. It
+  turns off Remote Management, which takes over port 5900 when enabled and
+  rejects users without Remote Management privileges as if the password were
+  wrong.
 
 ### Windows Runners
 
-SSH uses the Windows OpenSSH server. In admin PowerShell:
+RDP requires Windows Pro, Enterprise, or Education. In admin PowerShell, run
+[windows_remote_access.ps1](scripts/windows_remote_access.ps1), which installs
+the OpenSSH server, enables RDP, and adds SSH keys:
 
 ```powershell
-Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-Set-Service sshd -StartupType Automatic
-Start-Service sshd
+.\windows_remote_access.ps1 -PublicKey '<public-key>'
 ```
 
-When the login account is in the local Administrators group, `sshd` ignores
-`~\.ssh\authorized_keys` and reads
-`C:\ProgramData\ssh\administrators_authorized_keys` instead. Add keys there from
-admin PowerShell:
-
-```powershell
-Add-Content -Path C:\ProgramData\ssh\administrators_authorized_keys -Value '<public-key>'
-icacls.exe C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
-```
-
-* The key file must be ASCII or UTF-8. Windows PowerShell 5.1 writes UTF-16 with
-  `echo ... > file`, and `sshd` silently ignores that file.
+* Keys go in `C:\ProgramData\ssh\administrators_authorized_keys`, because
+  `sshd` ignores `~\.ssh\authorized_keys` for members of the Administrators
+  group.
+* Connect with Microsoft's Windows App using `<runner-name>` as the PC name.
+  RDP takes over the console session and leaves it locked when you disconnect.
 * Debug with `ssh -v` and the Event Viewer log under **Applications and
   Services Logs** → **OpenSSH** → **Operational**.
 * Once key login works, set `PasswordAuthentication no` in
@@ -168,6 +167,10 @@ From a maintainer's machine signed in to the runner tailnet (`tailscale switch
 * `tailscale ping <runner-name>` reports a direct path. A path "via DERP" is
   relayed; it works but is slow for screen sharing.
 * `ssh <user>@<runner-name>` logs in.
+* [check_runner_access.sh](scripts/check_runner_access.sh)
+  `<runner-name> macos|windows` checks each port. "No answer" means the access
+  policy or the runner's firewall drops it; "refused" means nothing is
+  listening on the runner.
 
 ### Runners with a Public IP
 
