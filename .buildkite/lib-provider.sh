@@ -167,6 +167,9 @@ function provider_bringup {
 
       "podman-rootless")
         podman machine start
+        # The API socket lives under $TMPDIR, which differs between the agent
+        # and an ssh session, so follow wherever this start put it.
+        docker context update podman-rootless --docker "host=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')" >/dev/null
         docker context use podman-rootless
 
         # podman machine ssh joins its arguments into one string, which breaks
