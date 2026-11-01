@@ -17,7 +17,7 @@ if [ ${DISK_AVAIL} -ge 95 ] ; then
     echo "Disk usage is ${DISK_AVAIL}% on $(hostname), not usable";
     exit 1;
 else
-   echo "Disk usage is ${DISK_AVAIL}% on $(hostname).";
+   echo "Disk usage is ${DISK_AVAIL}% on $(hostname), $(df -k . | awk 'NR==2 {print int($4/1048576)}')GB free.";
 fi
 
 # Determine whether this job uses the Windows host's Docker Desktop. The WSL2

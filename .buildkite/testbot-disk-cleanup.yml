@@ -1,0 +1,33 @@
+# Weekly disk cleanup of the macOS testbots that share tb-macos-arm64-5/6/7,
+# running testbot_disk_cleanup.sh once on each machine.
+#
+# Configure this in the Buildkite dashboard as its own pipeline pointed at
+# this file, with a weekly Scheduled Build (not a push/PR trigger). Each agent
+# needs a `testbot=<hostname>` tag so a step lands on one specific machine.
+
+  - label: "disk cleanup: tb-macos-arm64-5"
+    command: ".buildkite/testbot_disk_cleanup.sh"
+    agents:
+      - "testbot=tb-macos-arm64-5"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+    timeout_in_minutes: 90
+
+  - label: "disk cleanup: tb-macos-arm64-6"
+    command: ".buildkite/testbot_disk_cleanup.sh"
+    agents:
+      - "testbot=tb-macos-arm64-6"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+    timeout_in_minutes: 90
+
+  - label: "disk cleanup: tb-macos-arm64-7"
+    command: ".buildkite/testbot_disk_cleanup.sh"
+    agents:
+      - "testbot=tb-macos-arm64-7"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+    timeout_in_minutes: 90
