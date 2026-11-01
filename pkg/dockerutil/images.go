@@ -3,6 +3,7 @@ package dockerutil
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/containerd/platforms"
@@ -158,7 +159,27 @@ func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]image.Su
 	if err != nil {
 		return nil, err
 	}
-	return images.Items, nil
+	// Callers delete what this returns, so check the filters here too, in case
+	// a Docker-compatible API ignores them and returns every image.
+	return slices.DeleteFunc(images.Items, func(img image.Summary) bool {
+		return !imageMatches(img, labels, danglingOnly)
+	}), nil
+}
+
+// imageMatches reports whether img has all labels, with their values where a
+// value is given, and, when danglingOnly is set, whether it has no tag.
+func imageMatches(img image.Summary, labels map[string]string, danglingOnly bool) bool {
+	if !hasLabels(img.Labels, labels) {
+		return false
+	}
+	if danglingOnly {
+		for _, tag := range img.RepoTags {
+			if tag != "<none>:<none>" {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // RemoveImage removes an image with force
