@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -392,7 +391,7 @@ func (p *Provider) importDatabaseBackup(fileLocation []string, importPath []stri
 			// The database name used will be basename of the file.
 			// For example. `db.sql.gz` will go into the database named 'db'
 			// xxx.sql will go into database named 'xxx';
-			b := path.Base(loc)
+			b := filepath.Base(loc)
 			n := strings.Split(b, ".")
 			dbName := n[0]
 			err = p.app.ImportDB(loc, importPath[i], true, false, dbName)
