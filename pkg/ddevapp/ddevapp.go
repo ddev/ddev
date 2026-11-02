@@ -3846,7 +3846,6 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 		deleteServiceVolumes(app)
 		deleteImages(app)
-		app.removeOldGlobalCacheData()
 		// Unregistering now would leave the volume unreachable for a retry.
 		if len(heldVolumes) > 0 {
 			return fmt.Errorf("project %s was not deleted because volume %s could not be removed; it stays listed so you can run 'ddev delete %s' again", app.Name, strings.Join(heldVolumes, ", "), app.Name)
@@ -3864,31 +3863,6 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	}
 
 	return nil
-}
-
-// removeOldGlobalCacheData removes the per-container directories older DDEV
-// versions kept in ddev-global-cache. It skips the removal while another
-// running container holds the volume, since some providers refuse a second
-// attachment.
-func (app *DdevApp) removeOldGlobalCacheData() {
-	if !dockerutil.VolumeExists("ddev-global-cache") {
-		return
-	}
-	containers, err := dockerutil.FindContainersByVolume("ddev-global-cache")
-	if err != nil {
-		util.Debug("Unable to list containers using ddev-global-cache: %v", err)
-		return
-	}
-	if slices.ContainsFunc(containers, func(c container.Summary) bool { return c.State == container.StateRunning }) {
-		util.Debug("Not cleaning ddev-global-cache for %s, a running container holds it", app.Name)
-		return
-	}
-	c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-web /mnt/ddev-global-cache/*/%[1]s-db", app.Name)
-	util.Verbose("Cleaning ddev-global-cache with command '%s'", c)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"sh", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
-	if err != nil {
-		util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
-	}
 }
 
 // removeDdevContainersUsingVolume catches utility containers an interrupted start
