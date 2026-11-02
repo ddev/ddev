@@ -26,6 +26,14 @@ substring lengths that assume a fixed line-ending width.
 When a change builds a host path or parses text by offset, check it against
 both rules before moving on.
 
+## OS-specific files
+
+golangci-lint checks only the files that build for its `GOOS`, so `make`
+and the edit hook skip files for other platforms; CI lints each one. After
+changing a file with an OS suffix such as `_windows.go` or a `//go:build`
+constraint, lint its package for that platform too, for example
+`GOOS=windows golangci-lint run ./winpkg/...`.
+
 ## Comments
 
 The rules and the length budget in `AGENTS.md` apply here unchanged. Two Go
