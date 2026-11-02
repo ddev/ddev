@@ -358,7 +358,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 			// 1. Check $WSLENV env var on Windows side
 			out, err = exec.RunHostCommand("cmd.exe", "/c", "echo %WSLENV%")
-			t.Logf("Windows WSLENV env var: %s (err: %v)", strings.TrimSpace(out), caRootErr)
+			t.Logf("Windows WSLENV env var: %s (err: %v)", strings.TrimSpace(out), err)
 
 			// Check user environment variables in registry
 			userCarootReg, userCarootRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_CURRENT_USER\\Environment", "/v", "CAROOT")
@@ -403,7 +403,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			const maxTries = 60
 			statusFile := "/tmp/ddev_installation_status.txt"
 
-			for i := 0; i < maxTries; i++ {
+			for i := range maxTries {
 				// Log current status for debugging
 				statusOut, _ := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "tail -1l "+statusFile+" 2>/dev/null")
 				if statusOut != "" {
@@ -455,8 +455,6 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 		t.Skip("Skipping Traditional Windows test - Docker Desktop not working on Windows")
 	}
 
-	require := require.New(t)
-
 	// Dump installer debug logs on test failure (registered first, runs last)
 	t.Cleanup(func() {
 		if t.Failed() {
@@ -478,25 +476,25 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 
 	// Get absolute path to installer
 	wd, err := os.Getwd()
-	require.NoError(err)
+	require.NoError(t, err)
 	installerFullPath := filepath.Join(wd, installerPath)
-	require.True(fileutil.FileExists(installerFullPath), "Installer not found at %s", installerFullPath)
+	require.True(t, fileutil.FileExists(installerFullPath), "Installer not found at %s", installerFullPath)
 
 	err = runInstaller(t, installerFullPath, "/traditional", "/S")
-	require.NoError(err, "Installer failed")
+	require.NoError(t, err, "Installer failed")
 
 	// Wait for installer to complete by checking for ddev.exe at expected location
 	// NSIS installers in silent mode may return before fully completing
 	localAppData := os.Getenv("LOCALAPPDATA")
 	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
 	const maxWaitSeconds = 60
-	for i := 0; i < maxWaitSeconds; i++ {
+	for i := range maxWaitSeconds {
 		if fileutil.FileExists(ddevPath) {
 			t.Logf("ddev.exe found at %s after %d seconds", ddevPath, i)
 			break
 		}
 		if i == maxWaitSeconds-1 {
-			require.Fail("ddev.exe not found at expected location after %d seconds: %s", maxWaitSeconds, ddevPath)
+			require.Fail(t, "ddev.exe not found at expected location after %d seconds: %s", maxWaitSeconds, ddevPath)
 		}
 		time.Sleep(1 * time.Second)
 	}
@@ -566,20 +564,20 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 		// Old certs in Docker volumes from a broken-interop run are signed by a CA that
 		// is not in the Windows cert store; without this delete, DDEV reuses them and the
 		// Windows HTTPS check fails even after interop and the CA are restored.
-		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev delete -Oy tp 2>/dev/null || true) && (ddev poweroff 2>/dev/null || true) && (ddev stop --unlist -a 2>/dev/null) && rm -rf ~/tp")
+		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev delete -Oy tp 2>/dev/null || true) && (ddev poweroff 2>/dev/null || true) && (ddev stop --unlist -a 2>/dev/null) && rm -rf ~/tp")
 		t.Logf("ddev poweroff/stop/unlist: err=%v, output: %s", err, out)
 
 		// Temp allow all sudo to let mkcert -uninstall work as normal user
-		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", `echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/temp-mkcert-install`)
-		require.NoError(t, err)
+		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", `echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/temp-mkcert-install`)
+		require.NoError(t, err, "output: %s", out)
 
 		// Now do mkcert -uninstall as normal user if mkcert is installed
 		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "if command -v mkcert >/dev/null 2>&1; then mkcert -uninstall; fi")
-		require.NoError(t, err)
+		require.NoError(t, err, "output: %s", out)
 
 		// Now take away temp sudo and remove ddev/docker apt sources leftovers (*.list and *.sources create conflicts in apt-get)
 		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "rm -f /etc/sudoers.d/temp-mkcert-install /etc/apt/sources.list.d/ddev.* /etc/apt/sources.list.d/docker.*")
-		require.NoError(t, err)
+		require.NoError(t, err, "output: %s", out)
 
 		// Remove docker-ce-cli/docker-ce on ALL distros, including docker-desktop.
 		// docker-desktop distros must use Docker Desktop's own /usr/bin/docker
@@ -608,11 +606,10 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 // create them — it only resets and reuses them (see cleanupTestEnv). This
 // function fails fast with a clear message if the instance is missing.
 func configureTestWSL2Distro(t *testing.T, distroName string) {
-	require := require.New(t)
 	t.Logf("Verifying pre-provisioned test distro: %s", distroName)
 
 	out, err := exec.RunHostCommand("wsl.exe", "-l", "-q")
-	require.NoError(err, "Failed to list WSL distros")
+	require.NoError(t, err, "Failed to list WSL distros")
 
 	// Convert UTF-16 output to UTF-8 by removing null bytes
 	cleanOut := strings.ReplaceAll(out, "\x00", "")
@@ -628,30 +625,28 @@ func configureTestWSL2Distro(t *testing.T, distroName string) {
 
 // testDdevInstallation verifies that ddev is properly installed in WSL2
 func testDdevInstallation(t *testing.T, distroName string) {
-	require := require.New(t)
 	t.Logf("Testing ddev installation in %s", distroName)
 
 	// Test ddev version
 	out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "ddev version | egrep 'DDEV|docker'")
-	require.NoError(err, "ddev version failed: %v, output: %s", err, out)
-	require.Contains(out, "DDEV version")
+	require.NoError(t, err, "ddev version failed: %v, output: %s", err, out)
+	require.Contains(t, out, "DDEV version")
 	t.Logf("ddev version output: %s", out)
 
 	// Test ddev-hostname
 	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "ddev-hostname", "--help")
-	require.NoError(err, "ddev-hostname failed: %v, output: %s", err, out)
+	require.NoError(t, err, "ddev-hostname failed: %v, output: %s", err, out)
 	t.Logf("ddev-hostname available")
 
 	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "command", "-v", "ddev-hostname.exe")
-	require.NoError(err, "ddev-hostname.exe failed: %v, output: %s", err, out)
+	require.NoError(t, err, "ddev-hostname.exe failed: %v, output: %s", err, out)
 	out = strings.TrimSpace(out)
-	require.EqualValues("/usr/bin/ddev-hostname.exe", out, "Expected ddev-hostname.exe to be at /usr/bin/ddev-hostname.exe, got %s", out)
+	require.EqualValues(t, "/usr/bin/ddev-hostname.exe", out, "Expected ddev-hostname.exe to be at /usr/bin/ddev-hostname.exe, got %s", out)
 	t.Logf("ddev-hostname.exe available at %s", out)
 }
 
 // testBasicDdevFunctionality tests basic ddev project creation and start
 func testBasicDdevFunctionality(t *testing.T, distroName string) {
-	require := require.New(t)
 	t.Logf("Testing basic ddev functionality in %s", distroName)
 
 	projectDir := "~/tp"
@@ -665,11 +660,11 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 
 	// Create test project directory
 	out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "mkdir", "-p", projectDir)
-	require.NoError(err, "Failed to create project directory: %v, output: %s", err, out)
+	require.NoError(t, err, "Failed to create project directory: %v, output: %s", err, out)
 
 	// Create a simple index.html
 	_, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", fmt.Sprintf("echo 'Hello from DDEV!' > %s/index.html", projectDir))
-	require.NoError(err, "Failed to create index.html: %v", err)
+	require.NoError(t, err, "Failed to create index.html: %v", err)
 
 	// Ensure DDEV's mkcert_caroot is set to the correct Windows CAROOT before ddev start.
 	// Issue #8485: the NSIS installer calls SetEnvironmentVariable("CAROOT", NULL) to unset
@@ -708,14 +703,14 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 
 	// Initialize ddev project
 	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", fmt.Sprintf("cd %s && ddev config --auto && ddev start -y", projectDir))
-	require.NoError(err, "ddev config/start failed: %v, output: %s", err, out)
+	require.NoError(t, err, "ddev config/start failed: %v, output: %s", err, out)
 	t.Logf("ddev config/start output: %s", out)
 
 	// Test HTTP response from inside WSL distro
 	insideCurl := fmt.Sprintf("curl -s http://%s.ddev.site", projectName)
 	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", insideCurl)
-	require.NoError(err, "`%s` failed inside distro: %v, output: %s", insideCurl, err, out)
-	require.Contains(out, "Hello from DDEV!")
+	require.NoError(t, err, "`%s` failed inside distro: %v, output: %s", insideCurl, err, out)
+	require.Contains(t, out, "Hello from DDEV!")
 	t.Logf("HTTPS project responding correctly inside distro")
 
 	// Dump Windows cert store mkcert entries and compare thumbprint with rootCA.pem.
@@ -746,8 +741,8 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 	// Test using windows PowerShell to check HTTPS
 	psInvoke := fmt.Sprintf("powershell.exe -NoProfile -ExecutionPolicy Bypass -Command Invoke-RestMethod 'https://%s.ddev.site' -ErrorAction Stop", projectName)
 	out, err = exec.RunHostCommand("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", fmt.Sprintf("Invoke-RestMethod 'https://%s.ddev.site' -ErrorAction Stop", projectName))
-	require.NoError(err, "HTTPS check from Windows failed (`%s`): %v, output: %s", psInvoke, err, out)
-	require.Contains(out, "Hello from DDEV!")
+	require.NoError(t, err, "HTTPS check from Windows failed (`%s`): %v, output: %s", psInvoke, err, out)
+	require.Contains(t, out, "Hello from DDEV!")
 	t.Logf("Project working and accessible from Windows")
 
 	_, _ = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "ddev poweroff")
@@ -798,7 +793,6 @@ func cleanupTraditionalWindowsEnv(t *testing.T) {
 
 // testDdevTraditionalInstallation verifies that ddev is properly installed on Windows
 func testDdevTraditionalInstallation(t *testing.T) {
-	require := require.New(t)
 	t.Logf("Testing ddev installation on Windows")
 
 	// Use full paths since the current process doesn't see the PATH update from the installer
@@ -807,24 +801,23 @@ func testDdevTraditionalInstallation(t *testing.T) {
 	hostnamePath := filepath.Join(localAppData, "Programs", "DDEV", "ddev-hostname.exe")
 
 	// Verify files exist in expected per-user location
-	require.True(fileutil.FileExists(ddevPath), "ddev.exe not found at %s", ddevPath)
-	require.True(fileutil.FileExists(hostnamePath), "ddev-hostname.exe not found at %s", hostnamePath)
+	require.True(t, fileutil.FileExists(ddevPath), "ddev.exe not found at %s", ddevPath)
+	require.True(t, fileutil.FileExists(hostnamePath), "ddev-hostname.exe not found at %s", hostnamePath)
 
 	// Test ddev version using full path
 	out, err := exec.RunHostCommand(ddevPath, "version")
-	require.NoError(err, "ddev version failed: %v, output: %s", err, out)
-	require.Contains(out, "DDEV version")
+	require.NoError(t, err, "ddev version failed: %v, output: %s", err, out)
+	require.Contains(t, out, "DDEV version")
 	t.Logf("ddev version output: %s", out)
 
 	// Test ddev-hostname using full path
 	out, err = exec.RunHostCommand(hostnamePath, "--help")
-	require.NoError(err, "ddev-hostname failed: %v, output: %s", err, out)
+	require.NoError(t, err, "ddev-hostname failed: %v, output: %s", err, out)
 	t.Logf("ddev-hostname available")
 }
 
 // testBasicDdevTraditionalFunctionality tests basic ddev project creation and start on Windows
 func testBasicDdevTraditionalFunctionality(t *testing.T) {
-	require := require.New(t)
 	t.Logf("Testing basic ddev functionality on Windows")
 
 	// Use full path since the current process doesn't see the PATH update from the installer
@@ -833,7 +826,7 @@ func testBasicDdevTraditionalFunctionality(t *testing.T) {
 
 	// Create a temporary directory for the test project
 	tempDir, err := os.MkdirTemp("", "ddev-test-")
-	require.NoError(err, "Failed to create temp directory: %v", err)
+	require.NoError(t, err, "Failed to create temp directory: %v", err)
 	t.Cleanup(func() { os.RemoveAll(tempDir) })
 
 	projectName := "testproj"
@@ -841,29 +834,24 @@ func testBasicDdevTraditionalFunctionality(t *testing.T) {
 
 	// Create test project directory
 	err = os.MkdirAll(projectDir, 0755)
-	require.NoError(err, "Failed to create project directory: %v", err)
+	require.NoError(t, err, "Failed to create project directory: %v", err)
 
 	// Create a simple index.html
 	indexPath := filepath.Join(projectDir, "index.html")
 	err = os.WriteFile(indexPath, []byte("Hello from DDEV Traditional!"), 0644)
-	require.NoError(err, "Failed to create index.html: %v", err)
+	require.NoError(t, err, "Failed to create index.html: %v", err)
 
 	// Change to project directory and initialize ddev project
-	originalDir, err := os.Getwd()
-	require.NoError(err, "Failed to get current directory: %v", err)
-	t.Cleanup(func() { os.Chdir(originalDir) })
-
-	err = os.Chdir(projectDir)
-	require.NoError(err, "Failed to change to project directory: %v", err)
+	t.Chdir(projectDir)
 
 	// Initialize ddev project using full path
 	out, err := exec.RunHostCommand(ddevPath, "config", "--auto")
-	require.NoError(err, "ddev config failed: %v, output: %s", err, out)
+	require.NoError(t, err, "ddev config failed: %v, output: %s", err, out)
 	t.Logf("ddev config output: %s", out)
 
 	// Start the project using full path
 	out, err = exec.RunHostCommand(ddevPath, "start", "-y")
-	require.NoError(err, "ddev start failed: %v, output: %s", err, out)
+	require.NoError(t, err, "ddev start failed: %v, output: %s", err, out)
 	t.Logf("ddev start output: %s", out)
 
 	// Ensure cleanup using full path
@@ -875,8 +863,8 @@ func testBasicDdevTraditionalFunctionality(t *testing.T) {
 	// Test HTTPS response from Windows
 	siteURL := fmt.Sprintf("https://%s.ddev.site", projectName)
 	out, err = exec.RunHostCommand("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", fmt.Sprintf("Invoke-RestMethod '%s' -ErrorAction Stop", siteURL))
-	require.NoError(err, "HTTPS check failed: %v, output: %s", err, out)
-	require.Contains(out, "Hello from DDEV Traditional!")
+	require.NoError(t, err, "HTTPS check failed: %v, output: %s", err, out)
+	require.Contains(t, out, "Hello from DDEV Traditional!")
 	t.Logf("Project working and accessible from Windows: %s", siteURL)
 
 	t.Logf("Basic Traditional Windows ddev functionality test completed successfully")
