@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -34,6 +35,7 @@ func TestCARootArchive(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1234, h.Uid, h.Name)
 		require.Equal(t, 5678, h.Gid, h.Name)
+		require.WithinDuration(t, time.Now(), h.ModTime, time.Minute, h.Name)
 		content, err := io.ReadAll(tr)
 		require.NoError(t, err)
 		got = append(got, entry{h.Name, h.Mode, string(content)})
