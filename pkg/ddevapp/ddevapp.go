@@ -1790,14 +1790,8 @@ func (app *DdevApp) start(o StartOptions) error {
 			volumesNeeded = append(volumesNeeded, app.GetMariaDBVolumeName())
 		}
 	}
-	// Project cache volumes created now get their history seeded below
-	var newCacheServices []string
 	for _, s := range app.projectCacheServices() {
-		v := app.GetProjectCacheVolumeName(s)
-		if !dockerutil.VolumeExists(v) {
-			newCacheServices = append(newCacheServices, s)
-		}
-		volumesNeeded = append(volumesNeeded, v)
+		volumesNeeded = append(volumesNeeded, app.GetProjectCacheVolumeName(s))
 	}
 	for _, v := range volumesNeeded {
 		util.Verbose("creating docker volume %s", v)
@@ -1905,12 +1899,7 @@ func (app *DdevApp) start(o StartOptions) error {
 	}
 	for _, s := range app.projectCacheServices() {
 		cacheDir := "/mnt/ddev-project-cache-" + s
-		prep := fmt.Sprintf("mkdir -p %s/history; ", cacheDir)
-		// Copy history from where older DDEV versions kept it, keyed by container hostname
-		if slices.Contains(newCacheServices, s) {
-			prep += fmt.Sprintf("cp -p /mnt/ddev-global-cache/bashhistory/%[1]s-%[2]s/bash_history /mnt/ddev-global-cache/mysqlhistory/%[1]s-%[2]s/mysql_history %[3]s/history/ 2>/dev/null; ", app.Name, s, cacheDir)
-		}
-		chownVolumes = append(chownVolumes, chownVolume{name: app.GetProjectCacheVolumeName(s), path: cacheDir, prep: prep})
+		chownVolumes = append(chownVolumes, chownVolume{name: app.GetProjectCacheVolumeName(s), path: cacheDir, prep: fmt.Sprintf("mkdir -p %s/history; ", cacheDir)})
 	}
 
 	// A volume a running container holds was chowned when that container
@@ -1940,9 +1929,6 @@ func (app *DdevApp) start(o StartOptions) error {
 		// ddev-global-cache is shared by every project and user, so it is never
 		// chowned; the sticky bit lets add-ons create their own directories in it.
 		prepCmd.WriteString("chmod 1777 /mnt/ddev-global-cache; ")
-	} else if len(newCacheServices) > 0 {
-		// Only to read the old history
-		volumeMounts = append(volumeMounts, "ddev-global-cache:/mnt/ddev-global-cache:ro")
 	}
 	chownCmd := prepCmd.String()
 	if len(chownPaths) > 0 {
