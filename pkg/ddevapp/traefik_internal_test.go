@@ -46,11 +46,10 @@ func TestRemoveStaleTraefikFiles(t *testing.T) {
 		"traefik/certs/oldname.key":   true,
 	}
 	for name := range files {
-		_, err := os.Stat(app.GetConfigPath(name))
 		if removed[name] {
-			require.True(t, os.IsNotExist(err), "%s should have been removed", name)
+			require.NoFileExists(t, app.GetConfigPath(name))
 		} else {
-			require.NoError(t, err, "%s should have been kept", name)
+			require.FileExists(t, app.GetConfigPath(name))
 		}
 	}
 }
