@@ -333,6 +333,32 @@ if [ -f /mnt/new/acme.json ]; then chmod 600 /mnt/new/acme.json; fi`, uid, gid)
 	return nil
 }
 
+// removeRouterTraefikFiles removes shell globs relative to RouterTraefikDir.
+// It goes through the router when it runs, because a helper container must not
+// attach a volume a running container holds.
+func removeRouterTraefikFiles(globs []string) {
+	var paths []string
+	for _, g := range globs {
+		paths = append(paths, RouterTraefikDir+"/"+g)
+	}
+	c := "rm -rf " + strings.Join(paths, " ")
+	util.Debug("Removing router files with command '%s'", c)
+	if router, err := FindDdevRouter(); err == nil && router.State == "running" {
+		if _, stderr, err := dockerutil.Exec(router.ID, c, "0"); err != nil {
+			util.Warning("Unable to remove router files with '%s': %v; stderr='%s'", c, err, stderr)
+		}
+		return
+	}
+	binds := routerTraefikBinds()
+	if binds == nil {
+		return
+	}
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-router-files-"+util.RandString(6), []string{"sh", "-c", c}, []string{}, []string{}, binds, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+	if err != nil {
+		util.Warning("Unable to remove router files with '%s': %v; output='%s'", c, err, out)
+	}
+}
+
 // routerTraefikBinds mounts RouterTraefikVolume at RouterTraefikDir for a
 // cleanup container. It mounts nothing when the volume is missing, because
 // mounting would create it empty and skip the seeding in ensureRouterTraefikVolume.
