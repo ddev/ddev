@@ -559,12 +559,12 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 	util.Debug("Ensuring write permissions for %s", app.GetName())
 	var writePerms os.FileMode = 0200
 
-	settingsDir := path.Dir(app.SiteSettingsPath)
+	settingsDir := filepath.Dir(app.SiteSettingsPath)
 	makeWritable := []string{
 		settingsDir,
 		app.SiteSettingsPath,
 		app.SiteDdevSettingsFile,
-		path.Join(settingsDir, "services.yml"),
+		filepath.Join(settingsDir, "services.yml"),
 	}
 
 	for _, o := range makeWritable {
@@ -617,7 +617,7 @@ func createDrupal8SyncDir(app *DdevApp) error {
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings(app)
 
-	syncDirPath := path.Join(app.GetAppRoot(), app.GetDocroot(), "sites/default", drupalConfig.SyncDir)
+	syncDirPath := filepath.Join(app.GetAppRoot(), app.GetDocroot(), "sites/default", drupalConfig.SyncDir)
 	if fileutil.FileExists(syncDirPath) {
 		return nil
 	}

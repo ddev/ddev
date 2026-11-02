@@ -402,7 +402,7 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 // sourceURL is the actual URL to download.
 // Returns the extracted path, the tarball path (both possibly cached), and an error value.
 func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, string, error) {
-	uniqueName := fmt.Sprintf("%.4x_%s", sha256.Sum256([]byte(sourceURL)), path.Base(sourceURL))
+	uniqueName := fmt.Sprintf("%.4x_%s", sha256.Sum256([]byte(sourceURL)), path.Base(sourceURL)) //nolint:forbidigo // URL
 	testCache := filepath.Join(globalconfig.GetGlobalDdevDir(), "testcache")
 	archiveFullPath := filepath.Join(testCache, "tarballs", uniqueName)
 	_ = os.MkdirAll(filepath.Dir(archiveFullPath), 0777)

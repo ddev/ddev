@@ -165,7 +165,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 
 		prepareAppForComposer(app)
 
-		composerManifest, err := composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
+		composerManifest, err := composer.NewManifest(filepath.Join(composerRoot, composerDirectoryArg, "composer.json"))
 		if err != nil {
 			util.Failed("Failed to read composer.json: %v", err)
 		}
@@ -267,7 +267,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 		}
 
 		// Reload composer.json if it has changed in the meantime.
-		composerManifest, err = composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
+		composerManifest, err = composer.NewManifest(filepath.Join(composerRoot, composerDirectoryArg, "composer.json"))
 		if err != nil {
 			util.Failed("Failed to read composer.json: %v", err)
 		}

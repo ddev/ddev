@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"testing"
 
@@ -143,18 +142,18 @@ func TestExtractTarballWithCleanup(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, suffix := range []string{"tar", "tar.gz", "tgz"} {
-		tarball := path.Join("testdata", t.Name(), "testfile"+"."+suffix)
+		tarball := filepath.Join("testdata", t.Name(), "testfile"+"."+suffix)
 		dir, cleanup, err := archive.ExtractTarballWithCleanup(tarball, false)
 		assert.NoError(err)
 		assert.DirExists(dir)
-		assert.FileExists(path.Join(dir, "dir1/dir1_file.txt"))
+		assert.FileExists(filepath.Join(dir, "dir1", "dir1_file.txt"))
 		cleanup()
 		assert.NoDirExists(dir)
 
 		dir, cleanup, err = archive.ExtractTarballWithCleanup(tarball, true)
 		assert.NoError(err)
 		assert.DirExists(dir)
-		assert.FileExists(path.Join(dir, "dir1_file.txt"))
+		assert.FileExists(filepath.Join(dir, "dir1_file.txt"))
 		cleanup()
 		assert.NoDirExists(dir)
 	}
@@ -170,7 +169,7 @@ func TestDownloadAndExtractTarball(t *testing.T) {
 	}
 	require.NoError(t, err)
 	require.DirExists(t, dir)
-	require.FileExists(t, path.Join(dir, "install.yaml"))
+	require.FileExists(t, filepath.Join(dir, "install.yaml"))
 	cleanup()
 	require.NoDirExists(t, dir)
 }

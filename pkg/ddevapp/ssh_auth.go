@@ -171,13 +171,13 @@ func sshAgentUpstreamMount(upstream string) (mount string, name string) {
 	if upstream == hostServicesSSHAuthSock {
 		return upstream + ":/upstream/agent.sock", "agent.sock"
 	}
-	return path.Dir(upstream) + ":/upstream", path.Base(upstream)
+	return path.Dir(upstream) + ":/upstream", path.Base(upstream) //nolint:forbidigo // socket path on the Docker host
 }
 
 // SSHAuthComposeYAMLPath returns the filepath to the base .ssh-auth-compose yaml file.
 func SSHAuthComposeYAMLPath() string {
 	globalDir := globalconfig.GetGlobalDdevDir()
-	dest := path.Join(globalDir, ".ssh-auth-compose.yaml")
+	dest := filepath.Join(globalDir, ".ssh-auth-compose.yaml")
 	return dest
 }
 
@@ -185,7 +185,7 @@ func SSHAuthComposeYAMLPath() string {
 // .ssh-auth-compose-full.yaml file.
 func FullRenderedSSHAuthComposeYAMLPath() string {
 	globalDir := globalconfig.GetGlobalDdevDir()
-	dest := path.Join(globalDir, ".ssh-auth-compose-full.yaml")
+	dest := filepath.Join(globalDir, ".ssh-auth-compose-full.yaml")
 	return dest
 }
 

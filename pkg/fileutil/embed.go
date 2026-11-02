@@ -21,7 +21,7 @@ func CopyEmbedAssets(fsys embed.FS, sourceDir string, targetDir string, excluded
 	for _, d := range subdirs {
 		sourcePath := path.Join(sourceDir, d.Name())
 		if d.IsDir() {
-			err = CopyEmbedAssets(fsys, path.Join(sourceDir, d.Name()), path.Join(targetDir, d.Name()), excludedFiles)
+			err = CopyEmbedAssets(fsys, sourcePath, filepath.Join(targetDir, d.Name()), excludedFiles)
 			if err != nil {
 				return err
 			}
