@@ -39,8 +39,8 @@ func TestCARootArchive(t *testing.T) {
 		got = append(got, entry{h.Name, h.Mode, string(content)})
 	}
 	require.Equal(t, []entry{
-		{"mnt/ddev-global-cache/mkcert/", 0755, ""},
-		{"mnt/ddev-global-cache/mkcert/rootCA-key.pem", 0600, "key"},
-		{"mnt/ddev-global-cache/mkcert/rootCA.pem", 0644, "cert"},
+		{"usr/local/lib/ddev/mkcert/", 0755, ""},
+		{"usr/local/lib/ddev/mkcert/rootCA-key.pem", 0600, "key"},
+		{"usr/local/lib/ddev/mkcert/rootCA.pem", 0644, "cert"},
 	}, got)
 }

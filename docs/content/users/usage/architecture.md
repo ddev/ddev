@@ -220,7 +220,7 @@ Here’s a basic diagram of how it works inside the Docker network:
 | --- | --- |
 | `mkcert` | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
 
-The `web` and `db` containers don’t mount it. On each [`ddev start`](commands.md#start), DDEV copies the mkcert certificate authority into the `web` container at `/mnt/ddev-global-cache/mkcert`, the path `CAROOT` names.
+The `web` and `db` containers don’t mount it. On each [`ddev start`](commands.md#start), DDEV copies the mkcert certificate authority into the `web` container at `/usr/local/lib/ddev/mkcert`, the path `CAROOT` names. `/mnt/ddev-global-cache/mkcert` in `web` is a symlink to it.
 
 Add-ons may keep their own directories here too. DDEV doesn’t `chown` the whole volume, so data that belongs to one project should go in its [project cache volume](#project-cache-volumes) instead. An add-on that writes here from the `web` container mounts the volume itself, in its `docker-compose.*.yaml`:
 

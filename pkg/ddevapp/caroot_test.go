@@ -47,6 +47,10 @@ func TestWebCAROOTCopied(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, strings.TrimSpace(string(hostCA)), strings.TrimSpace(out))
 
+	out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: `cat /mnt/ddev-global-cache/mkcert/rootCA.pem`})
+	require.NoError(t, err)
+	require.Equal(t, strings.TrimSpace(string(hostCA)), strings.TrimSpace(out), "the old CAROOT path should still lead to the CA")
+
 	uid, _, _ := dockerutil.GetContainerUser()
 	out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: `stat -c "%u %a" "$CAROOT/rootCA-key.pem"`})
 	require.NoError(t, err)

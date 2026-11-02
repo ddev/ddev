@@ -241,7 +241,7 @@ services:
     - MYSQL_HISTFILE=/mnt/ddev-project-cache/history/mysql_history
     - N_PREFIX=/usr/local/n
     - N_CACHE_PREFIX=/mnt/ddev-project-cache/n_prefix
-    - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
+    - NODE_EXTRA_CA_CERTS=/usr/local/lib/ddev/mkcert/rootCA.pem
     - NODE_REPL_HISTORY=/mnt/ddev-project-cache/history/node_repl_history
     - npm_config_cache=/mnt/ddev-project-cache/npm
     {{- if ne (env "DDEV_PAGER") "" }}

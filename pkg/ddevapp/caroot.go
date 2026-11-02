@@ -18,7 +18,7 @@ import (
 
 // CAROOTContainerDir is CAROOT in the ddev-webserver image, where web holds
 // its own copy of the host's mkcert root CA.
-const CAROOTContainerDir = "/mnt/ddev-global-cache/mkcert"
+const CAROOTContainerDir = "/usr/local/lib/ddev/mkcert"
 
 // hostCAROOT returns the host's mkcert CAROOT when it holds a root CA and key.
 func hostCAROOT() string {
