@@ -21,6 +21,36 @@ func TestHasUnspecifiedHostPort(t *testing.T) {
 	require.False(t, hasUnspecifiedHostPort("12345"))
 }
 
+func TestComposeBindMounts(t *testing.T) {
+	project := &composeTypes.Project{
+		Services: composeTypes.Services{
+			"web": {
+				Volumes: []composeTypes.ServiceVolumeConfig{
+					{Type: composeTypes.VolumeTypeVolume, Source: "ddev-config", Target: "/mnt/ddev_config"},
+					{Type: composeTypes.VolumeTypeBind, Source: "/project/.ddev", Target: "/mnt/ddev_config"},
+				},
+				Secrets: []composeTypes.ServiceSecretConfig{{Source: "from-file"}, {Source: "from-env"}},
+			},
+			"db": {
+				Configs: []composeTypes.ServiceConfigObjConfig{{Source: "my-cnf"}},
+			},
+		},
+		Secrets: composeTypes.Secrets{
+			"from-file": {File: "/project/.ddev/secret.txt"},
+			"from-env":  {Environment: "SECRET"},
+		},
+		Configs: composeTypes.Configs{
+			"my-cnf": {File: "/project/.ddev/my.cnf"},
+		},
+	}
+	require.Equal(t, []string{
+		"db: config my-cnf from /project/.ddev/my.cnf",
+		"web: /project/.ddev:/mnt/ddev_config",
+		"web: secret from-file from /project/.ddev/secret.txt",
+	}, composeBindMounts(project))
+	require.Empty(t, composeBindMounts(&composeTypes.Project{}))
+}
+
 // TestFixupComposeYamlAssignsUnspecifiedHostPorts checks that both ways of
 // leaving the host port empty end up with a port from DDEV's range.
 func TestFixupComposeYamlAssignsUnspecifiedHostPorts(t *testing.T) {
