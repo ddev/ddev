@@ -498,6 +498,53 @@ func CleanupGlobalTraefikStaging() error {
 	return nil
 }
 
+// removeStaleTraefikFiles deletes #ddev-generated Traefik config and certs left
+// behind under a previous project name, so they are not merged into the router
+// config. Files without the signature and files installed by add-ons are kept.
+func removeStaleTraefikFiles(app *DdevApp, configDir string, certsDir string) {
+	var addonFiles map[string]bool
+	keep := map[string]bool{
+		app.Name + ".yaml": true,
+		app.Name + ".crt":  true,
+		app.Name + ".key":  true,
+	}
+	for _, g := range []struct{ dir, pattern string }{
+		{configDir, "*.yaml"},
+		{certsDir, "*.crt"},
+		{certsDir, "*.key"},
+	} {
+		files, err := fileutil.GlobFilenames(g.dir, g.pattern)
+		if err != nil {
+			util.Warning("Failed to list %s in %s: %v", g.pattern, g.dir, err)
+			continue
+		}
+		for _, f := range files {
+			if keep[filepath.Base(f)] {
+				continue
+			}
+			found, err := fileutil.FgrepStringInFile(f, nodeps.DdevFileSignature)
+			if err != nil || !found {
+				continue
+			}
+			// Loaded only when needed, since reading add-ons creates .ddev/addon-metadata
+			if addonFiles == nil {
+				addonFiles = make(map[string]bool)
+				for _, a := range GetInstalledAddonProjectFiles(app) {
+					addonFiles[a] = true
+				}
+			}
+			if addonFiles[f] {
+				continue
+			}
+			if err = os.Remove(f); err != nil {
+				util.Warning("Failed to remove stale Traefik file %s: %v", f, err)
+			} else {
+				util.Debug("Removed stale Traefik file %s", f)
+			}
+		}
+	}
+}
+
 // configureTraefikForApp configures the dynamic configuration and creates cert+key
 // in .ddev/traefik/certs
 func configureTraefikForApp(app *DdevApp) error {
@@ -522,6 +569,7 @@ func configureTraefikForApp(app *DdevApp) error {
 	if err != nil {
 		return fmt.Errorf("failed to create project Traefik config dir: %v", err)
 	}
+	removeStaleTraefikFiles(app, projectSourceConfigDir, projectSourceCertsPath)
 
 	baseName := filepath.Join(projectSourceCertsPath, app.Name)
 	// Assume that the #ddev-generated doesn't exist in files
