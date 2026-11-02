@@ -136,15 +136,6 @@ if [ -d /mnt/ddev_config/.homeadditions ]; then
   cp -r /mnt/ddev_config/.homeadditions/. ~/
 fi
 
-# DDEV copies the host's root CA in after the container starts
-if [ "${DDEV_WAIT_FOR_CAROOT:-}" = "true" ]; then
-  for _ in $(seq 1 120); do
-    [ -f "${CAROOT}/.ddev-copied" ] && break
-    sleep 0.5
-  done
-  [ -f "${CAROOT}/.ddev-copied" ] || echo "Gave up waiting for DDEV to copy the root CA into ${CAROOT}"
-fi
-
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
 # It also creates them if they don't already exist

@@ -20,10 +20,6 @@ import (
 // its own copy of the host's mkcert root CA.
 const CAROOTContainerDir = "/mnt/ddev-global-cache/mkcert"
 
-// caRootReadyFile is the last entry of the copy. The web container's start.sh
-// waits for it before it runs mkcert, when DDEV_WAIT_FOR_CAROOT is true.
-const caRootReadyFile = ".ddev-copied"
-
 // hostCAROOT returns the host's mkcert CAROOT when it holds a root CA and key.
 func hostCAROOT() string {
 	caRoot := globalconfig.GetCAROOT()
@@ -34,7 +30,7 @@ func hostCAROOT() string {
 }
 
 // caRootArchive returns a tar of the root CA and key in caRoot, rooted at
-// CAROOTContainerDir and owned by uid and gid, ending with caRootReadyFile.
+// CAROOTContainerDir and owned by uid and gid.
 func caRootArchive(caRoot string, uid int, gid int) ([]byte, error) {
 	var buf bytes.Buffer
 	tw := tar.NewWriter(&buf)
@@ -45,13 +41,10 @@ func caRootArchive(caRoot string, uid int, gid int) ([]byte, error) {
 	for _, f := range []struct {
 		name string
 		mode int64
-	}{{"rootCA-key.pem", 0600}, {"rootCA.pem", 0644}, {caRootReadyFile, 0644}} {
-		var content []byte
-		if f.name != caRootReadyFile {
-			var err error
-			if content, err = os.ReadFile(filepath.Join(caRoot, f.name)); err != nil {
-				return nil, err
-			}
+	}{{"rootCA-key.pem", 0600}, {"rootCA.pem", 0644}} {
+		content, err := os.ReadFile(filepath.Join(caRoot, f.name))
+		if err != nil {
+			return nil, err
 		}
 		if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeReg, Name: path.Join(root, f.name), Mode: f.mode, Size: int64(len(content)), Uid: uid, Gid: gid}); err != nil {
 			return nil, err

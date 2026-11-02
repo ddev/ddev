@@ -11,9 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestCARootArchive checks that the ready marker comes last, so start.sh never
-// sees it before the CA and key are complete, and that the container user
-// owns the files.
 func TestCARootArchive(t *testing.T) {
 	caRoot := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(caRoot, "rootCA.pem"), []byte("cert"), 0644))
@@ -45,6 +42,5 @@ func TestCARootArchive(t *testing.T) {
 		{"mnt/ddev-global-cache/mkcert/", 0755, ""},
 		{"mnt/ddev-global-cache/mkcert/rootCA-key.pem", 0600, "key"},
 		{"mnt/ddev-global-cache/mkcert/rootCA.pem", 0644, "cert"},
-		{"mnt/ddev-global-cache/mkcert/" + caRootReadyFile, 0644, ""},
 	}, got)
 }

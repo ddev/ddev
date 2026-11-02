@@ -54,4 +54,9 @@ func TestWebCAROOTCopied(t *testing.T) {
 
 	out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: `openssl verify -CAfile "$CAROOT/rootCA.pem" /etc/ssl/certs/master.crt`})
 	require.NoError(t, err, "web should sign its certificate with the host's root CA, output=%s", out)
+
+	// Restarting only web recreates its container without a full start
+	require.NoError(t, app.RestartServices([]string{"web"}, ddevapp.StartOptions{}))
+	out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: `openssl verify -CAfile "$CAROOT/rootCA.pem" /etc/ssl/certs/master.crt`})
+	require.NoError(t, err, "recreated web should sign its certificate with the host's root CA, output=%s", out)
 }

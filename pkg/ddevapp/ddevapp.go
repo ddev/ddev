@@ -2080,12 +2080,9 @@ func (app *DdevApp) start(o StartOptions) error {
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
 
-	err = composeUp(project, api.CreateOptions{})
+	err = app.composeUp(project, api.CreateOptions{})
 	if err != nil {
 		return err
-	}
-	if err = app.copyCAROOTIntoWeb(); err != nil {
-		util.Warning("%v", err)
 	}
 
 	waitForGlobalCommands := app.populateGlobalCommandsInBackground()
@@ -2410,7 +2407,7 @@ func (app *DdevApp) imageOnlyProfiles(o StartOptions) *composeTypes.Project {
 // startProfileServices starts the project's services on a running project,
 // leaving the services already running alone.
 func (app *DdevApp) startProfileServices(project *composeTypes.Project) error {
-	if err := composeUp(project, api.CreateOptions{}); err != nil {
+	if err := app.composeUp(project, api.CreateOptions{}); err != nil {
 		return err
 	}
 	defer app.populateGlobalCommandsInBackground()()
@@ -2555,7 +2552,7 @@ func (app *DdevApp) recreateServices(services []string, build *api.BuildOptions)
 	// Unlike a restart, a new container picks up a rebuilt image and config
 	// changes, and skips the delay some healthchecks add after a restart.
 	timeout := time.Duration(app.GetMaxContainerWaitTime()) * time.Second
-	err = composeUp(project, api.CreateOptions{
+	err = app.composeUp(project, api.CreateOptions{
 		Services:             services,
 		Recreate:             api.RecreateForce,
 		RecreateDependencies: api.RecreateNever,

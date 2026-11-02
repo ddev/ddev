@@ -896,7 +896,6 @@ type composeYAMLVars struct {
 	DdevGenerated             string
 	DisableSettingsManagement bool
 	MountType                 string
-	WaitForCAROOT             bool
 	WebMount                  string
 	WebBuildContext           string
 	DBBuildContext            string
@@ -994,7 +993,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		IsWindowsFS:        nodeps.IsWindows(),
 		NoProjectMount:     app.NoProjectMount,
 		MountType:          "bind",
-		WaitForCAROOT:      hostCAROOT() != "",
 		WebMount:           "../",
 		Timezone:           timezone,
 		ComposerVersion:    app.ComposerVersion,

@@ -90,8 +90,9 @@ See https://docs.ddev.com/en/stable/users/usage/offline/ for info.`)
 }
 
 // composeUp runs docker-compose up for create.Services, or for all the
-// project's enabled services when that's empty.
-func composeUp(project *composeTypes.Project, create api.CreateOptions) error {
+// project's enabled services when that's empty. It copies the mkcert root CA
+// into web between create and start, so web's start.sh finds it in place.
+func (app *DdevApp) composeUp(project *composeTypes.Project, create api.CreateOptions) error {
 	upCtx, upSvc, err := dockerutil.NewComposeService()
 	if err != nil {
 		return err
@@ -102,10 +103,13 @@ func composeUp(project *composeTypes.Project, create api.CreateOptions) error {
 	}
 	create.Build = &api.BuildOptions{Progress: progress}
 	create.RemoveOrphans = true
-	return upSvc.Up(upCtx, project, api.UpOptions{
-		Create: create,
-		Start:  api.StartOptions{Project: project, Services: create.Services},
-	})
+	if err = upSvc.Create(upCtx, project, create); err != nil {
+		return err
+	}
+	if err = app.copyCAROOTIntoWeb(); err != nil {
+		util.Warning("%v", err)
+	}
+	return upSvc.Start(upCtx, project.Name, api.StartOptions{Project: project, Services: create.Services})
 }
 
 // builtProfileServices returns the profile services with build: whose images

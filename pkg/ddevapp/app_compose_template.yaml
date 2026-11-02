@@ -236,7 +236,6 @@ services:
     - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILPIT_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPPorts }}
     - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILPIT_HTTPS_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPSPorts }}
     {{ end }}
-    - DDEV_WAIT_FOR_CAROOT={{ .WaitForCAROOT }}
     - IS_DDEV_PROJECT=true
     - LINES
     - MYSQL_HISTFILE=/mnt/ddev-project-cache/history/mysql_history
