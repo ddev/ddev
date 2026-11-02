@@ -1079,6 +1079,12 @@ func TestOmitProjectNameByDefault(t *testing.T) {
 				expectedRuntimeName = actualDirName
 			}
 			require.Equal(t, expectedRuntimeName, app.Name, "app.Name should be derived correctly")
+
+			require.NoError(t, globalconfig.ReadProjectList())
+			require.Nil(t, globalconfig.GetProject(""))
+			project := globalconfig.GetProject(expectedRuntimeName)
+			require.NotNil(t, project, "project %s should be registered", expectedRuntimeName)
+			require.Equal(t, tmpDir, project.AppRoot)
 		})
 	}
 }

@@ -199,26 +199,21 @@ func runConfig(cmd *cobra.Command, args []string, app *ddevapp.DdevApp, prompt b
 
 		// If omit_project_name_by_default is set, only omit the name if it
 		// matches the directory-based default (user didn't customize it)
-		originalName := app.Name
+		omitName := false
 		if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault {
 			pwd, err := os.Getwd()
 			if err == nil {
-				dirBasedName := ddevapp.NormalizeProjectName(filepath.Base(pwd))
-				if app.Name == dirBasedName {
-					app.Name = ""
-				}
+				omitName = app.Name == ddevapp.NormalizeProjectName(filepath.Base(pwd))
 			}
 		}
 
-		err = app.WriteConfig()
+		if omitName {
+			err = app.WriteConfigOmittingName()
+		} else {
+			err = app.WriteConfig()
+		}
 		if err != nil {
 			util.Failed("Failed to write config: %v", err)
-		}
-		if app.Name == "" {
-			app.Name = originalName
-			if err = app.UpdateGlobalProjectList(); err != nil {
-				util.Failed("Failed to update the global project list: %v", err)
-			}
 		}
 	}
 
@@ -790,27 +785,16 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp, 
 		}
 	}
 
-	// If global omit_project_name_by_default, empty the `name` field
+	// With omit_project_name_by_default, leave out the `name` field
 	// unless they explicitly specified it here.
-	// Save the original name so we can restore it for the global project list.
-	originalName := app.Name
-	omitName := false
+	writeConfig := app.WriteConfig
 	if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault &&
 		!cmd.Flags().Changed("project-name") {
-		app.Name = ""
-		omitName = true
+		writeConfig = app.WriteConfigOmittingName
 	}
 
-	if err := app.WriteConfig(); err != nil {
+	if err := writeConfig(); err != nil {
 		return fmt.Errorf("could not write DDEV config file %s: %v", app.ConfigPath, err)
-	}
-
-	// WriteConfig doesn't register an empty name, so register the real one.
-	if omitName && originalName != "" {
-		app.Name = originalName
-		if err := app.UpdateGlobalProjectList(); err != nil {
-			return err
-		}
 	}
 
 	return nil
