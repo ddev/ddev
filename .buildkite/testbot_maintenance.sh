@@ -2,6 +2,9 @@
 
 set -eu -o pipefail
 
+# shellcheck source=lib-disk.sh
+source "$(dirname "$0")/lib-disk.sh"
+
 os=$(go env GOOS)
 
 # Keep in sync with wsl2-setup.sh's pin for the GitHub Actions WSL2 runner.
@@ -87,9 +90,17 @@ fi
 docker system prune --volumes --force || true
 docker volume prune -a -f || true
 
-if [ "${DOCKER_TYPE:-}" = "podman-rootless" ] && command -v podman >/dev/null; then
-    podman machine ssh 'sudo fstrim -av' || true
+# Pruning every unused image on every job would re-pull old database images
+# each time; the scheduled testbot_disk_cleanup.sh does that weekly, and this
+# does it only when space is already short.
+free=$(free_gb || true)
+if [ "${free:-999}" -lt "${LOW_DISK_GB}" ]; then
+    echo "Only ${free}GB free on $(hostname), pruning all unused images and the Go build cache"
+    docker system prune -a --volumes --force || true
+    go clean -cache || true
 fi
+provider_fstrim "${DOCKER_TYPE:-}" || true
+host_disk_cleanup
 
 # Update all images that could have changed
 ( docker images | awk '/ddev|traefik|postgres/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
