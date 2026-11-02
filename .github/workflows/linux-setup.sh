@@ -39,6 +39,25 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set -x
 fi
 
+if [[ "${DDEV_TEST_NO_BIND_MOUNTS:-}" == "true" ]]; then
+  # Run dockerd where /home and /tmp are empty, so like a remote Docker host it
+  # can't see the projects and any bind mount comes up empty. Without the system
+  # containerd, dockerd starts its own in the same mount namespace.
+  sudo systemctl stop docker.socket docker.service containerd.service
+  sudo setsid unshare --mount --propagation private -- sh -c \
+    'mount -t tmpfs tmpfs /home && mount -t tmpfs tmpfs /tmp && exec dockerd --group docker' \
+    >"${RUNNER_TEMP:-/tmp}/dockerd.log" 2>&1 &
+  if ! timeout 120 bash -c 'until docker info >/dev/null 2>&1; do sleep 2; done'; then
+    echo "dockerd did not answer within 120s, its log:" >&2
+    cat "${RUNNER_TEMP:-/tmp}/dockerd.log" >&2
+    exit 1
+  fi
+  if [ -n "$(docker run --rm -v "${HOME}:/h:ro" busybox:stable ls -A /h)" ]; then
+    echo "dockerd can still see ${HOME}" >&2
+    exit 1
+  fi
+fi
+
 curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
   | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
   && echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
