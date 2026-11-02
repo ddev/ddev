@@ -26,17 +26,14 @@ export WEBSERVER_TYPE=nginx-fpm
 
 export MOUNTUID=33
 export MOUNTGID=33
-# Use a dedicated volume, never the real ddev-global-cache: this script chowns
-# and chmods its contents to an arbitrary test uid, which would corrupt a
-# shared volume still in use by real DDEV projects on the same host.
-export TEST_VOLUME_NAME="ddev-webserver-test-cache"
 # /usr/local/bin is added for git-bash, where it may not be in the $PATH.
 export PATH="/usr/local/bin:$PATH"
 
-docker volume rm "$TEST_VOLUME_NAME" >/dev/null 2>&1 || true
-
 mkcert -install
-docker run -t --rm -v "$(mkcert -CAROOT):/mnt/mkcert" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" busybox:stable sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
+# docker cp makes the copied files root-owned, so the key must be world-readable
+CA_COPY_DIR="$(mktemp -d)"
+cp "$(mkcert -CAROOT)/rootCA.pem" "$(mkcert -CAROOT)/rootCA-key.pem" "$CA_COPY_DIR"
+chmod 644 "$CA_COPY_DIR"/*
 
 # Wait for container to be ready.
 function containerwait {
@@ -64,22 +61,27 @@ function containerwait {
   return 1
 }
 
+# Like DDEV, copy the host's CA into $CAROOT before the container starts, so
+# start.sh signs the webserver's certificate with it. Arguments go to docker create.
+function runwebserver {
+  docker create "$@" --name "$CONTAINER_NAME" "$DOCKER_IMAGE" >/dev/null
+  docker cp "$CA_COPY_DIR/." "$CONTAINER_NAME:/usr/local/lib/ddev/mkcert"
+  docker start "$CONTAINER_NAME" >/dev/null
+}
+
 function cleanup {
   docker rm -f $CONTAINER_NAME >/dev/null 2>&1 || true
 }
 
 function finalcleanup {
   cleanup
-  docker volume rm "$TEST_VOLUME_NAME" >/dev/null 2>&1 || true
+  rm -rf "$CA_COPY_DIR"
 }
 trap finalcleanup EXIT
 cleanup
 
-# We have to push the CA into the test volume so it will be respected
-docker run --rm -v "$(mkcert -CAROOT):/mnt/mkcert" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" "${DOCKER_IMAGE}" bash -c "mkdir -p /mnt/ddev-global-cache/mkcert && cp -R /mnt/mkcert /mnt/ddev-global-cache/ && chown -Rf ${MOUNTUID}:${MOUNTGID} /mnt/ddev-global-cache/* && chmod -Rf ugo+w /mnt/ddev-global-cache/*"
-
 # Run general tests with a default container
-docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name "$CONTAINER_NAME" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" -d "$DOCKER_IMAGE" >/dev/null
+runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}"
 if ! containerwait; then
   echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
   exit 100
@@ -91,7 +93,7 @@ cleanup
 for PHP_VERSION in 8.2 8.3 8.4 8.5 8.6; do
   for WEBSERVER_TYPE in nginx-fpm apache-fpm; do
     export PHP_VERSION WEBSERVER_TYPE DOCKER_IMAGE
-    docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name "$CONTAINER_NAME" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" -d "$DOCKER_IMAGE" >/dev/null
+    runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}"
     if ! containerwait; then
       echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
       exit 101
@@ -105,7 +107,7 @@ done
 for project_type in backdrop craftcms drupal drupal7 drupal10 drupal11 laravel magento magento2 maho modx symfony typo3 wordpress default; do
   export PHP_VERSION="8.4"
   export project_type
-  docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" --name "$CONTAINER_NAME" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" -d "$DOCKER_IMAGE" >/dev/null
+  runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type"
   if ! containerwait; then
     echo "=============== Failed containerwait after docker run with  DDEV_PROJECT_TYPE=${project_type} DDEV_PHP_VERSION=$PHP_VERSION ==================="
     exit 103
@@ -115,14 +117,14 @@ for project_type in backdrop craftcms drupal drupal7 drupal10 drupal11 laravel m
   cleanup
 done
 
-docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" --name "$CONTAINER_NAME" -d "$DOCKER_IMAGE" >/dev/null
+runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config"
 containerwait
 
 bats tests/ddev-webserver/custom_config.bats
 
 cleanup
 
-docker run -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v "$TEST_VOLUME_NAME:/mnt/ddev-global-cache" --name "$CONTAINER_NAME" -d "$DOCKER_IMAGE" >/dev/null
+runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config"
 containerwait
 bats tests/ddev-webserver/imagemagick.bats
 
