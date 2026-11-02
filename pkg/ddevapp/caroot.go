@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -35,7 +36,8 @@ func caRootArchive(caRoot string, uid int, gid int) ([]byte, error) {
 	var buf bytes.Buffer
 	tw := tar.NewWriter(&buf)
 	root := strings.TrimPrefix(CAROOTContainerDir, "/")
-	if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeDir, Name: root + "/", Mode: 0755, Uid: uid, Gid: gid}); err != nil {
+	now := time.Now()
+	if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeDir, Name: root + "/", Mode: 0755, Uid: uid, Gid: gid, ModTime: now}); err != nil {
 		return nil, err
 	}
 	for _, f := range []struct {
@@ -46,7 +48,7 @@ func caRootArchive(caRoot string, uid int, gid int) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeReg, Name: path.Join(root, f.name), Mode: f.mode, Size: int64(len(content)), Uid: uid, Gid: gid}); err != nil {
+		if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeReg, Name: path.Join(root, f.name), Mode: f.mode, Size: int64(len(content)), Uid: uid, Gid: gid, ModTime: now}); err != nil {
 			return nil, err
 		}
 		if _, err := tw.Write(content); err != nil {

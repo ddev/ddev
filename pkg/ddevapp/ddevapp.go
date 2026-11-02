@@ -1926,7 +1926,8 @@ func (app *DdevApp) start(o StartOptions) error {
 		volumeMounts = append(volumeMounts, "ddev-global-cache:/mnt/ddev-global-cache")
 		// ddev-global-cache is shared by every project and user, so it is never
 		// chowned; the sticky bit lets add-ons create their own directories in it.
-		prepCmd.WriteString("chmod 1777 /mnt/ddev-global-cache; ")
+		// Creating mkcert keeps Docker from copying web's mkcert symlink into an empty volume.
+		prepCmd.WriteString("chmod 1777 /mnt/ddev-global-cache; mkdir -p /mnt/ddev-global-cache/mkcert; ")
 	}
 	chownCmd := prepCmd.String()
 	if len(chownPaths) > 0 {
