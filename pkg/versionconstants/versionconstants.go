@@ -49,7 +49,7 @@ func IsUnreleasedDdevVersion(version string) bool {
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "2785f2b301" // 20261101_rfay_copy_mkcert_into_containers-2785f2b301
+var WebTag = "e2788dfc8d" // 20261101_rfay_copy_mkcert_into_containers-e2788dfc8d
 
 // WebTagBranch is the branch WebTag's content was built from.
 var WebTagBranch = "20261101_rfay_copy_mkcert_into_containers"

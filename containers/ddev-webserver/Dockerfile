@@ -473,12 +473,12 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
     update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
 # we need to create the /var/cache/nginx and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /mnt/ddev-global-cache /usr/local/lib/ddev/mkcert /mnt/ddev-project-cache /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
+RUN mkdir -p /mnt/ddev-global-cache ${CAROOT} /mnt/ddev-project-cache /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
     chown www-data:www-data /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
     chmod 755 /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
     ln -sf /run/php/php-fpm.sock /run/php-fpm.sock && \
-    chmod -R ugo+rw /mnt/ddev-global-cache/ /usr/local/lib/ddev/mkcert /mnt/ddev-project-cache/ && \
-    ln -s /usr/local/lib/ddev/mkcert /mnt/ddev-global-cache/mkcert
+    chmod -R ugo+rw /mnt/ddev-global-cache/ ${CAROOT} /mnt/ddev-project-cache/ && \
+    ln -s ${CAROOT} /mnt/ddev-global-cache/mkcert
 
 RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
     chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
@@ -578,12 +578,12 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
     update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
 # we need to create the /var/cache/linux and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /mnt/ddev-global-cache /usr/local/lib/ddev/mkcert /mnt/ddev-project-cache /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
+RUN mkdir -p /mnt/ddev-global-cache ${CAROOT} /mnt/ddev-project-cache /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
     chown www-data:www-data /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
     chmod 755 /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
     ln -sf /run/php/php-fpm.sock /run/php-fpm.sock && \
-    chmod -R ugo+rw /home /mnt/ddev-global-cache/ /usr/local/lib/ddev/mkcert /mnt/ddev-project-cache/ && \
-    ln -s /usr/local/lib/ddev/mkcert /mnt/ddev-global-cache/mkcert
+    chmod -R ugo+rw /home /mnt/ddev-global-cache/ ${CAROOT} /mnt/ddev-project-cache/ && \
+    ln -s ${CAROOT} /mnt/ddev-global-cache/mkcert
 
 RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
     chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
