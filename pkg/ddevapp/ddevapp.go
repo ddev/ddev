@@ -3875,8 +3875,12 @@ func (app *DdevApp) removeOldGlobalCacheData() {
 		return
 	}
 	containers, err := dockerutil.FindContainersByVolume("ddev-global-cache")
-	if err != nil || slices.ContainsFunc(containers, func(c container.Summary) bool { return c.State == container.StateRunning }) {
-		util.Debug("Not cleaning ddev-global-cache for %s, a running container holds it or listing failed: %v", app.Name, err)
+	if err != nil {
+		util.Debug("Unable to list containers using ddev-global-cache: %v", err)
+		return
+	}
+	if slices.ContainsFunc(containers, func(c container.Summary) bool { return c.State == container.StateRunning }) {
+		util.Debug("Not cleaning ddev-global-cache for %s, a running container holds it", app.Name)
 		return
 	}
 	c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-web /mnt/ddev-global-cache/*/%[1]s-db", app.Name)
