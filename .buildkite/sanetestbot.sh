@@ -9,6 +9,9 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+# shellcheck source=lib-disk.sh
+source "$(dirname "$0")/lib-disk.sh"
+
 # thanks to https://stackoverflow.com/a/24067243/215713
 function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
 
@@ -17,7 +20,7 @@ if [ ${DISK_AVAIL} -ge 95 ] ; then
     echo "Disk usage is ${DISK_AVAIL}% on $(hostname), not usable";
     exit 1;
 else
-   echo "Disk usage is ${DISK_AVAIL}% on $(hostname), $(df -k . | awk 'NR==2 {print int($4/1048576)}')GB free.";
+   echo "Disk usage is ${DISK_AVAIL}% on $(hostname), $(free_gb .)GB free.";
 fi
 
 # Determine whether this job uses the Windows host's Docker Desktop. The WSL2

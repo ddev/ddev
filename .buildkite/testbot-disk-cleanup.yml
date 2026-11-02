@@ -1,4 +1,4 @@
-# Weekly disk cleanup of the macOS testbots that share tb-macos-arm64-5/6/7,
+# Weekly disk cleanup of the shared macOS testbots tb-macos-arm64-5/6/7,
 # running testbot_disk_cleanup.sh once on each machine.
 #
 # Configure this in the Buildkite dashboard as its own pipeline pointed at

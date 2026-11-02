@@ -53,7 +53,7 @@ function provider_reset {
       local cpus memory disk
       read -r cpus memory disk < <(podman machine inspect --format '{{.Resources.CPUs}} {{.Resources.Memory}} {{.Resources.DiskSize}}')
       podman machine rm -f
-      podman machine init --cpus "${cpus}" --memory "${memory}" --disk-size "${disk}"
+      podman machine init --provider applehv --cpus "${cpus}" --memory "${memory}" --disk-size "${disk}"
       ;;
     lima)
       limactl stop -f lima-vz || true

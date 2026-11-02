@@ -7,9 +7,9 @@
 # unused images and the Go build cache instead of only dangling images.
 LOW_DISK_GB=${LOW_DISK_GB:-40}
 
-# free_gb prints the GB available on the filesystem holding $HOME.
+# free_gb prints the GB available on the filesystem holding $1, default $HOME.
 function free_gb {
-  df -k "$HOME" | awk 'NR==2 {print int($4/1048576)}'
+  df -k "${1:-$HOME}" | awk 'NR==2 {print int($4/1048576)}'
 }
 
 # provider_fstrim returns blocks freed inside a provider's VM to the host;
