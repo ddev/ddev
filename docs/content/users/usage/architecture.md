@@ -254,7 +254,7 @@ To clear a project’s caches without deleting the project, delete its volume wi
 ddev utility delete-volume web-cache
 ```
 
-If the project was used with a version of DDEV before v1.26.0, the next `ddev start` copies its old history from `ddev-global-cache` into the new volume again. History written since the upgrade is lost.
+Deleting the volume also deletes the project's shell history.
 
 ## The `ddev-router-traefik` Volume
 
