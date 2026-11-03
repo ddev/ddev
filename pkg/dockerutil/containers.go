@@ -269,7 +269,7 @@ func FindContainersByLabels(labels map[string]string) ([]container.Summary, erro
 	if cached := cachedContainers.Load(); cached != nil {
 		var matches []container.Summary
 		for _, c := range *cached {
-			if hasLabels(c, labels) {
+			if hasLabels(c.Labels, labels) {
 				matches = append(matches, c)
 			}
 		}
@@ -301,9 +301,9 @@ func FindContainersByLabels(labels map[string]string) ([]container.Summary, erro
 
 // hasLabels matches labels the way a Docker label filter does: an empty value
 // matches any value of that label
-func hasLabels(c container.Summary, labels map[string]string) bool {
+func hasLabels(have map[string]string, labels map[string]string) bool {
 	for k, v := range labels {
-		if got, ok := c.Labels[k]; !ok || (v != "" && got != v) {
+		if got, ok := have[k]; !ok || (v != "" && got != v) {
 			return false
 		}
 	}
