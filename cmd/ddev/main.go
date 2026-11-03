@@ -5,11 +5,13 @@ import (
 
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/amplitude"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/util"
 )
 
 func main() {
+	dockerutil.HandleTerminalExec()
 	defer util.CheckGoroutines()
 	defer util.TimeTrack()()
 

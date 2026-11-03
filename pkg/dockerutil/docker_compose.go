@@ -222,41 +222,15 @@ func cleanOutput(s string) string {
 // shared DockerCli before the call. ddev's CLI is single-threaded for exec, so
 // the singleton mutation is safe in practice; this function is NOT safe for
 // concurrent use.
-//
-// On TTY paths we also hand compose a dup of the file descriptor so the
-// restoreTerminal->in.Close() call in
-// vendor/github.com/docker/cli/cli/command/container/hijack.go (line 211)
-// (https://github.com/docker/cli/blob/v29.4.0/cli/command/container/hijack.go#L211)
-// lands on the dup, not on the ddev process's real fd 0. The dup is closed
-// here on restore so it does not leak when compose declines to close it
-// (darwin, windows) or on non-TTY exec where setupInput returns a no-op
-// restore (line 96 in the same file).
-func SetExecStdin(in io.ReadCloser, tty bool) (restore func(), err error) {
+func SetExecStdin(in io.ReadCloser) (restore func(), err error) {
 	dm, err := getDockerManagerInstance()
 	if err != nil {
 		return func() {}, err
-	}
-	var dupFile *os.File
-	if tty {
-		if f, ok := in.(*os.File); ok {
-			if dup, dupErr := dupStdin(f); dupErr == nil && dup != f {
-				// dup != f filters out the windows pass-through, where dupStdin
-				// returns the original *os.File and we must not close it.
-				in = dup
-				dupFile = dup
-			}
-		}
 	}
 	prevIn := dm.cli.In()
 	dm.cli.SetIn(streams.NewIn(in))
 	return func() {
 		dm.cli.SetIn(prevIn)
-		if dupFile != nil {
-			// Compose's hijack may have already closed the underlying fd on
-			// linux TTY paths; *os.File.Close on an already-closed fd returns
-			// an error that is safe to discard.
-			_ = dupFile.Close()
-		}
 	}, nil
 }
 

@@ -353,7 +353,7 @@ func TestSetExecStdinRestoreOnPanic(t *testing.T) {
 	// Read the original stdin from the singleton before the call.
 	// We compare os.Stdin here as a proxy — after restore the CLI's In() will
 	// point back to whatever it was before SetExecStdin ran.
-	restore, err := dockerutil.SetExecStdin(os.Stdin, false)
+	restore, err := dockerutil.SetExecStdin(os.Stdin)
 	require.NoError(t, err)
 
 	func() {
@@ -367,7 +367,7 @@ func TestSetExecStdinRestoreOnPanic(t *testing.T) {
 	// If we get here without the process crashing, restore() ran successfully.
 	// A second call with the same arguments must also succeed, proving stdin
 	// was returned to a state that can accept another SetExecStdin call.
-	restore2, err := dockerutil.SetExecStdin(os.Stdin, false)
+	restore2, err := dockerutil.SetExecStdin(os.Stdin)
 	require.NoError(t, err)
 	restore2()
 }

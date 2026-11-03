@@ -3018,20 +3018,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	var stdoutResult, stderrResult string
 	if opts.NoCapture || opts.Tty {
-		restore, stdinErr := dockerutil.SetExecStdin(os.Stdin, tty)
-		if stdinErr != nil {
-			return "", "", stdinErr
-		}
-		defer restore()
-		execCtx, execSvc, svcErr := dockerutil.NewComposeServiceWithStreams(stdout, stderr)
-		if svcErr != nil {
-			return "", "", svcErr
-		}
-		err = dockerutil.ExitCodeToError(execSvc.Exec(execCtx, execProject.Name, runOpts))
+		err = dockerutil.ExecWithStreams(execProject.Name, runOpts, stdout, stderr)
 	} else {
 		if !isatty.IsTerminal(os.Stdin.Fd()) {
 			// Forward piped stdin so exec commands can read it even without Tty.
-			restore, _ := dockerutil.SetExecStdin(os.Stdin, false)
+			restore, _ := dockerutil.SetExecStdin(os.Stdin)
 			defer restore()
 		}
 		captureCtx, _, captureCtxErr := dockerutil.GetDockerClient()
