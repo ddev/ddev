@@ -171,3 +171,21 @@ func TestRunInteractiveCommandWithCapture(t *testing.T) {
 		require.Equal(t, "\x1b[31mred\x1b[0m\rprogress\n", captured)
 	})
 }
+
+func TestCleanAndCopy(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"\x1b[32mok\x1b[0m\n", "ok\n"},
+		{"\x1b[2Kmigrated\n", "migrated\n"},
+		{"\x1b]7501;state=working:app=composer\x1b\\done\n", "done\n"},
+		{"\x1b]8;;https://ddev.com\x1b\\DDEV\x1b]8;;\x1b\\\n", "DDEV\n"},
+		{"\x1b]0;cut off\nnext line", "\nnext line\n"},
+	}
+	for _, tt := range tests {
+		var out bytes.Buffer
+		require.NoError(t, exec.CleanAndCopy(&out, strings.NewReader(tt.input)))
+		require.Equal(t, tt.want, out.String(), "input=%q", tt.input)
+	}
+}

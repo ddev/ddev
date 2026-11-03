@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/compose-spec/compose-go/v2/loader"
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -197,11 +198,14 @@ func CaptureOutput(fn func(svc api.Compose) error) (string, string, error) {
 }
 
 // cleanOutput strips ANSI escape codes and carriage-return overwrite sequences so
-// captured compose output is safe to embed in log messages and errors.
+// captured compose output is safe to embed in log messages and errors. Each line
+// is stripped on its own, so an unterminated OSC can't swallow the lines after it.
 func cleanOutput(s string) string {
-	s = regexp.MustCompile(`\x1b[^a-zA-Z]*[a-zA-Z]`).ReplaceAllString(s, "")
-	s = strings.ReplaceAll(s, "\r", "")
-	return s
+	lines := strings.Split(s, "\n")
+	for i, line := range lines {
+		lines[i] = ansi.Strip(line)
+	}
+	return strings.ReplaceAll(strings.Join(lines, "\n"), "\r", "")
 }
 
 // SetExecStdin installs `in` as the stdin of the singleton DockerCli for the

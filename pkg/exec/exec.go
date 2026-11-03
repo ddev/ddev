@@ -7,10 +7,10 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"regexp"
 	"strings"
 	"syscall"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/output"
@@ -114,8 +114,8 @@ func RunInteractiveCommandWithCapture(command string, args []string) (string, er
 }
 
 // RunInteractiveCommandWithOutput connects stdin and writes the command's
-// combined output to the passed io.Writer, line by line with ANSI color
-// codes removed. Nothing goes to the terminal unless out writes there.
+// combined output to the passed io.Writer, line by line with ANSI escape
+// sequences removed. Nothing goes to the terminal unless out writes there.
 func RunInteractiveCommandWithOutput(command string, args []string, out io.Writer) error {
 	cmd := HostCommand(command, args...)
 	cmd.Stdin = os.Stdin
@@ -214,17 +214,11 @@ func RunHostCommandSeparateStreams(command string, args ...string) (string, erro
 	return string(o), err
 }
 
-// CleanAndCopy removes control characters from output
+// CleanAndCopy copies src to dst line by line with ANSI escape sequences removed
 func CleanAndCopy(dst io.Writer, src io.Reader) error {
 	scanner := bufio.NewScanner(src)
-	// This regex matches ANSI escape codes that are used for terminal text formatting such as color changes.
-	// \x1b is the ESC character, which starts the escape sequence.
-	// [^m]* matches any character that is not 'm', multiple times. 'm' is the final character in the sequence.
-	// This effectively matches any escape sequence starting with ESC and ending with 'm'.
-	re := regexp.MustCompile(`\x1b[^m]*m`)
 	for scanner.Scan() {
-		cleanString := re.ReplaceAllString(scanner.Text(), "")
-		_, err := io.WriteString(dst, cleanString+"\n")
+		_, err := io.WriteString(dst, ansi.Strip(scanner.Text())+"\n")
 		if err != nil {
 			return err
 		}

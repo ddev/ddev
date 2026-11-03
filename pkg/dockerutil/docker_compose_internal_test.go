@@ -218,3 +218,24 @@ func TestSetupLogrusSuppressionIdempotent(t *testing.T) {
 	require.Same(t, first, second,
 		"second install must be a no-op; otherwise we'd double-wrap and lose the original formatter")
 }
+
+func TestCleanOutput(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"array[0] = 1\n", "array[0] = 1\n"},
+		{"\x1b[32mInstalling\x1b[39m\r\n", "Installing\n"},
+		{"\x1b[?25lHidden\x1b[?25h", "Hidden"},
+		{"\x1b7Saved\x1b8", "Saved"},
+		{"\x1b]7501;state=working:app=composer\x1b\\\x1b[32mNo lock\x1b[39m", "No lock"},
+		{"\x1b]0;title\x07done", "done"},
+		{"\x1b]8;;https://ddev.com\x1b\\DDEV\x1b]8;;\x1b\\", "DDEV"},
+		{"done\x1b]7501;state=done:app=composer", "done"},
+		{"\x1b]0;title\x1b[0mafter", "after"},
+		{"\x1b]0;cut off\nnext line", "\nnext line"},
+	}
+	for _, tt := range tests {
+		require.Equal(t, tt.want, cleanOutput(tt.input), "input=%q", tt.input)
+	}
+}
