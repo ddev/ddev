@@ -105,7 +105,7 @@ The standard approach:
       - NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/node_ca_certs.pem
     hooks:
       post-start:
-        - exec: "cat /mnt/ddev-global-cache/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem"
+        - exec: "cat /usr/local/lib/ddev/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem"
     ```
 
     !!!tip "Apply to all projects"
@@ -114,7 +114,7 @@ The standard approach:
         ```yaml
         hooks:
           post-start:
-            - exec: "if test -f /usr/local/share/ca-certificates/mycorp-ca.crt; then cat /mnt/ddev-global-cache/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem; fi"
+            - exec: "if test -f /usr/local/share/ca-certificates/mycorp-ca.crt; then cat /usr/local/lib/ddev/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem; fi"
         ```
 
 5. Run:

@@ -1926,7 +1926,8 @@ func (app *DdevApp) start(o StartOptions) error {
 		volumeMounts = append(volumeMounts, "ddev-global-cache:/mnt/ddev-global-cache")
 		// ddev-global-cache is shared by every project and user, so it is never
 		// chowned; the sticky bit lets add-ons create their own directories in it.
-		prepCmd.WriteString("chmod 1777 /mnt/ddev-global-cache; ")
+		// Creating mkcert keeps Docker from copying web's mkcert symlink into an empty volume.
+		prepCmd.WriteString("chmod 1777 /mnt/ddev-global-cache; mkdir -p /mnt/ddev-global-cache/mkcert; ")
 	}
 	chownCmd := prepCmd.String()
 	if len(chownPaths) > 0 {
@@ -2080,7 +2081,7 @@ func (app *DdevApp) start(o StartOptions) error {
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
 
-	err = composeUp(project, api.CreateOptions{})
+	err = app.composeUp(project, api.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -2407,7 +2408,7 @@ func (app *DdevApp) imageOnlyProfiles(o StartOptions) *composeTypes.Project {
 // startProfileServices starts the project's services on a running project,
 // leaving the services already running alone.
 func (app *DdevApp) startProfileServices(project *composeTypes.Project) error {
-	if err := composeUp(project, api.CreateOptions{}); err != nil {
+	if err := app.composeUp(project, api.CreateOptions{}); err != nil {
 		return err
 	}
 	defer app.populateGlobalCommandsInBackground()()
@@ -2552,7 +2553,7 @@ func (app *DdevApp) recreateServices(services []string, build *api.BuildOptions)
 	// Unlike a restart, a new container picks up a rebuilt image and config
 	// changes, and skips the delay some healthchecks add after a restart.
 	timeout := time.Duration(app.GetMaxContainerWaitTime()) * time.Second
-	err = composeUp(project, api.CreateOptions{
+	err = app.composeUp(project, api.CreateOptions{
 		Services:             services,
 		Recreate:             api.RecreateForce,
 		RecreateDependencies: api.RecreateNever,

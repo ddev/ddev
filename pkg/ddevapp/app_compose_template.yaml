@@ -33,7 +33,6 @@ services:
       {{ if .SeedSnapshotMountDir }}
       - {{ .SeedSnapshotMountDir }}:{{ .SeedSnapshotMountTarget }}:ro
       {{ end }}
-      - ddev-global-cache:/mnt/ddev-global-cache:ro
       - db-cache:/mnt/ddev-project-cache
     restart: "no"
 
@@ -155,7 +154,6 @@ services:
           {{- end }} {{- /* end if .GitDirMount */}}
         {{- end }} {{- /* end if .MutagenEnabled */}}
       {{- end }} {{- /* end else of if .NoBindMounts */}}
-      - ddev-global-cache:/mnt/ddev-global-cache
       - web-cache:/mnt/ddev-project-cache
       {{- if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
@@ -243,7 +241,7 @@ services:
     - MYSQL_HISTFILE=/mnt/ddev-project-cache/history/mysql_history
     - N_PREFIX=/usr/local/n
     - N_CACHE_PREFIX=/mnt/ddev-project-cache/n_prefix
-    - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
+    - NODE_EXTRA_CA_CERTS=/usr/local/lib/ddev/mkcert/rootCA.pem
     - NODE_REPL_HISTORY=/mnt/ddev-project-cache/history/node_repl_history
     - npm_config_cache=/mnt/ddev-project-cache/npm
     {{- if ne (env "DDEV_PAGER") "" }}

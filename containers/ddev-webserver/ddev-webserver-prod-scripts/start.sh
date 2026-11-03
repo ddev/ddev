@@ -123,7 +123,7 @@ fi
 
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
 mkdir -p ${CAROOT}
-# This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
+# This will install the certs from $CAROOT (/usr/local/lib/ddev/mkcert)
 mkcert -install
 
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert

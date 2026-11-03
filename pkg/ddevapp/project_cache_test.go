@@ -42,9 +42,6 @@ func TestProjectCacheVolumes(t *testing.T) {
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: `echo "db-history" >> "$HISTFILE"`})
 	require.NoError(t, err)
-	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "touch /mnt/ddev-global-cache/should-fail"})
-	require.Error(t, err, "db should mount ddev-global-cache read-only")
-
 	require.NoError(t, app.Restart())
 	out, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: `cat "$HISTFILE"`})
 	require.NoError(t, err)
