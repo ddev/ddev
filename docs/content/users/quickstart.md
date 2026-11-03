@@ -536,9 +536,10 @@ DDEV injects a number of special environment variables into the container (via `
     ddev start
     ```
 
-    Scaffold a new project with Composer:
+    Scaffold a new project with Composer. Craft depends on the `php-http/discovery` Composer plugin, which the starter project does not allow, so allow it first:
 
     ```bash
+    ddev composer config --global allow-plugins.php-http/discovery true
     ddev composer create-project craftcms/craft
     ```
 
@@ -556,6 +557,7 @@ DDEV injects a number of special environment variables into the container (via `
         mkdir -p my-craft-site && cd my-craft-site
         ddev config --project-type=craftcms --docroot=web
         ddev start -y
+        ddev composer config --global allow-plugins.php-http/discovery true
         ddev composer create-project craftcms/craft
         EOF
         chmod +x setup-craft.sh
