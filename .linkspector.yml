@@ -21,6 +21,7 @@ ignorePatterns:
   - pattern: "https://github.com/orgs/ddev"
   - pattern: "https://github.com/watching"
   - pattern: "https://monitor.ddev.com/icingaweb2"
+  - pattern: "https://console.tailscale.com"
   - pattern: "https://analytics.amplitude.com"
   - pattern: "https://stackoverflow.com"
   - pattern: "https://meta.stackoverflow.com"

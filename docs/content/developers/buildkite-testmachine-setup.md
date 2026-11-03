@@ -47,6 +47,166 @@ to run again) and restart the agent afterward:
   instead use `git-mirrors-path="C:\buildkite-agent\git-mirrors"` — check
   `build-path` in the file first.
 
+## Remote Access with Tailscale
+
+Maintainers reach test runners with SSH and screen sharing over a dedicated
+[Tailscale](https://tailscale.com/) tailnet. Chrome Remote Desktop stays set up
+on the runners as a fallback until every runner has been moved over. The tailnet
+carries only human access: `buildkite-agent` and the GitHub runners connect out
+to their services as before and don't depend on it.
+
+Runners are tagged `tag:ddev-runner`. The access policy lets the maintainers'
+group connect to runners but not the reverse, because runners execute pull
+request code.
+
+### Access Policy
+
+In the Tailscale admin console under
+[**Access controls**](https://console.tailscale.com/admin/acls/file):
+
+```jsonc
+{
+  "groups": {
+    "group:ddev-admins": ["<github-username>@github"],
+  },
+
+  "tagOwners": {
+    "tag:ddev-runner": ["group:ddev-admins"],
+  },
+
+  "grants": [
+    {
+      "src": ["group:ddev-admins"],
+      "dst": ["tag:ddev-runner"],
+      "ip":  ["tcp:22", "tcp:3389", "tcp:5900"],
+    },
+  ],
+
+  "ssh": [
+    {
+      "action": "accept",
+      "src":    ["group:ddev-admins"],
+      "dst":    ["tag:ddev-runner"],
+      "users":  ["autogroup:nonroot"],
+    },
+  ],
+}
+```
+
+* A group member must be the login name exactly as the admin console **Users**
+  page shows it. For a GitHub identity that is `<github-username>@github`, not
+  an email address. An email address leaves the group empty, so no rule
+  matches and the runner sees no peers.
+* Use a group, not `autogroup:admin`, as the `ssh` rule source.
+* The `ssh` block applies only to runners using Tailscale SSH (macOS). It has no
+  effect on Windows.
+* `ip` lists SSH (22), RDP for Windows (3389), and Screen Sharing for macOS
+  (5900). The tailnet silently drops other ports, so a working SSH login
+  doesn't show that the screen sharing port is allowed.
+* The **Preview rules** tab shows what a policy allows before you save it.
+
+### Joining as a Maintainer
+
+Install [Tailscale](https://tailscale.com/download) and sign in with GitHub to
+the runner tailnet, `ddev.org.github`, using the login listed in
+`group:ddev-admins`.
+
+On Linux, run `sudo systemctl enable --now tailscaled` first, because some
+distributions, such as Arch, don't enable the service on install. Then sign in
+with `sudo tailscale up --operator=$USER` so later `tailscale` commands and the
+[`tailscale systray`](https://tailscale.com/docs/features/client/linux-systray)
+tray app work without `sudo`. `tailscale login` instead starts a new profile
+without the operator setting and fails with "checkprefs access denied".
+
+### Joining a Runner
+
+Save `tagOwners` before a runner advertises the tag, or the tag is silently
+refused. Install [Tailscale](https://tailscale.com/download), then join the
+tailnet and tag the device:
+
+* macOS: `sudo tailscale up --ssh --advertise-tags=tag:ddev-runner`
+* Windows, in admin PowerShell: `tailscale up --advertise-tags=tag:ddev-runner`
+  (Tailscale SSH isn't supported on Windows)
+
+"Tailscale SSH enabled, but access controls don't allow anyone to access this
+device" means the policy doesn't match anyone yet; it clears once the policy is
+correct.
+
+To join without a browser login, create a reusable, pre-approved auth key with
+`tag:ddev-runner` selected under **Settings** → **Keys** in the admin console,
+then run `tailscale up --auth-key=<key>`, adding `--ssh` on macOS. A device
+joined with a tagged key gets the tag without `--advertise-tags`. Tagged
+devices have key expiry disabled, which unattended runners need. Treat the key
+as a secret.
+
+### macOS Runners
+
+* SSH works through Tailscale SSH and through regular Remote Login (step 7 of
+  [macOS setup](#macos-docker-desktop-test-agent-setup-apple-silicon)).
+* For screen sharing, run
+  [macos_screen_sharing.sh](scripts/macos_screen_sharing.sh) with `sudo`, then
+  connect to `vnc://<runner-name>` with the built-in Screen Sharing app. It
+  turns off Remote Management, which takes over port 5900 when enabled and
+  rejects users without Remote Management privileges as if the password were
+  wrong.
+* On Linux with KDE, connect with KRDC using `vnc`. It needs its optional
+  `libvncserver` dependency; without it KRDC rejects every address with "The
+  entered address does not have the required form".
+
+### Windows Runners
+
+RDP requires Windows Pro, Enterprise, or Education. In admin PowerShell, run
+[windows_remote_access.ps1](scripts/windows_remote_access.ps1), which installs
+the OpenSSH server, enables RDP, and adds SSH keys:
+
+```powershell
+.\windows_remote_access.ps1 -PublicKey '<public-key>'
+```
+
+* Keys go in `C:\ProgramData\ssh\administrators_authorized_keys`, because
+  `sshd` ignores `~\.ssh\authorized_keys` for members of the Administrators
+  group.
+* Connect with Microsoft's Windows App using `<runner-name>` as the PC name.
+  RDP takes over the console session and leaves it locked when you disconnect.
+  On Linux with KDE, use KRDC with `rdp` and its optional `freerdp` dependency.
+* Debug with `ssh -v` and the Event Viewer log under **Applications and
+  Services Logs** → **OpenSSH** → **Operational**.
+* Once key login works, set `PasswordAuthentication no` in
+  `C:\ProgramData\ssh\sshd_config` and run `Restart-Service sshd`. Confirm a new
+  session can still log in before closing the current one.
+
+### Checking Access
+
+From a maintainer's machine signed in to the runner tailnet (`tailscale switch
+<account>` if you use more than one):
+
+* `tailscale status` lists the runner, and the admin console **Machines** page
+  shows it with `tag:ddev-runner`. If it lists only your own machine, your
+  login isn't in `group:ddev-admins`, and `ssh` to a runner can't resolve its
+  name or times out.
+* `tailscale ping <runner-name>` reports a direct path. A path "via DERP" is
+  relayed; it works but is slow for screen sharing.
+* `ssh <user>@<runner-name>` logs in.
+* [check_runner_access.sh](scripts/check_runner_access.sh)
+  `<runner-name> macos|windows` checks each port. "No answer" means the access
+  policy or the runner's firewall drops it; "refused" means nothing is
+  listening on the runner.
+
+### Runners with a Public IP
+
+Joining the tailnet doesn't close ports already open on a public interface.
+For a runner with a public IP:
+
+1. Keep an out-of-band path, such as the hosting provider's console, in case of
+   lockout.
+2. Block inbound traffic on the public interface with the provider's firewall
+   or `pf` on macOS, allowing 22 and 5900 only from the tailnet range
+   `100.64.0.0/10`. The macOS application firewall works per application, so it
+   isn't a substitute.
+3. Allow SSH keys only, and turn off the legacy VNC password option on macOS.
+4. From a machine outside the tailnet, `nmap -Pn <public-ip>` should show 22
+   and 5900 closed or filtered.
+
 ## Windows Test Agent Setup
 
 1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
@@ -70,7 +230,7 @@ to run again) and restart the agent afterward:
     * Uncheck "SBOM Indexing"
     * Under "Resources" uncheck "Resource Saver" — **important**: Docker Desktop may re-enable this after a full restart. Verify it is unchecked after any Docker Desktop upgrade or manual restart. When Resource Saver is active, Docker Desktop pauses the Linux VM when no containers are running; `docker ps` and WSL2 integration fail until it is un-paused, causing spurious test failures.
 12. After starting Docker Desktop or Rancher Desktop, set the correct Docker context in the Git Bash window with `docker context use desktop-linux` (Docker Desktop) or `docker context use default` (Rancher Desktop).
-13. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
+13. Set up [remote access with Tailscale](#remote-access-with-tailscale), including the [OpenSSH server](#windows-runners). As a fallback, log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
 14. (Traditional Windows test runner only): Enable `gd`, `fileinfo`, and `curl` extensions in `/c/tools/php*/php.ini`.
 15. Set the “Sleep after time” setting in settings to never.
 16. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
@@ -89,7 +249,7 @@ to run again) and restart the agent afterward:
 
 1. The Ubuntu distro should be set up with the user `buildkite-agent` and the password used for `ddevtestbot@gmail.com`.
 2. Stop Docker Desktop if it is running.
-3. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
+3. Set up [remote access with Tailscale](#remote-access-with-tailscale) on the Windows host. As a fallback, log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
 4. Windows Terminal should be installed. Set "Ubuntu" (or this distro) as the default and have it start on Windows startup. Enable "copy on select" in behaviors.
 5. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
 6. For a docker-ce/WSL2 runner (`BUILDKITE_DOCKER_TYPE=wsl2` below), Mirrored Mode
@@ -306,7 +466,7 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 
 1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
 2. Change the name of the machine to something in keeping with current style, perhaps `testbot-macos-arm64-8`. This is done in **Settings** → **General** → **About** → **Name** and in **Sharing** → **Computer Name** and in **Sharing** → **Local Hostname**.
-3. Download and install Chrome and log the browser into the account used for test runners. It will pick up the Chrome Remote Desktop setup as a result. Configure Chrome Remote Desktop to serve. When this is done, the machine will be available for remote access and most other tasks can be done using Chrome Remote Desktop.
+3. Set up [remote access with Tailscale](#remote-access-with-tailscale), including [Screen Sharing](#macos-runners). When this is done, most other tasks can be done remotely. As a fallback, install Chrome and log the browser into the account used for test runners, which picks up the Chrome Remote Desktop setup, and configure Chrome Remote Desktop to serve.
 4. The machine should be on the correct network and have a static IP handed out by DHCP. IP addresses are listed in /etc/hosts on `pi.ddev.site`, so this one should be added.
 5. Power should be set up as in ![macos power settings](../images/macos_power_settings.png).
 6. Auto login should be set up as in ![macos users and groups](../images/macos_users_and_groups.png), see [automatically log in on boot](https://support.apple.com/en-us/HT201476).
