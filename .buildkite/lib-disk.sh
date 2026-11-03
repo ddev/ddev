@@ -34,8 +34,8 @@ function host_disk_cleanup {
     echo "Removing orphaned Mutagen caches in ${mutagen_dir}/caches"
     rm -rf "${mutagen_dir}/caches"
   fi
-  # buildx writes a ref file per build and never removes them.
-  if [ -d ~/.docker/buildx/refs ]; then
-    find ~/.docker/buildx/refs -type f -mtime +7 -delete 2>/dev/null || true
-  fi
+  # buildx writes a client-side ref file per build, which `docker buildx prune`
+  # does not touch. Remove them all: no test reads them, and stat-ing 100k of
+  # them for -mtime under Git Bash on Windows outlasted the maintenance timeout.
+  rm -rf ~/.docker/buildx/refs
 }
