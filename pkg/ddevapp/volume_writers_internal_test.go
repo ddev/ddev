@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"strings"
 	"testing"
 
 	"github.com/compose-spec/compose-go/v2/types"
@@ -16,11 +15,8 @@ import (
 )
 
 // knownSharedVolumes are the volumes still attached by more than one service
-// in a way some providers refuse, with what keeps them that way. Keys ending
-// in "-" match any project's volume with that suffix after the project name.
+// in a way some providers refuse, with what keeps them that way.
 var knownSharedVolumes = map[string]string{
-	"ddev-global-cache":         "web mounts it read-write and db read-only, in every project",
-	"-ddev-config":              "with no_bind_mounts, web and db both mount it read-write",
 	"ddev-ssh-agent_socket_dir": "a unix socket can't reach across VMs, so this needs a transport change",
 }
 
@@ -30,10 +26,11 @@ type volumeAttachment struct {
 	readOnly bool
 }
 
-// TestNamedVolumesHaveOneWriter renders two projects and the router, and fails
-// when a named volume is attached read-write by more than one service, or
-// read-write by one and read-only by another. Docker allows both, but Apple
-// container refuses them, so this catches a regression on any provider.
+// TestNamedVolumesHaveOneWriter renders two projects, the router, and the
+// ssh-agent, and fails when a named volume is attached read-write by more than
+// one service, or read-write by one and read-only by another. Docker allows
+// both, but Apple container refuses them, so this catches a regression on any
+// provider.
 func TestNamedVolumesHaveOneWriter(t *testing.T) {
 	origNoBindMounts := globalconfig.DdevGlobalConfig.NoBindMounts
 	t.Cleanup(func() { globalconfig.DdevGlobalConfig.NoBindMounts = origNoBindMounts })
@@ -63,14 +60,20 @@ func TestNamedVolumesHaveOneWriter(t *testing.T) {
 			require.NoError(t, err)
 			addVolumeAttachments(attachments, router)
 
+			sshCompose, err := apps[0].CreateSSHAuthComposeFile()
+			require.NoError(t, err)
+			sshAgent, err := dockerutil.LoadComposeProject([]string{sshCompose}, api.ProjectLoadOptions{ProjectName: SSHAuthName})
+			require.NoError(t, err)
+			addVolumeAttachments(attachments, sshAgent)
+
 			var problems []string
 			stillShared := map[string]bool{}
 			for _, name := range slices.Sorted(maps.Keys(attachments)) {
 				if !sharedUnsafely(attachments[name]) {
 					continue
 				}
-				if key := knownSharedVolumeKey(name); key != "" {
-					stillShared[key] = true
+				if _, ok := knownSharedVolumes[name]; ok {
+					stillShared[name] = true
 					continue
 				}
 				problems = append(problems, fmt.Sprintf("%s: %v", name, attachments[name]))
@@ -110,13 +113,4 @@ func sharedUnsafely(attached []volumeAttachment) bool {
 		}
 	}
 	return writers > 1 || (writers == 1 && len(attached) > 1)
-}
-
-func knownSharedVolumeKey(name string) string {
-	for key := range knownSharedVolumes {
-		if name == key || (strings.HasPrefix(key, "-") && strings.HasSuffix(name, key)) {
-			return key
-		}
-	}
-	return ""
 }
