@@ -10,7 +10,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -648,7 +647,7 @@ func ExtractTarballWithCleanup(tarball string, removeTopLevel bool) (string, fun
 		if len(list) == 0 {
 			return "", cleanupFunc, fmt.Errorf("no files found in %v", tmpDir)
 		}
-		extractedDir = path.Join(tmpDir, list[0])
+		extractedDir = filepath.Join(tmpDir, list[0])
 	}
 	return extractedDir, cleanupFunc, nil
 }

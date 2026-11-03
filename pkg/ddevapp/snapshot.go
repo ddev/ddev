@@ -574,7 +574,7 @@ func (app *DdevApp) snapshotRestoreContainerCommand(snapshotPath string) string 
 		return RestoreSnapshotCommand + " " + snapshotPath
 	}
 
-	if !path.IsAbs(snapshotPath) {
+	if !path.IsAbs(snapshotPath) { //nolint:forbidigo // container path
 		snapshotPath = path.Join("/mnt/snapshots", snapshotPath)
 	}
 	tarExtract := "-zxf"

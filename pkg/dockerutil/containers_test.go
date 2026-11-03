@@ -704,5 +704,5 @@ func TestCopyFromContainer(t *testing.T) {
 	err = dockerutil.CopyFromContainer(testContainerName, containerSourceDir, targetDir)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(targetDir, path.Base(containerSourceDir), containerExpectedFile))
+	assert.FileExists(filepath.Join(targetDir, path.Base(containerSourceDir), containerExpectedFile)) //nolint:forbidigo // container path
 }

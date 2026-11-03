@@ -97,7 +97,7 @@ func (app *DdevApp) GetHostUploadDirFullPath() string {
 // directory in container or "" if there is none.
 func (app *DdevApp) calculateContainerUploadDirFullPath(uploadDir string) string {
 	if uploadDir != "" {
-		return path.Clean(path.Join(app.GetAbsDocroot(true), uploadDir))
+		return path.Join(app.GetAbsDocroot(true), uploadDir)
 	}
 
 	return ""

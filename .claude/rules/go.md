@@ -11,11 +11,10 @@ Two mistakes account for nearly all Windows breakage here, and neither shows up
 on the machine where the change is written — passing tests on macOS or Linux is
 not evidence either way.
 
-**`path` vs `path/filepath`.** Use `filepath` for anything touching the host
-filesystem — file paths, directory listings, anything passed to `os.*`. Use
-`path` only for what is always forward-slash regardless of host OS: paths inside
-a Docker container, URLs, embedded and import paths. Using `path`, or a manual
-`"/"` join, for a host path silently produces a wrong path on Windows.
+**`path` vs `path/filepath`.** Use `filepath` for host paths, and `path` only
+for paths inside a container, URLs, and embed paths. golangci-lint flags the
+other `path` functions, but not `path.Join` or a manual `"/"` join on a host
+path.
 
 **Line endings.** Windows tools can produce CRLF. When removing line endings
 from command output or text files, handle both `\r` and `\n`, for example

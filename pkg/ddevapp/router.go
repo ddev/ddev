@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"maps"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -70,14 +69,14 @@ var RouterPortSubstitutions = make(map[string]string)
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
 	globalDir := globalconfig.GetGlobalDdevDir()
-	dest := path.Join(globalDir, ".router-compose.yaml")
+	dest := filepath.Join(globalDir, ".router-compose.yaml")
 	return dest
 }
 
 // FullRenderedRouterComposeYAMLPath returns the path of the full rendered .router-compose-full.yaml
 func FullRenderedRouterComposeYAMLPath() string {
 	globalDir := globalconfig.GetGlobalDdevDir()
-	dest := path.Join(globalDir, ".router-compose-full.yaml")
+	dest := filepath.Join(globalDir, ".router-compose-full.yaml")
 	return dest
 }
 

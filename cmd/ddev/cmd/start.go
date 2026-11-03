@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/amplitude"
@@ -43,7 +43,7 @@ ddev start --reset-database -y`,
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		// Create a global state to be injected later.
-		state := yaml.NewState(path.Join(globalconfig.GetGlobalDdevDir(), ".state.yaml"))
+		state := yaml.NewState(filepath.Join(globalconfig.GetGlobalDdevDir(), ".state.yaml"))
 
 		// TODO: For the time being this triggers the download from GitHub but
 		// should be realized with a clean bootstrap as soon as it exists. The

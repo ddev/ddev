@@ -288,6 +288,8 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 			newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
 			require.NoError(t, err)
 			require.True(t, newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedGitIgnoreLocation)
+		} else {
+			require.NoFileExists(t, expectedGitIgnoreLocation)
 		}
 	}
 }

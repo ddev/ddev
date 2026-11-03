@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -372,7 +371,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		// there is almost certainly already a gitignore (like Backdrop)
 		// Don't accidentally override the existing .ddev/.gitignore as well
 		// TODO: we may want to append to .ddev/.gitignore if needed.
-		if path.Dir(app.SiteSettingsPath) != app.AppRoot && path.Dir(app.SiteSettingsPath) != app.GetConfigPath("") && app.SiteDdevSettingsFile != "" {
+		if filepath.Dir(app.SiteSettingsPath) != app.AppRoot && filepath.Dir(app.SiteSettingsPath) != app.GetConfigPath("") && app.SiteDdevSettingsFile != "" {
 			if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), nil, filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 				util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 			}
@@ -427,7 +426,7 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
 		// We don't create gitignore if it would be in top-level directory, where
 		// there is almost certainly already a gitignore (like Backdrop)
-		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
+		if filepath.Dir(app.SiteSettingsPath) != app.AppRoot {
 			allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(filepath.Join(filepath.Dir(app.SiteSettingsPath), ".gitignore")))...)
 		}
 	}

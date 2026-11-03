@@ -12,6 +12,7 @@ linters:
   default: none
   enable:
     - errcheck
+    - forbidigo
     - govet
     - ineffassign
     - modernize
@@ -22,6 +23,13 @@ linters:
     #- testifylint
     #- usetesting
   settings:
+    forbidigo:
+      analyze-types: true
+      forbid:
+        # path treats only "/" as a separator, so these break Windows host paths.
+        # path.Join stays allowed for container and embed paths.
+        - pattern: ^path\.(Base|Clean|Dir|Ext|IsAbs|Match|Split)$
+          msg: use path/filepath for host paths; add //nolint:forbidigo with the reason for a container path, URL or embed path
     staticcheck:
       checks:
         - all
