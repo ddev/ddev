@@ -61,7 +61,8 @@ request code.
 
 ### Access Policy
 
-In the Tailscale admin console under **Access controls**:
+In the Tailscale admin console under
+[**Access controls**](https://console.tailscale.com/admin/acls/file):
 
 ```jsonc
 {
@@ -104,6 +105,19 @@ In the Tailscale admin console under **Access controls**:
   doesn't show that the screen sharing port is allowed.
 * The **Preview rules** tab shows what a policy allows before you save it.
 
+### Joining as a Maintainer
+
+Install [Tailscale](https://tailscale.com/download) and sign in with GitHub to
+the runner tailnet, `ddev.org.github`, using the login listed in
+`group:ddev-admins`.
+
+On Linux, run `sudo systemctl enable --now tailscaled` first, because some
+distributions, such as Arch, don't enable the service on install. Then sign in
+with `sudo tailscale up --operator=$USER` so later `tailscale` commands and the
+[`tailscale systray`](https://tailscale.com/docs/features/client/linux-systray)
+tray app work without `sudo`. `tailscale login` instead starts a new profile
+without the operator setting and fails with "checkprefs access denied".
+
 ### Joining a Runner
 
 Save `tagOwners` before a runner advertises the tag, or the tag is silently
@@ -135,6 +149,9 @@ as a secret.
   turns off Remote Management, which takes over port 5900 when enabled and
   rejects users without Remote Management privileges as if the password were
   wrong.
+* On Linux with KDE, connect with KRDC using `vnc`. It needs its optional
+  `libvncserver` dependency; without it KRDC rejects every address with "The
+  entered address does not have the required form".
 
 ### Windows Runners
 
@@ -151,6 +168,7 @@ the OpenSSH server, enables RDP, and adds SSH keys:
   group.
 * Connect with Microsoft's Windows App using `<runner-name>` as the PC name.
   RDP takes over the console session and leaves it locked when you disconnect.
+  On Linux with KDE, use KRDC with `rdp` and its optional `freerdp` dependency.
 * Debug with `ssh -v` and the Event Viewer log under **Applications and
   Services Logs** → **OpenSSH** → **Operational**.
 * Once key login works, set `PasswordAuthentication no` in
@@ -163,7 +181,9 @@ From a maintainer's machine signed in to the runner tailnet (`tailscale switch
 <account>` if you use more than one):
 
 * `tailscale status` lists the runner, and the admin console **Machines** page
-  shows it with `tag:ddev-runner`.
+  shows it with `tag:ddev-runner`. If it lists only your own machine, your
+  login isn't in `group:ddev-admins`, and `ssh` to a runner can't resolve its
+  name or times out.
 * `tailscale ping <runner-name>` reports a direct path. A path "via DERP" is
   relayed; it works but is slow for screen sharing.
 * `ssh <user>@<runner-name>` logs in.
