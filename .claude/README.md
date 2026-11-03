@@ -39,6 +39,21 @@ before each Bash command. PATH cannot go in the `env` block, whose values are
 literal: `$PATH` and `$HOME` arrive unexpanded. `make` does not depend on this
 hook, since the `Makefile` prepends the dev-tools directories itself.
 
+## Pushes
+
+The `ask` rule makes Claude prompt for every `git push`, in every permission
+mode including auto and bypass. It cannot see forms like `git -C dir push` or
+`bash -c "git push"`, so `git-hooks/pre-push` is the backstop: it refuses
+pushes to `ddev/ddev` under any remote name, tag pushes, deletions, and
+non-fast-forwards, whatever command started the push.
+
+A second SessionStart hook sets `core.hooksPath` to `.claude/git-hooks`
+through `GIT_CONFIG_*` variables, so it applies only to Claude's shells and
+leaves `.git/config` alone. While it is set, git skips the repository's own
+`.git/hooks` other than `pre-push`, which the hook chains to. The deny rules on
+`--no-verify` and `core.hooksPath` keep Claude from switching the backstop
+off by accident; they are not a security boundary.
+
 ## Permissions
 
 Every rule has a space before its `*`: `Bash(tr *)` matches only `tr`, while

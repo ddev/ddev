@@ -33,8 +33,11 @@ rules below by hand. With it:
 - Every test variable in the Testing table below is preset.
 - Editing a `.go` file runs `make golangci-lint-fix` on its package, which can
   change other files there. Editing a `.md` file lints and fixes that file.
-- Common forms of `git push`, `docker push`, `go build`, and clearing
-  `GOTEST_SHORT` are denied; the rules below still apply to any other form.
+- `git push` asks for approval every time, and a `pre-push` hook in
+  `.claude/git-hooks/` refuses pushes to `ddev/ddev`, deletions, and
+  non-fast-forwards.
+- Common forms of `docker push`, `go build`, and clearing `GOTEST_SHORT` are
+  denied; the rules below still apply to any other form.
 - The PATH from `.envrc`, with the built `ddev` and the docs tools, applies to
   every Bash call.
 
@@ -168,11 +171,13 @@ delete the word, and if that changes the meaning, the claim needed evidence.
 
 ## Git workflow
 
-**Commit locally, never publish.** Committing, branching, and amending local
-commits are expected. **Never run `git push` or `docker push`**, even when an
-open PR, a CI run, or a `raw.githubusercontent.com` URL waits on it, and do not
-offer to. Finish at the commit, report which commits are unpushed, and say when
-a next step needs the maintainer to push.
+**Commit locally; push only to a fork, with approval.** Committing, branching,
+and amending local commits are expected. Push a branch only after the user
+approves that push, only to a fork such as `rfay/ddev`, **never to
+`ddev/ddev`**, and never with `--force`, `--delete`, or `--no-verify`. **Never
+run `docker push`.** When there is no fork to push to, finish at the commit,
+report which commits are unpushed, and say the next step needs the maintainer
+to push.
 
 When creating a branch, use `YYYYMMDD_<username>_<short_description>`, for
 example `20250108_rfay_fix_networking`. Create one from upstream rather than
