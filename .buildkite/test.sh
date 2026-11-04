@@ -147,7 +147,7 @@ ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh"
 
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"
-${TIMEOUT} 60s bash "$(dirname "$0")/sanetestbot.sh"
+${TIMEOUT} 5m bash "$(dirname "$0")/sanetestbot.sh"
 
 # Rootless podman cannot bind privileged ports (<1024), so the DDEV router must
 # use non-privileged ports. This must run AFTER testbot_maintenance.sh, which
