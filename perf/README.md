@@ -119,18 +119,23 @@ under `perf/fixtures/large-tree/` (gitignored) and reused on subsequent runs.
 - **Over time, within one leg**: meaningful, with the caveat that the round-robin pools
   (`tb-macos-arm64-5/6/7`) can land a given provider on a different physical machine each night.
 
+## Regression alerts
+
+`perf/collector/detect-regressions.js`, run by `perf-collect.yml` after each nightly
+collection, opens a GitHub issue labeled `perf-regression` for each leg with a sustained
+slowdown. See "Regression signal" in `perf/collector/README.md` for the rule.
+
 ## Relationship to `perf-start-time.yml`
 
-`.github/workflows/perf-start-time.yml` predates this harness and overlaps it: it also measures
-`ddev start` and `ddev utility rebuild` on Linux nightly, and exists for the same regression
-(#8600) that `ddev_rebuild_s` cites. The two are kept separate on purpose and are not redundant:
+`.github/workflows/perf-start-time.yml` also measures `ddev start` and `ddev utility rebuild`
+on Linux, for the same regression (#8600) that `ddev_rebuild_s` cites. The two do different jobs:
 
-- `perf-start-time.yml` is a **gate**: it also runs on PRs touching the build-layer files, compares
-  against a baseline ref in the same job on the same machine, and is meant to fail.
-- This harness is a **trend record**: nightly, cross-provider, absolute numbers, no pass/fail.
-
-Neither supersedes the other. If `ddev_rebuild_s`/`ddev_start_cold_s` here ever become a CI gate,
-revisit — at that point one of them should go.
+- `perf-start-time.yml` is a **PR check**. It runs on PRs that touch project start/build code or
+  the images DDEV starts, compares the PR against its base commit on the same runner, and fails
+  when start or rebuild is both 50% and 5s slower (`compare-start-perf.sh -f 50 -s 5`).
+- This harness is the **trend record** for `main`: nightly, cross-provider, absolute numbers,
+  with regression issues filed from it. `perf-start-time.yml` no longer runs nightly or on
+  push, since `perf-linux.yml` covers the same setup.
 
 ## Assumption: one Buildkite agent per testbot
 

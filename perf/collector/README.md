@@ -10,6 +10,9 @@ should have finished.
   separate jobs in the same build), plus the latest successful `perf-linux.yml`
   run's artifact, and appends one line per leg to `history.ndjson` on the
   `performance-data` branch.
+- `detect-regressions.js` reads that `history.ndjson` and files
+  `perf-regression` issues for sustained slowdowns; see
+  [Regression signal](#regression-signal).
 - `collect-test-runtime.js` is a separate dataset: total runtime per CI test
   type (`golang-nginx-fpm`, `macos-lima`, `quickstart`, etc.), not narrow
   synthetic benchmarks. It pulls completed `main`-branch runs for every
@@ -111,13 +114,13 @@ should have finished.
   HANDOFF.md). An earlier version of this put both behind one `<select>` on
   one page; that implied a relationship between them that doesn't exist, so
   it was split.
-  - `dashboard-common.js` + `dashboard-common.css` are the shared engine and
+    - `dashboard-common.js` + `dashboard-common.css` are the shared engine and
     styling both pages use -- everything dataset-agnostic (trend/compare
     chart drawing, the workflow/runner checkbox boxes, CSV export). A page
     calls `initDashboard(config)` once with its own small config object
     (which file to fetch, how to key/filter/format its rows); there's no
     dataset switching inside the engine itself.
-  - `perf-dashboard.html` is the nightly perf benchmarks page (deploys as
+    - `perf-dashboard.html` is the nightly perf benchmarks page (deploys as
     `/perf/index.html`): filterable by metric and by leg
     (platform/arch/docker provider). Two views: a per-metric trend line over
     time (the default), and a "Compare environments" bar chart -- one bar
@@ -126,11 +129,11 @@ should have finished.
     for the fact that legs run on different physical/virtual machines --
     it's comparing Docker-provider/platform overhead, which is the point,
     not controlling for hardware.
-  - `ci-dashboard.html` is the CI test-runtime page (deploys as
+    - `ci-dashboard.html` is the CI test-runtime page (deploys as
     `/perf/ci/index.html`): same trend/compare views, filterable by test
     type and (for Buildkite pipelines) by runner machine -- see
     `collect-test-runtime.js`'s section above for what the data means.
-  - `per-test-dashboard.html` is the per-test timing page (deploys as
+    - `per-test-dashboard.html` is the per-test timing page (deploys as
     `/perf/ci/tests/index.html`): a sortable, searchable table of every
     tracked test (see `collect-per-test.js` above for what "tracked" means),
     showing its latest duration, trailing median, and percent change: a row
@@ -142,7 +145,7 @@ should have finished.
     per-leg checkbox/trend model, and a checkbox per tracked test wouldn't
     scale the way a search box does. It does reuse `dashboard-common.css`
     for visual consistency.
-  - Both pages have a "Download CSV" link exporting the rows behind whichever
+    - Both pages have a "Download CSV" link exporting the rows behind whichever
     chart and filters are currently on screen -- for slide decks or
     spreadsheets, so numbers quoted from a presentation match what the
     dashboard shows.
@@ -175,9 +178,28 @@ These can't be done from the repo itself:
 
 ## Regression signal
 
-Kept intentionally simple for now: `dashboard-common.js` computes, per leg
-and metric, the trailing median of the last 10 points and marks any point
-more than 20% above it in red -- on both pages. This is a visual flag only —
-nothing fails CI or pages anyone on it yet. Revisit once the signal has been
-observed to be trustworthy over a few weeks (see the main plan/README for
-why).
+Two signals use the same history:
+
+- **Dashboard flag**: `dashboard-common.js` marks in red any point more than 20% above the
+  trailing median of the last 10 points for its leg and metric, on all three pages. It is a
+  visual cue only, and single-night noise trips it often.
+- **Regression alerts**: `detect-regressions.js` runs in `perf-collect.yml` after collection,
+  on `history.ndjson` only. For each leg and metric it takes the median of the 14 nights before
+  the last 3, and flags the metric when each of the last 3 nights is above the largest of
+  +20%, +2s, and +3σ (σ estimated from the median absolute deviation). It skips legs with no
+  result in the last 3 days.
+
+  Each flagged leg gets one open issue labeled `perf-regression`, titled
+  `Nightly perf regression: <leg>`, with the metrics, values, and a compare link for the
+  commits between the last good and first slow night. While that issue is open, the check
+  comments on it only when another metric on that leg regresses; closing it is left to a
+  person. Runs on any branch other than `main` are dry runs that only write the step summary.
+
+  Replayed over the history from August to early November 2026, the rule raised 7 alerts across
+  12 legs. Run it locally against the published data with:
+
+  ```bash
+  git fetch origin performance-data
+  git show origin/performance-data:history.ndjson > ~/tmp/history.ndjson
+  node perf/collector/detect-regressions.js ~/tmp/history.ndjson --dry-run
+  ```

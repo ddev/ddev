@@ -35,6 +35,7 @@ on:
 permissions:
   contents: write
   actions: write
+  issues: write
 
 concurrency:
   group: perf-collect
@@ -174,6 +175,16 @@ jobs:
         # took down the real public /perf/ page (dropped dashboard-common.js
         # /css and the new /perf/ci/ page) while testing this PR pre-merge.
         run: gh workflow run docs-publish.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.ref_name }}"
+
+      # Opens or comments on a perf-regression issue per leg with a sustained
+      # slowdown; see "Regression signal" in perf/collector/README.md. Runs
+      # dry on any branch but main, so testing this workflow files no issues.
+      - name: Detect sustained regressions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node perf/collector/detect-regressions.js ../performance-data/history.ndjson \
+            ${{ github.ref != 'refs/heads/main' && '--dry-run' || '' }}
 
       # Deliberately last: collect.js exits 0 even when a source failed, so
       # the commit/push and docs-publish steps above still run and publish
