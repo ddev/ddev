@@ -38,8 +38,12 @@
       "WebFetch(domain:docs.ddev.com)",
       "WebFetch(domain:code.claude.com)"
     ],
+    "ask": [
+      "Bash(git push *)"
+    ],
     "deny": [
-      "Bash(git push *)",
+      "Bash(git push *--no-verify*)",
+      "Bash(git *core.hooksPath*)",
       "Bash(docker push *)",
       "Bash(go build *)",
       "Bash(GOTEST_SHORT= *)",
@@ -61,6 +65,14 @@
             "args": [
               "-c",
               "cd \"$CLAUDE_PROJECT_DIR\" && source .envrc && printf 'export PATH=%q\\n' \"$PATH\" >> \"$CLAUDE_ENV_FILE\""
+            ]
+          },
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [
+              "-c",
+              "n=${GIT_CONFIG_COUNT:-0}; printf 'export GIT_CONFIG_KEY_%d=core.hooksPath GIT_CONFIG_VALUE_%d=%q GIT_CONFIG_COUNT=%d\\n' \"$n\" \"$n\" \"$CLAUDE_PROJECT_DIR/.claude/git-hooks\" $((n + 1)) >> \"$CLAUDE_ENV_FILE\""
             ]
           }
         ]
