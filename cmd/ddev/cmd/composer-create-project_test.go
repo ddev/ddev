@@ -350,4 +350,7 @@ func TestWrapWithPipedInput(t *testing.T) {
 	require.Equal(t, []string{"bash", "-c"}, wrapped[:2])
 	require.Equal(t, append([]string{"/tmp/abc-input"}, cmd...), wrapped[3:])
 	require.Equal(t, []string{"DDEV_PIPED_INPUT=x\n"}, env)
+
+	_, env = wrapWithPipedInput([]byte("x\ny"), "/tmp/abc-input", cmd)
+	require.Equal(t, []string{"DDEV_PIPED_INPUT=x\ny\n"}, env)
 }

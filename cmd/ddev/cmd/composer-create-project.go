@@ -609,6 +609,12 @@ func wrapWithPipedInput(data []byte, inputFile string, cmd []string) ([]string, 
 	if len(data) == 0 {
 		return cmd, nil
 	}
+	// In a PTY, a last answer without a newline arrives only with script's EOF,
+	// up to 0.25s after the step's last read, which can miss the 0.2s wait below.
+	input := string(data)
+	if !strings.HasSuffix(input, "\n") {
+		input += "\n"
+	}
 	// $0 is inputFile, created on the first step. When a step fails ddev
 	// stops, so the unread answers are deleted.
 	const wrapper = `export DDEV_INPUT_FILE=$0
@@ -626,7 +632,7 @@ else
   rm -f "$DDEV_INPUT_FILE" "$DDEV_INPUT_FILE.left"
 fi
 exit $status`
-	return append([]string{"bash", "-c", wrapper, inputFile}, cmd...), []string{"DDEV_PIPED_INPUT=" + string(data)}
+	return append([]string{"bash", "-c", wrapper, inputFile}, cmd...), []string{"DDEV_PIPED_INPUT=" + input}
 }
 
 // ComposerCreateCmd does the same thing as "ddev composer create-project".
