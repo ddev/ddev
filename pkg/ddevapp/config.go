@@ -1612,15 +1612,6 @@ RUN mkdir -p /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/l
 RUN rm -f /usr/local/lib/ddev/ddev-keep-root.so
 `
 		}
-
-		// Files from containers/ddev-webserver/ddev-webserver-base-files/var/www/html
-		// are added to host on `ddev start` when using Podman with Mutagen enabled
-		if dockerutil.IsPodman() && app.IsMutagenEnabled() {
-			contents = contents + `
-### DDEV-injected cleanup of /var/www/html for Podman with Mutagen
-RUN rm -rf /var/www/html && mkdir -p /var/www/html
-`
-		}
 	}
 
 	return WriteImageDockerfile(fullpath, []byte(contents))

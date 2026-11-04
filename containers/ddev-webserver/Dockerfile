@@ -109,7 +109,8 @@ RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-insta
     jq \
     msmtp \
     nginx \
-    sqlite3
+    sqlite3 && \
+    rm -f /var/www/html/index.html /var/www/html/index.nginx-debian.html
 
 # Add the ddev-keep-root.so shim (see ddev-keep-root.c). It does nothing unless
 # DDEV_KEEP_ROOT is set, and DDEV deletes it from the web image unless it is

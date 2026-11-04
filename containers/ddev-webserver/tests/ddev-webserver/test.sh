@@ -62,10 +62,12 @@ function containerwait {
 }
 
 # Like DDEV, copy the host's CA into $CAROOT before the container starts, so
-# start.sh signs the webserver's certificate with it. Arguments go to docker create.
+# start.sh signs the webserver's certificate with it, and add the test fixtures.
+# Arguments go to docker create.
 function runwebserver {
   docker create "$@" --name "$CONTAINER_NAME" "$DOCKER_IMAGE" >/dev/null
   docker cp "$CA_COPY_DIR/." "$CONTAINER_NAME:/usr/local/lib/ddev/mkcert"
+  docker cp "$DIR/fixtures/test" "$CONTAINER_NAME:/var/www/html/test"
   docker start "$CONTAINER_NAME" >/dev/null
 }
 
