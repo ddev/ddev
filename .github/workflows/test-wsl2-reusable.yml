@@ -72,13 +72,15 @@ jobs:
           wsl --shutdown
 
       - name: Install WSL2 distribution
+        timeout-minutes: 15
         shell: pwsh
         run: |
+          wsl --version
           Write-Host "Setting WSL default version to 2"
           wsl --set-default-version 2
           Write-Host "Installing DDEV Ubuntu distro"
           wsl --install --name DDEV --no-launch
-          # Create testuser, enable systemd, set default user
+          Write-Host "Creating testuser and enabling systemd"
           wsl -d DDEV --user root bash -c "useradd -m -s /bin/bash testuser && echo 'testuser:password' | chpasswd && usermod -aG sudo testuser && printf '[boot]\nsystemd=true\n\n[user]\ndefault=testuser\n' > /etc/wsl.conf"
           # WSL owns binfmt_misc (for WSLInterop) and newer releases mount it read-only, so systemd-binfmt fails.
           wsl -d DDEV --user root ln -sf /dev/null /etc/systemd/system/systemd-binfmt.service
