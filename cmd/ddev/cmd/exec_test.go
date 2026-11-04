@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -43,6 +44,11 @@ func TestCmdExecTerminalChild(t *testing.T) {
 	require.NoError(t, err)
 	// 200 KB, more than Linux allows in one environment variable.
 	bigArgs := slices.Repeat([]string{strings.Repeat("a", 2000)}, 100)
+	// Engines word this error differently; Podman's says only "received 500".
+	// The test binary can't start a child, so ExecWithStreams runs in-process.
+	badUserOpts := api.RunOptions{Service: "web", User: "nosuchuser", Command: []string{"true"}}
+	inProcessErr := dockerutil.ExecWithStreams(app.GetComposeProjectName(), badUserOpts, io.Discard, io.Discard)
+	require.Error(t, inProcessErr)
 
 	tests := []struct {
 		name    string
@@ -51,7 +57,7 @@ func TestCmdExecTerminalChild(t *testing.T) {
 		wantErr string
 	}{
 		{"exit status", api.RunOptions{Service: "web", Command: []string{"sh", "-c", "echo out; exit 3"}}, "out\n", "exit status 3"},
-		{"daemon error", api.RunOptions{Service: "web", User: "nosuchuser", Command: []string{"true"}}, "", "unable to find user nosuchuser"},
+		{"daemon error", badUserOpts, "", inProcessErr.Error()},
 		{"large options", api.RunOptions{Service: "web", Command: append([]string{"sh", "-c", "echo $#", "x"}, bigArgs...)}, "100\n", ""},
 	}
 	for _, tc := range tests {
