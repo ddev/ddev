@@ -44,7 +44,7 @@ DDEV takes care of Docker for you, so you and your team can focus on your work. 
 - 🔧 **Your stack, your choice:** [Supported PHP versions](https://docs.ddev.com/en/stable/users/configuration/config/#php_version), [Nginx or Apache](https://docs.ddev.com/en/stable/users/configuration/config/#webserver_type), and [MariaDB, MySQL, or PostgreSQL](https://docs.ddev.com/en/stable/users/extend/database-types/), per project. And any version of Node.js you need.
 - 🧩 **Easy to extend:** a growing set of [add-ons](https://addons.ddev.com) for extra services and integrations, and custom commands are ordinary shell scripts.
 - 🖥️ **Runs everywhere:** macOS, Windows, WSL2, Linux, and GitHub Codespaces, on both ARM64 and AMD64.
-- 🔒 **Included out of the box:** trusted HTTPS, Xdebug, database snapshots, and hosting integrations with [Upsun (formerly Platform.sh)](https://upsun.com), [Pantheon](https://pantheon.io), [Acquia](https://www.acquia.com), and others.
+- 🔒 **Included out of the box:** trusted HTTPS, Xdebug, database snapshots, and hosting integrations with [Upsun (formerly Platform.sh)](https://upsun.com), [Pantheon](https://pantheon.io), [Acquia](https://www.acquia.com), [Drupito](https://drupito.com), and others.
 - 💙 **Run by the community:** free and open source, cared for by the nonprofit [DDEV Foundation](https://ddev.com/foundation/).
 
 ## Everyday commands
