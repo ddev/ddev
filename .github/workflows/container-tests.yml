@@ -88,6 +88,18 @@ jobs:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
+      # Some ubuntu-26.04 VMs have a 72G disk with only 18G free.
+      - name: Remove unnecessary items on disk
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
+
       - name: Install test dependencies (linux-setup.sh)
         if: matrix.os == 'ubuntu-26.04'
         run: ./.github/workflows/linux-setup.sh
@@ -120,7 +132,14 @@ jobs:
           if [[ "${{ matrix.containers }}" == "dbserver" ]]; then
             pushd containers/ddev-dbserver
             echo "--- Test container dbserver"
-            time make test DOCKER_ARGS="--no-cache"
+            # One variant at a time, so only one image and its build cache are on disk at once
+            for target in $(./variants.sh build-targets "$(../get_arch.sh)"); do
+              time make "${target}" DOCKER_ARGS="--no-cache"
+              make "${target%_*}_test"
+              docker image prune -af >/dev/null
+              docker buildx prune -af >/dev/null
+              df -h /
+            done
             popd
 
           elif [[ "${{ matrix.containers }}" == "webserver" ]]; then
