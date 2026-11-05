@@ -323,6 +323,9 @@ assert_eq "0" "$(log_count DELETE)" "too many tags delete nothing"
 
 NOT_CANDIDATES="ddev/ddev-webserver:v1.1.0 ddev/ddev-webserver:4444444444 ddev/ddev-webserver:gone"
 serve_fixture
+assert_eq "  ddevhq/ddev-webserver:junk  not in ddev" \
+  "$("$CLEANUP_SH" ddevhq/ddev-webserver:junk ddev/ddev-webserver:junk 2>/dev/null | sed -n '/^Skipped/,$p' | tail -n +2)" \
+  "a tag of another organization is skipped as not in DOCKER_ORG"
 assert_fails_with "none of the tags given is a candidate" "a dry run of tags that aren't candidates fails" "$CLEANUP_SH" "$NOT_CANDIDATES"
 assert_fails_with "none of the tags given is a candidate" "--execute of tags that aren't candidates fails" \
   env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --execute "$NOT_CANDIDATES"
