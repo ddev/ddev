@@ -95,12 +95,11 @@ case "$REBUILD_RUNS" in
   ''|*[!0-9]*) echo "Error: -b must be a non-negative integer" >&2; exit 1 ;;
 esac
 
-case "$FAIL_PCT" in
-  *[!0-9.]*) echo "Error: -f must be a non-negative number" >&2; exit 1 ;;
-esac
-case "$FAIL_SECS" in
-  ''|*[!0-9.]*) echo "Error: -s must be a non-negative number" >&2; exit 1 ;;
-esac
+is_number() { printf '%s\n' "$1" | grep -Eq '^[0-9]+(\.[0-9]+)?$'; }
+if [ -n "$FAIL_PCT" ] && ! is_number "$FAIL_PCT"; then
+  echo "Error: -f must be a non-negative number" >&2; exit 1
+fi
+is_number "$FAIL_SECS" || { echo "Error: -s must be a non-negative number" >&2; exit 1; }
 
 # Map Mutagen mode to the config flag value and the config.yaml key fallback.
 case "$MUTAGEN_MODE" in

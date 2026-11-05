@@ -44,9 +44,27 @@ function readHistory(path) {
   return rows;
 }
 
+// Collapses a leg's rows into one point per UTC date for a metric, so the
+// windows below count nights even when a leg records more than one run a night.
+function nightly(legRows, metric) {
+  const byDate = new Map();
+  for (const row of legRows) {
+    if (typeof row.metrics[metric] !== 'number') continue;
+    const date = row.timestamp.slice(0, 10);
+    if (!byDate.has(date)) byDate.set(date, []);
+    byDate.get(date).push(row);
+  }
+  return [...byDate].map(([date, dayRows]) => ({
+    date,
+    value: median(dayRows.map((r) => r.metrics[metric])),
+    first: dayRows[0],
+    last: dayRows[dayRows.length - 1],
+  }));
+}
+
 // Returns [{leg, metrics: [{metric, baseline, threshold, recent}], lastGood, firstBad}]
-// for every leg whose last RECENT_NIGHTS points of some metric all exceed the
-// threshold derived from the BASELINE_NIGHTS points before them.
+// for every leg whose last RECENT_NIGHTS nights of some metric all exceed the
+// threshold derived from the BASELINE_NIGHTS nights before them.
 function detect(rows, now = Date.now()) {
   const byLeg = new Map();
   for (const row of rows) {
@@ -67,25 +85,32 @@ function detect(rows, now = Date.now()) {
     let lastGood = null;
     let firstBad = null;
     for (const metric of [...metricNames].sort()) {
-      const points = legRows.filter((r) => typeof r.metrics[metric] === 'number');
-      if (points.length < RECENT_NIGHTS + BASELINE_NIGHTS) continue;
-      const recent = points.slice(-RECENT_NIGHTS);
-      const base = points.slice(-RECENT_NIGHTS - BASELINE_NIGHTS, -RECENT_NIGHTS);
+      const nights = nightly(legRows, metric);
+      if (nights.length < RECENT_NIGHTS + BASELINE_NIGHTS) continue;
+      const recent = nights.slice(-RECENT_NIGHTS);
+      const base = nights.slice(-RECENT_NIGHTS - BASELINE_NIGHTS, -RECENT_NIGHTS);
       // A metric that stopped reporting (e.g. mutagen_settle_s turned null)
       // must not alert on its stale tail.
-      if (recent[recent.length - 1] !== newest) continue;
+      if (recent[recent.length - 1].last !== newest) continue;
 
-      const baseValues = base.map((r) => r.metrics[metric]);
+      const baseValues = base.map((n) => n.value);
       const baseline = median(baseValues);
       const sigma = 1.4826 * median(baseValues.map((v) => Math.abs(v - baseline)));
       const threshold = Math.max(baseline * MIN_RATIO, baseline + MIN_SECONDS, baseline + MAD_SIGMAS * sigma);
-      const recentValues = recent.map((r) => r.metrics[metric]);
+      const recentValues = recent.map((n) => n.value);
       if (!recentValues.every((v) => v > threshold)) continue;
 
       regressed.push({ metric, baseline, threshold, recent: recentValues });
-      if (!firstBad || recent[0].timestamp < firstBad.timestamp) {
-        firstBad = recent[0];
-        lastGood = base[base.length - 1];
+      // The slowdown may have begun before the recent window, with a single
+      // noisy fast night breaking the streak, so walk back past slow nights
+      // and past any lone fast night that has a slow night before it.
+      const slow = (j) => j >= 0 && nights[j].value > threshold;
+      let i = nights.length - RECENT_NIGHTS;
+      while (slow(i - 1) || slow(i - 2)) i -= slow(i - 1) ? 1 : 2;
+      const metricFirstBad = nights[i].first;
+      if (!firstBad || metricFirstBad.timestamp < firstBad.timestamp) {
+        firstBad = metricFirstBad;
+        lastGood = i > 0 ? nights[i - 1].last : null;
       }
     }
     if (regressed.length) findings.push({ leg, metrics: regressed, lastGood, firstBad });
@@ -118,21 +143,31 @@ function report(finding, repo) {
     }),
     '',
   ];
-  if (lastGood.commit_sha && firstBad.commit_sha && lastGood.commit_sha !== firstBad.commit_sha) {
+  const goodSha = lastGood && lastGood.commit_sha;
+  const badSha = firstBad.commit_sha;
+  const badDate = firstBad.timestamp.slice(0, 10);
+  if (!lastGood) {
+    lines.push(`Every night in the history is above the threshold back to ${badDate}, so there is no last good night to compare against.`);
+  } else if (!goodSha || !badSha) {
     lines.push(
-      `Last good night ${lastGood.timestamp.slice(0, 10)} (\`${shortSha(lastGood.commit_sha)}\`), first slow night ${firstBad.timestamp.slice(0, 10)} (\`${shortSha(firstBad.commit_sha)}\`): ` +
-        `[commits in between](https://github.com/${repo}/compare/${lastGood.commit_sha}...${firstBad.commit_sha}).`
+      `Last good night ${lastGood.timestamp.slice(0, 10)} (\`${shortSha(goodSha)}\`), first slow night ${badDate} (\`${shortSha(badSha)}\`): ` +
+        'a commit is missing from the history, so no commit range is available.'
+    );
+  } else if (goodSha !== badSha) {
+    lines.push(
+      `Last good night ${lastGood.timestamp.slice(0, 10)} (\`${shortSha(goodSha)}\`), first slow night ${badDate} (\`${shortSha(badSha)}\`): ` +
+        `[commits in between](https://github.com/${repo}/compare/${goodSha}...${badSha}).`
     );
   } else {
     lines.push(
-      `Last good night ${lastGood.timestamp.slice(0, 10)} and first slow night ${firstBad.timestamp.slice(0, 10)} ran the same commit (\`${shortSha(firstBad.commit_sha)}\`), so DDEV code did not change: look at the machine, its Docker provider, or upstream images.`
+      `Last good night ${lastGood.timestamp.slice(0, 10)} and first slow night ${badDate} ran the same commit (\`${shortSha(badSha)}\`), so DDEV code did not change: look at the machine, its Docker provider, or upstream images.`
     );
   }
   lines.push(
     '',
     'Also check other legs at the same dates on the [dashboard](https://ddev.github.io/ddev/perf/): a code change usually shows on several legs, a machine change on one.',
     '',
-    `Close this issue once it is explained or fixed. While it is open, the nightly check comments here only when another metric on this leg regresses.`,
+    `Close this issue once it is explained or fixed. The nightly check then files nothing more for these metrics on this leg until a new slowdown begins; while the issue is open, it comments here only when another metric on this leg regresses.`,
     `<!-- perf-regression-metrics: ${metrics.map((m) => m.metric).join(',')} -->`
   );
   return lines.join('\n');
@@ -142,33 +177,45 @@ function gh(args) {
   return execFileSync('gh', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
 }
 
+function metricsIn(issue) {
+  const known = new Set();
+  for (const text of [issue.body, ...issue.comments.map((c) => c.body)]) {
+    const m = /<!-- perf-regression-metrics: ([^ ]*) -->/.exec(text || '');
+    if (m) m[1].split(',').forEach((name) => known.add(name));
+  }
+  return known;
+}
+
 function fileIssues(findings, repo) {
   gh(['label', 'create', LABEL, '--repo', repo, '--force', '--color', 'd93f0b',
     '--description', 'Opened by perf-collect.yml when a nightly benchmark regresses']);
-  const open = JSON.parse(gh(['issue', 'list', '--repo', repo, '--label', LABEL, '--state', 'open',
-    '--limit', '100', '--json', 'number,title,body,comments']));
+  const issues = JSON.parse(gh(['issue', 'list', '--repo', repo, '--label', LABEL, '--state', 'all',
+    '--limit', '100', '--json', 'number,title,body,comments,state,closedAt']));
 
   for (const finding of findings) {
     const title = issueTitle(finding.leg);
     const body = report(finding, repo);
-    const existing = open.find((i) => i.title === title);
-    if (!existing) {
-      const url = gh(['issue', 'create', '--repo', repo, '--title', title, '--label', LABEL, '--body', body]).trim();
-      console.log(`Opened ${url}`);
-      continue;
-    }
+    const sameLeg = issues.filter((i) => i.title === title);
+    const open = sameLeg.find((i) => i.state === 'OPEN');
+    // An issue closed after this slowdown began was closed with it in view,
+    // so it still covers it; one closed earlier was about a different one.
+    const closedDuring = (i) => i.state === 'CLOSED' && Date.parse(i.closedAt) >= Date.parse(finding.firstBad.timestamp);
     const known = new Set();
-    for (const text of [existing.body, ...existing.comments.map((c) => c.body)]) {
-      const m = /<!-- perf-regression-metrics: ([^ ]*) -->/.exec(text || '');
-      if (m) m[1].split(',').forEach((name) => known.add(name));
+    for (const issue of sameLeg.filter((i) => i === open || closedDuring(i))) {
+      metricsIn(issue).forEach((name) => known.add(name));
     }
     const added = finding.metrics.filter((m) => !known.has(m.metric));
     if (!added.length) {
-      console.log(`#${existing.number} already covers ${finding.leg}; not commenting`);
+      console.log(`An open issue, or one closed since this slowdown began, already covers ${finding.leg}; not filing`);
       continue;
     }
-    gh(['issue', 'comment', String(existing.number), '--repo', repo, '--body', body]);
-    console.log(`Commented on #${existing.number} for ${added.map((m) => m.metric).join(', ')}`);
+    if (open) {
+      gh(['issue', 'comment', String(open.number), '--repo', repo, '--body', body]);
+      console.log(`Commented on #${open.number} for ${added.map((m) => m.metric).join(', ')}`);
+    } else {
+      const url = gh(['issue', 'create', '--repo', repo, '--title', title, '--label', LABEL, '--body', body]).trim();
+      console.log(`Opened ${url}`);
+    }
   }
 }
 
@@ -198,4 +245,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { detect, report };
+module.exports = { detect, report, fileIssues };

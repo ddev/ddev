@@ -184,18 +184,23 @@ Two signals use the same history:
   trailing median of the last 10 points for its leg and metric, on all three pages. It is a
   visual cue only, and single-night noise trips it often.
 - **Regression alerts**: `detect-regressions.js` runs in `perf-collect.yml` after collection,
-  on `history.ndjson` only. For each leg and metric it takes the median of the 14 nights before
-  the last 3, and flags the metric when each of the last 3 nights is above the largest of
-  +20%, +2s, and +3σ (σ estimated from the median absolute deviation). It skips legs with no
-  result in the last 3 days.
+  on `history.ndjson` only. It first reduces each leg and metric to one value per UTC date
+  (the median of that night's runs). It then takes the median of the 14 nights before the last
+  3, and flags the metric when each of the last 3 nights is above the largest of +20%, +2s, and
+  +3σ (σ estimated from the median absolute deviation). It skips legs with no result in the
+  last 3 days.
 
   Each flagged leg gets one open issue labeled `perf-regression`, titled
   `Nightly perf regression: <leg>`, with the metrics, values, and a compare link for the
-  commits between the last good and first slow night. While that issue is open, the check
-  comments on it only when another metric on that leg regresses; closing it is left to a
-  person. Runs on any branch other than `main` are dry runs that only write the step summary.
+  commits between the last good and first slow night. The first slow night is the start of
+  the unbroken run of nights above the threshold, which can begin before the last 3. While that
+  issue is open, the check comments on it only when another metric on that leg regresses;
+  closing it is left to a person. After that, an issue closed since the slowdown began still
+  counts as covering it, so a regression accepted as explained is not filed again. The check
+  runs as its own `detect-regressions` job, the only one with `issues: write`. Runs on any
+  branch other than `main` are dry runs that only write the step summary.
 
-  Replayed over the history from August to early November 2026, the rule raised 7 alerts across
+  Replayed over the history from August to early November 2026, the rule raised 6 alerts across
   12 legs. Run it locally against the published data with:
 
   ```bash
