@@ -354,59 +354,43 @@ So a maintainer only ever needs to click **Approve** once — as soon as a fork 
 
 ### Cleaning Up Unused Image Tags
 
-Every image change pushes new tags to Docker Hub, and most are only useful until the release that follows. `containers/image-tag-cleanup.sh` finds the tags nothing uses any more and, only when told to with `--execute`, deletes them. The [Image tag cleanup](https://github.com/ddev/ddev/actions/workflows/image-tag-cleanup.yml) workflow runs the same script.
+`containers/image-tag-cleanup.sh` deletes Docker Hub tags that no DDEV build needs any more. The [Image tag cleanup](https://github.com/ddev/ddev/actions/workflows/image-tag-cleanup.yml) workflow runs it.
 
-#### What counts as unused
+It deletes tags pushed before the latest release, except:
 
-A tag is a candidate for deletion only when all of these hold:
+| Kept | Why |
+| --- | --- |
+| Tags in `versionconstants.go` on `main` | `main` builds and CI pull them |
+| Tags in `versionconstants.go` of an open pull request | Its CI pulls them |
+| Tags a release or prerelease pulls | Users of that release pull them |
+| Aliases of those tags, like `<branch>-<hash>` | They name the same image |
+| Tags named after a release or prerelease, `latest`, `stable`, `edge` | Release tags |
+| Other `v*` tags, and tags without a push date | Questionable, for a maintainer to check |
+| Tags pushed after the latest release | Recent builds |
 
-* It has a shape that CI or a branch build produces: a bare hash, a `<branch>-<hash>` alias, a date-prefixed branch tag like `20250612_stasadev_rebuild_images`, or a leftover `-amd64`/`-arm64` tag. Release tags, `latest`, and anything unrecognized are never candidates.
-* It isn't named in a version file (`pkg/versionconstants/versionconstants.go`, or `pkg/version/version.go` for older releases) at any `v*` release tag, at the head of any open pull request, or on the main branch within the last 90 days (`--keep-main-branch-days`).
-* It was pushed more than 90 days ago (`--older-than-days`) and hasn't been pulled in the last 30 days (`--not-pulled-for-days`).
-* No kept tag points at the same manifest.
-
-A deleted tag that a pull request later needs is pushed again by that pull request's next image build, so the worst case is one rebuild.
+Deleting a hash tag leaves the release tag on the same image working. A pull request that needs a deleted tag pushes it again on its next image build.
 
 #### From the command line
 
-Run these from a checkout of ddev/ddev with the release tags fetched (`git fetch upstream --tags`) and [`gh`](https://cli.github.com/) logged in. The default run deletes nothing and lists what it would:
+Run it from a DDEV checkout with [`gh`](https://cli.github.com/) logged in. It reads the releases, `main`, and the open pull requests of `GITHUB_REPOSITORY`, and the tags of `DOCKER_ORG`:
 
 ```bash
-containers/image-tag-cleanup.sh
+export DOCKER_ORG=ddev GITHUB_REPOSITORY=ddev/ddev
+containers/image-tag-cleanup.sh                   # list the candidates by tag, in batches of up to 100 tags
+containers/image-tag-cleanup.sh <tags>            # show which of these are candidates
+containers/image-tag-cleanup.sh --execute <tags>  # delete those, 100 at most
 ```
 
-To include tags that were pulled recently, or only recently pushed ones, change the two rules:
-
-```bash
-containers/image-tag-cleanup.sh --older-than-days 10 --not-pulled-for-days 0
-```
-
-To see why each tag was kept or listed, write the decisions to a file:
-
-```bash
-containers/image-tag-cleanup.sh --decisions ~/tmp/decisions.tsv
-```
-
-To delete, set the credentials and add `--execute`. It asks before deleting. `--limit` deletes only the first few candidates, which is the way to try it on a small batch first:
-
-```bash
-export DOCKERHUB_USERNAME=<user> DOCKERHUB_TOKEN=<token>
-containers/image-tag-cleanup.sh --limit 5 --execute
-```
-
-Every flag can be written `--flag value` or `--flag=value`, and `--help` lists them all. `--max-delete` refuses lists longer than its value (default 1000), and `--docker-org` chooses the Docker Hub organization (default `ddev`). The three steps also run alone, each with its own `--help`: `image-tag-keep-set.sh` lists the tags to keep, `image-tag-cleanup-candidates.sh` lists the tags that can go, and `delete-image-tags.sh` deletes the tags it is given, after checking that each is still a candidate.
+`<tags>` are `<org>/<repo>:<tag>` entries separated by spaces. `--execute` needs `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`, and deletes only the tags given. It skips tags that are not candidates, and fails if none of them is. `--before-release <vX.Y.Z>` sets the cutoff.
 
 #### From GitHub
 
-The workflow has two jobs. `report` runs every Monday, and on demand with no inputs. It needs no credentials and only lists candidates: the run summary shows the counts and the list, and the `image-tag-cleanup-report` artifact holds every tag's decision in `decisions.tsv`.
+1. Run the workflow with no inputs, or wait for the Monday run. Its summary lists the candidates in batches of up to 100 tags. Open a batch to see its tags, with their push dates.
+2. Copy the batch's line into `images_to_delete` and run it again. Unchecked `execute` is a dry run; checked, from `main`, it deletes the batch after the `image-tag-cleanup` environment's approval.
 
-`delete` runs only when started by hand from `main` with `tags` or `report_run_id`. The `image-tag-cleanup` environment must approve it, and it deletes only if `execute` is checked, so an unchecked run is a dry run:
+#### Tags that are not candidates
 
-1. Run the workflow with every input empty, and read the report.
-2. Run it with `report_run_id` set to that run's ID, `execute` unchecked, and approve. The log shows `would delete …` for each tag.
-3. Run it again with the same `report_run_id` and `execute` checked, and approve. To delete only some tags, set `tags` to a list of `<org>/<repo>:<tag>` entries instead.
-
-Before deleting, the job recomputes the candidates, and if any requested tag is no longer a candidate, it deletes nothing. The repository variables `CLEANUP_OLDER_THAN_DAYS` and `CLEANUP_NOT_PULLED_FOR_DAYS` change the two rules for the workflow, and `DOCKER_ORG` chooses the Docker Hub organization (ddev-test uses `ddevhq` on its own).
+The script never deletes a tag that is not a candidate. The summary lists questionable tags in their own section. Delete such a tag by hand in the Docker Hub web UI, after you check that no release or branch uses it.
 
 ## Pull Requests
 

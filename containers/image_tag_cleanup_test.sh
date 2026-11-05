@@ -1,19 +1,15 @@
 #!/usr/bin/env bash
-# image_tag_cleanup_test.sh - unit tests for image-tag-keep-set.sh,
-# image-tag-cleanup-candidates.sh, and delete-image-tags.sh.
+# image_tag_cleanup_test.sh - unit tests for image-tag-cleanup.sh.
 #
-# The keep-set runs against a scratch git repository with backdated commits;
-# the other two run against a stubbed `curl` that serves Docker Hub listings
-# from fixtures and logs every request, so "deletes nothing" is asserted.
+# Fetches from a scratch repository standing in for GitHub, with backdated
+# commits and release tags. `curl` is stubbed to serve Docker Hub listings
+# from fixtures and log every request, `gh` to list open pull requests.
 # Run with:
 #   containers/image_tag_cleanup_test.sh
 
 set -eu -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-KEEP_SET_SH="$SCRIPT_DIR/image-tag-keep-set.sh"
-CANDIDATES_SH="$SCRIPT_DIR/image-tag-cleanup-candidates.sh"
-DELETE_SH="$SCRIPT_DIR/delete-image-tags.sh"
+CLEANUP_SH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/image-tag-cleanup.sh"
 
 FAILURES=0
 
@@ -50,14 +46,14 @@ assert_fails_with() {
 
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
-
-NOW_TS="$(date +%s)"
+NOW="$(date +%s)"
 
 # ---------------------------------------------------------------------------
-# image-tag-keep-set.sh
+# Scratch repository. The default cutoff is the latest release, v1.1.0,
+# committed 100 days ago.
 # ---------------------------------------------------------------------------
 
-REPO="$WORKDIR/repo"
+REPO="$WORKDIR/github/ddev/ddev"
 mkdir -p "$REPO"
 git -C "$REPO" init -q -b main
 git -C "$REPO" config user.email test@example.com
@@ -67,96 +63,73 @@ git -C "$REPO" config tag.gpgsign false
 
 # commit_at <days-ago> <message>: commits whatever is staged, backdated.
 commit_at() {
-  local date="@$((NOW_TS - $1 * 86400)) +0000"
+  local date="@$((NOW - $1 * 86400)) +0000"
   GIT_AUTHOR_DATE="$date" GIT_COMMITTER_DATE="$date" git -C "$REPO" commit -q --allow-empty -m "$2"
 }
 
-# write_version <path> <WebTag> <BaseDBTag>
+# write_version <WebTag> <BaseDBTag> [<WebTagBranch>] [<WebImg>]
 write_version() {
-  mkdir -p "$REPO/$(dirname "$1")"
-  printf 'package x\n\nvar WebTag = "%s" // comment\nvar BaseDBTag = "%s"\nvar WebImg = "not-a-tag"\n' "$2" "$3" > "$REPO/$1"
+  local f="$REPO/pkg/versionconstants/versionconstants.go"
+  mkdir -p "$(dirname "$f")"
+  printf 'package x\n\nvar WebImg = "%s"\nvar WebTag = "%s" // comment\nvar BaseDBTag = "%s"\n' "${4:-ddev/ddev-webserver}" "$1" "$2" > "$f"
+  [ -z "${3:-}" ] || printf 'var WebTagBranch = "%s"\nvar BaseDBTagBranch = "some_branch"\n' "$3" >> "$f"
   git -C "$REPO" add -A
 }
 
 commit_at 500 "before any version file"
-git -C "$REPO" tag v0.1
+git -C "$REPO" tag v0.0.1
 
-write_version pkg/version/version.go 20190101_legacy_web v0.9.0
-commit_at 400 "old layout release"
+write_version 20190101_drud_web v0.9.0 "" drud/ddev-webserver
+commit_at 450 "release that pulled from the drud organization"
 git -C "$REPO" tag v0.9.0
 
-git -C "$REPO" rm -q -r pkg/version
-write_version pkg/versionconstants/versionconstants.go 0000000001 0000000002
-commit_at 300 "superseded before the window opens"
+write_version 5555555555 5555555556 v0.9.5
+commit_at 350 "release that pulls its release tag for web"
+git -C "$REPO" tag v0.9.5
 
-write_version pkg/versionconstants/versionconstants.go 1111111111 v1.0.0
-commit_at 200 "release"
+write_version 0000000001 0000000002
+commit_at 300 "test tag"
+git -C "$REPO" tag v0.9.6-aaa1
+
+write_version 1111111111 v1.0.0
+commit_at 200 "previous release"
 git -C "$REPO" tag v1.0.0
 
-write_version pkg/versionconstants/versionconstants.go 2222222222 2222222223
-commit_at 150 "in effect when the window opens"
+write_version 2222222222 2222222223
+commit_at 150 "replaced before the release"
 
-write_version pkg/versionconstants/versionconstants.go 3333333333 3333333334
-commit_at 30 "inside the window"
+write_version 8888888888 8888888889
+commit_at 120 "prerelease"
+git -C "$REPO" tag v1.1.0-rc1
+
+write_version 7777777777 7777777778 v1.1.0
+commit_at 100 "latest release"
+git -C "$REPO" tag v1.1.0
 
 echo readme > "$REPO/README"
 git -C "$REPO" add README
 commit_at 5 "main tip, version file untouched"
 
 git -C "$REPO" checkout -q -b pr
-write_version pkg/versionconstants/versionconstants.go 4444444444 3333333334
-commit_at 1 "open pull request"
+write_version 4444444444 7777777778
+commit_at 1 "open pull request #1"
+git -C "$REPO" update-ref refs/pull/1/head pr
 git -C "$REPO" checkout -q main
 
-keep_set() {
-  (cd "$REPO" && KEEP_MAIN_BRANCH_REF=main "$KEEP_SET_SH" "$@")
-}
+git clone -q --no-tags "$REPO" "$WORKDIR/github/ddev/notags"
 
-EXPECTED_KEEP="$(printf '%s\n' 1111111111 20190101_legacy_web 2222222222 2222222223 3333333333 3333333334 v0.9.0 v1.0.0 | sort)"
-assert_eq "$EXPECTED_KEEP" "$(keep_set 2>/dev/null)" "keep-set holds release tags, both version-file layouts, and main's window"
-assert_eq "$(printf '%s\n' "$EXPECTED_KEEP" 4444444444 | sort)" "$(keep_set --ref pr 2>/dev/null)" "keep-set adds the tags of each ref given"
-if (cd "$REPO" && KEEP_MAIN_BRANCH_REF=main KEEP_MAIN_BRANCH_DAYS=350 "$KEEP_SET_SH" 2>/dev/null) | grep -qx 0000000001; then
-  pass "KEEP_MAIN_BRANCH_DAYS widens main's window"
-else
-  fail "KEEP_MAIN_BRANCH_DAYS=350 should keep a tag committed 300 days ago"
-fi
-if (cd "$REPO" && "$KEEP_SET_SH" --main-branch-ref main --keep-main-branch-days 350 2>/dev/null) | grep -qx 0000000001; then
-  pass "--main-branch-ref and --keep-main-branch-days do what their environment variables do"
-else
-  fail "--keep-main-branch-days 350 should keep a tag committed 300 days ago"
-fi
-if (cd "$REPO" && "$KEEP_SET_SH" --main-branch-ref=main --keep-main-branch-days=350 2>/dev/null) | grep -qx 0000000001; then
-  pass "--keep-main-branch-days=350 works like --keep-main-branch-days 350"
-else
-  fail "--keep-main-branch-days=350 should keep a tag committed 300 days ago"
-fi
-
-assert_fails_with "not found" "keep-set fails on a missing main ref" \
-  bash -c "cd '$REPO' && KEEP_MAIN_BRANCH_REF=nosuch '$KEEP_SET_SH'"
-assert_fails_with "not found" "keep-set fails on a missing extra ref" \
-  bash -c "cd '$REPO' && KEEP_MAIN_BRANCH_REF=main '$KEEP_SET_SH' --ref nosuch"
-
-NOTAGS="$WORKDIR/notags"
-git clone -q --no-tags "$REPO" "$NOTAGS"
-assert_fails_with "were tags fetched" "keep-set fails when no release tags are present" \
-  bash -c "cd '$NOTAGS' && KEEP_MAIN_BRANCH_REF=origin/main '$KEEP_SET_SH'"
-
-printf 'package x\n' > "$REPO/pkg/versionconstants/versionconstants.go"
-git -C "$REPO" add -A
-commit_at 0 "version file without tags"
-assert_fails_with "names no image tags" "keep-set fails on a version file naming no tags" \
-  bash -c "cd '$REPO' && KEEP_MAIN_BRANCH_REF=main '$KEEP_SET_SH'"
+git init -q "$WORKDIR/checkout"
+cd "$WORKDIR/checkout"
+export GITHUB_SERVER_URL="$WORKDIR/github" GITHUB_REPOSITORY=ddev/ddev DOCKER_ORG=ddev
 
 # ---------------------------------------------------------------------------
-# curl stub, shared by the candidates and delete tests
+# Stubs
 # ---------------------------------------------------------------------------
 
 BINDIR="$WORKDIR/bin"
 mkdir -p "$BINDIR"
-export CURL_FIXTURES="$WORKDIR/fixtures"
-export CURL_LOG="$WORKDIR/curl.log"
-export CURL_FAIL_URLS="$WORKDIR/curl_fail_urls"
-cat > "$BINDIR/curl" <<'CURLEOF'
+export CURL_FIXTURES="$WORKDIR/fixtures" CURL_LOG="$WORKDIR/curl.log" CURL_FAIL_URLS="$WORKDIR/curl_fail_urls"
+cat > "$BINDIR/curl" <<'EOF'
 #!/usr/bin/env bash
 set -eu -o pipefail
 method=GET url="" auth=""
@@ -175,46 +148,32 @@ case "$method" in
   POST) cat > /dev/null; echo '{"token":"stub-token"}' ;;
   DELETE) ;;
   GET)
+    # Repositories without a fixture list only `latest`.
     f="$CURL_FIXTURES/$(printf '%s' "$url" | sed 's/[^A-Za-z0-9]/_/g')"
-    [ -f "$f" ] || exit 22
-    cat "$f"
+    if [ -f "$f" ]; then cat "$f"; else echo '{"next":null,"results":[{"name":"latest","tag_last_pushed":"2020-01-01T00:00:00Z"}]}'; fi
     ;;
 esac
-CURLEOF
-chmod +x "$BINDIR/curl"
-export PATH="$BINDIR:$PATH"
+EOF
+# GH_PRS lists the open pull request numbers; GH_FAIL makes the listing fail.
+cat > "$BINDIR/gh" <<'EOF'
+#!/usr/bin/env bash
+[ -z "${GH_FAIL:-}" ] || exit 1
+[ -z "${GH_PRS:-}" ] || printf '%s\n' $GH_PRS
+EOF
+chmod +x "$BINDIR/curl" "$BINDIR/gh"
+export PATH="$BINDIR:$PATH" GH_PRS=1
 
-reset_stub() {
-  rm -rf "$CURL_FIXTURES"
-  mkdir -p "$CURL_FIXTURES"
-  : > "$CURL_LOG"
-  : > "$CURL_FAIL_URLS"
-}
-
-export NOW="$NOW_TS"
-export DOCKER_ORG=ddev
 HUB="https://hub.docker.com/v2/namespaces/ddev/repositories"
 
-iso_days_ago() {
-  jq -rn --argjson t "$((NOW - $1 * 86400))" '$t | todate | sub("Z$"; ".123456789Z")'
-}
-
-# tag <name> <pushed-days-ago> <pulled-days-ago or -> <digest or ->
+# tag <name> <pushed-days-ago>
 tag() {
-  local pulled=null digest=null pushed
-  pushed="$(iso_days_ago "$2")"
-  [ "$3" = - ] || pulled="\"$(iso_days_ago "$3")\""
-  [ "$4" = - ] || digest="\"sha256:$4\""
-  printf '{"name":"%s","digest":%s,"last_updated":"%s","tag_last_pushed":"%s","tag_last_pulled":%s,"images":[]}\n' \
-    "$1" "$digest" "$pushed" "$pushed" "$pulled"
+  local pushed
+  pushed="$(jq -rn --argjson t "$((NOW - $2 * 86400))" '$t | todate | sub("Z$"; ".123456789Z")')"
+  printf '{"name":"%s","last_updated":"%s","tag_last_pushed":"%s"}\n' "$1" "$pushed" "$pushed"
 }
 
 page_url() {
-  if [ "$2" = 1 ]; then
-    echo "${HUB}/$1/tags?page_size=100"
-  else
-    echo "${HUB}/$1/tags?page=$2&page_size=100"
-  fi
+  if [ "$2" = 1 ]; then echo "${HUB}/$1/tags?page_size=100"; else echo "${HUB}/$1/tags?page=$2&page_size=100"; fi
 }
 
 # serve <repo> <page> <next-url or -> reads tag lines from stdin.
@@ -225,200 +184,212 @@ serve() {
     > "$CURL_FIXTURES/$(page_url "$1" "$2" | sed 's/[^A-Za-z0-9]/_/g')"
 }
 
-KEEP="$WORKDIR/keep.txt"
-printf '%s\n' aaaaaaaaaa 20250612_released_branch > "$KEEP"
+reset_stub() {
+  rm -rf "$CURL_FIXTURES"
+  mkdir -p "$CURL_FIXTURES"
+  : > "$CURL_LOG"
+  : > "$CURL_FAIL_URLS"
+}
 
-serve_standard_fixture() {
+serve_fixture() {
   reset_stub
   {
-    tag aaaaaaaaaa 400 - d1
-    tag main-aaaaaaaaaa 400 - d1
-    tag 20240202_same_manifest_as_kept 400 - d1
-    tag bbbbbbbbbb 400 - d2
-    tag feature-bbbbbbbbbb 400 - d2
-    tag cccccccccc 10 - d3
-    tag dddddddddd 400 5 d4
-    tag feature-dddddddddd 400 5 d4
-    tag eeeeeeeeee 400 100 d5
-    tag ffffffffff 400 - d6
-    tag v1.24.0 400 - d6
-    tag latest 400 - d6
-    tag 20250612_released_branch 400 - d7
-    tag 20240101_old_branch 400 - d8
-    tag 20240101_old_branch-amd64 400 - d9
-    tag aaaaaaaaaa-arm64 400 - d10
-    tag 1111111111 400 - -
-    tag weird_tag 400 - d11
-    tag v1.2.3-2222222222 400 - d12
-    tag 5 400 - d14
+    tag v1.1.0 400                     # kept: release tag
+    tag latest 400                     # kept: release tag
+    tag v1.2.0 400                     # kept: questionable, no such release
+    tag v0.9.6-aaa1 400                # kept: questionable, a test tag isn't a release
+    echo '{"name":"nodate"}'           # kept: questionable, no push date
+    tag 20190101_drud_web 400          # goes: v0.9.0 pulled from drud
+    tag 5555555555 400                 # goes: v0.9.5 pulls its WebTagBranch
+    tag 5555555556 400                 # kept: v0.9.5 pulls it
+    tag 1111111111 400                 # kept: v1.0.0 pulls it
+    tag 2222222222 400                 # goes: main no longer names it
+    tag 7777777777 400                 # kept: main names it
+    tag 8888888888 400                 # kept: prerelease v1.1.0-rc1 pulls it
+    tag 4444444444 400                 # kept: open pull request #1 names it
+    tag main-2222222222 400            # goes: an alias of a hash nothing uses
+    tag 0000000001 400                 # goes: test tag v0.9.6-aaa1 isn't a release
+    tag 0a0a0a0a0a 150                 # goes: pushed before v1.1.0
+    tag cccccccccc 10                  # kept: pushed after v1.1.0
+    tag 7777777778 10                  # kept: main names it, and so does v1.1.0
+    tag 20240101_web-7777777777 400    # kept: an alias of a hash main uses
+    tag 20240101_old_branch 400        # goes, with ddev-webserver-prod's
+    tag 20240101_old_branch-amd64 400  # goes
   } | serve ddev-webserver 1 "$(page_url ddev-webserver 2)"
-  tag 3333333333 400 - d13 | serve ddev-webserver 2 -
+  tag junk 450 | serve ddev-webserver 2 -  # goes first: the oldest
+  { tag latest 400; tag 20240101_old_branch 400; } | serve ddev-webserver-prod 1 -
 }
 
-# ---------------------------------------------------------------------------
-# image-tag-cleanup-candidates.sh
-# ---------------------------------------------------------------------------
-
-export CLEANUP_IMAGE_REPOS=ddev-webserver
-
-serve_standard_fixture
-EXPECTED_CANDIDATES="$(printf 'ddev/ddev-webserver:%s\n' 20240101_old_branch 20240101_old_branch-amd64 3333333333 bbbbbbbbbb eeeeeeeeee feature-bbbbbbbbbb | sort)"
-assert_eq "$EXPECTED_CANDIDATES" "$("$CANDIDATES_SH" --keep-set "$KEEP" --decisions "$WORKDIR/explain.tsv" 2>/dev/null | sort)" \
-  "candidates are exactly the old, unpulled, unreferenced CI and branch tags, across pages"
-
-reason() {
-  awk -F'\t' -v ref="ddev/ddev-webserver:$1" '$3 == ref { print $1 ": " $4 }' "$WORKDIR/explain.tsv"
+# Serves 60 tags in each of two images, and one tag main names.
+serve_many() {
+  reset_stub
+  { tag 7777777777 400; seq -f 't%02g' 60 | while read -r t; do tag "$t" 400; done; } | serve ddev-webserver 1 -
+  seq -f 't%02g' 60 | while read -r t; do tag "$t" 400; done | serve ddev-webserver-prod 1 -
 }
-assert_eq "keep: in keep-set as aaaaaaaaaa" "$(reason main-aaaaaaaaaa)" "an alias is kept when its hash is in the keep-set"
-assert_eq "keep: in keep-set as aaaaaaaaaa" "$(reason aaaaaaaaaa-arm64)" "an arch tag is kept when its base is in the keep-set"
-assert_eq "keep: shares manifest with kept tag v1.24.0" "$(reason ffffffffff)" "a hash tag is kept when a release tag names the same manifest"
-assert_eq "keep: shares manifest with kept tag aaaaaaaaaa" "$(reason 20240202_same_manifest_as_kept)" "a legacy tag is kept when a kept tag names the same manifest"
-assert_eq "keep: pushed 10d ago" "$(reason cccccccccc)" "a recently pushed tag is kept"
-assert_eq "keep: pulled 5d ago" "$(reason feature-dddddddddd)" "a recently pulled tag is kept"
-assert_eq "keep: no digest reported" "$(reason 1111111111)" "a tag without a digest is kept"
-assert_eq "keep: not a CI or branch tag" "$(reason v1.2.3-2222222222)" "a release-shaped alias prefix is kept"
-assert_eq "keep: not a CI or branch tag" "$(reason 5)" "an unrecognized tag shape is kept"
-assert_eq "delete: pushed 400d ago, pulled 100d ago" "$(reason eeeeeeeeee)" "a candidate's reason gives its push and pull age"
-
-assert_eq "$(printf 'ddev/ddev-webserver:%s\n' 20240101_old_branch 20240101_old_branch-amd64 3333333333 bbbbbbbbbb cccccccccc feature-bbbbbbbbbb | sort)" \
-  "$(CLEANUP_NOT_PULLED_FOR_DAYS=200 CLEANUP_OLDER_THAN_DAYS=5 "$CANDIDATES_SH" --keep-set "$KEEP" 2>/dev/null | sort)" \
-  "the push and pull thresholds are configurable"
-
-serve_standard_fixture
-page_url ddev-webserver 2 > "$CURL_FAIL_URLS"
-assert_fails_with "listing ddev-webserver failed" "a failed page aborts instead of listing a partial result" \
-  "$CANDIDATES_SH" --keep-set "$KEEP"
-if [ -n "$("$CANDIDATES_SH" --keep-set "$KEEP" 2>/dev/null)" ]; then
-  fail "a failed page printed candidates"
-else
-  pass "a failed page prints no candidates"
-fi
-
-reset_stub
-: | serve ddev-webserver 1 -
-assert_fails_with "lists no tags" "an empty listing aborts" "$CANDIDATES_SH" --keep-set "$KEEP"
-
-reset_stub
-tag bbbbbbbbbb 400 - d2 | serve ddev-webserver 1 "https://evil.example.com/tags?page=2"
-assert_fails_with "refusing to follow pagination" "pagination off Docker Hub aborts" "$CANDIDATES_SH" --keep-set "$KEEP"
-
-serve_standard_fixture
-echo 9999999999 > "$WORKDIR/unrelated-keep.txt"
-assert_fails_with "no listed tag is in the keep-set" "a keep-set matching nothing listed aborts" \
-  "$CANDIDATES_SH" --keep-set "$WORKDIR/unrelated-keep.txt"
-
-: > "$WORKDIR/empty-keep.txt"
-assert_fails_with "missing or empty" "an empty keep-set aborts" "$CANDIDATES_SH" --keep-set "$WORKDIR/empty-keep.txt"
-
-unset CLEANUP_IMAGE_REPOS
-
-# ---------------------------------------------------------------------------
-# delete-image-tags.sh
-# ---------------------------------------------------------------------------
 
 log_count() {
   grep -c "^$1 " "$CURL_LOG" || true
 }
 
-serve_standard_fixture
-output="$("$DELETE_SH" --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb,ddev/ddev-webserver:eeeeeeeeee 2>/dev/null)"
-assert_eq "$(printf 'would delete ddev/ddev-webserver:%s\n' bbbbbbbbbb eeeeeeeeee)" "$output" "a dry run lists what it would delete"
+# ---------------------------------------------------------------------------
+# Decisions
+# ---------------------------------------------------------------------------
+
+# Candidates as "<tags> <images>", oldest first, then by tag; a hash and its
+# aliases share a line.
+CANDIDATES="junk ddev-webserver
+0000000001 ddev-webserver
+20190101_drud_web ddev-webserver
+20240101_old_branch ddev-webserver, ddev-webserver-prod
+20240101_old_branch-amd64 ddev-webserver
+2222222222, main-2222222222 ddev-webserver
+5555555555 ddev-webserver
+0a0a0a0a0a ddev-webserver"
+
+# listed <heading> [<arg>...] prints "<tag> <images>" for the rows a run
+# lists under the headings that start with <heading>.
+listed() {
+  "$CLEANUP_SH" "${@:2}" 2>/dev/null | awk -v heading="$1" '/^[^ ]/ { on = index($0, heading) == 1; next } on { $1 = ""; print substr($0, 2) }'
+}
+
+serve_fixture
+assert_eq "$CANDIDATES" "$(listed "Batch")" "a dry run lists every candidate by tag, oldest first, across pages and images"
+assert_eq "Batch 1: pushed $(date -u -d "@$((NOW - 450 * 86400))" +%F) to $(date -u -d "@$((NOW - 150 * 86400))" +%F), 10 tags:"$'\n'"  $(date -u -d "@$((NOW - 450 * 86400))" +%F)  junk  ddev-webserver" \
+  "$("$CLEANUP_SH" 2>/dev/null | head -2)" "a dry run shows the batch, and when each tag was pushed"
 assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "a dry run neither logs in nor deletes"
+assert_eq "" "$(git for-each-ref refs/image-tag-cleanup/)" "the fetched refs are removed after the run"
+summary="$("$CLEANUP_SH" 2>&1 >/dev/null)"
+for line in "cutoff v1.1.0" $'keep\tquestionable' $'keep\tused by a release' $'keep\tused by main' $'keep\tused by a pull request' $'delete\tpushed before v1.1.0'; do
+  if [[ "$summary" == *"$line"* ]]; then pass "the summary says '$line'"; else fail "the summary should say '$line': $summary"; fi
+done
+assert_eq "$(sed '/^2222222222, /a 4444444444 ddev-webserver' <<< "$CANDIDATES")" \
+  "$(GH_PRS="" listed "Batch")" "a closed pull request keeps nothing"
 
-serve_standard_fixture
-assert_fails_with "ddev/ddev-webserver:aaaaaaaaaa" "a kept tag in the list is refused by name" \
-  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb --tag ddev/ddev-webserver:aaaaaaaaaa
-assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "one refused tag means nothing is deleted"
+serve_fixture
+assert_eq "$(grep -v -e '^0a0a0a0a0a ' <<< "$CANDIDATES")" \
+  "$(listed "Batch" --before-release v1.0.0)" "--before-release moves the cutoff"
+assert_fails_with "is not a vX.Y.Z release" "--before-release refuses a test tag" "$CLEANUP_SH" --before-release v0.9.6-aaa1
+assert_fails_with "has no release v9.9.9" "--before-release refuses a missing release" "$CLEANUP_SH" --before-release v9.9.9
+assert_fails_with "ddev/notags has no vX.Y.Z release" "the default cutoff needs a release" env GITHUB_REPOSITORY=ddev/notags GH_PRS= "$CLEANUP_SH"
 
-serve_standard_fixture
-assert_fails_with "ddev/ddev-webserver:0123456789" "a tag that isn't listed at all is refused" \
-  "$DELETE_SH" --keep-set "$KEEP" --tag ddev/ddev-webserver:0123456789
+serve_many
+assert_eq "Batch 1, 100 tags:"$'\n'"Batch 2, 20 tags:" \
+  "$("$CLEANUP_SH" 2>/dev/null | sed -n 's/: pushed [0-9-]* to [0-9-]*//p')" "batches hold 100 tags at most, and never split a tag"
+
+serve_fixture
+export GITHUB_STEP_SUMMARY="$WORKDIR/step-summary.md"
+"$CLEANUP_SH" >/dev/null 2>&1
+unset GITHUB_STEP_SUMMARY
+for line in "| delete | pushed before v1.1.0 | 10 |" "<details><summary>10 tags</summary>" \
+  "| $(date -u -d "@$((NOW - 450 * 86400))" +%F) | \`junk\` | ddev-webserver |" \
+  "<details><summary>Kept, used by main: 3 tags</summary>" \
+  "<details><summary>Kept, pushed after v1.1.0: 1 tag</summary>" \
+  "<details><summary>Kept, questionable: 3 tags</summary>" \
+  "| $(date -u -d "@$((NOW - 400 * 86400))" +%F) | \`v1.2.0\` (not a release) | ddev-webserver |" \
+  "| $(date -u -d "@$((NOW - 400 * 86400))" +%F) | \`7777777777\`, \`20240101_web-7777777777\` | ddev-webserver |" \
+  "| $(date -u -d "@$((NOW - 400 * 86400))" +%F) | \`5555555556\` (v0.9.5) | ddev-webserver |" \
+  "| $(date -u -d "@$((NOW - 400 * 86400))" +%F) | \`4444444444\` (#1) | ddev-webserver |"; do
+  if grep -qxF "$line" "$WORKDIR/step-summary.md"; then pass "the step summary has '$line'"; else fail "the step summary should have '$line': $(cat "$WORKDIR/step-summary.md")"; fi
+done
+batch="$(grep '^ddev/' "$WORKDIR/step-summary.md")"
+assert_eq "$CANDIDATES" "$(listed "Would delete" "$batch")" "a batch's line, pasted back, would delete that batch"
+
+# ---------------------------------------------------------------------------
+# Given tags
+# ---------------------------------------------------------------------------
+
+REQUESTED=("ddev/ddev-webserver:5555555555, ddev/ddev-webserver:junk" ddev/ddev-webserver:4444444444 ddev/ddev-webserver:gone)
+serve_fixture
+assert_eq "$(printf '%s ddev-webserver\n' junk 5555555555)" "$(listed "Would delete" "${REQUESTED[@]}")" \
+  "given tags that are candidates are shown, oldest first"
+assert_eq "$(printf '  ddev/ddev-webserver:%s  %s\n' 4444444444 "used by a pull request (#1)" gone "not on Docker Hub")" \
+  "$("$CLEANUP_SH" "${REQUESTED[@]}" 2>/dev/null | sed -n '/^Skipped/,$p' | tail -n +2)" "given tags that aren't candidates are skipped, with why"
+assert_eq "0" "$(log_count DELETE)" "given tags without --execute is a dry run"
+GITHUB_STEP_SUMMARY="$WORKDIR/given.md" "$CLEANUP_SH" "${REQUESTED[@]}" >/dev/null 2>&1
+assert_eq "$(printf '<details><summary>Tags given: 4</summary>\n\n```text\n'; printf 'ddev/ddev-webserver:%s\n' 5555555555 junk 4444444444 gone; echo '```')" \
+  "$(sed -n '/^<details><summary>Tags given/,/^```$/p' "$WORKDIR/given.md")" "the step summary lists the tags given"
+
+serve_fixture
+assert_fails_with "--execute deletes only the tags given" "--execute needs the tags" \
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --execute
+assert_fails_with "needs DOCKERHUB_USERNAME and DOCKERHUB_TOKEN" "--execute needs both credentials" \
+  env -u DOCKERHUB_USERNAME -u DOCKERHUB_TOKEN "$CLEANUP_SH" --execute "${REQUESTED[@]}"
+assert_eq "0" "$(wc -l < "$CURL_LOG" | tr -d ' ')" "a refused --execute makes no request"
+
+serve_many
+assert_fails_with "the tags given are 120 candidates; delete at most 100 per run" "--execute deletes 100 at most" \
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --execute "$(seq -f 'ddev/ddev-webserver:t%02g' 60) $(seq -f 'ddev/ddev-webserver-prod:t%02g' 60)"
+assert_eq "0" "$(log_count DELETE)" "too many tags delete nothing"
+
+NOT_CANDIDATES="ddev/ddev-webserver:v1.1.0 ddev/ddev-webserver:4444444444 ddev/ddev-webserver:gone"
+serve_fixture
+assert_fails_with "none of the tags given is a candidate" "a dry run of tags that aren't candidates fails" "$CLEANUP_SH" "$NOT_CANDIDATES"
+assert_fails_with "none of the tags given is a candidate" "--execute of tags that aren't candidates fails" \
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --execute "$NOT_CANDIDATES"
+assert_eq "00" "$(log_count POST)$(log_count DELETE)" "--execute with no candidates doesn't log in or delete"
+
+serve_fixture
+assert_eq "$(printf '  ddev/ddev-webserver:%s  %s\n' v1.1.0 "release tag" 4444444444 "used by a pull request (#1)" gone "not on Docker Hub")" \
+  "$(DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --execute "${REQUESTED[@]}" ddev/ddev-webserver:v1.1.0 2>/dev/null | sed -n '/^Skipped/,$p' | tail -n +2)" \
+  "--execute skips the tags that aren't candidates, with why"
+assert_eq "2" "$(log_count DELETE)" "--execute deletes the candidates among the tags given"
+
+CANDIDATE_TAGS="ddev/ddev-webserver:5555555555, ddev/ddev-webserver:junk"
+serve_fixture
+assert_eq "$(printf '%s ddev-webserver\n' junk 5555555555)" \
+  "$(DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t listed "Deleted" --execute "$CANDIDATE_TAGS")" "--execute reports what it deleted"
+assert_eq "$(printf '%s\n' \
+  "DELETE https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/junk/ Authorization: JWT stub-token" \
+  "DELETE https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/5555555555/ Authorization: JWT stub-token")" \
+  "$(grep '^DELETE ' "$CURL_LOG")" "--execute deletes only the given candidates, with the login token"
+serve_fixture
+assert_eq "$(printf '  [1/2] deleted ddev/ddev-webserver:junk\n  [2/2] deleted ddev/ddev-webserver:5555555555')" \
+  "$(DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --execute "$CANDIDATE_TAGS" 2>&1 >/dev/null | grep '^  \[')" "--execute logs each deletion as it goes"
+
+serve_fixture
+echo "https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/junk/" > "$CURL_FAIL_URLS"
+assert_fails_with "1 of 2 deletions failed" "a failed deletion fails the run" \
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --execute "$CANDIDATE_TAGS"
+assert_eq "2" "$(log_count DELETE)" "a failed deletion doesn't stop the rest"
+serve_fixture
+echo "https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/junk/" > "$CURL_FAIL_URLS"
+assert_eq "  [1/2] failed ddev/ddev-webserver:junk" \
+  "$(DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --execute "$CANDIDATE_TAGS" 2>&1 >/dev/null | grep -m1 '^  \[')" "a failed deletion is logged as it happens"
+
+# ---------------------------------------------------------------------------
+# Refusals
+# ---------------------------------------------------------------------------
+
+serve_fixture
+page_url ddev-webserver 2 > "$CURL_FAIL_URLS"
+assert_fails_with "listing ddev-webserver failed" "a failed page aborts" "$CLEANUP_SH"
+if [ -n "$("$CLEANUP_SH" 2>/dev/null)" ]; then fail "a failed page printed candidates"; else pass "a failed page prints no candidates"; fi
 
 reset_stub
-assert_fails_with "not in a repository this project publishes" "another organization is refused" \
-  "$DELETE_SH" --keep-set "$KEEP" --tag someone/ddev-webserver:bbbbbbbbbb
-assert_fails_with "not in a repository this project publishes" "an unknown repository is refused" \
-  "$DELETE_SH" --keep-set "$KEEP" --tag ddev/not-ours:bbbbbbbbbb
-assert_fails_with "is not <org>/<repo>:<tag>" "a malformed entry is refused" \
-  "$DELETE_SH" --keep-set "$KEEP" --tag ddev/ddev-webserver
-assert_eq "0" "$(wc -l < "$CURL_LOG" | tr -d ' ')" "validation failures happen before any request"
-assert_fails_with "needs a value" "a flag without its value is refused" "$DELETE_SH" --keep-set
-assert_fails_with "unknown argument" "an unknown flag is refused" "$DELETE_SH" --bogus --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb
+: | serve ddev-webserver 1 -
+assert_fails_with "lists no tags" "an empty listing aborts" "$CLEANUP_SH"
 
-assert_fails_with "exceeds CLEANUP_MAX_DELETE" "a list over the limit is refused" \
-  env CLEANUP_MAX_DELETE=1 "$DELETE_SH" --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb --tag ddev/ddev-webserver:eeeeeeeeee
+reset_stub
+tag junk 400 | serve ddev-webserver 1 "https://evil.example.com/tags?page=2"
+assert_fails_with "refusing to follow pagination" "pagination off Docker Hub aborts" "$CLEANUP_SH"
 
-serve_standard_fixture
-assert_fails_with "needs DOCKERHUB_USERNAME DOCKERHUB_TOKEN" "--execute names every missing credential" \
-  env -u DOCKERHUB_USERNAME -u DOCKERHUB_TOKEN "$DELETE_SH" --execute --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb
-assert_eq "0" "$(log_count DELETE)" "no deletion without credentials"
-assert_fails_with "needs DOCKERHUB_TOKEN set" "--execute names only the missing credential" \
-  env -u DOCKERHUB_TOKEN DOCKERHUB_USERNAME=u "$DELETE_SH" --execute --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb
+reset_stub
+tag junk 400 | serve ddev-webserver 1 -
+assert_fails_with "no version file names a listed tag" "a listing nothing names aborts" "$CLEANUP_SH"
 
-serve_standard_fixture
-printf 'ddev/ddev-webserver:bbbbbbbbbb\nddev/ddev-webserver:eeeeeeeeee, ddev/ddev-webserver:bbbbbbbbbb\n' |
-  DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" --tags-from - >/dev/null 2>&1
-assert_eq "$(printf '%s\n' \
-  "DELETE https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/bbbbbbbbbb/ Authorization: JWT stub-token" \
-  "DELETE https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/eeeeeeeeee/ Authorization: JWT stub-token")" \
-  "$(grep '^DELETE ' "$CURL_LOG")" "--execute deletes each requested tag once, from stdin, with the login token"
+serve_fixture
+assert_fails_with "listing open pull requests" "a failed pull request listing aborts" env GH_FAIL=1 "$CLEANUP_SH"
+assert_fails_with "fetching from $WORKDIR/github/ddev/nosuch failed" "a failed fetch aborts" env GITHUB_REPOSITORY=ddev/nosuch "$CLEANUP_SH"
+assert_fails_with "DOCKER_ORG and GITHUB_REPOSITORY must be set" "DOCKER_ORG is required" env -u DOCKER_ORG "$CLEANUP_SH"
+assert_fails_with "DOCKER_ORG and GITHUB_REPOSITORY must be set" "GITHUB_REPOSITORY is required" env -u GITHUB_REPOSITORY "$CLEANUP_SH"
+assert_fails_with "unknown argument" "an unknown flag is refused" "$CLEANUP_SH" --bogus x
+assert_fails_with "--before-release needs a value" "a flag without its value is refused" "$CLEANUP_SH" --before-release
 
-serve_standard_fixture
-echo "https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/bbbbbbbbbb/" > "$CURL_FAIL_URLS"
-assert_fails_with "1 of 2 deletions failed" "a failed deletion fails the run" \
-  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb --tag ddev/ddev-webserver:eeeeeeeeee
-assert_eq "2" "$(log_count DELETE)" "a failed deletion doesn't stop the rest"
+printf 'package x\n' > "$REPO/pkg/versionconstants/versionconstants.go"
+git -C "$REPO" add -A
+commit_at 0 "version file without tags"
+assert_fails_with "names no image tags" "a version file naming no tags aborts" "$CLEANUP_SH"
 
-# ---------------------------------------------------------------------------
-# image-tag-cleanup.sh
-# ---------------------------------------------------------------------------
-
-CLEANUP_SH="$SCRIPT_DIR/image-tag-cleanup.sh"
-export CLEANUP_IMAGE_REPOS=ddev-webserver
-assert_fails_with "needs DOCKERHUB_USERNAME DOCKERHUB_TOKEN" "the front door checks credentials before doing any work" \
-  env -u DOCKERHUB_USERNAME -u DOCKERHUB_TOKEN "$CLEANUP_SH" --execute --keep-set "$KEEP"
-
-serve_standard_fixture
-output="$("$CLEANUP_SH" --keep-set "$KEEP" 2>/dev/null)"
-assert_eq "$(printf 'would delete %s\n' $EXPECTED_CANDIDATES)" "$output" "the default run is a dry run naming every candidate"
-assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "the default run neither logs in nor deletes"
-
-serve_standard_fixture
-assert_fails_with "needs --yes" "--execute of every candidate without a terminal needs --yes" \
-  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --execute </dev/null
-assert_eq "0" "$(log_count DELETE)" "a refused --execute deletes nothing"
-
-serve_standard_fixture
-"$CLEANUP_SH" --keep-set "$KEEP" --save-keep-set "$WORKDIR/saved-keep.txt" --save-candidates "$WORKDIR/saved-candidates.txt" >/dev/null 2>&1
-assert_eq "$(sort "$KEEP")" "$(sort "$WORKDIR/saved-keep.txt")" "--save-keep-set writes the keep-set used"
-assert_eq "$(printf 'ddev/ddev-webserver:%s\n' $(echo "$EXPECTED_CANDIDATES" | sed 's/.*://') | sort)" "$(sort "$WORKDIR/saved-candidates.txt")" "--save-candidates writes the candidates found"
-
-serve_standard_fixture
-DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --execute --yes >/dev/null 2>&1 </dev/null
-assert_eq "$(echo "$EXPECTED_CANDIDATES" | wc -w | tr -d ' ')" "$(log_count DELETE)" "--execute --yes deletes every candidate"
-
-serve_standard_fixture
-output="$("$CLEANUP_SH" --keep-set "$KEEP" --older-than-days 10000 2>/dev/null)"
-assert_eq "image-tag-cleanup.sh: no tags to delete" "$output" "a flag sets the age rule the way its environment variable does"
-
-serve_standard_fixture
-output="$("$CLEANUP_SH" --keep-set="$KEEP" --older-than-days=10000 2>/dev/null)"
-assert_eq "image-tag-cleanup.sh: no tags to delete" "$output" "--flag=value works like --flag value"
-
-serve_standard_fixture
-output="$(env -u CLEANUP_IMAGE_REPOS "$CLEANUP_SH" --keep-set "$KEEP" --docker-org ddev --image-repo ddev-webserver 2>/dev/null)"
-assert_eq "$(printf 'would delete %s\n' $EXPECTED_CANDIDATES)" "$output" "--docker-org and --image-repo select what is checked"
-
-serve_standard_fixture
-output="$("$CLEANUP_SH" --keep-set "$KEEP" --limit 2 2>/dev/null)"
-assert_eq "$(printf 'would delete %s\n' $EXPECTED_CANDIDATES | head -2)" "$output" "--limit keeps the first n candidates, sorted"
-serve_standard_fixture
-DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --limit 2 --execute --yes >/dev/null 2>&1 </dev/null
-assert_eq "2" "$(log_count DELETE)" "--limit 2 --execute deletes two"
-assert_fails_with "--limit must be a number" "--limit needs a number" "$CLEANUP_SH" --keep-set "$KEEP" --limit many
-assert_fails_with "not to --tag" "--limit with explicit tags is refused" "$CLEANUP_SH" --keep-set "$KEEP" --limit 2 --tag ddev/ddev-webserver:bbbbbbbbbb
-
-unset CLEANUP_IMAGE_REPOS
 if [ "$FAILURES" -gt 0 ]; then
   echo "${FAILURES} test(s) failed" >&2
   exit 1
