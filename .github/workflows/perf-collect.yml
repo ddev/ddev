@@ -33,8 +33,7 @@ on:
         default: ''
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
 
 concurrency:
   group: perf-collect
@@ -43,6 +42,9 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+      actions: write
     steps:
       # continue-on-error so a missing BUILDKITE_API_TOKEN vault item doesn't turn
       # every nightly run red before the one-time setup below is done. collect.js
@@ -198,3 +200,32 @@ jobs:
           [ -n "$TEST_RUNTIME_ERRORS" ] && printf '%s\n' "$TEST_RUNTIME_ERRORS"
           [ -n "$PER_TEST_ERRORS" ] && printf '%s\n' "$PER_TEST_ERRORS"
           exit 1
+
+  # Opens or comments on a perf-regression issue per leg with a sustained
+  # slowdown; see "Regression signal" in perf/collector/README.md. A separate
+  # job so only it holds issues: write, and so a gh failure here cannot skip
+  # the collection-error report above. Dry on any branch but main.
+  detect-regressions:
+    needs: collect
+    if: ${{ !cancelled() && needs.collect.result != 'skipped' }}
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Detect sustained regressions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch --depth=1 origin performance-data
+          git show FETCH_HEAD:history.ndjson > "$RUNNER_TEMP/history.ndjson"
+          node perf/collector/detect-regressions.js "$RUNNER_TEMP/history.ndjson" \
+            ${{ github.ref != 'refs/heads/main' && '--dry-run' || '' }}

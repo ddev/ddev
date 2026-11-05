@@ -33,6 +33,10 @@
 #   -m MODE    Mutagen: on | off | default (global config)     (default: default)
 #   -P         do NOT run 'ddev poweroff' before each commit   (default: do it)
 #   -k         keep the built binaries and test projects (skip cleanup)
+#   -f PCT     exit 3 if B's median is more than PCT percent    (default: off)
+#              AND more than -s seconds slower than A's, for
+#              either start or rebuild
+#   -s SECS    seconds floor for -f                             (default: 0)
 #   -h         show this help
 #
 # Example:
@@ -40,6 +44,7 @@
 #   scripts/compare-start-perf.sh -n 10 -m off v1.25.0 HEAD
 #   scripts/compare-start-perf.sh -m on upstream/main HEAD
 #   scripts/compare-start-perf.sh -b 5 upstream/main HEAD
+#   scripts/compare-start-perf.sh -f 50 -s 5 upstream/main HEAD
 
 set -u
 
@@ -49,13 +54,15 @@ PROJECT_TYPE=php
 KEEP=0
 MUTAGEN_MODE=default
 POWEROFF=1
+FAIL_PCT=""
+FAIL_SECS=0
 
 usage() {
-  sed -n '2,42p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,47p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 
-while getopts ":n:b:t:m:Pkh" opt; do
+while getopts ":n:b:t:m:f:s:Pkh" opt; do
   case "$opt" in
     n) RUNS=$OPTARG ;;
     b) REBUILD_RUNS=$OPTARG ;;
@@ -63,6 +70,8 @@ while getopts ":n:b:t:m:Pkh" opt; do
     m) MUTAGEN_MODE=$OPTARG ;;
     P) POWEROFF=0 ;;
     k) KEEP=1 ;;
+    f) FAIL_PCT=$OPTARG ;;
+    s) FAIL_SECS=$OPTARG ;;
     h) usage 0 ;;
     :) echo "Error: -$OPTARG requires an argument" >&2; usage 1 ;;
     \?) echo "Error: unknown option -$OPTARG" >&2; usage 1 ;;
@@ -85,6 +94,12 @@ esac
 case "$REBUILD_RUNS" in
   ''|*[!0-9]*) echo "Error: -b must be a non-negative integer" >&2; exit 1 ;;
 esac
+
+is_number() { printf '%s\n' "$1" | grep -Eq '^[0-9]+(\.[0-9]+)?$'; }
+if [ -n "$FAIL_PCT" ] && ! is_number "$FAIL_PCT"; then
+  echo "Error: -f must be a non-negative number" >&2; exit 1
+fi
+is_number "$FAIL_SECS" || { echo "Error: -s must be a non-negative number" >&2; exit 1; }
 
 # Map Mutagen mode to the config flag value and the config.yaml key fallback.
 case "$MUTAGEN_MODE" in
@@ -415,6 +430,7 @@ echo
 
 # print_summary <title> <arrname-a> <arrname-b> : median/trimmed-mean comparison
 # for one metric. Arrays are passed by name (not value) for bash 3.2 compatibility.
+REGRESSED=0
 print_summary() {
   title=$1; an=$2; bn=$3
   eval "aset=(\"\${$an[@]}\")"
@@ -432,6 +448,11 @@ print_summary() {
     else if (d < 0) printf "  B is FASTER than A by %.2fs (%+.1f%%) on median\n", -d, pct
     else            printf "  No median difference\n"
   }'
+  if [ -n "$FAIL_PCT" ] && awk -v a="$med_a" -v b="$med_b" -v p="$FAIL_PCT" -v s="$FAIL_SECS" \
+    'BEGIN { exit !(a > 0 && b - a > s && (b - a) / a * 100 > p) }'; then
+    echo "  REGRESSION: more than ${FAIL_PCT}% and ${FAIL_SECS}s slower"
+    REGRESSED=1
+  fi
 }
 
 echo "==================================================================="
@@ -441,3 +462,4 @@ if [ "$REBUILD_RUNS" -gt 0 ]; then
   print_summary "ddev utility rebuild" REBUILD_A REBUILD_B
 fi
 echo "==================================================================="
+[ "$REGRESSED" -eq 0 ] || exit 3
