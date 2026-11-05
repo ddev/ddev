@@ -154,3 +154,7 @@ mkcert -install
 docker info
 docker version
 lsb_release -a
+# A runner that fills its disk dies without uploading its log, so record the
+# disk it started with.
+df -h /
+docker system df || true
