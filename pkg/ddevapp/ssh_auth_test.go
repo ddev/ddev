@@ -24,6 +24,9 @@ import (
 
 // TestSSHAuth tests basic SSH authentication
 func TestSSHAuth(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: ddev-ssh-agent doesn't run on Apple Container; TestAppleContainerSSHAgent covers its replacement")
+	}
 	if dockerutil.IsColima() {
 		t.Skip("Skipping on Colima")
 	}
@@ -169,6 +172,9 @@ expect eof
 // TestSshAuthConfigOverride tests that the ~/.ddev/.ssh-auth-compose-compose.yaml can be overridden
 // with ~/.ddev/ssh-auth-compose.*.yaml
 func TestSshAuthConfigOverride(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: ddev-ssh-agent doesn't run on Apple Container; TestAppleContainerSSHAgent covers its replacement")
+	}
 	assert := asrt.New(t)
 	pwd, _ := os.Getwd()
 	testDir := testcommon.CreateTmpDir(t.Name())
@@ -211,6 +217,9 @@ func TestSshAuthConfigOverride(t *testing.T) {
 // TestSSHAgentUpstream checks that ssh_agent_upstream turns ddev-ssh-agent
 // into a relay to an existing agent, and that clearing it restores the default.
 func TestSSHAgentUpstream(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: ddev-ssh-agent doesn't run on Apple Container; TestAppleContainerSSHAgent covers its replacement")
+	}
 	origUpstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
 	// Code under test can write the global config, so restore the file too.
 	t.Cleanup(func() {
@@ -339,6 +348,9 @@ func TestSSHAgentUpstream(t *testing.T) {
 // TestSSHAgentUpstreamHost checks ssh_agent_upstream=host against the macOS
 // agent that Docker providers forward, and the fallback where none is forwarded.
 func TestSSHAgentUpstreamHost(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: ddev-ssh-agent doesn't run on Apple Container; TestAppleContainerSSHAgent covers its replacement")
+	}
 	if !nodeps.IsMacOS() {
 		t.Skip("Skipping: macOS Docker providers only")
 	}
@@ -396,4 +408,55 @@ func TestSSHAgentUpstreamHost(t *testing.T) {
 	}
 	require.NoError(t, err, stderr)
 	require.Contains(t, stdout, "ddev-upstream-host-test")
+}
+
+// TestAppleContainerSSHAgent checks that web uses a host agent named by
+// ssh_agent_upstream directly, since ddev-ssh-agent doesn't run there.
+func TestAppleContainerSSHAgent(t *testing.T) {
+	if !dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container only")
+	}
+	origDir, _ := os.Getwd()
+	origUpstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
+	site := TestSites[0]
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		require.NoError(t, site.Prepare())
+	}
+	testcommon.ClearDockerEnv()
+	app := &ddevapp.DdevApp{}
+	require.NoError(t, app.Init(site.Dir))
+
+	// Not named *.sock, which socktainer drops (socktainer#495)
+	agentDir := testcommon.CreateTmpDir(t.Name())
+	sock := filepath.Join(agentDir, "agent")
+	agent := osexec.Command("ssh-agent", "-D", "-a", sock)
+	require.NoError(t, agent.Start())
+	t.Cleanup(func() {
+		err := app.Stop(true, false)
+		require.NoError(t, err)
+		globalconfig.DdevGlobalConfig.SSHAgentUpstream = origUpstream
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		_ = agent.Process.Kill()
+		_ = agent.Wait()
+		_ = os.RemoveAll(agentDir)
+		_ = os.Chdir(origDir)
+	})
+	require.Eventually(t, func() bool { return fileutil.FileExists(sock) }, 10*time.Second, 100*time.Millisecond)
+	keyFile := filepath.Join(agentDir, "id_ed25519")
+	out, err := osexec.Command("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "ddev-apple-container-test", "-f", keyFile).CombinedOutput()
+	require.NoError(t, err, string(out))
+	add := osexec.Command("ssh-add", keyFile)
+	add.Env = append(os.Environ(), "SSH_AUTH_SOCK="+sock)
+	out, err = add.CombinedOutput()
+	require.NoError(t, err, string(out))
+
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = sock
+	require.NoError(t, app.Restart())
+
+	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{Cmd: "ssh-add -l"})
+	require.NoError(t, err, stderr)
+	require.Contains(t, stdout, "ddev-apple-container-test")
+	c, err := dockerutil.FindContainerByName(ddevapp.SSHAuthName)
+	require.NoError(t, err)
+	require.Nil(t, c, "ddev-ssh-agent shouldn't run on Apple Container")
 }

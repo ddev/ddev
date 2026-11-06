@@ -457,6 +457,9 @@ func TestGetDdevLabels(t *testing.T) {
 // TestFindServiceImages checks which images FindServiceImages returns for each
 // kind of service, and the platform each has to be pulled for.
 func TestFindServiceImages(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: socktainer reports its server Os as macOS, though its images are linux")
+	}
 	app := &ddevapp.DdevApp{Name: "proj"}
 	project, err := dockerutil.CreateComposeProject(`
 name: test-project

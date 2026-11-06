@@ -158,6 +158,9 @@ services:
       {{- if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{- end }}
+      {{- if .SSHAgentHostSocket }}
+      - '{{ .SSHAgentHostSocket }}:/home/.ssh-agent/socket'
+      {{- end }}
 
     restart: "no"
     user: '$DDEV_UID:$DDEV_GID'

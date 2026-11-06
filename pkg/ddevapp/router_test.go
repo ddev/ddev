@@ -25,6 +25,9 @@ import (
 
 // TestGlobalPortOverride tests global router_http_port and router_https_port
 func TestGlobalPortOverride(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: the global router port is 8080 here, and WriteConfig after Start pins it into the test site's config")
+	}
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() || dockerutil.IsPodmanRootlessmacOS()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
@@ -73,6 +76,9 @@ func TestGlobalPortOverride(t *testing.T) {
 // It starts up three DDEV projects, looks to see if the config is set right,
 // then tests to see that the right ports have been started up on the router.
 func TestProjectPortOverride(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -263,6 +269,9 @@ func startRetryingHostPortRace(t *testing.T, app *ddevapp.DdevApp) error {
 
 // Test that the app assigns a substitute port if the default one is not available.
 func TestUseRouterSubstitutePort(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
@@ -1143,6 +1152,9 @@ func TestRouterNotRebuiltWithExtraPorts(t *testing.T) {
 // project update the router's network aliases in place rather than recreating
 // the router container.
 func TestRouterNotRebuiltOnHostnameChange(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: socktainer neither reports network aliases nor applies new ones on reconnect, https://github.com/socktainer/socktainer/issues/505")
+	}
 	// Windows can't handle this test, util.CaptureUserOut() can deadlock around a full app.Start()/Restart(), see #8644
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && nodeps.IsWindows() {
 		t.Skip("Skipping TestRouterNotRebuiltOnHostnameChange on Windows")

@@ -1,0 +1,22 @@
+# socktainer (Docker API over Apple Container) on macOS arm64
+# See https://buildkite.com/ddev/macos-socktainer/settings/repository
+
+  - command: ".buildkite/test.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=macos"
+      - "socktainer=true"
+      - "architecture=arm64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DOCKER_TYPE: "socktainer"
+      # Keep going past a failing package so one run shows every failure.
+      MAKE_TARGET: "-k test"
+      GOTESTSUM_JSONFILE_DIR: "test-results"
+      # /opt/homebrew/etc/buildkite-agent/hooks/environment
+      # DOCKERHUB_PULL_USERNAME
+      # DOCKERHUB_PULL_PASSWORD
+    parallelism: 1

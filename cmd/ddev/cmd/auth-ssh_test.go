@@ -21,6 +21,9 @@ import (
 
 // TestCmdAuthSSH runs `ddev auth ssh` and checks that it actually worked out.
 func TestCmdAuthSSH(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: ddev-ssh-agent doesn't run on Apple Container; TestAppleContainerSSHAgent covers its replacement")
+	}
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping TestCmdAuthSSH on Apple Silicon because of Docker Desktop failures to connect")
 	}
@@ -179,6 +182,9 @@ func TestCmdAuthSSHUpstream(t *testing.T) {
 
 // TestCmdAuthSSHStdin checks that `ddev auth ssh -f -` adds a key piped to stdin.
 func TestCmdAuthSSHStdin(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: ddev-ssh-agent doesn't run on Apple Container; TestAppleContainerSSHAgent covers its replacement")
+	}
 	origUpstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
 	keyDir := testcommon.CreateTmpDir(t.Name())
 	keyFile := filepath.Join(keyDir, "id_ed25519")

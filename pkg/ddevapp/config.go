@@ -905,6 +905,7 @@ type composeYAMLVars struct {
 	OmitDBA                   bool
 	OmitRouter                bool
 	OmitSSHAgent              bool
+	SSHAgentHostSocket        string
 	BindAllInterfaces         bool
 	MariaDBVolumeName         string
 	PostgresVolumeName        string
@@ -987,6 +988,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitDB:                    app.IsDBOmitted(),
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
+		SSHAgentHostSocket:        AppleContainerSSHAgentSocket(),
 		BindAllInterfaces:         app.BindAllInterfaces,
 		MutagenEnabled:            app.IsMutagenEnabled(),
 

@@ -477,7 +477,7 @@ func SkipUnlessDefaultEnvironment(t *testing.T) {
 		nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
 		globalconfig.DdevGlobalConfig.IsMutagenEnabled() ||
 		nodeps.NoBindMountsDefault ||
-		dockerutil.IsPodman() || dockerutil.IsDockerRootless() {
+		dockerutil.IsPodman() || dockerutil.IsDockerRootless() || dockerutil.IsAppleContainer() {
 		t.Skip("skipping: this test doesn't depend on webserver type, Mutagen, or rootless Docker, so it only needs to run once, under the plain default setup; see ddev/ddev#8696")
 	}
 }

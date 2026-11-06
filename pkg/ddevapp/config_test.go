@@ -1452,6 +1452,9 @@ func TestExtraPackages(t *testing.T) {
 
 // TestTimezoneConfig tests to make sure setting timezone config takes effect in the container.
 func TestTimezoneConfig(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	app := &ddevapp.DdevApp{}
 
 	site := TestSites[0]
@@ -2090,6 +2093,9 @@ func TestConfigFunctionality(t *testing.T) {
 // TestConfigDefaultContainerTimeout verifies that `default_container_timeout` works
 // properly
 func TestConfigDefaultContainerTimeout(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	if dockerutil.IsLima() {
 		t.Skip("Skipping on Lima, unknown why non-writeable filesystem error")
 	}
