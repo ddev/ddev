@@ -510,6 +510,23 @@ quickstart-test: build dummy-project
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); bats docs/tests
+WEBUI_E2E=pkg/webui/e2e
+
+.PHONY: webui-e2e webui-e2e-real
+# Browser tests of the `ddev serve` dashboard against a fake API, in Chromium
+# and WebKit; no Docker.
+webui-e2e:
+	cd $(WEBUI_E2E) && npm ci --no-audit --no-fund && npx playwright install chromium webkit && npx playwright test --project=mocked --project=mocked-webkit
+
+# Browser test of a real `ddev serve`, which starts and deletes a project.
+webui-e2e-real: build
+	cd $(WEBUI_E2E) && npm ci --no-audit --no-fund && npx playwright install chromium && DDEV_WEBUI_E2E=true DDEV_BINARY=$(DDEV_BINARY_FULLPATH) npx playwright test --project=real
+
+.PHONY: desktop
+# Experimental Wails desktop app, a separate module; see desktop/README.md.
+desktop: build
+	$(MAKE) -C desktop VERSION=$(VERSION) DDEV_BIN=$(abspath $(GOTMP)/bin/$(DEFAULT_BUILD))
+
 # bats refuses ever to exit until all processes started by it
 # have exited. So we don't want to let bats/ddev start mutagen daemon
 dummy-project: build
