@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -241,6 +242,12 @@ func TestComposerCreateProjectPipedInput(t *testing.T) {
 	})
 	err = app.Start()
 	require.NoError(t, err)
+	listTmp := func() []string {
+		stdout, _, err := app.Exec(&ddevapp.ExecOpts{Cmd: "ls /tmp"})
+		require.NoError(t, err)
+		return strings.Fields(stdout)
+	}
+	tmpBefore := listTmp()
 
 	packages := map[string]string{
 		"plain": `{"name": "test/plain", "type": "project", "version": "1.0.0"}`,
@@ -285,9 +292,13 @@ func TestComposerCreateProjectPipedInput(t *testing.T) {
 	require.Equal(t, "post=test\n", string(post))
 	require.NotRegexp(t, `(?m)^(y|test)\r?$`, out)
 
-	stdout, _, err := app.Exec(&ddevapp.ExecOpts{Cmd: "ls /tmp"})
-	require.NoError(t, err)
-	require.NotContains(t, stdout, "-input")
+	// Each run's install directory and input file are /tmp/<6 letters> and
+	// /tmp/<6 letters>-input.
+	for _, name := range listTmp() {
+		if !slices.Contains(tmpBefore, name) {
+			require.NotRegexp(t, `^[a-zA-Z]{6}(-input)?$`, name)
+		}
+	}
 }
 
 func TestReadPipedInput(t *testing.T) {
