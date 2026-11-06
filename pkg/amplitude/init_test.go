@@ -52,10 +52,12 @@ func TestInitAmplitudeAfterGlobalConfig(t *testing.T) {
 	require.False(t, globalconfig.IsGlobalConfigLoaded(), "another test in this package loaded the global config first")
 	InitAmplitude()
 	require.False(t, ampli.Instance.InitializedAndEnabled())
+	require.False(t, IsEnabled())
 
 	globalconfig.EnsureGlobalConfig()
 	InitAmplitude()
 	require.True(t, ampli.Instance.InitializedAndEnabled())
+	require.True(t, IsEnabled())
 
 	ampli.Instance.Flush()
 	require.Eventually(t, func() bool {
@@ -69,6 +71,7 @@ func TestInitAmplitudeAfterGlobalConfig(t *testing.T) {
 	resetForTest(server.URL)
 	InitAmplitude()
 	require.False(t, ampli.Instance.InitializedAndEnabled())
+	require.False(t, IsEnabled())
 
 	writeGlobalConfig("instrumentation_opt_in: true\n")
 	globalconfig.EnsureGlobalConfig()
@@ -76,6 +79,7 @@ func TestInitAmplitudeAfterGlobalConfig(t *testing.T) {
 	resetForTest(server.URL)
 	InitAmplitude()
 	require.False(t, ampli.Instance.InitializedAndEnabled())
+	require.False(t, IsEnabled())
 }
 
 // resetForTest clears the initialization state and sets the server URL.
