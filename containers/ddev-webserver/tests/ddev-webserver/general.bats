@@ -161,6 +161,14 @@ teardown() {
   assert_output "Upstream error message"
 }
 
+@test "verify the image's /var/www/html is empty" {
+  # A runtime that ignores volume nocopy copies anything here into the Mutagen
+  # volume, which then syncs it into the project (socktainer/socktainer#497)
+  run docker run --rm --entrypoint ls "$DOCKER_IMAGE" -A /var/www/html
+  assert_success
+  assert_output ""
+}
+
 @test "verify that xdebug is not enabled by default" {
   run docker run --rm "$DOCKER_IMAGE" php --version
   assert_success
