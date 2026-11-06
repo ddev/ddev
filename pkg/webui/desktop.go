@@ -34,10 +34,15 @@ func (s *Server) Changed() <-chan struct{} {
 }
 
 // Post sends a POST through the handler as the page would, so that an action
-// started from a tray menu shows in the page's activity list.
+// started from a tray menu shows in the page's activity list. A server from
+// New gets the token, as a script would send it.
 func (s *Server) Post(path string) error {
 	r := httptest.NewRequest(http.MethodPost, path, nil)
 	r.Header.Set(dashboardHeader, "1")
+	if s.listener != nil {
+		r.Host = s.listener.Addr().String()
+		r.Header.Set("Authorization", "Bearer "+s.token)
+	}
 	w := httptest.NewRecorder()
 	s.Handler().ServeHTTP(w, r)
 	if w.Code >= 400 {

@@ -1,6 +1,7 @@
 // Command ddev-desktop is an experimental desktop app for DDEV. It shows the
-// `ddev serve` dashboard in a native window through Wails, without opening a
-// network port, and adds a tray menu and notifications.
+// `ddev serve` dashboard in a native window through Wails, and adds a tray
+// menu and notifications. On macOS and Linux it opens no network port; see
+// modes.go for Windows.
 //
 // It is a separate module so that Wails, and the CGO it needs on macOS and
 // Linux, stay out of the ddev binary and its vendor directory.
@@ -39,13 +40,20 @@ func main() {
 		log.Fatal("DDEV is not designed to run as root")
 	}
 	useLoginShellPath()
-	ddevBinary, err := findDdev()
-	if err != nil {
-		log.Print(err)
+	ddevBinary, findErr := findDdev()
+	if findErr != nil {
+		log.Print(findErr)
 	}
 
+	m, err := chooseMode()
+	if err != nil {
+		log.Fatal(err)
+	}
 	var st *selfTest
 	if os.Getenv("DDEV_DESKTOP_SELFTEST") == "true" {
+		if m == modeWSL {
+			log.Fatal("The self-test runs in embedded or loopback mode")
+		}
 		if st, err = newSelfTest(); err != nil {
 			log.Fatal(err)
 		}
@@ -57,14 +65,65 @@ func main() {
 	// Hooks would print to nowhere; the subcommands still run theirs.
 	ddevapp.SkipHooks = true
 
-	srv := webui.NewEmbedded(ddevBinary)
-	handler := srv.Handler()
-	if st != nil {
-		handler = st.wrap(handler)
+	var wrap func(http.Handler) http.Handler
+	if st != nil || os.Getenv("DDEV_DESKTOP_DEBUG") == "true" {
+		wrap = func(h http.Handler) http.Handler {
+			if st != nil {
+				h = st.wrap(h)
+			}
+			if os.Getenv("DDEV_DESKTOP_DEBUG") == "true" {
+				h = logRequests(h)
+			}
+			return h
+		}
 	}
-	if os.Getenv("DDEV_DESKTOP_DEBUG") == "true" {
-		handler = logRequests(handler)
+
+	// srv is the in-process dashboard; it is nil in WSL2 mode.
+	var srv *webui.Server
+	var be backend
+	var remote *remoteServer
+	handler := http.NotFoundHandler()
+	windowURL := "/"
+	switch m {
+	case modeEmbedded:
+		srv = webui.NewEmbedded(ddevBinary)
+		handler = srv.Handler()
+		if wrap != nil {
+			handler = wrap(handler)
+		}
+	case modeLoopback:
+		if srv, err = webui.New(0); err != nil {
+			log.Fatal(err)
+		}
+		srv.SetDesktop(ddevBinary, wrap)
+		go func() {
+			if err := srv.Serve(); err != nil {
+				log.Print(err)
+			}
+		}()
+		windowURL = srv.URL()
+	case modeWSL:
+		if remote, err = startRemote(ddevBinary); err != nil {
+			log.Fatal(err)
+		}
+		windowURL = remote.URL()
+		be = remote
 	}
+	if srv != nil {
+		be = srv
+	}
+	shutdown := func() {
+		if srv != nil {
+			// Open status streams never go idle, so do not wait for them long.
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			_ = srv.Shutdown(ctx)
+		}
+		if remote != nil {
+			remote.Close()
+		}
+	}
+
 	singleInstance := &application.SingleInstanceOptions{UniqueID: "com.ddev.desktop"}
 	if st != nil {
 		// A self-test runs beside the user's own copy of the app.
@@ -84,6 +143,7 @@ func main() {
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
 		SingleInstance: singleInstance,
+		OnShutdown:     shutdown,
 	})
 
 	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
@@ -93,7 +153,7 @@ func main() {
 		Height:    820,
 		MinWidth:  720,
 		MinHeight: 480,
-		URL:       "/",
+		URL:       windowURL,
 	})
 	showWindow := func() {
 		window.Show()
@@ -111,8 +171,11 @@ func main() {
 		if st != nil {
 			go runSelfTest(srv, st)
 		}
-		if ddevBinary == "" {
-			app.Dialog.Error().SetTitle("ddev not found").SetMessage(err.Error()).Show()
+		if ddevBinary == "" && m != modeWSL {
+			app.Dialog.Error().SetTitle("ddev not found").SetMessage(findErr.Error()).Show()
+		}
+		if srv == nil {
+			return
 		}
 		// Notifications need an app bundle on macOS and a session bus on
 		// Linux; without them the app runs without notifications.
@@ -144,13 +207,12 @@ func main() {
 	tray := app.SystemTray.New()
 	tray.SetTemplateIcon(trayIcon)
 	tray.SetTooltip("DDEV")
-	t := &trayMenu{app: app, tray: tray, srv: srv, show: showWindow}
+	t := &trayMenu{app: app, tray: tray, srv: be, show: showWindow}
 	go t.follow()
 
 	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
-	_ = srv.Shutdown(context.Background())
 }
 
 // runSelfTest waits for selftest.js to report, prints the result, and exits
@@ -169,7 +231,9 @@ func runSelfTest(srv *webui.Server, st *selfTest) {
 	case <-time.After(3 * time.Minute):
 		fmt.Println("SELFTEST FAIL: no result from the window within 3 minutes")
 	}
-	_ = srv.Shutdown(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	_ = srv.Shutdown(ctx)
 	st.cleanup()
 	os.Exit(code)
 }
@@ -187,7 +251,7 @@ func logRequests(next http.Handler) http.Handler {
 type trayMenu struct {
 	app  *application.App
 	tray *application.SystemTray
-	srv  *webui.Server
+	srv  backend
 	show func()
 	last []webui.ProjectState
 	err  string
