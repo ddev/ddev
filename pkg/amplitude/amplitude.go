@@ -63,9 +63,10 @@ func GetEventOptions() (options ampli.EventOptions) {
 	return
 }
 
-// TrackCommand collects and tracks information about the command for
-// instrumentation.
-func TrackCommand(cmd *cobra.Command, args []string) {
+// TrackCommand counts the command for instrumentation. The counts are sent
+// as one Command Summary event per command and day, on the first command
+// of a later day.
+func TrackCommand(cmd *cobra.Command) {
 	// defer util.TimeTrack()()
 
 	InitAmplitude()
@@ -75,13 +76,10 @@ func TrackCommand(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	builder := ampli.Command.Builder().
-		Arguments(args).
-		CalledAs(cmd.CalledAs()).
-		CommandName(cmd.Name()).
-		CommandPath(cmd.CommandPath())
-
-	ampli.Instance.Command("", builder.Build(), GetEventOptions())
+	previous := countCommand(getCommandsFileName(), time.Now().Format(time.DateOnly), cmd.CommandPath())
+	if previous != nil {
+		sendCommandSummaries(*previous)
+	}
 }
 
 // Flush transmits the queued events if limits are reached.
@@ -134,10 +132,12 @@ func FlushForce() {
 	ampli.Instance.Flush()
 }
 
-// Clean removes the cache file and the record of events reported today.
+// Clean removes the cache file, the record of events reported today, and
+// the command counts.
 func Clean() {
 	_ = os.Remove(getCacheFileName())
 	_ = os.Remove(getReportedFileName())
+	_ = os.Remove(getCommandsFileName())
 }
 
 // CheckSetUp shows a warning to the user if the API key is not available.
