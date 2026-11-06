@@ -27,9 +27,9 @@ commit plus this file's updates.
 - **socktainer release:** #492, #494 and #496 merged on 2026-11-03, but the latest release
   is still v1.6.0 (2026-10-20). After the next release, raise `SocktainerMinVersion`, and
   drop the `*.sock` warning and the #493 exit-code skips.
-- **Hostname uniqueness** is still the main blocker and still unfiled (see "Open
-  blockers"). File it with a Compose repro and the attachment-hostname proposal. Then
-  file a PR for #479 (opt-in peer rewrite) or #505 (aliases); keep about two open.
+- **Hostname uniqueness**, the main blocker, is filed as socktainer#508 with fix PR #509
+  (see "Hostname uniqueness" below). #479's fix is PR #506. Those are the two open PRs;
+  hold #505 (aliases) and #504 (`group_add`) until one merges.
 - **Skips:** drop `IsAppleContainer()` from `SkipUnlessDefaultEnvironment`, and give each
   remaining skip a named socktainer issue (see "Test skips to rethink").
 - **Remove `HANDOFF.md` and `handoff/`** before review. Move what matters into the PR
@@ -138,7 +138,8 @@ test). Of its 18 failures:
       `https://<router IP>:8443` (`ddev poweroff; ddev start; ddev restart` shows it).
       `TestEnvironmentVariables` ignores that one value on Apple Container; it failed
       only after `TestCustomCerts`, whose `PowerOff()` recreates the router with the
-      alias. Users hit it too (`drush uli` links). Proposed upstream fix: make the peer
+      alias. Users hit it too (`drush uli` links). Fix PR
+      [socktainer#506](https://github.com/socktainer/socktainer/pull/506) makes the peer
       rewrite opt-in by label, as the loopback rewrite already is.
 
 ### Test skips to rethink (audited 2026-11-03)
@@ -222,10 +223,11 @@ Next to file, in this order:
    file after reading `Vminitd.copy`. It left DDEV's `ddev-router-traefik` volume empty, so
    Traefik fell back to its defaults and failed binding `:80`. The branch extracts with
    `tar` inside the container instead on this provider.
-3. **Hostname uniqueness** — still the main remaining DDEV gate; no fix exists. File as an
-   issue with the proposal in "Open blockers" below, with a DDEV-independent Compose repro (a
-   service recreated while its old container still exists). Upstream's closed #385 (Compose
-   recreate and rename) is related background.
+3. **Hostname uniqueness** — still the main remaining DDEV gate. Filed 2026-11-06 as
+   [socktainer#508](https://github.com/socktainer/socktainer/issues/508), fix in PR
+   [#509](https://github.com/socktainer/socktainer/pull/509) (branch
+   `fix/unique-attachment-hostname` in `~/workspace/socktainer`). Repro:
+   `~/tmp/hostname-recreate-repro/repro.sh`.
 4. **`docker inspect` reports `State.ExitCode` 0 for every stopped container** — filed
    2026-11-01 as [socktainer#493](https://github.com/socktainer/socktainer/issues/493), fix in PR
    [#494](https://github.com/socktainer/socktainer/pull/494) (branch `fix/inspect-exit-code`,
@@ -406,10 +408,15 @@ outright: restore removes the db container and runs `compose up`, which recreate
 dependent while the old web still exists. `ddev restart` is unaffected, because `Stop()` runs
 `compose down` first. The running project keeps serving through the failure.
 
-The likely socktainer-side fix: keep the requested hostname as the container's own hostname,
-but stop passing it as the network attachment hostname. That name feeds Apple Container's own
-DNS, which socktainer doesn't use since it runs its own. No issue filed yet. Upstream's open
-socktainer#487 (a mode resolving names with apple/container's DNS) touches the same area.
+The uniqueness rule is apple/container's `AttachmentNameValidator`, and it is deliberate.
+Apple Container also has no guest hostname apart from the attachment's: it takes the
+attachment hostname up to the first dot. So the fix in
+[socktainer#509](https://github.com/socktainer/socktainer/pull/509) (issue
+[#508](https://github.com/socktainer/socktainer/issues/508)) gives each attachment
+`<hostname>.<random suffix>`. The guest still sees the requested hostname, and
+`ddev snapshot restore` completes with it. socktainer was also reporting the hostname error
+as a 409 about the container name, which #509 fixes as well. Upstream's open socktainer#487
+(a mode resolving names with apple/container's DNS) would see the suffixed names.
 
 Seen again 2026-11-03 on `d11`: after `ddev config global --ssh-agent-upstream=…` changed
 web's mounts, `ddev restart` and a `ddev poweroff`/`ddev start` in quick succession both failed
@@ -587,9 +594,10 @@ then point `DOCKER_HOST` at the proxy.
 
 - Apple `container` **1.6.1** from the signed installer at `/usr/local`
   (`container-apiserver` running). Homebrew's `container` is also 1.6.1.
-- socktainer running by hand from `~/tmp/socktainer-imgfilter/.build/release/socktainer`
-  (upstream `main` `8ea2350` plus #492). Stock upstream `main` is built at
-  `~/workspace/socktainer/.build/release/socktainer`. Log: `~/tmp/socktainer.log`.
+- socktainer running by hand from `~/workspace/socktainer/.build/release/socktainer`, built
+  from branch `fix/unique-attachment-hostname` (PR #509 on upstream `main` of 2026-11-06).
+  Log: `~/tmp/socktainer.log`. Start `container system start --disable-kernel-install`;
+  without the flag it waits on a prompt.
 - Docker context **`socktainer`**.
 - Global router ports 8080/8443, `traefik_monitor_port` 11999.
 - `appletest` and `appletest2` (`~/tmp/`) powered off, both served 200 when last up; both have
