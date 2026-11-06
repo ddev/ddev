@@ -316,14 +316,20 @@ func FindContainersByVolume(volumeName string) ([]container.Summary, error) {
 	if err != nil {
 		return nil, err
 	}
-	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{
-		All:     true,
-		Filters: client.Filters{}.Add("volume", volumeName),
-	})
+	// Matched on Mounts here, since socktainer ignores the "volume" list filter.
+	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{All: true})
 	if err != nil {
 		return nil, err
 	}
-	return containers.Items, nil
+	var holders []container.Summary
+	for _, c := range containers.Items {
+		if slices.ContainsFunc(c.Mounts, func(m container.MountPoint) bool {
+			return m.Type == mount.TypeVolume && m.Name == volumeName
+		}) {
+			holders = append(holders, c)
+		}
+	}
+	return holders, nil
 }
 
 // VolumesHeldByRunningContainers returns which of volumeNames a running

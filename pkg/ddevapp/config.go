@@ -254,10 +254,12 @@ func (app *DdevApp) writeConfig(omitName bool) error {
 	if appcopy.DBImage == docker.GetDBImage(appcopy.Database.Type, appcopy.Database.Version) {
 		appcopy.DBImage = ""
 	}
-	if appcopy.RouterHTTPPort == nodeps.DdevDefaultRouterHTTPPort {
+	// Start() resolves the router ports into app, so a port that only comes
+	// from the global config must not be pinned into the project's config.
+	if appcopy.RouterHTTPPort == nodeps.DdevDefaultRouterHTTPPort || appcopy.RouterHTTPPort == globalconfig.DdevGlobalConfig.RouterHTTPPort {
 		appcopy.RouterHTTPPort = ""
 	}
-	if appcopy.RouterHTTPSPort == nodeps.DdevDefaultRouterHTTPSPort {
+	if appcopy.RouterHTTPSPort == nodeps.DdevDefaultRouterHTTPSPort || appcopy.RouterHTTPSPort == globalconfig.DdevGlobalConfig.RouterHTTPSPort {
 		appcopy.RouterHTTPSPort = ""
 	}
 	if appcopy.MailpitHTTPPort == nodeps.DdevDefaultMailpitHTTPPort {
