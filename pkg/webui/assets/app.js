@@ -16,6 +16,10 @@ const state = {
   jobId: 0,
   jobSource: null,
   logSource: null,
+  desktop: false,
+  // xdebugWanted holds a project's requested Xdebug state until its detail
+  // is reloaded, so the switch does not flip back while the job runs.
+  xdebugWanted: {},
   logService: 'web',
   registry: null,
   types: null,
@@ -50,7 +54,7 @@ function toast(text, isError) {
 async function post(url, params) {
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-DDEV-Dashboard': '1' },
     body: new URLSearchParams(params || {}),
   });
   if (!res.ok) {
@@ -109,6 +113,7 @@ function connectEvents() {
     state.projects = st.projects || [];
     state.jobs = st.jobs || [];
     state.router = st.router || '';
+    state.desktop = !!st.desktop;
     const banner = $('error-banner');
     banner.textContent = st.error || '';
     banner.classList.toggle('hidden', !st.error);
@@ -193,6 +198,7 @@ async function loadDetail() {
     const d = await res.json();
     if (seq !== detailSeq) return;
     state.detail = d;
+    delete state.xdebugWanted[p.name];
   } catch (e) {
     if (seq !== detailSeq) return;
     state.detail = { error: e.message };
@@ -200,9 +206,16 @@ async function loadDetail() {
   renderDetail();
 }
 
+// detailKey is what the panel was last built from. Rebuilding it on every
+// status event would replace a control the user is clicking or typing in.
+let detailKey = '';
+
 function renderDetail() {
   const root = $('detail');
   const p = selectedProject();
+  const key = JSON.stringify([p, state.tab, state.detail, state.xdebugWanted, state.jobs.filter((j) => !j.done).map((j) => [j.id, j.project])]);
+  if (key === detailKey && root.childElementCount) return;
+  detailKey = key;
   if (!p) {
     root.replaceChildren(h('div', { class: 'placeholder muted' }, state.projects.length ? 'Select a project.' : ''));
     return;
@@ -288,6 +301,7 @@ function overviewTab(p, d) {
   const urls = desc.urls || [];
   const shell = `cd ${shellQuote(p.approot)} && ddev ssh`;
   const xdebugOn = d.xdebug === 'on';
+  const wanted = state.xdebugWanted[p.name];
   return h('div', { class: 'cards' },
     h('div', { class: 'card' }, h('h3', {}, 'URLs'),
       running && urls.length
@@ -308,11 +322,15 @@ function overviewTab(p, d) {
       h('label', { class: 'switch' },
         h('input', {
           type: 'checkbox',
-          checked: xdebugOn,
+          checked: wanted ?? xdebugOn,
           disabled: !running || !!runningJobFor(p.name),
-          onchange: (e) => runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/xdebug-' + (e.target.checked ? 'on' : 'off')),
+          onchange: (e) => {
+            state.xdebugWanted[p.name] = e.target.checked;
+            runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/xdebug-' + (e.target.checked ? 'on' : 'off'));
+          },
         }),
-        'Xdebug ', h('span', { class: 'muted' }, running ? (xdebugOn ? 'enabled' : 'disabled') : '(project stopped)'))),
+        'Xdebug ', h('span', { class: 'muted' }, !running ? '(project stopped)'
+          : wanted !== undefined ? (wanted ? 'enabling…' : 'disabling…') : (xdebugOn ? 'enabled' : 'disabled')))),
     h('div', { class: 'card' }, h('h3', {}, 'Terminal'),
       h('p', { class: 'muted' }, 'A browser cannot host a shell. Paste this into a terminal:'),
       copyable(shell)));
@@ -608,6 +626,13 @@ function init() {
   });
   $('btn-poweroff').addEventListener('click', async () => {
     if (await confirmDialog('Power off DDEV?', 'This stops all projects and DDEV’s shared containers.', 'Power off')) runJob('/api/actions/poweroff');
+  });
+  // A desktop webview opens no new windows, so the server opens the link.
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[target="_blank"]');
+    if (!state.desktop || !a || !/^https?:/.test(a.href)) return;
+    e.preventDefault();
+    post('/api/open-url', { url: a.href }).catch((err) => toast(err.message, true));
   });
   connectEvents();
 }

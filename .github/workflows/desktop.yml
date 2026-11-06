@@ -1,0 +1,74 @@
+name: Desktop app
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "desktop/**"
+      - "pkg/webui/**"
+      - ".github/workflows/desktop.yml"
+  pull_request:
+    paths:
+      - "desktop/**"
+      - "pkg/webui/**"
+      - ".github/workflows/desktop.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and self-test the desktop app (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, ubuntu-26.04 ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: |
+            go.sum
+            desktop/go.sum
+
+      - name: Install GTK 4 and WebKitGTK (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev xvfb
+
+      - name: Test
+        working-directory: desktop
+        run: go test -v ./...
+
+      - name: Build
+        run: make desktop
+
+      # Drives the dashboard in the app's own window; see desktop/selftest.js.
+      - name: Self-test in the app window (macOS)
+        if: runner.os == 'macOS'
+        env:
+          DDEV_DESKTOP_SELFTEST: "true"
+        run: .gotmp/bin/darwin_*/DDEV.app/Contents/MacOS/ddev-desktop
+
+      - name: Self-test in the app window (Linux)
+        if: runner.os == 'Linux'
+        env:
+          DDEV_DESKTOP_SELFTEST: "true"
+          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_amd64/ddev
+        run: xvfb-run --auto-servernum .gotmp/bin/linux_amd64/ddev-desktop

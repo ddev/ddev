@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
@@ -27,6 +28,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		changed := s.changedCh()
 		st := loadStatus()
 		st.Jobs = s.jobs.summaries()
+		st.Desktop = s.embedded
 		sse.send("status", st)
 		select {
 		case <-changed:
@@ -173,6 +175,21 @@ func (s *Server) handleOpen(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := openTarget(target); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// handleOpenURL opens an http or https link in the default browser, since a
+// desktop webview opens no new windows.
+func (s *Server) handleOpenURL(w http.ResponseWriter, r *http.Request) {
+	u, err := url.Parse(r.FormValue("url"))
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		http.Error(w, "only http and https links can be opened", http.StatusBadRequest)
+		return
+	}
+	if err := openTarget(u.String()); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
