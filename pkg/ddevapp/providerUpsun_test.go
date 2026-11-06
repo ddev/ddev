@@ -44,10 +44,6 @@ func TestUpsunPull(t *testing.T) {
 	if token = os.Getenv("DDEV_UPSUN_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_UPSUN_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
-	var err error
-
-	require.True(t, isPullSiteValid(upsunPullSiteURL, upsunSiteExpectation), "upsunPullSiteURL %s isn't working right", upsunPullSiteURL)
-
 	origDir, _ := os.Getwd()
 
 	app, provider, err := setupUpsunProject(t, upsunPullTestSiteEnvironment)
@@ -58,6 +54,8 @@ func TestUpsunPull(t *testing.T) {
 		_ = os.Chdir(origDir)
 		_ = os.RemoveAll(app.AppRoot)
 	})
+
+	resumeEnvironmentAndCheckSite(t, app, "upsun", "UPSUN_CLI_TOKEN", token, upsunTestSiteID, upsunPullTestSiteEnvironment, upsunPullSiteURL, upsunSiteExpectation)
 
 	// variant using .upsun/local/project.yaml
 	t.Run("local-config", func(t *testing.T) {
@@ -222,4 +220,21 @@ func startAndCheckUpsunPush(t *testing.T, app *ddevapp.DdevApp, provider *ddevap
 	})
 	require.NoError(t, err, "output='%s', stderr='%s'", out, stderr)
 	require.Contains(t, out, tval)
+}
+
+// resumeEnvironmentAndCheckSite resumes a paused upstream environment, then
+// verifies its site. Paused environments fail the site check, and the
+// provider's own resume only runs later, inside app.Pull().
+func resumeEnvironmentAndCheckSite(t *testing.T, app *ddevapp.DdevApp, cli string, tokenVar string, token string, project string, environment string, siteURL string, expectation string) {
+	err := app.Start()
+	require.NoError(t, err)
+
+	c := fmt.Sprintf(`set -eu -o pipefail; if [ "$(%[1]s environment:info status --project=%[2]s -e %[3]s)" != "active" ]; then %[1]s environment:resume --project=%[2]s -e %[3]s -y; fi`, cli, project, environment)
+	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: c,
+		Env: []string{tokenVar + "=" + token},
+	})
+	require.NoError(t, err, "failed to resume %s environment %s: output='%s', stderr='%s'", cli, environment, out, stderr)
+
+	require.True(t, isPullSiteValid(siteURL, expectation), "site %s isn't working right", siteURL)
 }
