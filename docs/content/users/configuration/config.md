@@ -436,6 +436,8 @@ Whether to not use Docker bind mounts.
 
 Some Docker environments (like remote Docker) do not allow bind mounts, so when `true` this turns those off, turns on Mutagen, and uses volume copies to do what bind mounts would otherwise do.
 
+Bind mounts in your own `.ddev/docker-compose.*.yaml` files or in add-ons stay as written. They work only when Docker runs on the same machine as DDEV, so `ddev start` lists them in a warning.
+
 ## `no_project_mount`
 
 Whether to skip mounting project into web container.

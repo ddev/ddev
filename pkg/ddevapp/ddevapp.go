@@ -1988,6 +1988,15 @@ func (app *DdevApp) start(o StartOptions) error {
 	if err != nil {
 		return err
 	}
+	if binds := composeBindMounts(project); globalconfig.DdevGlobalConfig.NoBindMounts && len(binds) > 0 {
+		msg := fmt.Sprintf("With no_bind_mounts, these bind mounts work only when Docker runs on this machine:\n  • %s", strings.Join(binds, "\n  • "))
+		// The no-bind-mounts tests run Docker where it can't see the project,
+		// and an empty bind mount fails few tests on its own
+		if nodeps.IsEnvTrue("DDEV_TEST_NO_BIND_MOUNTS") {
+			return fmt.Errorf("%s", msg)
+		}
+		util.WarningWithColor("magenta", "%s", msg)
+	}
 
 	err = app.AddHostsEntriesIfNeeded()
 	if err != nil {
