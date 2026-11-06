@@ -3,19 +3,24 @@
 package dockerutil
 
 import (
-	"os"
+	"os/exec"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
 
-// killWithParent puts p in a job object that Windows closes when ddev exits,
-// however it exits, so p ends with ddev. Stop-Process and Task Manager end
-// ddev without a console event, so the interrupt handler never runs.
-func killWithParent(p *os.Process) (release func()) {
+// startWithParent starts the child in a job object that Windows closes when
+// ddev exits, however it exits, so the child ends with ddev. Stop-Process and
+// Task Manager end ddev without a console event, so the interrupt handler
+// never runs.
+func startWithParent(child *exec.Cmd) (release func(), err error) {
+	if err = child.Start(); err != nil {
+		return nil, err
+	}
+	p := child.Process
 	job, err := windows.CreateJobObject(nil, nil)
 	if err != nil {
-		return func() {}
+		return func() {}, nil
 	}
 	info := windows.JOBOBJECT_EXTENDED_LIMIT_INFORMATION{
 		BasicLimitInformation: windows.JOBOBJECT_BASIC_LIMIT_INFORMATION{
@@ -29,5 +34,8 @@ func killWithParent(p *os.Process) (release func()) {
 			_ = windows.CloseHandle(h)
 		}
 	}
-	return func() { _ = windows.CloseHandle(job) }
+	return func() { _ = windows.CloseHandle(job) }, nil
 }
+
+// exitWithParent does nothing here, because the job object ends the child.
+func exitWithParent() {}

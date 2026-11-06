@@ -8,11 +8,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"syscall"
 
 	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/compose"
 	"github.com/mattn/go-isatty"
+	"github.com/moby/term"
 )
 
 // An exec that reads the terminal runs in a child ddev process. docker/cli's
@@ -112,15 +114,19 @@ func ExecInChild(ddevPath, projectName string, opts api.RunOptions, stdin io.Rea
 	}
 	child := exec.Command(ddevPath, terminalExecArg, dir)
 	child.Stdin, child.Stdout, child.Stderr = stdin, stdout, stderr
-	if err = child.Start(); err != nil {
+	// A killed child can't take the terminal out of raw mode.
+	restoreTerminal := saveTerminal(stdin)
+	defer restoreTerminal()
+	release, err := startWithParent(child)
+	if err != nil {
 		return err
 	}
-	release := killWithParent(child.Process)
 	defer release()
 	// The interrupt handler exits without running deferred calls, and a signal
 	// sent only to ddev, such as `kill`, would leave the child running.
 	unregister := interrupt.OnInterrupt(func(context.Context) {
 		_ = child.Process.Kill()
+		restoreTerminal()
 		_ = os.RemoveAll(dir)
 	})
 	runErr := child.Wait()
@@ -135,9 +141,27 @@ func ExecInChild(ddevPath, projectName string, opts api.RunOptions, stdin io.Rea
 	}
 	// The child ended without a result, for example on a signal.
 	if exitErr, ok := errors.AsType[*exec.ExitError](runErr); ok {
-		return ExitCodeToError(exitErr.ExitCode(), nil)
+		exitCode := exitErr.ExitCode()
+		if ws, ok := exitErr.Sys().(syscall.WaitStatus); ok && ws.Signaled() {
+			exitCode = interrupt.ExitCode(ws.Signal())
+		}
+		return ExitCodeToError(exitCode, nil)
 	}
 	return runErr
+}
+
+// saveTerminal returns a function that puts stdin back in the terminal mode
+// it has now, or does nothing when stdin isn't a terminal.
+func saveTerminal(stdin io.Reader) (restore func()) {
+	f, ok := stdin.(*os.File)
+	if !ok || !term.IsTerminal(f.Fd()) {
+		return func() {}
+	}
+	state, err := term.SaveState(f.Fd())
+	if err != nil {
+		return func() {}
+	}
+	return func() { _ = term.RestoreTerminal(f.Fd(), state) }
 }
 
 // runTerminalExec runs the exec in optionsPath. The child needs none of what
@@ -155,6 +179,7 @@ func runTerminalExec(optionsPath string) (int, error) {
 	if err = json.Unmarshal(data, &te); err != nil {
 		return 0, err
 	}
+	exitWithParent()
 	dockerCli, _, err := newDockerCli(os.Stdin)
 	if err != nil {
 		return 0, err
