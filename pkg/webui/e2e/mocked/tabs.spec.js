@@ -33,9 +33,13 @@ test('installs, updates and removes add-ons', async ({ page, backend, browserNam
   // An empty name sends nothing.
   await page.getByRole('button', { name: 'Install' }).click();
   await page.getByLabel('Add-on repository').fill('ddev/ddev-solr');
-  // In WebKit the first Enter accepts the matching suggestion.
-  if (browserName === 'webkit') await page.getByLabel('Add-on repository').press('Enter');
-  await page.getByLabel('Add-on repository').press('Enter');
+  // What Enter does in a field with suggestions differs between WebKit
+  // builds, so WebKit submits with the button.
+  if (browserName === 'webkit') {
+    await page.getByRole('button', { name: 'Install' }).click();
+  } else {
+    await page.getByLabel('Add-on repository').press('Enter');
+  }
   expect(await nthPost(backend, 1)).toEqual({ path: '/api/projects/d11/actions/addon-get', form: { repo: 'ddev/ddev-solr' } });
   backend.endJob(backend.jobs[0].id);
 
