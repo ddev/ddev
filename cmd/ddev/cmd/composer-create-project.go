@@ -609,9 +609,11 @@ func wrapWithPipedInput(data []byte, inputFile string, cmd []string) ([]string, 
 	if len(data) == 0 {
 		return cmd, nil
 	}
+	// The PTY turns each \r into a newline, so CRLF from Windows would give an
+	// empty answer after each one.
+	input := strings.ReplaceAll(string(data), "\r\n", "\n")
 	// In a PTY, a last answer without a newline arrives only with script's EOF,
 	// up to 0.25s after the step's last read, which can miss the 0.2s wait below.
-	input := string(data)
 	if !strings.HasSuffix(input, "\n") {
 		input += "\n"
 	}

@@ -353,4 +353,7 @@ func TestWrapWithPipedInput(t *testing.T) {
 
 	_, env = wrapWithPipedInput([]byte("x\ny"), "/tmp/abc-input", cmd)
 	require.Equal(t, []string{"DDEV_PIPED_INPUT=x\ny\n"}, env)
+
+	_, env = wrapWithPipedInput([]byte("x\r\ny\r\n"), "/tmp/abc-input", cmd)
+	require.Equal(t, []string{"DDEV_PIPED_INPUT=x\ny\n"}, env)
 }
