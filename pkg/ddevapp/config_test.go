@@ -1030,6 +1030,48 @@ func TestWriteConfig(t *testing.T) {
 	assert.Equal("php", app.Type)
 }
 
+// TestWriteConfigOmitsGlobalRouterPorts checks that router ports resolved from
+// the global config, as Start() leaves them in app, aren't written to the project.
+func TestWriteConfigOmitsGlobalRouterPorts(t *testing.T) {
+	origHTTPPort := globalconfig.DdevGlobalConfig.RouterHTTPPort
+	origHTTPSPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.RouterHTTPPort = origHTTPPort
+		globalconfig.DdevGlobalConfig.RouterHTTPSPort = origHTTPSPort
+	})
+	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8080"
+	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8443"
+
+	projDir := testcommon.CreateTmpDir(t.Name())
+	projectName := strings.ToLower(t.Name())
+	t.Cleanup(func() {
+		_ = globalconfig.RemoveProjectInfo(projectName)
+		_ = os.RemoveAll(projDir)
+	})
+	app, err := ddevapp.NewApp(projDir, false)
+	require.NoError(t, err)
+	app.Name = projectName
+	app.Type = nodeps.AppTypePHP
+
+	app.RouterHTTPPort = app.GetPrimaryRouterHTTPPort()
+	app.RouterHTTPSPort = app.GetPrimaryRouterHTTPSPort()
+	require.Equal(t, "8080", app.RouterHTTPPort)
+	require.NoError(t, app.WriteConfig())
+
+	app, err = ddevapp.NewApp(projDir, false)
+	require.NoError(t, err)
+	require.Empty(t, app.RouterHTTPPort)
+	require.Empty(t, app.RouterHTTPSPort)
+
+	app.RouterHTTPPort = "8555"
+	app.RouterHTTPSPort = "8556"
+	require.NoError(t, app.WriteConfig())
+	app, err = ddevapp.NewApp(projDir, false)
+	require.NoError(t, err)
+	require.Equal(t, "8555", app.RouterHTTPPort)
+	require.Equal(t, "8556", app.RouterHTTPSPort)
+}
+
 // TestConfigOverrideDetection tests to make sure we tell them about config overrides.
 func TestConfigOverrideDetection(t *testing.T) {
 	if nodeps.IsWindows() {

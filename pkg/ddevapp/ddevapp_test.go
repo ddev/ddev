@@ -1106,8 +1106,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		require.NoError(t, err)
 		time.Sleep(time.Second * 1)
 
+		// Never closed: the accept goroutine can still send after a timeout.
 		acceptListenDone := make(chan bool, 1)
-		defer close(acceptListenDone)
 
 		go func() {
 			time.Sleep(time.Second)
@@ -2739,12 +2739,17 @@ func TestWriteableFilesDirectory(t *testing.T) {
 		time.Sleep(time.Second * 1)
 	}
 
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "cat " + fileCreatedOnHost,
-	})
-	require.NoError(t, err)
+	// virtiofs (Apple Container) caches file attributes for about a second, so
+	// the host's write can show up in the container after a delay.
+	var out string
+	require.EventuallyWithT(t, func(c *asrt.CollectT) {
+		out, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: "cat " + fileCreatedOnHost,
+		})
+		require.NoError(c, err)
+		require.Contains(c, out, baseCreatedOnHostText)
+	}, 5*time.Second, 250*time.Millisecond)
 	t.Logf("Initial fileCreatedOnHost after mutagen sync='%s'", out)
-	require.Contains(t, out, baseCreatedOnHostText)
 
 	// Append text inside the container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
