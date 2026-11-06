@@ -19,8 +19,12 @@ class MockBackend {
     this.details = {};
     this.router = 'healthy';
     this.error = '';
+    // desktop marks the status as shown in the desktop app's webview.
+    this.desktop = false;
     this.jobs = [];
     this.posts = [];
+    // postHeaders[i] holds the headers of posts[i].
+    this.postHeaders = [];
     this.registry = [
       { repo: 'ddev/ddev-redis', title: 'ddev-redis', description: 'Redis', type: 'official' },
       { repo: 'ddev/ddev-solr', title: 'ddev-solr', description: 'Solr', type: 'official' },
@@ -60,7 +64,7 @@ class MockBackend {
   }
 
   pushStatus() {
-    const status = { projects: this.projects, router: this.router, jobs: this.jobs.map(summary), error: this.error || undefined };
+    const status = { projects: this.projects, router: this.router, jobs: this.jobs.map(summary), error: this.error || undefined, desktop: this.desktop || undefined };
     for (const res of this.statusClients) send(res, 'status', status);
   }
 
@@ -148,11 +152,12 @@ class MockBackend {
     for await (const chunk of req) body += chunk;
     const post = { path: url.pathname, form: Object.fromEntries(new URLSearchParams(body)) };
     this.posts.push(post);
+    this.postHeaders.push(req.headers);
     const reply = this.postReply && this.postReply(post);
     if (reply) {
       return typeof reply.body === 'string' ? text(res, reply.status, reply.body) : json(res, reply.status, reply.body ?? {});
     }
-    if (url.pathname.includes('/open/')) {
+    if (url.pathname.includes('/open/') || url.pathname === '/api/open-url') {
       res.writeHead(204);
       return res.end();
     }

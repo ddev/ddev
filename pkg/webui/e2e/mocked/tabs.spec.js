@@ -7,15 +7,22 @@ test('toggles Xdebug', async ({ page, backend }) => {
   await expect(toggle).not.toBeChecked();
   await toggle.check();
   expect((await nthPost(backend, 1)).path).toBe('/api/projects/d11/actions/xdebug-on');
+  // While the job runs, the switch keeps the requested state.
+  await expect(page.locator('.switch')).toContainText('enabling…');
+  await expect(toggle).toBeChecked();
+  await expect(toggle).toBeDisabled();
   backend.details.d11.xdebug = 'on';
   backend.endJob(backend.jobs[0].id);
   await expect(page.locator('.switch')).toContainText('enabled');
+  // The job's end and the status event each rebuild the panel; the enabled
+  // Stop button shows both have arrived.
+  await expect(page.locator('.toolbar').getByRole('button', { name: 'Stop', exact: true })).toBeEnabled();
   await expect(toggle).toBeChecked();
   await toggle.uncheck();
   expect((await nthPost(backend, 2)).path).toBe('/api/projects/d11/actions/xdebug-off');
 });
 
-test('installs, updates and removes add-ons', async ({ page, backend }) => {
+test('installs, updates and removes add-ons', async ({ page, backend, browserName }) => {
   await page.getByRole('button', { name: 'Add-ons' }).click();
   await expect(page.locator('#addon-registry option')).toHaveCount(2);
   await expect(page.locator('#addon-registry option').first()).toHaveAttribute('value', 'ddev/ddev-redis');
@@ -26,6 +33,8 @@ test('installs, updates and removes add-ons', async ({ page, backend }) => {
   // An empty name sends nothing.
   await page.getByRole('button', { name: 'Install' }).click();
   await page.getByLabel('Add-on repository').fill('ddev/ddev-solr');
+  // In WebKit the first Enter accepts the matching suggestion.
+  if (browserName === 'webkit') await page.getByLabel('Add-on repository').press('Enter');
   await page.getByLabel('Add-on repository').press('Enter');
   expect(await nthPost(backend, 1)).toEqual({ path: '/api/projects/d11/actions/addon-get', form: { repo: 'ddev/ddev-solr' } });
   backend.endJob(backend.jobs[0].id);
