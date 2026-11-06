@@ -11,6 +11,7 @@ on:
       - ".ci-scripts/**"
       - "!.github/workflows/docs**"
       - "cmd/**"
+      - "desktop/**"
       - "pkg/**"
       - "third_party/**"
       - "vendor/**"
@@ -124,3 +125,148 @@ jobs:
         with:
           name: ddev-windows-arm64-installer
           path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
+
+  # The experimental desktop app (desktop/README.md). These jobs may fail
+  # without failing the workflow, so the download comment still appears.
+  # Their artifacts are unsigned; main-build.yml signs and notarizes.
+  desktop-macos:
+    name: Desktop app on macOS
+    runs-on: macos-latest
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: |
+            go.sum
+            desktop/go.sum
+
+      - name: Build ddev and the app for arm64 and amd64
+        run: |
+          make darwin_arm64 darwin_amd64
+          make -C desktop GOARCH=arm64
+          make -C desktop GOARCH=amd64
+
+      - name: Upload macos-arm64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-macos-arm64
+          path: .gotmp/bin/darwin_arm64/DDEV.app.zip
+
+      - name: Upload macos-amd64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-macos-amd64
+          path: .gotmp/bin/darwin_amd64/DDEV.app.zip
+
+      - name: Go tests
+        working-directory: desktop
+        env:
+          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/darwin_arm64/ddev
+        run: go test -v ./...
+
+      # Drives the dashboard in the app's own window; see desktop/selftest.js.
+      - name: Self-test in the app window
+        env:
+          DDEV_DESKTOP_SELFTEST: "true"
+        run: |
+          DDEV_DESKTOP_MODE=embedded .gotmp/bin/darwin_arm64/DDEV.app/Contents/MacOS/ddev-desktop
+          DDEV_DESKTOP_MODE=loopback .gotmp/bin/darwin_arm64/DDEV.app/Contents/MacOS/ddev-desktop
+
+  desktop-linux:
+    name: Desktop app on Linux, and Windows builds
+    runs-on: ubuntu-26.04
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: |
+            go.sum
+            desktop/go.sum
+
+      - name: Install GTK 4 and WebKitGTK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev xvfb
+
+      - name: Build ddev and the app
+        run: |
+          make linux_amd64
+          make -C desktop
+          make -C desktop GOOS=windows GOARCH=amd64 binary
+          make -C desktop GOOS=windows GOARCH=arm64 binary
+
+      - name: Upload linux-amd64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-linux-amd64
+          path: .gotmp/bin/linux_amd64/ddev-desktop
+
+      - name: Upload windows-amd64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-windows-amd64
+          path: .gotmp/bin/windows_amd64/ddev-desktop.exe
+
+      - name: Upload windows-arm64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-windows-arm64
+          path: .gotmp/bin/windows_arm64/ddev-desktop.exe
+
+      - name: Go tests
+        working-directory: desktop
+        env:
+          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_amd64/ddev
+        run: go test -v ./...
+
+      - name: Self-test in the app window
+        env:
+          DDEV_DESKTOP_SELFTEST: "true"
+          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_amd64/ddev
+        run: |
+          DDEV_DESKTOP_MODE=embedded xvfb-run --auto-servernum .gotmp/bin/linux_amd64/ddev-desktop
+          DDEV_DESKTOP_MODE=loopback xvfb-run --auto-servernum .gotmp/bin/linux_amd64/ddev-desktop
+
+  # WebView2 cannot stream, so on Windows the window loads a local URL.
+  desktop-windows:
+    name: Desktop app on Windows
+    runs-on: windows-latest
+    needs: [ build, desktop-linux ]
+    continue-on-error: true
+    timeout-minutes: 20
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: ddev-windows-amd64
+          path: ddev
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: ddev-desktop-windows-amd64
+          path: app
+
+      - name: Self-test in the app window
+        env:
+          DDEV_DESKTOP_SELFTEST: "true"
+          DDEV_DESKTOP_MODE: loopback
+          DDEV_NO_INSTRUMENTATION: "true"
+        run: |
+          DDEV_BINARY="$(cygpath -w "$PWD/ddev/ddev.exe")"
+          export DDEV_BINARY
+          ./app/ddev-desktop.exe | cat

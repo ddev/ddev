@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"io"
+	"os"
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -30,6 +32,7 @@ ddev serve --no-open`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		port, _ := cmd.Flags().GetInt("port")
 		noOpen, _ := cmd.Flags().GetBool("no-open")
+		desktop, _ := cmd.Flags().GetBool("desktop")
 
 		// Hooks print to this terminal; the subcommands the dashboard runs,
 		// such as start, still run theirs.
@@ -37,6 +40,16 @@ ddev serve --no-open`,
 		srv, err := webui.New(port)
 		if err != nil {
 			util.Failed("Unable to start the dashboard: %v", err)
+		}
+		if desktop {
+			srv.SetDesktop("", nil)
+			// The desktop app holds stdin open, so this server stops with it.
+			go func() {
+				_, _ = io.Copy(io.Discard, os.Stdin)
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				defer cancel()
+				_ = srv.Shutdown(ctx)
+			}()
 		}
 		unregister := interrupt.OnInterrupt(func(ctx context.Context) {
 			ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -61,5 +74,8 @@ ddev serve --no-open`,
 func registerServeCmd() {
 	ServeCmd.Flags().Int("port", 0, "Port to listen on at 127.0.0.1; a free port is chosen when 0")
 	ServeCmd.Flags().Bool("no-open", false, "Print the URL without opening a browser")
+	// The desktop app on Windows shows a WSL2 dashboard with this flag.
+	ServeCmd.Flags().Bool("desktop", false, "Open links in the default browser, for a desktop window that shows the dashboard")
+	_ = ServeCmd.Flags().MarkHidden("desktop")
 	RootCmd.AddCommand(ServeCmd)
 }
