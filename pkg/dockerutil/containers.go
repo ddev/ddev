@@ -827,14 +827,11 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:"+hostDockerInternal.ExtraHost)
 	}
 
-	// An interrupt removes the container by name, so track the name before
-	// the daemon can list the container.
+	// Track before creating, so an interrupt during ContainerCreate waits for
+	// the ID instead of missing a container the daemon already lists.
 	created, untrack := func(string, error) {}, func() {}
 	if removeContainerAfterRun {
-		if name == "" {
-			name = "temporary-" + util.RandString(8)
-		}
-		created, untrack = trackContainer(name)
+		created, untrack = trackContainer()
 	}
 	c, err := apiClient.ContainerCreate(ctx, client.ContainerCreateOptions{Config: config, HostConfig: hostConfig, Name: name})
 	created(c.ID, err)

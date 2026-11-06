@@ -17,7 +17,7 @@ import (
 // container but before ContainerCreate has returned to DDEV.
 func TestCleanUpInFlightWaitsForCreate(t *testing.T) {
 	name := "TestCleanUpInFlight-" + util.RandString(6)
-	created, untrack := trackContainer(name)
+	created, untrack := trackContainer()
 	t.Cleanup(untrack)
 	t.Cleanup(func() { _ = RemoveContainer(name) })
 
@@ -43,7 +43,7 @@ func TestCleanUpInFlightSkipsNameConflict(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = RemoveContainer(name) })
 
-	created, untrack := trackContainer(name)
+	created, untrack := trackContainer()
 	t.Cleanup(untrack)
 	done := startCleanUpInFlight(t)
 	id, err := createTestContainer(name)

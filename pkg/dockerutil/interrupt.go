@@ -2,7 +2,6 @@ package dockerutil
 
 import (
 	"context"
-	"maps"
 	"sync"
 
 	cerrdefs "github.com/containerd/errdefs"
@@ -13,14 +12,14 @@ import (
 )
 
 // inFlight holds the temporary containers RunSimpleContainerExtended() is
-// creating or has created and not yet removed, keyed by name, and the restore
-// function of a terminal setupRawTerminal() has put in raw mode, so an
-// interrupt can undo both.
+// creating or has created and not yet removed, and the restore function of a
+// terminal setupRawTerminal() has put in raw mode, so an interrupt can undo
+// both.
 var inFlight = struct {
 	sync.Mutex
-	containers      map[string]*trackedContainer
+	containers      map[*trackedContainer]struct{}
 	restoreTerminal func()
-}{containers: map[string]*trackedContainer{}}
+}{containers: map[*trackedContainer]struct{}{}}
 
 // trackedContainer's done is closed once ContainerCreate has returned, and
 // target is then what an interrupt should remove, or empty for nothing.
@@ -33,14 +32,14 @@ func init() {
 	interrupt.OnInterrupt(cleanUpInFlight)
 }
 
-// trackContainer registers name before the container is created, because
-// the daemon can list it before ContainerCreate returns. Call created with
+// trackContainer registers a container before it is created, because the
+// daemon can list it before ContainerCreate returns. Call created with
 // ContainerCreate's result once it has returned.
-func trackContainer(name string) (created func(id string, err error), untrack func()) {
+func trackContainer() (created func(id string, err error), untrack func()) {
 	tc := &trackedContainer{done: make(chan struct{})}
 	inFlight.Lock()
 	defer inFlight.Unlock()
-	inFlight.containers[name] = tc
+	inFlight.containers[tc] = struct{}{}
 	var once sync.Once
 	created = func(id string, err error) {
 		once.Do(func() {
@@ -55,9 +54,7 @@ func trackContainer(name string) (created func(id string, err error), untrack fu
 	untrack = func() {
 		inFlight.Lock()
 		defer inFlight.Unlock()
-		if inFlight.containers[name] == tc {
-			delete(inFlight.containers, name)
-		}
+		delete(inFlight.containers, tc)
 	}
 	return created, untrack
 }
@@ -79,8 +76,8 @@ func cleanUpInFlight(ctx context.Context) {
 	inFlight.Lock()
 	restore := inFlight.restoreTerminal
 	inFlight.restoreTerminal = nil
-	containers := maps.Clone(inFlight.containers)
-	clear(inFlight.containers)
+	containers := inFlight.containers
+	inFlight.containers = map[*trackedContainer]struct{}{}
 	inFlight.Unlock()
 
 	if restore != nil {
@@ -95,7 +92,7 @@ func cleanUpInFlight(ctx context.Context) {
 		return
 	}
 	var wg sync.WaitGroup
-	for _, tc := range containers {
+	for tc := range containers {
 		wg.Go(func() {
 			// Removing before the create returns would find nothing and leak it.
 			select {
@@ -103,22 +100,22 @@ func cleanUpInFlight(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			}
-			name := tc.target
-			if name == "" {
+			id := tc.target
+			if id == "" {
 				return
 			}
-			_, err := apiClient.ContainerRemove(ctx, name, client.ContainerRemoveOptions{Force: true})
+			_, err := apiClient.ContainerRemove(ctx, id, client.ContainerRemoveOptions{Force: true})
 			if err == nil || cerrdefs.IsNotFound(err) {
 				return
 			}
-			util.Debug("Unable to remove container %s after interrupt: %v", name, err)
+			util.Debug("Unable to remove container %s after interrupt: %v", TruncateID(id), err)
 			// A removal RunSimpleContainerExtended() already started is
 			// cancelled if the process exits first.
-			wait := apiClient.ContainerWait(ctx, name, client.ContainerWaitOptions{Condition: container.WaitConditionRemoved})
+			wait := apiClient.ContainerWait(ctx, id, client.ContainerWaitOptions{Condition: container.WaitConditionRemoved})
 			select {
 			case <-wait.Result:
 			case err := <-wait.Error:
-				util.Debug("Unable to wait for removal of container %s: %v", name, err)
+				util.Debug("Unable to wait for removal of container %s: %v", TruncateID(id), err)
 			}
 		})
 	}
