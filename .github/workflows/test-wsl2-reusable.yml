@@ -89,6 +89,7 @@ jobs:
           wsl --list --verbose
 
       - name: Restart WSL to enable systemd
+        timeout-minutes: 5
         shell: pwsh
         run: |
           Write-Host "Shutting down WSL so systemd and default user take effect"
@@ -102,12 +103,43 @@ jobs:
             exit 1
           }
           wsl -- uname -a
-          $state = (wsl -- systemctl is-system-running --wait).Trim()
+          Write-Host "Waiting for systemd to finish booting"
+          $state = "$(wsl -- timeout 120 systemctl is-system-running --wait)".Trim()
           Write-Host "systemd state: $state"
           if ($state -ne "running") {
             wsl -u root -- bash -c "systemctl --failed --plain --no-legend | cut -d' ' -f1 | xargs -r systemctl status --no-pager -l -n 30"
             Write-Error "Unexpected systemd state: $state"
             exit 1
+          }
+
+      - name: Show WSL diagnostics
+        if: failure()
+        timeout-minutes: 3
+        shell: pwsh
+        run: |
+          Write-Host "=== Services"
+          Get-Service WSLService, hns, vmcompute -ErrorAction SilentlyContinue | Format-Table Name, Status, StartType -AutoSize
+          Write-Host "=== Processes"
+          Get-Process wsl*, vmmem*, vmwp -ErrorAction SilentlyContinue | Format-Table Id, ProcessName, StartTime, CPU -AutoSize
+          $since = (Get-Date).AddMinutes(-30)
+          foreach ($log in "Microsoft-Windows-Hyper-V-Compute-Admin", "Microsoft-Windows-Hyper-V-Worker-Admin", "Microsoft-Windows-Host-Network-Service-Admin") {
+            Write-Host "=== $log"
+            try {
+              Get-WinEvent -FilterHashtable @{ LogName = $log; StartTime = $since } -MaxEvents 50 -ErrorAction Stop | Format-List TimeCreated, LevelDisplayName, Message
+            } catch {
+              Write-Host $_.Exception.Message
+            }
+          }
+          Write-Host "=== wsl --list --verbose"
+          # WSL may still be stuck, so don't let this call hang the step
+          $job = Start-Job {
+            $env:WSL_UTF8 = "1"
+            wsl --list --verbose
+          }
+          if (Wait-Job $job -Timeout 30) {
+            Receive-Job $job
+          } else {
+            Write-Host "wsl --list --verbose did not return within 30 seconds"
           }
 
       - uses: actions/checkout@v7
