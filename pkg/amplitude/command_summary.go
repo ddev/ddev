@@ -15,15 +15,16 @@ import (
 	"github.com/gofrs/flock"
 )
 
-// CommandSummaryEventType is the event that reports one command's runs on one day.
+// CommandSummaryEventType is the event that reports one command's runs in one week.
 const CommandSummaryEventType = "Command Summary"
 
-// commandsFile is the name of the file in ~/.ddev that counts the day's commands.
+// commandsFile is the name of the file in ~/.ddev that counts the week's commands.
 const commandsFile = ".amplitude.commands"
 
-// commandCounts holds the number of runs of each command path on Date.
+// commandCounts holds the number of runs of each command path in the week
+// that starts on Week, a Monday.
 type commandCounts struct {
-	Date   string         `json:"date"`
+	Week   string         `json:"week"`
 	Counts map[string]int `json:"counts"`
 }
 
@@ -40,10 +41,10 @@ func (e commandSummaryEvent) ToAmplitudeEvent() amplitude.Event {
 	}
 }
 
-// countCommand adds one run of commandPath to today's counts in file. When
-// the file holds counts from an earlier day, it starts a new day and returns
-// those counts, so the caller can send them.
-func countCommand(file string, today string, commandPath string) *commandCounts {
+// countCommand adds one run of commandPath to this week's counts in file.
+// When the file holds counts from an earlier week, it starts a new week and
+// returns those counts, so the caller can send them.
+func countCommand(file string, week string, commandPath string) *commandCounts {
 	unlock, ok := lockFile(file + ".lock")
 	if !ok {
 		return nil
@@ -56,11 +57,11 @@ func countCommand(file string, today string, commandPath string) *commandCounts 
 	}
 
 	var previous *commandCounts
-	if state.Date != today || state.Counts == nil {
-		if state.Date != "" && len(state.Counts) > 0 {
-			previous = &commandCounts{Date: state.Date, Counts: state.Counts}
+	if state.Week != week || state.Counts == nil {
+		if state.Week != "" && len(state.Counts) > 0 {
+			previous = &commandCounts{Week: state.Week, Counts: state.Counts}
 		}
-		state = commandCounts{Date: today, Counts: map[string]int{}}
+		state = commandCounts{Week: week, Counts: map[string]int{}}
 	}
 
 	state.Counts[commandPath]++
@@ -94,19 +95,20 @@ func commandSummaryEvents(counts commandCounts) []ampli.Event {
 			`Command Name`: name,
 			`Command Path`: path,
 			`Count`:        counts.Counts[path],
-			`Date`:         counts.Date,
+			`Week`:         counts.Week,
 		}})
 	}
 
 	return events
 }
 
-// sendCommandSummaries queues the summary events for an earlier day.
+// sendCommandSummaries queues the summary events for an earlier week.
 func sendCommandSummaries(counts commandCounts) {
-	// Noon keeps the event on the same calendar day in UTC for most time zones.
+	// Thursday noon falls in the same week whether weeks start on Sunday or
+	// Monday, and stays on that day in UTC for most time zones.
 	eventTime := time.Now()
-	if day, err := time.ParseInLocation(time.DateOnly, counts.Date, time.Local); err == nil {
-		eventTime = day.Add(12 * time.Hour)
+	if monday, err := time.ParseInLocation(time.DateOnly, counts.Week, time.Local); err == nil {
+		eventTime = monday.AddDate(0, 0, 3).Add(12 * time.Hour)
 	}
 
 	for _, event := range commandSummaryEvents(counts) {
@@ -114,6 +116,13 @@ func sendCommandSummaries(counts commandCounts) {
 		options.SetTime(eventTime)
 		ampli.Instance.Track("", event, options)
 	}
+}
+
+// weekStart returns the date of the Monday that starts t's week, in t's
+// location.
+func weekStart(t time.Time) string {
+	daysSinceMonday := (int(t.Weekday()) + 6) % 7
+	return time.Date(t.Year(), t.Month(), t.Day()-daysSinceMonday, 0, 0, 0, 0, t.Location()).Format(time.DateOnly)
 }
 
 // lockFile holds an exclusive lock on path. It gives up after a second,
