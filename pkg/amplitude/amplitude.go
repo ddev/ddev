@@ -134,9 +134,10 @@ func FlushForce() {
 	ampli.Instance.Flush()
 }
 
-// Clean removes the cache file.
+// Clean removes the cache file and the record of events reported today.
 func Clean() {
 	_ = os.Remove(getCacheFileName())
+	_ = os.Remove(getReportedFileName())
 }
 
 // CheckSetUp shows a warning to the user if the API key is not available.
@@ -256,5 +257,10 @@ func identify() {
 		builder.WslDistro(wslDistro)
 	}
 
-	ampli.Instance.Identify("", builder.Build(), GetEventOptions())
+	event := builder.Build()
+	if AlreadyReportedToday("identify", event) {
+		return
+	}
+
+	ampli.Instance.Identify("", event, GetEventOptions())
 }

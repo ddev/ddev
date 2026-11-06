@@ -21,7 +21,7 @@ Usage information is also never collected in automated workflows where `CI=true`
 If you choose to share diagnostics, it helps us tremendously in our effort to improve the tool. DDEV tracks three kinds of events: `Identify` (about your machine), `Command` (which command you ran), and `Project` (your project's configuration). Here’s an example of what we might see:
 
 ```go
-// Sent once per machine, to identify the environment DDEV runs in.
+// Sent at most once a day per machine, or when its details change, to identify the environment DDEV runs in.
 client.Track(&analytics.Track{
   DeviceId:   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   AppVersion: "v1.25.3",
@@ -62,7 +62,7 @@ client.Track(&analytics.Track{
   },
 })
 
-// Sent when a project starts, describing its configuration.
+// Sent at most once a day per project, or when its configuration changes.
 client.Track(&analytics.Track{
   DeviceId:   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   AppVersion: "v1.25.3",
