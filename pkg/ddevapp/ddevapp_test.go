@@ -2743,11 +2743,12 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	// the host's write can show up in the container after a delay.
 	var out string
 	require.EventuallyWithT(t, func(c *asrt.CollectT) {
-		out, _, err = app.Exec(&ddevapp.ExecOpts{
+		o, _, execErr := app.Exec(&ddevapp.ExecOpts{
 			Cmd: "cat " + fileCreatedOnHost,
 		})
-		require.NoError(c, err)
-		require.Contains(c, out, baseCreatedOnHostText)
+		require.NoError(c, execErr)
+		require.Contains(c, o, baseCreatedOnHostText)
+		out = o
 	}, 5*time.Second, 250*time.Millisecond)
 	t.Logf("Initial fileCreatedOnHost after mutagen sync='%s'", out)
 
