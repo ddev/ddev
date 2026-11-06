@@ -59,26 +59,11 @@ var (
 func getDockerManagerInstance() (*dockerManager, error) {
 	sDockerManagerOnce.Do(func() {
 		sDockerManager = &dockerManager{}
-		sDockerManager.cli, sDockerManagerErr = command.NewDockerCli(
-			// Suppress any output (stdout, stderr) from docker/cli.
-			command.WithCombinedStreams(io.Discard),
-			// Detach stdin (an empty io.ReadCloser, not os.Stdin) so an in-process
-			// compose exec doesn't compete with the bubbletea TUI for keystrokes;
-			// interactive/piped execs set real stdin via SetExecStdin.
-			command.WithInputStream(io.NopCloser(bytes.NewReader(nil))),
-		)
-		if sDockerManagerErr != nil {
-			return
-		}
-		// InstallFlags and SetDefaultOptions are necessary to match
-		// the plugin mode behavior to handle env vars such as
-		// DOCKER_TLS and DOCKER_TLS_VERIFY.
-		// See https://github.com/docker/cli/blob/master/cmd/docker-trust/trust/commands.go
-		flagSet := pflag.NewFlagSet("ddev", pflag.ContinueOnError)
-		opts := flags.NewClientOptions()
-		opts.InstallFlags(flagSet)
-		opts.SetDefaultOptions(flagSet)
-		sDockerManagerErr = sDockerManager.cli.Initialize(opts)
+		var opts *flags.ClientOptions
+		// Detach stdin (an empty io.ReadCloser, not os.Stdin) so an in-process
+		// compose exec doesn't compete with the bubbletea TUI for keystrokes;
+		// interactive/piped execs set real stdin via SetExecStdin.
+		sDockerManager.cli, opts, sDockerManagerErr = newDockerCli(io.NopCloser(bytes.NewReader(nil)))
 		if sDockerManagerErr != nil {
 			return
 		}
@@ -91,8 +76,6 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		util.Verbose("getDockerManagerInstance(): dockerContextName=%s, host=%s", sDockerManager.dockerContextName, sDockerManager.host)
 		sDockerManager.hostIP, sDockerManager.hostIPErr = getDockerIPFromDockerHost(sDockerManager.host)
 		sDockerManager.goContext = context.Background()
-		// Set the Docker CLI version for User-Agent header
-		version.Version = "ddev-" + versionconstants.DdevVersion
 		// We can't use sDockerManager.cli.Client(), see https://github.com/docker/cli/issues/4489
 		// That's why we create a new client from flags to catch errors
 		sDockerManager.apiClient, sDockerManagerErr = command.NewAPIClientFromFlags(
@@ -130,6 +113,27 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		sDockerManager.info = info.Info
 	})
 	return sDockerManager, sDockerManagerErr
+}
+
+// newDockerCli returns an initialized Docker CLI that reads in and discards
+// docker/cli's own output, such as config file warnings, along with the
+// client options it was initialized with.
+func newDockerCli(in io.ReadCloser) (*command.DockerCli, *flags.ClientOptions, error) {
+	// Set the Docker CLI version for User-Agent header
+	version.Version = "ddev-" + versionconstants.DdevVersion
+	dockerCli, err := command.NewDockerCli(command.WithCombinedStreams(io.Discard), command.WithInputStream(in))
+	if err != nil {
+		return nil, nil, err
+	}
+	// InstallFlags and SetDefaultOptions are necessary to match
+	// the plugin mode behavior to handle env vars such as
+	// DOCKER_TLS and DOCKER_TLS_VERIFY.
+	// See https://github.com/docker/cli/blob/master/cmd/docker-trust/trust/commands.go
+	flagSet := pflag.NewFlagSet("ddev", pflag.ContinueOnError)
+	opts := flags.NewClientOptions()
+	opts.InstallFlags(flagSet)
+	opts.SetDefaultOptions(flagSet)
+	return dockerCli, opts, dockerCli.Initialize(opts)
 }
 
 // GetDockerClient returns the Go context and the Docker API client

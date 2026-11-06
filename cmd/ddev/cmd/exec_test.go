@@ -1,13 +1,17 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -15,6 +19,7 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/compose/v5/pkg/api"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,6 +34,44 @@ func TestCmdExecBadArgs(t *testing.T) {
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Usage:")
+}
+
+// TestCmdExecTerminalChild runs execs in the child process that ddev uses
+// when stdin is a terminal. A test has no terminal, so it starts the child
+// through dockerutil.ExecInChild.
+func TestCmdExecTerminalChild(t *testing.T) {
+	app, err := ddevapp.NewApp(TestSites[0].Dir, false)
+	require.NoError(t, err)
+	// 200 KB, more than Linux allows in one environment variable.
+	bigArgs := slices.Repeat([]string{strings.Repeat("a", 2000)}, 100)
+	// Engines word this error differently; Podman's says only "received 500".
+	// The test binary can't start a child, so ExecWithStreams runs in-process.
+	badUserOpts := api.RunOptions{Service: "web", User: "nosuchuser", Command: []string{"true"}}
+	inProcessErr := dockerutil.ExecWithStreams(app.GetComposeProjectName(), badUserOpts, io.Discard, io.Discard)
+	require.Error(t, inProcessErr)
+
+	tests := []struct {
+		name    string
+		opts    api.RunOptions
+		wantOut string
+		wantErr string
+	}{
+		{"exit status", api.RunOptions{Service: "web", Command: []string{"sh", "-c", "echo out; exit 3"}}, "out\n", "exit status 3"},
+		{"daemon error", badUserOpts, "", inProcessErr.Error()},
+		{"large options", api.RunOptions{Service: "web", Command: append([]string{"sh", "-c", "echo $#", "x"}, bigArgs...)}, "100\n", ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var out bytes.Buffer
+			err := dockerutil.ExecInChild(DdevBin, app.GetComposeProjectName(), tc.opts, nil, &out, &out)
+			if tc.wantErr == "" {
+				require.NoError(t, err, "output=%s", out.String())
+			} else {
+				require.ErrorContains(t, err, tc.wantErr, "output=%s", out.String())
+			}
+			require.Equal(t, tc.wantOut, out.String())
+		})
+	}
 }
 
 // TestCmdExec runs a number of exec commands to verify behavior
