@@ -7,6 +7,7 @@ side; these cover the page.
 | Project | What it runs against | Needs Docker | Run with |
 | --- | --- | --- | --- |
 | `mocked` | The real page files served by `mocked/mock-backend.js`, a fake API whose event streams the tests control | No | `make webui-e2e` |
+| `mocked-webkit` | The same tests in WebKit, the engine of the desktop app's window | No | `make webui-e2e` |
 | `real` | A real `ddev serve`, which adds, starts, snapshots, and deletes a PHP project | Yes | `make webui-e2e-real` |
 
 The mocked tests fail on any script error or Content-Security-Policy

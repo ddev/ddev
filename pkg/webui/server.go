@@ -5,6 +5,8 @@
 //
 // It listens on 127.0.0.1 only, and every request must carry the token from
 // the launch URL, since any page the user visits could otherwise reach it.
+// NewEmbedded serves the same dashboard to a desktop webview, which delivers
+// requests itself without a network port.
 package webui
 
 import (
@@ -50,6 +52,11 @@ type Server struct {
 	baseEnv []string
 	// ddevBinary is the ddev binary subcommands run with.
 	ddevBinary string
+	// embedded is set when no port is open and a webview delivers requests.
+	embedded bool
+
+	// OnJobDone, when set before serving, is called as each job ends.
+	OnJobDone func(title, project, errText string)
 
 	// changed is closed and replaced whenever a job starts or ends, so the
 	// status streams reload at once instead of on their next tick.
@@ -80,7 +87,7 @@ func New(port int) (*Server, error) {
 		ddevBinary: bin,
 		changed:    make(chan struct{}),
 	}
-	s.jobs = newJobs(s.notifyChanged)
+	s.jobs = newJobs(s.notifyChanged, s.jobDone)
 	actual := l.Addr().(*net.TCPAddr).Port
 	s.hosts, s.origins = map[string]bool{}, map[string]bool{}
 	for _, h := range []string{"127.0.0.1", "localhost"} {
@@ -90,6 +97,25 @@ func New(port int) (*Server, error) {
 	}
 	s.http = &http.Server{Handler: s.Handler(), ReadHeaderTimeout: 10 * time.Second}
 	return s, nil
+}
+
+// NewEmbedded returns a server without a listener, for a desktop webview
+// that passes requests to Handler. Subcommands run with ddevBinary.
+func NewEmbedded(ddevBinary string) *Server {
+	s := &Server{
+		baseEnv:    os.Environ(),
+		ddevBinary: ddevBinary,
+		embedded:   true,
+		changed:    make(chan struct{}),
+	}
+	s.jobs = newJobs(s.notifyChanged, s.jobDone)
+	return s
+}
+
+func (s *Server) jobDone(j jobSummary) {
+	if s.OnJobDone != nil {
+		s.OnJobDone(j.Title, j.Project, j.Err)
+	}
 }
 
 // URL is the launch URL, which carries the token.
@@ -109,6 +135,9 @@ func (s *Server) Serve() error {
 // Shutdown stops the server and the subcommands it started.
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.jobs.killAll()
+	if s.http == nil {
+		return nil
+	}
 	return s.http.Shutdown(ctx)
 }
 
@@ -141,7 +170,37 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/jobs/{id}", s.handleJobStream)
 	mux.HandleFunc("GET /api/project-types", s.handleProjectTypes)
 	mux.HandleFunc("GET /api/addons/registry", s.handleAddonRegistry)
+	if s.embedded {
+		mux.HandleFunc("POST /api/open-url", s.handleOpenURL)
+		return s.secureEmbedded(mux)
+	}
 	return s.secure(mux)
+}
+
+// securityHeaders are sent with every response.
+func securityHeaders(h http.Header) {
+	h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+	h.Set("X-Content-Type-Options", "nosniff")
+	h.Set("Referrer-Policy", "no-referrer")
+	h.Set("Cache-Control", "no-store")
+}
+
+// dashboardHeader is sent by the page with every state change. A page from
+// another origin cannot add it without a CORS preflight, which the
+// dashboard never answers.
+const dashboardHeader = "X-DDEV-Dashboard"
+
+// secureEmbedded needs no token, since no port is open, but still refuses a
+// state change that another page in the webview could have sent.
+func (s *Server) secureEmbedded(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		securityHeaders(w.Header())
+		if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Header.Get(dashboardHeader) == "" {
+			http.Error(w, "request refused", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // secure rejects requests to an unexpected host, without the token, or,
@@ -149,11 +208,7 @@ func (s *Server) Handler() http.Handler {
 // to a cookie and the browser sent back to /.
 func (s *Server) secure(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		h := w.Header()
-		h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
-		h.Set("X-Content-Type-Options", "nosniff")
-		h.Set("Referrer-Policy", "no-referrer")
-		h.Set("Cache-Control", "no-store")
+		securityHeaders(w.Header())
 
 		if !s.hosts[r.Host] {
 			http.Error(w, "unexpected Host header", http.StatusForbidden)

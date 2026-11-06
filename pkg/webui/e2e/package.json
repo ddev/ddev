@@ -4,7 +4,7 @@
   "private": true,
   "description": "Browser tests for the `ddev serve` dashboard (pkg/webui).",
   "scripts": {
-    "test": "playwright test --project=mocked",
+    "test": "playwright test --project=mocked --project=mocked-webkit",
     "test:real": "playwright test --project=real"
   },
   "devDependencies": {

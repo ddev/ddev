@@ -98,10 +98,11 @@ type jobs struct {
 	nextID   int
 	all      []*job
 	onChange func()
+	onDone   func(jobSummary)
 }
 
-func newJobs(onChange func()) *jobs {
-	return &jobs{onChange: onChange}
+func newJobs(onChange func(), onDone func(jobSummary)) *jobs {
+	return &jobs{onChange: onChange, onDone: onDone}
 }
 
 // errBusy is returned when the project already has a running job.
@@ -145,6 +146,9 @@ func (js *jobs) start(title, project string, cmd *exec.Cmd) (*job, error) {
 		<-scanned
 		j.finish(err)
 		js.onChange()
+		if js.onDone != nil {
+			js.onDone(j.summary())
+		}
 	}()
 	js.onChange()
 	return j, nil
