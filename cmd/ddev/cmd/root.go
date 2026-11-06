@@ -179,6 +179,8 @@ func Execute() {
 func Setup() {
 	RegisterCommands()
 	setupGlobalConfig()
+	// Instrumentation reads the opt-in from the global config.
+	amplitude.InitAmplitude()
 	activeAppRoot, activeAppRootErr := ddevapp.GetActiveAppRoot("")
 	setupRootCmd(activeAppRoot, activeAppRootErr)
 	addPullProviderSubcommands(activeAppRoot, activeAppRootErr)

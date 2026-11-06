@@ -25,9 +25,6 @@ func (app *DdevApp) ProtectedID() string {
 func (app *DdevApp) TrackProject() {
 	// defer util.TimeTrack()()
 
-	// Initialization is currently done before via init() func somewhere while
-	// creating the ddevapp. This should be cleaned up.
-	// TODO: Remove once clean up has done.
 	amplitude.InitAmplitude()
 
 	// Early exit if instrumentation is disabled.

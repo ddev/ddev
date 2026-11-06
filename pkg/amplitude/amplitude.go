@@ -31,6 +31,10 @@ var (
 	mutex       sync.Mutex
 )
 
+// serverURL overrides the Amplitude endpoint when set; tests point it at a
+// local server.
+var serverURL string
+
 // cacheFile is the name of the cache file in ~/.ddev.
 const cacheFile = ".amplitude.cache"
 
@@ -64,9 +68,6 @@ func GetEventOptions() (options ampli.EventOptions) {
 func TrackCommand(cmd *cobra.Command, args []string) {
 	// defer util.TimeTrack()()
 
-	// Initialization is currently done before via init() func somewhere while
-	// creating the ddevapp. This should be cleaned up.
-	// TODO: Remove once clean up has done.
 	InitAmplitude()
 
 	// Early exit if instrumentation is disabled.
@@ -150,15 +151,19 @@ func IsDisabled() bool {
 	return ampli.Instance.Disabled || !globalconfig.IsInternetActive()
 }
 
-// InitAmplitude initializes the instrumentation and must be called once before
-// the instrumentation functions can be used.
-// Initialization is currently done before via init() func somewhere while
-// creating the ddevapp. This should be cleaned up.
-// TODO: Make private once clean up has done.
+// InitAmplitude initializes the instrumentation once the global config is
+// loaded, and does nothing when called earlier. Setup() in cmd/ddev/cmd
+// calls it right after loading the global config.
 func InitAmplitude() {
 	// defer util.TimeTrack()()
 
 	if initialized {
+		return
+	}
+
+	// Before the global config loads, the opt-in reads as false. Initializing
+	// then would disable instrumentation for the whole process, so wait.
+	if !globalconfig.IsGlobalConfigLoaded() {
 		return
 	}
 
@@ -190,7 +195,8 @@ func InitAmplitude() {
 		Client: ampli.LoadClientOptions{
 			APIKey: versionconstants.AmplitudeAPIKey,
 			Configuration: amplitude.Config{
-				Logger: logger,
+				Logger:    logger,
+				ServerURL: serverURL,
 				StorageFactory: func() amplitude.EventStorage {
 					return storages.NewDelayedTransmissionEventStorage(
 						logger,
