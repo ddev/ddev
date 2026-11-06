@@ -43,6 +43,8 @@ ignorePatterns:
   - pattern: "https://winaero.com"
   # modx.com returns 403 to linkspector's headless browser
   - pattern: "https://modx.com"
+  # viget.com (Vercel) answers 429 with a bot challenge, not a rate limit
+  - pattern: "https://www.viget.com"
   
 aliveStatusCodes:
   - 200
