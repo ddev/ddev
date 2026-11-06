@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   mocked:
-    name: Dashboard against a fake API
+    name: Dashboard against a fake API, in Chromium and WebKit
     runs-on: ubuntu-26.04
     timeout-minutes: 20
     defaults:
@@ -38,8 +38,8 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --project=mocked
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test --project=mocked --project=mocked-webkit
         env:
           CI: true
       - uses: actions/upload-artifact@v7

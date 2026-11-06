@@ -129,9 +129,12 @@ test('opens the folder and editors on the host', async ({ page, backend }) => {
   await expect(page.locator('#toasts .toast.error')).toHaveText('no opener found (install xdg-utils)');
 });
 
-test('copies commands', async ({ page, context }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('copies commands', async ({ page, context, browserName }) => {
+  // WebKit grants clipboard writes to a click without a permission.
+  if (browserName === 'chromium') await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.locator('.detail-head .copy-btn').click();
   await expect(page.locator('#toasts .toast')).toHaveText('Copied: /home/me/projects/d11');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('/home/me/projects/d11');
+  if (browserName === 'chromium') {
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('/home/me/projects/d11');
+  }
 });

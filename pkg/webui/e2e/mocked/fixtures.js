@@ -70,11 +70,16 @@ const test = base.test.extend({
   },
   // The page opens the dashboard, and the test fails on any script error
   // or Content-Security-Policy violation.
-  page: async ({ page, backend }, use) => {
+  page: async ({ page, backend, browserName }, use) => {
     const problems = [];
     page.on('pageerror', (e) => problems.push('page error: ' + e.message));
     page.on('console', (m) => {
-      if (m.type() === 'error' && !m.text().startsWith('Failed to load resource')) problems.push('console: ' + m.text());
+      const t = m.text();
+      if (m.type() !== 'error' || t.startsWith('Failed to load resource')) return;
+      // WebKit reports its own styles for <select> against any policy
+      // without 'unsafe-inline'; the page itself inlines none.
+      if (browserName === 'webkit' && t.startsWith('Refused to apply a stylesheet')) return;
+      problems.push('console: ' + t);
     });
     await page.addInitScript(() => localStorage.clear());
     await page.goto(backend.url);

@@ -34,6 +34,8 @@ type status struct {
 	Jobs     []jobSummary     `json:"jobs"`
 	// Error is set when Docker cannot be reached or the list cannot be read.
 	Error string `json:"error,omitempty"`
+	// Desktop is set when a desktop window, not a browser, shows the page.
+	Desktop bool `json:"desktop,omitempty"`
 }
 
 // loadStatus lists the projects the way `ddev list` does, with the router's
