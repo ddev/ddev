@@ -13,7 +13,6 @@ func main() {
 	defer util.CheckGoroutines()
 	defer util.TimeTrack()()
 
-	amplitude.InitAmplitude()
 	defer func() {
 		amplitude.Flush()
 	}()
