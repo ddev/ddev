@@ -260,6 +260,7 @@ nav:
       - 'Hosting Provider Integrations':
           - users/providers/index.md
           - 'Acquia': users/providers/acquia.md
+          - 'Drupito': users/providers/drupito.md
           - 'Lagoon': users/providers/lagoon.md
           - 'Pantheon': users/providers/pantheon.md
           - 'Upsun Fixed/Platform.sh': users/providers/platform.md

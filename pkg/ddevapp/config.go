@@ -1873,6 +1873,7 @@ func PrepDdevDirectory(app *DdevApp) error {
 		"nginx_full/nginx-site.conf",
 		"postgres/postgresql.conf",
 		"providers/acquia.yaml",
+		"providers/drupito.yaml",
 		"providers/lagoon.yaml",
 		"providers/pantheon.yaml",
 		"providers/platform.yaml",
