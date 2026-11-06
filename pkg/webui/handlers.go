@@ -28,7 +28,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		changed := s.changedCh()
 		st := loadStatus()
 		st.Jobs = s.jobs.summaries()
-		st.Desktop = s.embedded
+		st.Desktop = s.embedded || s.desktop
 		sse.send("status", st)
 		select {
 		case <-changed:
