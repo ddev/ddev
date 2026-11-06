@@ -27,8 +27,7 @@ func (app *DdevApp) TrackProject() {
 
 	amplitude.InitAmplitude()
 
-	// Early exit if instrumentation is disabled.
-	if ampli.Instance.Disabled {
+	if !amplitude.IsEnabled() {
 		return
 	}
 

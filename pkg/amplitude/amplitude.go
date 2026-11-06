@@ -71,8 +71,7 @@ func TrackCommand(cmd *cobra.Command) {
 
 	InitAmplitude()
 
-	// Early exit if instrumentation is disabled.
-	if ampli.Instance.Disabled {
+	if !IsEnabled() {
 		return
 	}
 
@@ -145,6 +144,13 @@ func CheckSetUp() {
 	if !output.JSONOutput && globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation && versionconstants.AmplitudeAPIKey == "" {
 		util.WarningOnce("Instrumentation is opted in, but AmplitudeAPIKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
+}
+
+// IsEnabled returns true once instrumentation is initialized and not
+// disabled. Unlike ampli's InitializedAndEnabled(), it prints no warning when
+// instrumentation was never initialized, as in builds without an API key.
+func IsEnabled() bool {
+	return ampli.Instance.Client != nil && !ampli.Instance.Disabled
 }
 
 // IsDisabled returns true if instrumentation is disabled or no internet is available.
