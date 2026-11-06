@@ -266,8 +266,10 @@ First, local `ddev` binaries have to be built with `AmplitudeAPIKey` set. Visit 
 
 Then run `ddev` commands as usual, and the data will be sent to Amplitude.
 
-* You can examine data on the local side with `export DDEV_VERBOSE=true` but it's awkward. However, the actual data is always marked with `AMPLITUDE:` and the `EventType` will be `Command`, `Project`, or `$identify` (User data). For example, DDEV_VERBOSE=true ddev start 2>&1 | grep AMPLITUDE`
+* You can examine data on the local side with `export DDEV_VERBOSE=true` but it's awkward. However, the actual data is always marked with `AMPLITUDE:` and the `EventType` will be `Command Summary`, `Project`, or `$identify` (User data). For example, DDEV_VERBOSE=true ddev start 2>&1 | grep AMPLITUDE`
 * To see the data show up on Amplitude, you'll need to `ddev utility instrumentation flush`.
+* `Identify` is queued only when its properties or the DDEV version change, and `Project` at most once a day unless its properties change. Both are recorded in `$HOME/.ddev/.amplitude.reported`. `ddev utility instrumentation clean` removes that file along with the queue, so the next command sends them again.
+* Commands are counted per week, Monday to Sunday, in `$HOME/.ddev/.amplitude.commands`. The first command in a later week queues one `Command Summary` event for each command counted. To queue them without waiting, change the `week` in that file to an earlier Monday, such as `2026-01-05`, and run any `ddev` command.
 * To make it easier to find your data, use the "Development" key and set your `instrumentation_user` to a familiar value in `$HOME/.ddev/global_config.yaml`. For example, `instrumentation_user: rfay` would make it so you can find the user `rfay`.
 * To inspect data, visit "User Lookup", (`https://app.amplitude.com/analytics/ddev/activity`) and choose the correct source in the upper left ("DDEV Production" or "DDEV Development"). Then use "Search users" in the upper right to find the user you are studying. If you've used an `instrumentation_user` it will be searchable as "User".  (Advanced->where: "User" = "rfay". for example). You'll then have a page devoted to the events of that user.
 

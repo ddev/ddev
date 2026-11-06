@@ -87,10 +87,8 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 
 		// Anonymize user defined custom commands.
 		cmdCopy := *cmd
-		argsCopy := args
 		if IsUserDefinedCustomCommand(&cmdCopy) {
 			cmdCopy = cobra.Command{Use: "custom-command"}
-			argsCopy = []string{}
 		}
 
 		// We don't want to send to amplitude if using --json-output
@@ -100,7 +98,7 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 		// that are called each time you press <TAB>.
 		// Bare `ddev` launches the TUI rather than running a command, so it isn't tracked.
 		if cmd.Parent() != nil && !output.JSONOutput && cmdCopy.Name() != cobra.ShellCompRequestCmd {
-			amplitude.TrackCommand(&cmdCopy, argsCopy)
+			amplitude.TrackCommand(&cmdCopy)
 		}
 
 		// Skip Docker and other validation for most commands
