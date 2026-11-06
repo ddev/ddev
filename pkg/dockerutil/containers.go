@@ -831,7 +831,9 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 	// the ID instead of missing a container the daemon already lists.
 	created, untrack := func(string, error) {}, func() {}
 	if removeContainerAfterRun {
-		created, untrack = trackContainer()
+		label := util.RandString(16)
+		config.Labels[temporaryLabel] = label
+		created, untrack = trackContainer(label)
 	}
 	c, err := apiClient.ContainerCreate(ctx, client.ContainerCreateOptions{Config: config, HostConfig: hostConfig, Name: name})
 	created(c.ID, err)
