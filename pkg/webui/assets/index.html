@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DDEV Dashboard</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="favicon.svg" alt="" class="logo">
+      <span>DDEV</span>
+      <span class="badge experimental" title="ddev serve is experimental and may change">experimental</span>
+    </div>
+    <div class="global-status">
+      <span id="router-status" class="pill">router: …</span>
+      <span id="conn-status" class="pill">connecting…</span>
+    </div>
+    <div class="global-actions">
+      <button id="btn-add" class="btn">Add project</button>
+      <button id="btn-start-all" class="btn">Start all</button>
+      <button id="btn-stop-all" class="btn">Stop all</button>
+      <button id="btn-poweroff" class="btn danger">Power off</button>
+    </div>
+  </header>
+
+  <div id="error-banner" class="banner hidden"></div>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <input id="filter" class="filter" type="search" placeholder="Filter projects (/)" autocomplete="off">
+      <ul id="project-list" class="project-list" aria-label="Projects"></ul>
+      <p id="project-empty" class="muted hidden">No projects yet. Use “Add project” to configure one.</p>
+    </aside>
+
+    <section id="detail" class="detail">
+      <div class="placeholder muted">Select a project.</div>
+    </section>
+  </main>
+
+  <section id="activity" class="activity collapsed">
+    <header class="activity-head">
+      <button id="activity-toggle" class="linkish">Activity <span id="activity-count" class="count"></span></button>
+      <span id="activity-title" class="muted"></span>
+    </header>
+    <div class="activity-body">
+      <ul id="job-list" class="job-list"></ul>
+      <pre id="job-output" class="output"></pre>
+    </div>
+  </section>
+
+  <dialog id="dialog">
+    <form method="dialog" id="dialog-form">
+      <h2 id="dialog-title"></h2>
+      <div id="dialog-body"></div>
+      <menu>
+        <button type="button" class="btn" id="dialog-cancel">Cancel</button>
+        <button value="ok" class="btn primary" id="dialog-ok">OK</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>

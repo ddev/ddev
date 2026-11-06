@@ -1410,6 +1410,27 @@ Example:
 ddev sequelace
 ```
 
+## `serve`
+
+Serve an experimental dashboard for managing DDEV projects in the browser. It offers what the [interactive TUI dashboard](../usage/cli.md#interactive-dashboard) does: start, stop, restart, and delete projects, open their sites, Mailpit, and XHGui, follow service logs, install and remove add-ons, create and restore snapshots, and toggle Xdebug.
+
+The dashboard listens on `127.0.0.1` only, and the URL it prints includes an access token. Keep that URL private: anyone who has it can control your projects.
+
+Flags:
+
+* `--port`: Port to listen on at `127.0.0.1`. A free port is chosen when this is `0`, the default.
+* `--no-open`: Print the URL without opening a browser.
+
+Example:
+
+```shell
+# Serve the dashboard and open it in the default browser
+ddev serve
+
+# Serve the dashboard on a fixed port, for example to forward it over SSH
+ddev serve --port 8765 --no-open
+```
+
 ## `share`
 
 [Share the current project](../topics/sharing.md) on the internet via a tunnel provider like ngrok or cloudflared.
