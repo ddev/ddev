@@ -10,6 +10,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     * **Docker** (recommended) - The best-tested option. Install OrbStack, Lima, Docker Desktop, Rancher Desktop, or Colima.
     * **Podman rootless** - Rootless by default; a good fit where Docker is forbidden. Can't use the default ports 80/443, so DDEV must be configured to use unprivileged ports.
+    * **Apple Container** (experimental) - Apple's own runtime, through socktainer. Incomplete; for trying it out only.
 
     === "Docker"
 
@@ -147,6 +148,68 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
             podman machine start
             podman machine ssh 'sudo fstrim -av'
             ```
+
+    === "Apple Container (experimental)"
+
+        !!!warning "Experimental"
+            Support for Apple Container is experimental and incomplete. Use it to try DDEV on Apple's runtime, not for day-to-day work. Progress is tracked in [ddev/ddev#7372](https://github.com/ddev/ddev/issues/7372).
+
+        [Apple Container](https://github.com/apple/container) is Apple's open-source container runtime, which runs each container in its own lightweight VM. DDEV talks to it through [socktainer](https://github.com/socktainer/socktainer), which provides a Docker-compatible API in front of it. Apple Container requires macOS 26 or later on Apple silicon.
+
+        ### Install Apple Container and socktainer
+
+        socktainer 1.6.0 or later is required. Install both with Homebrew, along with the Docker CLI:
+
+        ```bash
+        brew install socktainer docker
+        ```
+
+        The Homebrew `socktainer` formula depends on Homebrew's `container`. Don't mix it with Apple Container from Apple's signed installer: socktainer starts whichever `container` binary is first on your `PATH`.
+
+        ### Start Apple Container and socktainer
+
+        ```bash
+        container system start
+        socktainer
+        ```
+
+        The first `container system start` offers to install a Linux kernel; accept it. Leave `socktainer` running in its own terminal tab, or run it in the background with `nohup socktainer >~/socktainer.log 2>&1 &`. socktainer creates the `socktainer` Docker context the first time it runs. Then point the Docker CLI at it:
+
+        ```bash
+        docker context use socktainer
+        docker ps
+        ```
+
+        When your computer restarts, you'll need to run `container system start` and `socktainer` again.
+
+        The first time you start a project, macOS asks whether `container-runtime-linux` may find and connect to devices on your local network. Click **Allow**: it forwards your project's ports from your Mac into the containers. If you clicked **Don't Allow**, every connection to a project is reset ("Connection reset by peer") and DDEV warns that nothing answers on the router's ports; turn `container-runtime-linux` on in System Settings → Privacy & Security → Local Network.
+
+        !!!warning "Run `ddev poweroff` before switching providers"
+            Run `ddev poweroff` before you stop or restart socktainer, and before switching to another Docker context. A router left running keeps its ports bound.
+
+        ### Configure DDEV for Apple Container
+
+        Apple Container can't bind the privileged ports 80/443, so configure DDEV to use unprivileged ports:
+
+        ```bash
+        ddev config global --router-http-port=8080 --router-https-port=8443
+        ```
+
+        Your projects will then be reachable at `https://yourproject.ddev.site:8443`.
+
+        Each container is its own VM, so the `ddev-ssh-agent` container can't share its socket with the web container. Omit it in each project:
+
+        ```bash
+        ddev config --omit-containers=ddev-ssh-agent
+        ```
+
+        ### Known limitations
+
+        * `ddev auth ssh` doesn't work, because there is no `ddev-ssh-agent`.
+        * `ddev start` on a running project whose configuration changed fails with `hostname(s) already exist`; use `ddev restart` instead.
+        * `ddev snapshot restore` fails with the same error.
+        * The web container generates its own mkcert root CA instead of using yours, so HTTPS requests from one container to another aren't trusted. Your browser on the host is unaffected.
+        * A named volume can be mounted read-write by only one running container at a time, so add-ons whose services share a volume may fail to start.
 
 === "Linux"
 

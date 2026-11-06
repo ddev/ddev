@@ -207,6 +207,9 @@ func TestGetContainerUser(t *testing.T) {
 
 // TestGetContainerHealth tests the function for processing container readiness.
 func TestGetContainerHealth(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping until socktainer returns healthcheck output in docker inspect; remove then")
+	}
 	assert := asrt.New(t)
 	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
@@ -259,6 +262,9 @@ func TestGetContainerHealth(t *testing.T) {
 
 // TestContainerWait tests the error cases for the container check wait loop.
 func TestContainerWait(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping until socktainer returns healthcheck output in docker inspect; remove then")
+	}
 	assert := asrt.New(t)
 
 	labels := map[string]string{
@@ -517,6 +523,9 @@ func TestGetContainerEnv(t *testing.T) {
 
 // TestRunSimpleContainer does a simple test of RunSimpleContainer()
 func TestRunSimpleContainer(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping until socktainer reports the exit code in docker inspect (socktainer#493); remove then")
+	}
 	basename := fileutil.RandomFilenameBase()
 	pwd, _ := os.Getwd()
 	pwd, _ = filepath.Abs(pwd)

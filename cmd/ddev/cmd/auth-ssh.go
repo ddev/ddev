@@ -45,6 +45,15 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("This command takes no arguments.")
 		}
 
+		if dockerutil.IsAppleContainer() {
+			sock := ddevapp.AppleContainerSSHAgentSocket()
+			if sock == "" || sshKeyFiles != nil || sshKeyDirs != nil {
+				util.Failed("On Apple Container, web can't reach DDEV's own SSH agent, so keys can't be added to it.\nUse the host's agent instead: 'ddev config global --ssh-agent-upstream=host', then 'ddev restart'.")
+			}
+			util.Success("Web containers use the SSH agent at %s directly; 'ssh-add -l' on the host lists its keys.", sock)
+			return
+		}
+
 		if slices.Contains(sshKeyFiles, "-") {
 			if len(sshKeyFiles) > 1 {
 				util.Failed("'-f -' reads one key from stdin and can't be combined with other key files.")

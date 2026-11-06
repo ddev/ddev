@@ -1,0 +1,15 @@
+services:
+  web:
+    image: nginx:alpine
+    networks: [app, shared]
+  proxy:
+    image: alpine
+    command: sleep 3600
+    networks: [shared]
+  client:
+    image: alpine
+    command: sleep 3600
+    networks: [app]
+networks:
+  app:
+  shared:

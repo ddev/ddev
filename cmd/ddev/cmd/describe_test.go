@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -52,6 +53,9 @@ func TestDescribeBadArgs(t *testing.T) {
 
 // TestCmdDescribe tests that the describe command works properly when using the binary.
 func TestCmdDescribe(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	testcommon.UsesAllTestSites(t)
 	origDir, _ := os.Getwd()
 

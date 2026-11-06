@@ -115,6 +115,9 @@ func TestDescribeHTTPFailure(t *testing.T) {
 // TestGetLocalHTTPResponse brings up a project and exercises GetLocalHTTPResponse,
 // AssertLocalHTTPContent, and RequireLocalHTTPContent against it. Needs Docker.
 func TestGetLocalHTTPResponse(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: changing router ports recreates ddev-router, and Apple Container rejects the new container's hostname while the old one exists")
+	}
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() || nodeps.IsWSL2MirroredMode()) {
 		t.Skip("Skipping on Windows/Colima/Lima/Rancher/WSL2-mirrored as it always seems to fail")
 	}

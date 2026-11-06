@@ -489,6 +489,7 @@ localization
 localizations
 localpath
 localtunnel
+login's
 logs
 lookups
 loopback
@@ -670,6 +671,7 @@ snapshot's
 snapshotted
 snapshotting
 socio
+socktainer
 solr
 somefile
 sql

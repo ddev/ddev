@@ -12,6 +12,9 @@ import (
 // TestImageExistsLocallyForPlatform relies on TestMain having pulled the web
 // image, which is always for the daemon's own platform.
 func TestImageExistsLocallyForPlatform(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: socktainer reports its server Os as macOS, though its images are linux")
+	}
 	serverVersion, err := dockerutil.GetServerVersion()
 	require.NoError(t, err)
 	daemonPlatform := "linux/" + serverVersion.Arch
