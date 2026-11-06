@@ -48,6 +48,11 @@ WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 NOW="$(date +%s)"
 
+# Prints the UTC date <days> days before NOW. macOS `date` has no -d.
+days_ago() {
+  jq -rn --argjson t "$((NOW - $1 * 86400))" '$t | todate[:10]'
+}
+
 # ---------------------------------------------------------------------------
 # Scratch repository. The default cutoff is the latest release, v1.1.0,
 # committed 100 days ago.
@@ -254,7 +259,7 @@ listed() {
 
 serve_fixture
 assert_eq "$CANDIDATES" "$(listed "Batch")" "a dry run lists every candidate by tag, oldest first, across pages and images"
-assert_eq "Batch 1: pushed $(date -u -d "@$((NOW - 450 * 86400))" +%F) to $(date -u -d "@$((NOW - 150 * 86400))" +%F), 10 tags:"$'\n'"  $(date -u -d "@$((NOW - 450 * 86400))" +%F)  junk  ddev-webserver" \
+assert_eq "Batch 1: pushed $(days_ago 450) to $(days_ago 150), 10 tags:"$'\n'"  $(days_ago 450)  junk  ddev-webserver" \
   "$("$CLEANUP_SH" 2>/dev/null | head -2)" "a dry run shows the batch, and when each tag was pushed"
 assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "a dry run neither logs in nor deletes"
 assert_eq "" "$(git for-each-ref refs/image-tag-cleanup/)" "the fetched refs are removed after the run"
@@ -262,7 +267,7 @@ summary="$("$CLEANUP_SH" 2>&1 >/dev/null)"
 for line in "cutoff v1.1.0" $'keep\tquestionable' $'keep\tused by a release' $'keep\tused by main' $'keep\tused by a pull request' $'delete\tpushed before v1.1.0'; do
   if [[ "$summary" == *"$line"* ]]; then pass "the summary says '$line'"; else fail "the summary should say '$line': $summary"; fi
 done
-assert_eq "$(sed '/^2222222222, /a 4444444444 ddev-webserver' <<< "$CANDIDATES")" \
+assert_eq "$(awk '{ print } /^2222222222, / { print "4444444444 ddev-webserver" }' <<< "$CANDIDATES")" \
   "$(GH_PRS="" listed "Batch")" "a closed pull request keeps nothing"
 
 serve_fixture
@@ -281,14 +286,14 @@ export GITHUB_STEP_SUMMARY="$WORKDIR/step-summary.md"
 "$CLEANUP_SH" >/dev/null 2>&1
 unset GITHUB_STEP_SUMMARY
 for line in "| delete | pushed before v1.1.0 | 10 |" "<details><summary>10 tags</summary>" \
-  "| $(date -u -d "@$((NOW - 450 * 86400))" +%F) | \`junk\` | ddev-webserver |" \
+  "| $(days_ago 450) | \`junk\` | ddev-webserver |" \
   "<details><summary>Kept, used by main: 3 tags</summary>" \
   "<details><summary>Kept, pushed after v1.1.0: 1 tag</summary>" \
   "<details><summary>Kept, questionable: 3 tags</summary>" \
-  "| $(date -u -d "@$((NOW - 400 * 86400))" +%F) | \`v1.2.0\` (not a release) | ddev-webserver |" \
-  "| $(date -u -d "@$((NOW - 400 * 86400))" +%F) | \`7777777777\`, \`20240101_web-7777777777\` | ddev-webserver |" \
-  "| $(date -u -d "@$((NOW - 400 * 86400))" +%F) | \`5555555556\` (v0.9.5) | ddev-webserver |" \
-  "| $(date -u -d "@$((NOW - 400 * 86400))" +%F) | \`4444444444\` (#1) | ddev-webserver |"; do
+  "| $(days_ago 400) | \`v1.2.0\` (not a release) | ddev-webserver |" \
+  "| $(days_ago 400) | \`7777777777\`, \`20240101_web-7777777777\` | ddev-webserver |" \
+  "| $(days_ago 400) | \`5555555556\` (v0.9.5) | ddev-webserver |" \
+  "| $(days_ago 400) | \`4444444444\` (#1) | ddev-webserver |"; do
   if grep -qxF "$line" "$WORKDIR/step-summary.md"; then pass "the step summary has '$line'"; else fail "the step summary should have '$line': $(cat "$WORKDIR/step-summary.md")"; fi
 done
 batch="$(grep '^ddev/' "$WORKDIR/step-summary.md")"

@@ -45,11 +45,16 @@ concurrency:
 jobs:
   dry-run:
     name: Dry run
-    if: ${{ !inputs.execute }}
+    if: ${{ !(inputs.execute && inputs.images_to_delete && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - run: containers/image-tag-cleanup.sh ${BEFORE_RELEASE:+--before-release "$BEFORE_RELEASE"} "$IMAGES_TO_DELETE"
+      - name: Refuse execute
+        if: ${{ inputs.execute }}
+        run: |
+          echo "::error::Nothing deleted: execute needs images_to_delete and a run from main"
+          exit 1
 
   delete:
     name: Delete images_to_delete

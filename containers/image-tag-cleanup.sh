@@ -234,8 +234,8 @@ list_tags() {
 # push date: both are kept for a maintainer to check.
 # Pull dates aren't used: a scanner pulls nearly every tag each month.
 decide() {
-  awk -F'\t' -v OFS='\t' -v cutoff="${CUTOFF}" -v release="${BEFORE_RELEASE}" -v releases="$(releases)" '
-    BEGIN { n = split(releases, list, "\n"); for (i = 1; i <= n; i++) is_release[list[i]] }
+  RELEASES="$(releases)" awk -F'\t' -v OFS='\t' -v cutoff="${CUTOFF}" -v release="${BEFORE_RELEASE}" '
+    BEGIN { n = split(ENVIRON["RELEASES"], list, "\n"); for (i = 1; i <= n; i++) is_release[list[i]] }
     NR == FNR { if (!($1 in kept)) kept[$1] = $2; if ($1 ~ /^[0-9a-f]+$/ && length($1) == 10) hashes[$1]; next }
     $2 in is_release || $2 == "latest" || $2 == "stable" || $2 == "edge" { print "keep", $1, $3, $4, "release tag"; next }
     $2 in kept { print "keep", $1, $3, $4, kept[$2]; next }
@@ -255,8 +255,8 @@ count() {
 # epoch> <org/repo:tag> <pushed, date>" lines, oldest first, then by tag and
 # image. Requested tags that aren't candidates go to skipped as " <org/repo:tag> <why>".
 select_tags() {
-  awk -F'\t' -v OFS='\t' -v requested="${REQUESTED}" -v skipped="${WORKDIR}/skipped" -v org="${DOCKER_ORG}" '
-    BEGIN { n = split(requested, list, "\n"); for (i = 1; i <= n; i++) want[list[i]] }
+  REQUESTED="${REQUESTED}" awk -F'\t' -v OFS='\t' -v skipped="${WORKDIR}/skipped" -v org="${DOCKER_ORG}" '
+    BEGIN { n = split(ENVIRON["REQUESTED"], list, "\n"); for (i = 1; i <= n; i++) want[list[i]] }
     n && !($2 in want) { next }
     { seen[$2] }
     $1 == "delete" { image = tag = $2; sub(/:.*/, "", image); sub(/^[^:]*:/, "", tag); print $3, tag, image, $2, $4; next }
