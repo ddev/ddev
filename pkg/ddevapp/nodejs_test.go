@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -149,6 +150,9 @@ func TestNodeJSRoot(t *testing.T) {
 // TestCorepackEnable tests behavior of corepack_enable, both where Node.js
 // bundles corepack (<=24) and where DDEV must install it from npm (>=25)
 func TestCorepackEnable(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
 	_ = os.Chdir(site.Dir)
@@ -234,6 +238,9 @@ func TestCorepackEnable(t *testing.T) {
 // group (0/root) - regression test for
 // https://github.com/ddev/ddev/issues/8640
 func TestNpmGlobalInstall(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: socktainer ignores group_add, so the web user can't write the image's group-0 directories like /usr/local/n, https://github.com/socktainer/socktainer/issues/504")
+	}
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
 	_ = os.Chdir(site.Dir)

@@ -84,13 +84,13 @@ under `perf/fixtures/large-tree/` (gitignored) and reused on subsequent runs.
 ## CI wiring
 
 - **macOS**: `.buildkite/perf-macos-docker-desktop-arm64.yml` is its own pipeline, since Docker
-  Desktop has dedicated machines (`macstadium-m1`, `tb-macos-arm64-4`). The other five macOS
-  providers (colima, lima, orbstack, podman-rootless, rancher-desktop) currently share a single
-  3-machine pool (`tb-macos-arm64-5/6/7`), so they're combined into one pipeline instead of five:
-  `.buildkite/perf-macos-shared-providers.yml` runs all five as sequential steps (`wait` between
-  each), guaranteeing only one is ever active against that pool at a time — five independent
-  nightly pipelines could otherwise grab up to three of the five providers at once and starve the
-  pool for correctness tests during the run.
+  Desktop has dedicated machines (`macstadium-m1`, `tb-macos-arm64-4`). The other six macOS
+  providers (colima, lima, orbstack, podman-rootless, rancher-desktop, socktainer) currently share
+  a single 3-machine pool (`tb-macos-arm64-5/6/7`), so they're combined into one pipeline instead
+  of six: `.buildkite/perf-macos-shared-providers.yml` runs all six as sequential steps (`wait`
+  between each), guaranteeing only one is ever active against that pool at a time — six
+  independent nightly pipelines could otherwise grab up to three of the six providers at once and
+  starve the pool for correctness tests during the run.
 - **Windows/WSL2**: `.buildkite/perf-windows10dockerforwindows.yml` and `.buildkite/perf-wsl2-*.yml`,
   one per existing leg in `.buildkite/*.yml`, reusing the same `agents:` tags.
 - All of the above must be configured in the Buildkite dashboard as pipelines with a **nightly

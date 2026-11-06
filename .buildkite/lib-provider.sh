@@ -182,6 +182,25 @@ function provider_bringup {
         podman machine ssh 'sudo fstrim -av'
         ;;
 
+      "socktainer")
+        # Neither runs as a brew service on the testbots, so this job owns both.
+        container system start --disable-kernel-install
+        nohup socktainer --no-auto-start >~/tmp/socktainer.log 2>&1 &
+        for i in {1..60}; do
+          if docker --context socktainer ps >/dev/null 2>&1; then
+            break
+          fi
+          echo "Waiting for socktainer: $i"
+          sleep 1
+        done
+        docker context use socktainer
+
+        if ! try_cleanup_containers_native; then
+          echo "ERROR: Containers remain after socktainer start; aborting" >&2
+          exit 1
+        fi
+        ;;
+
       *)
         echo "no DOCKER_TYPE specified, exiting" && exit 10
         ;;
@@ -243,6 +262,13 @@ function provider_shutdown {
   command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop -f lima-vz || true)
   if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (~/.rd/bin/rdctl shutdown || true); fi
   command -v podman 2>/dev/null && echo "Stopping podman machine" && (podman machine stop || true)
+  # A second socktainer would share the socket and DNS port, and a router left
+  # running keeps its ports bound, so stop socktainer and every container.
+  if command -v socktainer >/dev/null 2>&1; then
+    echo "Stopping socktainer and apple container"
+    pkill -x socktainer || true
+    ${TIMEOUT} 60s container system stop || true
+  fi
   docker context use default || true
   # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop.
   if command -v orb 2>/dev/null ; then

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,9 +41,13 @@ func TestCARootArchive(t *testing.T) {
 		require.NoError(t, err)
 		got = append(got, entry{h.Name, h.Mode, string(content)})
 	}
-	require.Equal(t, []entry{
+	want := []entry{
 		{"usr/local/lib/ddev/mkcert/", 0755, ""},
 		{"usr/local/lib/ddev/mkcert/rootCA-key.pem", 0600, "key"},
 		{"usr/local/lib/ddev/mkcert/rootCA.pem", 0644, "cert"},
-	}, got)
+	}
+	if dockerutil.IsAppleContainer() {
+		want = want[1:]
+	}
+	require.Equal(t, want, got)
 }

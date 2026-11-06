@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -15,6 +16,9 @@ import (
 
 // TestCmdSnapshotRestore runs `ddev snapshot restore` on the test apps
 func TestCmdSnapshotRestore(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	assert := asrt.New(t)
 	// Gather reporting about goroutines at exit
 	t.Setenv("DDEV_GOROUTINES", "true")
@@ -56,6 +60,9 @@ func TestCmdSnapshotRestore(t *testing.T) {
 // file outside the project, which the db container can only reach through a mount
 // added for that restore.
 func TestCmdSnapshotRestoreFile(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	require.NoError(t, os.Chdir(site.Dir))

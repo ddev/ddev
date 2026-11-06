@@ -12,6 +12,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/state/storage/yaml"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -73,6 +74,9 @@ func TestCmdStart(t *testing.T) {
 
 // TestCmdStartOptionalProfiles checks `ddev start --profiles=list,of,profiles`
 func TestCmdStartOptionalProfiles(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	testcommon.ClearDockerEnv()
 
 	// When DDEV_GOROUTINES is set as it is in CI, its output is added to the

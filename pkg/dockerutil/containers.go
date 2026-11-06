@@ -311,19 +311,25 @@ func hasLabels(have map[string]string, labels map[string]string) bool {
 }
 
 // FindContainersByVolume includes exited containers, since those still block volume removal.
+// It matches Mounts itself because socktainer ignores the "volume" list filter.
 func FindContainersByVolume(volumeName string) ([]container.Summary, error) {
 	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{
-		All:     true,
-		Filters: client.Filters{}.Add("volume", volumeName),
-	})
+	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{All: true})
 	if err != nil {
 		return nil, err
 	}
-	return containers.Items, nil
+	var holders []container.Summary
+	for _, c := range containers.Items {
+		if slices.ContainsFunc(c.Mounts, func(m container.MountPoint) bool {
+			return m.Type == mount.TypeVolume && m.Name == volumeName
+		}) {
+			holders = append(holders, c)
+		}
+	}
+	return holders, nil
 }
 
 // VolumesHeldByRunningContainers returns which of volumeNames a running
@@ -1294,9 +1300,18 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	// nolint: errcheck
 	defer t.Close()
 
-	_, err = apiClient.CopyToContainer(ctx, cid.ID, client.CopyToContainerOptions{DestinationPath: dstPath, Content: t, AllowOverwriteDirWithFile: true})
-	if err != nil {
-		return err
+	if IsAppleContainer() {
+		// apple container's copy-in writes files to the container's rootfs, under
+		// any volume mounted at dstPath, so extract inside the container instead.
+		_, stderr, err = ExecWithStdin(cid.ID, `tar -xzf - -C "`+dstPath+`"`, "0", t)
+		if err != nil {
+			return fmt.Errorf("unable to extract into %s inside %s: %v (stderr=%s)", dstPath, containerName, err, stderr)
+		}
+	} else {
+		_, err = apiClient.CopyToContainer(ctx, cid.ID, client.CopyToContainerOptions{DestinationPath: dstPath, Content: t, AllowOverwriteDirWithFile: true})
+		if err != nil {
+			return err
+		}
 	}
 
 	util.Verbose("Copied %s:%s into %s in %v", srcPath, containerName, dstPath, time.Since(startTime))

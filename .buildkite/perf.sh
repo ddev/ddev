@@ -39,10 +39,14 @@ fi
 
 provider_bringup
 
-# Rootless podman cannot bind privileged ports (<1024), so the DDEV router must
-# use non-privileged ports -- same override test.sh applies for this DOCKER_TYPE.
-if [ "${DOCKER_TYPE:-}" = "podman-rootless" ]; then
+# Rootless podman and Apple Container cannot bind privileged ports (<1024), so
+# the DDEV router must use non-privileged ports -- same overrides test.sh
+# applies for these DOCKER_TYPEs.
+if [ "${DOCKER_TYPE:-}" = "podman-rootless" ] || [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
   ddev config global --router-http-port=8080 --router-https-port=8443
+fi
+if [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
+  ddev config global --omit-containers=ddev-ssh-agent
 fi
 
 echo

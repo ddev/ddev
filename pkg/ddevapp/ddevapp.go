@@ -654,8 +654,12 @@ func (app *DdevApp) GetPublishedPortForPrivatePort(serviceName string, privatePo
 
 // GetOmittedContainers returns full list of global and local omitted containers
 func (app *DdevApp) GetOmittedContainers() []string {
-	omitted := app.OmitContainersGlobal
-	omitted = append(omitted, app.OmitContainers...)
+	omitted := slices.Concat(app.OmitContainersGlobal, app.OmitContainers)
+	// web can't share a volume with ddev-ssh-agent's VM or reach a socket in it;
+	// it mounts the host's agent instead (AppleContainerSSHAgentSocket).
+	if dockerutil.IsAppleContainer() && !slices.Contains(omitted, SSHAuthName) {
+		omitted = append(omitted, SSHAuthName)
+	}
 	return omitted
 }
 
@@ -2193,6 +2197,14 @@ func (app *DdevApp) start(o StartOptions) error {
 		})
 		if err != nil {
 			util.Warning("Unable to run ln -sf /mnt/ddev_config/xhprof/xhprof_prepend.php /usr/local/bin/xhprof/xhprof_prepend.php: %v, stdout=%s, stderr=%s", err, stdout, stderr)
+		}
+	}
+
+	// The relayed agent socket belongs to root, with the host socket's mode
+	// (0600 for most agents), so the web user couldn't connect.
+	if AppleContainerSSHAgentSocket() != "" {
+		if _, stderr, err := app.Exec(&ExecOpts{Cmd: "chmod 0666 /home/.ssh-agent/socket", User: "root"}); err != nil {
+			util.Warning("Unable to open the SSH agent socket to the web user: %v %s", err, stderr)
 		}
 	}
 

@@ -79,6 +79,10 @@ func TestNamedVolumesHaveOneWriter(t *testing.T) {
 				problems = append(problems, fmt.Sprintf("%s: %v", name, attachments[name]))
 			}
 			require.Empty(t, problems, "named volumes with more than one writer, or a writer and readers")
+			// Apple container omits ddev-ssh-agent, so nothing shares its volume.
+			if dockerutil.IsAppleContainer() {
+				return
+			}
 			for key := range knownSharedVolumes {
 				require.True(t, stillShared[key], "%s is no longer shared, so remove it from knownSharedVolumes", key)
 			}

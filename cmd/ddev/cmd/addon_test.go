@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/github"
@@ -181,6 +182,9 @@ func getManifestMapFromLogs(t *testing.T, jsonOut string) map[string]map[string]
 
 // TestCmdAddonPHP tests the new PHP execution functionality in addons
 func TestCmdAddonPHP(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping until socktainer reports the exit code in docker inspect (socktainer#493); remove then")
+	}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
