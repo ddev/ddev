@@ -14,6 +14,11 @@ on:
         type: string
         required: false
         default: ''
+      previous_tag:
+        description: 'Previous release, the start of the GoReleaser changelog'
+        type: string
+        required: false
+        default: ''
       debug_enabled:
         description: 'Run the build with upterm set "debug_enabled"'
         type: boolean
@@ -65,10 +70,14 @@ jobs:
         if: inputs.release_tag != ''
         env:
           GH_REPO: ${{ github.repository }}
+          PREVIOUS_TAG: ${{ inputs.previous_tag }}
         run: |
           set -eu -o pipefail
           if ! [[ "${RELEASE_TAG}" =~ ^v1\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
             echo "release_tag '${RELEASE_TAG}' is not a v1.x.y release tag" >&2; exit 1
+          fi
+          if [ -n "${PREVIOUS_TAG}" ] && ! [[ "${PREVIOUS_TAG}" =~ ^v1\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "previous_tag '${PREVIOUS_TAG}' is not a v1.x.y release tag" >&2; exit 1
           fi
           releases="$(gh api "repos/${GH_REPO}/releases?per_page=100" --jq "[.[] | select(.tag_name == \"${RELEASE_TAG}\")]")"
           if [ "$(jq 'map(select(.draft | not)) | length' <<<"$releases")" -ne 0 ]; then
@@ -516,6 +525,8 @@ jobs:
           # An rc and its final release can share a commit, so don't let
           # GoReleaser pick the tag with git describe.
           GORELEASER_CURRENT_TAG: ${{ inputs.release_tag }}
+          # git describe can pick an rc tag; this matches GitHub's generated notes.
+          GORELEASER_PREVIOUS_TAG: ${{ inputs.previous_tag }}
 
       # Signed build provenance for every file in checksums.txt, SBOMs
       # included; verify with `gh attestation verify <file> --repo <owner/repo>`.
