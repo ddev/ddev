@@ -163,5 +163,5 @@ if [ "$YES" != true ]; then
   [[ "$answer" =~ ^[Yy] ]] || { echo "Not started. Run again to start it; the draft is kept."; exit 0; }
 fi
 
-gh workflow run main-build.yml --repo "$REPO" --ref "$BRANCH" -f release_tag="$TAG"
+gh workflow run main-build.yml --repo "$REPO" --ref "$BRANCH" -f release_tag="$TAG" -f previous_tag="$SINCE"
 echo "Started. Follow it with: gh run list --repo ${REPO} --workflow main-build.yml --limit 1"
