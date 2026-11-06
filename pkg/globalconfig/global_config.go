@@ -322,8 +322,15 @@ func ReadGlobalConfig() error {
 	}
 
 	loadedGlobalConfig = DdevGlobalConfig
+	globalConfigLoaded.Store(true)
 
 	return nil
+}
+
+// IsGlobalConfigLoaded returns true once ReadGlobalConfig has succeeded, so
+// code that reads DdevGlobalConfig early can tell defaults from user settings.
+func IsGlobalConfigLoaded() bool {
+	return globalConfigLoaded.Load()
 }
 
 // These hold the keys global_config.*.yaml files set, global_config.yaml alone,
@@ -332,6 +339,7 @@ var (
 	overriddenKeys     map[string]bool
 	mainOnlyConfig     GlobalConfig
 	loadedGlobalConfig GlobalConfig
+	globalConfigLoaded atomic.Bool
 )
 
 // loadGlobalConfigFiles loads global_config.yaml into DdevGlobalConfig, then merges
