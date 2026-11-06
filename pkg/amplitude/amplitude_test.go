@@ -44,10 +44,9 @@ func (t *AmplitudeSuite) TestTrackCommand() {
 	require := t.Require()
 
 	cmd := cobra.Command{}
-	args := []string{"arg1", "arg2"}
 
 	require.NotPanics(func() {
-		amplitude.TrackCommand(&cmd, args)
+		amplitude.TrackCommand(&cmd)
 	})
 }
 
