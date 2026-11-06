@@ -166,6 +166,9 @@ type DdevApp struct {
 	// restoreSnapshotMountDir is set by RestoreSnapshot() when the snapshot being
 	// restored lives outside the project, for the one Start() call it triggers.
 	restoreSnapshotMountDir string
+	// resolvedRouterPorts is set by Start() so that writeConfig() can keep
+	// resolved router ports out of config.yaml.
+	resolvedRouterPorts *resolvedRouterPorts
 }
 
 // SkipHooks Global variable that's set from --skip-hooks global flag.
@@ -1632,6 +1635,10 @@ func (app *DdevApp) start(o StartOptions) error {
 	// not set.
 	app.ComposeYaml = nil
 
+	// Resolve from the configured ports, not from what an earlier Start() resolved.
+	app.restoreConfiguredRouterPorts()
+	configuredPorts, configuredWebX := app.routerPortValues()
+
 	// Set up ports to be replaced with substitute ports if needed
 	app.RouterHTTPPort = app.GetPrimaryRouterHTTPPort()
 	app.RouterHTTPSPort = app.GetPrimaryRouterHTTPSPort()
@@ -1646,6 +1653,14 @@ func (app *DdevApp) start(o StartOptions) error {
 	GetSubstitutePortsIfNeeded(portsToCheck, true)
 
 	SyncGenericWebserverPortsWithRouterPorts(app)
+
+	resolvedPorts, resolvedWebX := app.routerPortValues()
+	app.resolvedRouterPorts = &resolvedRouterPorts{
+		configured:     configuredPorts,
+		resolved:       resolvedPorts,
+		configuredWebX: configuredWebX,
+		resolvedWebX:   resolvedWebX,
+	}
 
 	// dbNeedsInitialization means the database volume has no database in it yet,
 	// so the db container will seed it during this start. Seeding contributes a
