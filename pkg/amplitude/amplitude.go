@@ -64,8 +64,8 @@ func GetEventOptions() (options ampli.EventOptions) {
 }
 
 // TrackCommand counts the command for instrumentation. The counts are sent
-// as one Command Summary event per command and day, on the first command
-// of a later day.
+// as one Command Summary event per command and week, on the first command
+// of a later week.
 func TrackCommand(cmd *cobra.Command) {
 	// defer util.TimeTrack()()
 
@@ -76,7 +76,7 @@ func TrackCommand(cmd *cobra.Command) {
 		return
 	}
 
-	previous := countCommand(getCommandsFileName(), time.Now().Format(time.DateOnly), cmd.CommandPath())
+	previous := countCommand(getCommandsFileName(), weekStart(time.Now()), cmd.CommandPath())
 	if previous != nil {
 		sendCommandSummaries(*previous)
 	}
@@ -132,8 +132,8 @@ func FlushForce() {
 	ampli.Instance.Flush()
 }
 
-// Clean removes the cache file, the record of events reported today, and
-// the command counts.
+// Clean removes the cache file, the record of reported events, and the
+// command counts.
 func Clean() {
 	_ = os.Remove(getCacheFileName())
 	_ = os.Remove(getReportedFileName())
@@ -258,7 +258,8 @@ func identify() {
 	}
 
 	event := builder.Build()
-	if AlreadyReportedToday("identify", event) {
+	// User properties persist in Amplitude, so only a change needs sending.
+	if AlreadyReportedUnchanged("identify", event) {
 		return
 	}
 

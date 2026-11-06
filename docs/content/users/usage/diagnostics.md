@@ -18,10 +18,10 @@ Regardless of your choice, you can change this at any time using one of these ap
 
 Usage information is also never collected in automated workflows where `CI=true` is set in the environment.
 
-If you choose to share diagnostics, it helps us tremendously in our effort to improve the tool. DDEV tracks three kinds of events: `Identify` (about your machine), `Command Summary` (how many times you ran each command on a day), and `Project` (your project's configuration). Here’s an example of what we might see:
+If you choose to share diagnostics, it helps us tremendously in our effort to improve the tool. DDEV tracks three kinds of events: `Identify` (about your machine), `Command Summary` (how many times you ran each command in a week), and `Project` (your project's configuration). Here’s an example of what we might see:
 
 ```go
-// Sent at most once a day per machine, or when its details change, to identify the environment DDEV runs in.
+// Sent when DDEV first runs on a machine, and again when these details or the DDEV version change.
 client.Track(&analytics.Track{
   DeviceId:   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   AppVersion: "v1.25.3",
@@ -42,7 +42,7 @@ client.Track(&analytics.Track{
   },
 })
 
-// Sent once for each command you used on a day, when you first run DDEV on a later day.
+// Sent once for each command you used in a week, when you first run DDEV in a later week.
 // Arguments are never sent. For your own custom commands the
 // command name is replaced with "custom-command".
 client.Track(&analytics.Track{
@@ -57,7 +57,7 @@ client.Track(&analytics.Track{
     "Command Name": "start",
     "Command Path": "ddev start",
     "Count":        3,
-    "Date":         "2026-11-05",
+    "Week":         "2026-11-02",
   },
 })
 
