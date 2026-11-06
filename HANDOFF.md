@@ -9,9 +9,35 @@ Environment as last verified: Apple `container` 1.6.1 (signed installer, **not**
 below), `socktainer` built from upstream `main` as of 2026-10-31 with no fork fixes, docker
 CLI 29.9.2, docker context `socktainer`, macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment),
-rebased on `upstream/main` as of 2026-11-03, after #9040.
+rebased on `upstream/main` as of 2026-11-06, after #9061 and #9067, and squashed to one
+commit plus this file's updates.
 
 ## Resume here
+
+### Before review (2026-11-06)
+
+- **Split-out fixes:** branch `20261106_rfay_test_fixes_from_apple_container` (worktree
+  `~/workspace/ddev-worktrees/20261106_rfay_test_fixes_from_apple_container`, one commit,
+  not pushed). It has the DDEV-generic changes from this branch: `WriteConfig` no longer
+  pins a router port that equals the global one (fixes `TestGlobalPortOverride`, with new
+  `TestWriteConfigOmitsGlobalRouterPorts`); `TestDdevXdebugEnabled` no longer closes
+  `acceptListenDone`; `TestWriteableFilesDirectory` polls; `FindContainersByVolume` matches
+  `Mounts`. Once it merges, rebase here, and remove the `TestGlobalPortOverride` skip. The
+  Xdebug listen address stays here, since it needs `IsAppleContainer()`.
+- **socktainer release:** #492, #494 and #496 merged on 2026-11-03, but the latest release
+  is still v1.6.0 (2026-10-20). After the next release, raise `SocktainerMinVersion`, and
+  drop the `*.sock` warning and the #493 exit-code skips.
+- **Hostname uniqueness** is still the main blocker and still unfiled (see "Open
+  blockers"). File it with a Compose repro and the attachment-hostname proposal. Then
+  file a PR for #479 (opt-in peer rewrite) or #505 (aliases); keep about two open.
+- **Skips:** drop `IsAppleContainer()` from `SkipUnlessDefaultEnvironment`, and give each
+  remaining skip a named socktainer issue (see "Test skips to rethink").
+- **Remove `HANDOFF.md` and `handoff/`** before review. Move what matters into the PR
+  description or #7372.
+- **Decide the release stance:** ship it marked experimental with the hand steps
+  documented, or wait for hostname uniqueness. `ddev snapshot restore` fails until then.
+- **Buildkite:** widen `macos-socktainer`'s branch filter after merge, and decide whether
+  it's a required check.
 
 ### Buildkite CI (2026-11-01)
 
@@ -173,8 +199,7 @@ Next to file, in this order:
 1. **The image list ignores the `label` filter** — filed 2026-10-31 as
    [socktainer#491](https://github.com/socktainer/socktainer/issues/491), fix in PR
    [#492](https://github.com/socktainer/socktainer/pull/492) (branch
-   `fix/image-list-label-filter`), CodeRabbit's comments addressed, waiting on maintainer
-   review. `before`, `since` and `until` look
+   `fix/image-list-label-filter`), merged 2026-11-03, not yet released. `before`, `since` and `until` look
    ignored the same way, untested and left out of #492. `GET /images/json`
    applies only `dangling` and `reference` (`ImageListRoute.applyFilters`), so
    `docker images --filter label=x=y` lists every image. Repro
@@ -204,7 +229,7 @@ Next to file, in this order:
 4. **`docker inspect` reports `State.ExitCode` 0 for every stopped container** — filed
    2026-11-01 as [socktainer#493](https://github.com/socktainer/socktainer/issues/493), fix in PR
    [#494](https://github.com/socktainer/socktainer/pull/494) (branch `fix/inspect-exit-code`,
-   worktree `~/tmp/socktainer-exitcode`), waiting on review.
+   worktree `~/tmp/socktainer-exitcode`), merged 2026-11-03, not yet released.
    `docker wait` is right. DDEV's `RunSimpleContainer` polls inspect, so failing helpers
    looked successful. Repro `handoff/exitcoderepro/repro.sh`.
 5. **Gaps found by the first CI run (2026-11-01), not filed yet**, each with a DDEV test skip
@@ -231,7 +256,7 @@ Next to file, in this order:
    [#496](https://github.com/socktainer/socktainer/pull/496) (branch `fix/socket-bind-mounts`,
    worktree `~/tmp/socktainer-sockbind`); three rounds of CodeRabbit comments addressed, the
    last (relative socket sources in `Mounts`) answered rather than changed, since Docker
-   Engine rejects relative bind sources there. Not live-tested against a daemon yet. Closed
+   Engine rejects relative bind sources there. Merged 2026-11-03, not yet released. Closed
    [#265](https://github.com/socktainer/socktainer/pull/265) tried a narrower SSH-only
    approach.
 10. **Volume `nocopy` is ignored** — filed 2026-11-03 as
@@ -304,8 +329,9 @@ longer mount `ddev-global-cache`), and
 [#9040](https://github.com/ddev/ddev/pull/9040) (image labels re-checked client-side).
 Draft: [#8656](https://github.com/ddev/ddev/pull/8656), this branch.
 
-Still open: [#9046](https://github.com/ddev/ddev/pull/9046) (single-writer volume test,
-changes requested). [#9044](https://github.com/ddev/ddev/pull/9044) (seed
+Also merged: [#9046](https://github.com/ddev/ddev/pull/9046) (single-writer volume test) and
+[#9061](https://github.com/ddev/ddev/pull/9061) (empty `/var/www/html` in the web image).
+[#9044](https://github.com/ddev/ddev/pull/9044) (seed
 `ddev-router-traefik` before web) was closed unmerged.
 
 ### What still has to be done by hand
@@ -335,7 +361,7 @@ the router's one-time seed) and add-ons still mount `ddev-global-cache`, one at 
   `GetSocktainerVersion()`.
 - `pkg/dockerutil/requirements.go`, `versionconstants.go` — warn on `ddev start` and
   `ddev utility dockercheck` when socktainer is older than `SocktainerMinVersion` (1.6.0, the
-  current release). Raise it once socktainer#492 and #494 are released. The version comes from
+  current release). Raise it once a release has socktainer#492, #494 and #496 (all merged). The version comes from
   the `socktainer` server component; source builds report `unspecified` or `0.0.0-dev` and
   aren't compared.
 - `pkg/dockerutil/containers.go` — `CopyIntoContainer` extracts with `tar` through
@@ -437,7 +463,7 @@ vsock (what `container run --ssh` uses). So on Apple Container the branch:
 - makes `ddev auth ssh` explain this instead of adding keys to an agent web can't reach.
 
 Verified 2026-11-03 on `d11` and by `TestAppleContainerSSHAgent`: web lists the host agent's
-keys. Limits: a socket named `*.sock` is dropped until socktainer#495 is fixed (PR #496) (DDEV warns
+keys. Limits: a socket named `*.sock` is dropped until a socktainer release has #496 (merged 2026-11-03) (DDEV warns
 and skips the mount; drop that check once a release has the fix), so 1Password's socket
 needs a relay such as `socat UNIX-LISTEN:~/tmp/sshrelay/agent,fork,perm=0666
 UNIX-CONNECT:"$SSH_AUTH_SOCK"` and `--ssh-agent-upstream=~/tmp/sshrelay/agent`. A symlink to
