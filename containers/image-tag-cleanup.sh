@@ -281,7 +281,9 @@ summarize() {
 # Prints the candidates in batches to delete, or what the tags given come to.
 print_report() {
   local markdown="${1:-}"
-  if [[ -z "${REQUESTED}" ]]; then
+  if [[ -z "${REQUESTED}" && ! -s "${WORKDIR}/selected" ]]; then
+    printf '%sNothing to delete.\n' "${markdown:+$'\n'}"
+  elif [[ -z "${REQUESTED}" ]]; then
     group selected | awk -F'\t' -v OFS='\t' -v size="${MAX_DELETE}" '
       { if (used && used + $3 > size) { batch++; used = 0 } used += $3; print "Batch " batch + 1, $0 }' > "${WORKDIR}/rows"
     render "${markdown}" copy
@@ -390,7 +392,9 @@ write_step_summary() {
   if [[ -z "${REQUESTED}" ]]; then
     kept_rows
     render markdown kept
-    printf '\nTo delete a batch, copy its line into `images_to_delete`. Open the batch to see what is in it.\n'
+    if [[ -s "${WORKDIR}/selected" ]]; then
+      printf '\nTo delete a batch, copy its line into `images_to_delete`. Open the batch to see what is in it.\n'
+    fi
   fi
   print_report markdown
 }

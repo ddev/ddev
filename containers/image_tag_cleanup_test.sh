@@ -273,6 +273,20 @@ assert_eq "$(awk '{ print } /^2222222222, / { print "4444444444 ddev-webserver" 
 serve_fixture
 assert_eq "$(grep -v -e '^0a0a0a0a0a ' <<< "$CANDIDATES")" \
   "$(listed "Batch" --before-release v1.0.0)" "--before-release moves the cutoff"
+
+serve_fixture
+export GITHUB_STEP_SUMMARY="$WORKDIR/no-candidates.md"
+if output="$("$CLEANUP_SH" --before-release v0.0.1 2>/dev/null)"; then
+  assert_eq "Nothing to delete." "$output" "a dry run with no candidates says so"
+else
+  fail "a dry run with no candidates should succeed"
+fi
+unset GITHUB_STEP_SUMMARY
+if grep -qx "Nothing to delete." "$WORKDIR/no-candidates.md" && ! grep -q "To delete a batch" "$WORKDIR/no-candidates.md"; then
+  pass "the step summary says there is nothing to delete, without the batch hint"
+else
+  fail "the step summary should say 'Nothing to delete.' without the batch hint: $(cat "$WORKDIR/no-candidates.md")"
+fi
 assert_fails_with "is not a vX.Y.Z release" "--before-release refuses a test tag" "$CLEANUP_SH" --before-release v0.9.6-aaa1
 assert_fails_with "has no release v9.9.9" "--before-release refuses a missing release" "$CLEANUP_SH" --before-release v9.9.9
 assert_fails_with "ddev/notags has no vX.Y.Z release" "the default cutoff needs a release" env GITHUB_REPOSITORY=ddev/notags GH_PRS= "$CLEANUP_SH"
