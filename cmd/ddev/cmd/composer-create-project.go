@@ -598,7 +598,7 @@ func readPipedInput() <-chan []byte {
 }
 
 // maxPipedInput is the most piped input kept. More is a stream like `yes`,
-// not answers, so it is dropped.
+// not answers, so it is dropped. The PTY cuts each answer at 4095 bytes.
 const maxPipedInput = 64 * 1024
 
 // wrapWithPipedInput returns cmd and its env so that cmd runs in a PTY, where
