@@ -18,6 +18,9 @@ import (
 
 // TestMailpit does a basic test of mailpit.
 func TestMailpit(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	if nodeps.IsWSL2MirroredMode() {
 		t.Skip("Skipping TestMailpit in WSL2 mirrored mode; Manual testing and manual test run works fine, but can fail with 'remote error: tls: unrecognized name' in WSL2 mirrored mode.")
 	}

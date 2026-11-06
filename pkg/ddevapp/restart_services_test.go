@@ -21,6 +21,9 @@ import (
 // for web.
 // See https://github.com/ddev/ddev/issues/7904
 func TestRestartServices(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	site := TestSites[0]
 
 	app, err := ddevapp.NewApp(site.Dir, false)

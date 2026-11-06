@@ -995,8 +995,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	// On macOS we want to listen on localhost port, to not trigger
 	// a firewall block. On other systems, we listen on all interfaces.
+	// Apple container VMs reach the host at the vmnet gateway, not loopback.
 	listenPort := ":9003"
-	if nodeps.IsMacOS() {
+	if nodeps.IsMacOS() && !dockerutil.IsAppleContainer() {
 		listenPort = "127.0.0.1:9003"
 	}
 
@@ -4051,6 +4052,9 @@ func TestGetWebContainerDirectURLsErrorHandling(t *testing.T) {
 // TestGetWebContainerDirectURLsWithGenericWebserver checks that every URL DDEV reports for a
 // generic webserver project with web_extra_exposed_ports serves the project
 func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+	}
 	if dockerutil.IsPodmanRootlessmacOS() {
 		t.Skip("Skipping: podman rootless on macOS cannot bind privileged ports 80/443")
 	}
@@ -5271,6 +5275,12 @@ func TestEnvironmentVariables(t *testing.T) {
 		})
 		assert.NoError(err)
 		envVal = strings.Trim(envVal, "\r\n")
+		// socktainer rewrites ://hostname:port in env to the IP of whatever
+		// holds that alias, here the router, once the router already has it.
+		if k == "DDEV_PRIMARY_URL" && dockerutil.IsAppleContainer() && envVal != v {
+			t.Logf("Ignoring %s=%s: socktainer rewrote the hostname to an IP, https://github.com/socktainer/socktainer/issues/479", k, envVal)
+			continue
+		}
 		assert.Equal(v, envVal)
 	}
 

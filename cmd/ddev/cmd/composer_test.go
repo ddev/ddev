@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -80,6 +81,9 @@ func TestComposerCmdCreateConfigInstall(t *testing.T) {
 }
 
 func TestComposerCmdCreateRequireRemoveConfigVersion(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping until socktainer accepts network names over 63 characters (socktainer#498); remove then")
+	}
 	assert := asrt.New(t)
 
 	origDir, err := os.Getwd()
