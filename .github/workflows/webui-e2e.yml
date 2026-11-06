@@ -63,6 +63,11 @@ jobs:
         # see containers/wait-for-images.sh.
         run: containers/wait-for-images.sh
 
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+        with:
+          brew-gh-api-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
 
