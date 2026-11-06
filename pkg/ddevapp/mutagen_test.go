@@ -6,6 +6,7 @@ import (
 	"path"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,6 +28,23 @@ func requireMutagenStatus(t *testing.T, app *ddevapp.DdevApp, want string) {
 	status, short, long, err := app.MutagenStatus()
 	require.NoError(t, err, "could not run Mutagen sync list: status=%s short=%s long=%v", status, short, long)
 	require.Equal(t, want, status, "wrong Mutagen status: status=%s short=%s long=%v", status, short, long)
+}
+
+// requireNoMutagenProcess fails the test if a mutagen process is still running.
+// Zombies don't count: a daemon that has exited can stay unreaped for many
+// seconds when PID 1 is busy, as systemd is on WSL2 with Docker Desktop.
+func requireNoMutagenProcess(t *testing.T) {
+	t.Helper()
+	out, err := exec.RunHostCommand("ps", "-e", "-o", "stat=,comm=")
+	require.NoError(t, err, "ps failed: %s", out)
+	var running []string
+	for line := range strings.Lines(out) {
+		stat, comm, ok := strings.Cut(strings.TrimSpace(line), " ")
+		if ok && !strings.HasPrefix(stat, "Z") && filepath.Base(strings.TrimSpace(comm)) == "mutagen" {
+			running = append(running, strings.TrimSpace(line))
+		}
+	}
+	require.Empty(t, running, "Mutagen process still running")
 }
 
 // logMutagenDiagnostics logs Mutagen's own view of the world, for use when a test has failed.
@@ -164,8 +182,7 @@ func TestMutagenSimple(t *testing.T) {
 			sleepWait = time.Second * 5
 		}
 		time.Sleep(sleepWait)
-		_, err := exec.RunHostCommand("pkill", "-HUP", "mutagen")
-		require.Error(t, err)
+		requireNoMutagenProcess(t)
 	}
 
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
@@ -217,9 +234,7 @@ func TestMutagenSimple(t *testing.T) {
 		// Verify that the Mutagen daemon stopped/died
 		sleepWait := time.Second * 5
 		time.Sleep(sleepWait)
-		// pkill -HUP checks for process existence.
-		_, err := exec.RunHostCommand("pkill", "-HUP", "mutagen")
-		require.Error(t, err)
+		requireNoMutagenProcess(t)
 	}
 }
 
