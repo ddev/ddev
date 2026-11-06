@@ -39,7 +39,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 `,
 	ValidArgsFunction: getComposerCompletionFunc(true),
 	Run: func(cmd *cobra.Command, args []string) {
-		inputData := readPipedInput()
+		pipedInput := readPipedInput()
 
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -74,6 +74,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 		// Define a randomly named temp directory for install target
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
+		containerInputFile := containerInstallPath + "-input"
 
 		// Add some args to avoid troubles while cloning the project.
 		// We add the three options to "composer create-project": --no-plugins, --no-scripts, --no-install
@@ -155,7 +156,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     fmt.Sprintf(`rsync %s "%s/" "%s/"`, rsyncArgs, containerInstallPath, app.GetComposerRoot(true, false)),
+			Cmd:     fmt.Sprintf(`rsync %[1]s "%[2]s/" "%[3]s/" && rm -rf "%[2]s"`, rsyncArgs, containerInstallPath, app.GetComposerRoot(true, false)),
 			Dir:     "/var/www/html",
 		})
 
@@ -164,6 +165,19 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 		}
 
 		prepareAppForComposer(app)
+
+		// Decide once for all steps, so a late close can't give a step the
+		// answers meant for an earlier one.
+		var inputData []byte
+		select {
+		case inputData = <-pipedInput:
+			if len(inputData) > maxPipedInput {
+				util.Warning("Piped input is over %d KiB, so Composer scripts get none of it.", maxPipedInput/1024)
+				inputData = nil
+			}
+		default:
+			util.Warning("Stdin is still open, so Composer scripts get no piped input. Close stdin after writing the answers.")
+		}
 
 		composerManifest, err := composer.NewManifest(filepath.Join(composerRoot, composerDirectoryArg, "composer.json"))
 		if err != nil {
@@ -191,21 +205,17 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 			}
 
 			composerCmd = append(composerCmd, validRunScriptArgs...)
-			composerCmd = wrapTTYCommandWithStdin(inputData, composerCmd)
 
 			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 
+			rawCmd, inputEnv := wrapWithPipedInput(inputData, containerInputFile, composerCmd)
 			stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Dir:     getComposerRootInContainer(app),
-				RawCmd:  composerCmd,
+				RawCmd:  rawCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-				Env:     []string{"XDEBUG_MODE=off"},
+				Env:     append([]string{"XDEBUG_MODE=off"}, inputEnv...),
 			})
-
-			if err != nil {
-				util.Failed("Failed to run post-root-package-install: %v\nstderr=%v", err, stderr)
-			}
 
 			if len(stdout) > 0 {
 				output.UserOut.Println(stdout)
@@ -213,6 +223,10 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 
 			if len(stderr) > 0 {
 				output.UserErr.Println(stderr)
+			}
+
+			if err != nil {
+				util.Failed("Failed to run post-root-package-install: %v", err)
 			}
 
 			prepareAppForComposer(app)
@@ -237,23 +251,19 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				}
 			}
 
-			composerCmd = wrapTTYCommandWithStdin(inputData, composerCmd)
 			// Run install command.
 			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 
+			rawCmd, inputEnv := wrapWithPipedInput(inputData, containerInputFile, composerCmd)
 			stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				RawCmd:  composerCmd,
+				RawCmd:  rawCmd,
 				Dir:     getComposerRootInContainer(app),
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 				// Disable security blocking to allow installing any packages,
 				// this is a new feature in Composer 2.9+
-				Env: []string{"XDEBUG_MODE=off", "COMPOSER_NO_BLOCKING=1", "COMPOSER_NO_SECURITY_BLOCKING=1"},
+				Env: append([]string{"XDEBUG_MODE=off", "COMPOSER_NO_BLOCKING=1", "COMPOSER_NO_SECURITY_BLOCKING=1"}, inputEnv...),
 			})
-
-			if err != nil {
-				util.Failed("Failed to install project: %v\nstderr=%v", err, stderr)
-			}
 
 			if len(stdout) > 0 {
 				output.UserOut.Println(stdout)
@@ -261,6 +271,10 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 
 			if len(stderr) > 0 {
 				output.UserErr.Println(stderr)
+			}
+
+			if err != nil {
+				util.Failed("Failed to install project: %v", err)
 			}
 
 			prepareAppForComposer(app)
@@ -296,21 +310,17 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 			}
 
 			composerCmd = append(composerCmd, validRunScriptArgs...)
-			composerCmd = wrapTTYCommandWithStdin(inputData, composerCmd)
 
 			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 
+			rawCmd, inputEnv := wrapWithPipedInput(inputData, containerInputFile, composerCmd)
 			stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Dir:     getComposerRootInContainer(app),
-				RawCmd:  composerCmd,
+				RawCmd:  rawCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-				Env:     []string{"XDEBUG_MODE=off"},
+				Env:     append([]string{"XDEBUG_MODE=off"}, inputEnv...),
 			})
-
-			if err != nil {
-				util.Failed("Failed to run post-create-project-cmd: %v\nstderr=%v", err, stderr)
-			}
 
 			if len(stdout) > 0 {
 				output.UserOut.Println(stdout)
@@ -320,7 +330,19 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				output.UserErr.Println(stderr)
 			}
 
+			if err != nil {
+				util.Failed("Failed to run post-create-project-cmd: %v", err)
+			}
+
 			prepareAppForComposer(app)
+		}
+
+		if len(inputData) > 0 {
+			// Remove the answers that no step read.
+			_, _, _ = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     fmt.Sprintf(`rm -f "%s"`, containerInputFile),
+			})
 		}
 
 		util.Success("\nddev composer create-project was successful.")
@@ -551,42 +573,68 @@ func prepareAppForComposer(app *ddevapp.DdevApp) {
 	}
 }
 
-// readPipedInput reads from os.Stdin if it's not a terminal.
-// Returns nil if stdin is a terminal or unreadable.
-// Required because os.Stdin is consumed by the first app.Exec() call
-// and not forwarded to subsequent executions.
-func readPipedInput() []byte {
+// readPipedInput reads piped stdin in the background, because some callers
+// never close it. The channel gives the input once stdin closes, or once more
+// than maxPipedInput has arrived. os.Stdin becomes the null device, so
+// commands run before the Composer scripts can't consume the input.
+func readPipedInput() <-chan []byte {
+	received := make(chan []byte, 1)
 	if isatty.IsTerminal(os.Stdin.Fd()) {
-		return nil
+		received <- nil
+		return received
 	}
-	data, err := io.ReadAll(os.Stdin)
+	devNull, err := os.Open(os.DevNull)
 	if err != nil {
-		return nil
+		received <- nil
+		return received
 	}
-	return data
+	stdin := os.Stdin
+	os.Stdin = devNull
+	go func() {
+		data, _ := io.ReadAll(io.LimitReader(stdin, maxPipedInput+1))
+		received <- data
+	}()
+	return received
 }
 
-// wrapTTYCommandWithStdin wraps the given command in `script` to simulate a TTY,
-// allowing interactive prompts to work with piped stdin (e.g., inside containers).
-// If stdin is already a terminal or input is empty, returns the original command.
-func wrapTTYCommandWithStdin(data []byte, cmd []string) []string {
-	if isatty.IsTerminal(os.Stdin.Fd()) || len(data) == 0 {
-		return cmd
+// maxPipedInput is the most piped input kept. More is a stream like `yes`,
+// not answers, so it is dropped. The PTY cuts each answer at 4095 bytes.
+const maxPipedInput = 64 * 1024
+
+// wrapWithPipedInput returns cmd and its env so that cmd runs in a PTY, where
+// Composer prompts and reads one answer per line. The answers cmd leaves
+// unread stay in inputFile in the web container for the next step.
+// With no input, it returns cmd unchanged.
+func wrapWithPipedInput(data []byte, inputFile string, cmd []string) ([]string, []string) {
+	if len(data) == 0 {
+		return cmd, nil
 	}
-	stdinReader, stdinWriter, err := os.Pipe()
-	if err != nil {
-		return cmd
+	// The PTY turns each \r into a newline, so CRLF from Windows would give an
+	// empty answer after each one.
+	input := strings.ReplaceAll(string(data), "\r\n", "\n")
+	// In a PTY, a last answer without a newline arrives only with script's EOF,
+	// up to 0.25s after the step's last read, which can miss the 0.2s wait below.
+	if !strings.HasSuffix(input, "\n") {
+		input += "\n"
 	}
-	go func() {
-		defer stdinWriter.Close()
-		_, _ = stdinWriter.Write(data)
-	}()
-	os.Stdin = stdinReader
-	// 'script' forces execution in a pseudo-terminal (PTY)
-	// '-q' suppresses script's start and end messages (quiet mode)
-	// '-c' specifies the command to run in the PTY
-	// '/dev/null' discards the session log
-	return []string{"script", "-q", "-c", strings.Join(cmd, " "), "/dev/null"}
+	// $0 is inputFile, created on the first step. When a step fails ddev
+	// stops, so the unread answers are deleted.
+	const wrapper = `export DDEV_INPUT_FILE=$0
+[ -e "$DDEV_INPUT_FILE" ] || printf '%s' "$DDEV_PIPED_INPUT" >"$DDEV_INPUT_FILE"
+unset DDEV_PIPED_INPUT
+[ -s "$DDEV_INPUT_FILE" ] || exec "$@" </dev/null
+SHELL=/bin/bash script -q -e --echo never -c "$(printf '%q ' "$@")"'
+  status=$?
+  while IFS= read -r -t 0.2 line || [ -n "$line" ]; do printf "%s\n" "$line"; done >"$DDEV_INPUT_FILE.left"
+  exit $status' /dev/null <"$DDEV_INPUT_FILE"
+status=$?
+if [ $status -eq 0 ]; then
+  mv "$DDEV_INPUT_FILE.left" "$DDEV_INPUT_FILE"
+else
+  rm -f "$DDEV_INPUT_FILE" "$DDEV_INPUT_FILE.left"
+fi
+exit $status`
+	return append([]string{"bash", "-c", wrapper, inputFile}, cmd...), []string{"DDEV_PIPED_INPUT=" + input}
 }
 
 // ComposerCreateCmd does the same thing as "ddev composer create-project".
