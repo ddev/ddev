@@ -305,12 +305,19 @@ func TestReadPipedInput(t *testing.T) {
 	pipedInput := readPipedInput()
 	_, err = w.Write([]byte("x\n"))
 	require.NoError(t, err)
-	require.Empty(t, pipedInput())
+	select {
+	case <-pipedInput:
+		require.Fail(t, "input arrived before stdin closed")
+	default:
+	}
 
 	require.NoError(t, w.Close())
-	require.Eventually(t, func() bool {
-		return string(pipedInput()) == "x\n"
-	}, 5*time.Second, 10*time.Millisecond)
+	select {
+	case data := <-pipedInput:
+		require.Equal(t, "x\n", string(data))
+	case <-time.After(5 * time.Second):
+		require.Fail(t, "input didn't arrive after stdin closed")
+	}
 
 	n, err := os.Stdin.Read(make([]byte, 1))
 	require.Equal(t, 0, n)
@@ -319,24 +326,30 @@ func TestReadPipedInput(t *testing.T) {
 
 func TestReadPipedInputLimit(t *testing.T) {
 	origStdin := os.Stdin
-	t.Cleanup(func() { os.Stdin = origStdin })
-
-	for _, size := range []int{maxPipedInput, maxPipedInput + 1} {
-		r, w, err := os.Pipe()
-		require.NoError(t, err)
-		os.Stdin = r
-		pipedInput := readPipedInput()
-		_, err = w.Write([]byte(strings.Repeat("y", size)))
-		require.NoError(t, err)
-		require.NoError(t, w.Close())
-
-		if size <= maxPipedInput {
-			require.Eventually(t, func() bool { return len(pipedInput()) == size }, 5*time.Second, 10*time.Millisecond)
-		} else {
-			require.Never(t, func() bool { return len(pipedInput()) > 0 }, 500*time.Millisecond, 10*time.Millisecond)
-		}
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
+	os.Stdin = r
+	t.Cleanup(func() {
 		_ = os.Stdin.Close()
+		os.Stdin = origStdin
 		_ = r.Close()
+		_ = w.Close()
+	})
+
+	pipedInput := readPipedInput()
+	// Like `yes`, the writer never closes stdin.
+	go func() {
+		for {
+			if _, err := w.Write([]byte("y\n")); err != nil {
+				return
+			}
+		}
+	}()
+	select {
+	case data := <-pipedInput:
+		require.Len(t, data, maxPipedInput+1)
+	case <-time.After(5 * time.Second):
+		require.Fail(t, "input didn't arrive while stdin stayed open")
 	}
 }
 

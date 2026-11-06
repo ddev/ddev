@@ -168,7 +168,16 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 
 		// Decide once for all steps, so a late close can't give a step the
 		// answers meant for an earlier one.
-		inputData := pipedInput()
+		var inputData []byte
+		select {
+		case inputData = <-pipedInput:
+			if len(inputData) > maxPipedInput {
+				util.Warning("Piped input is over %d KiB, so Composer scripts get none of it.", maxPipedInput/1024)
+				inputData = nil
+			}
+		default:
+			util.Warning("Stdin is still open, so Composer scripts get no piped input. Close stdin after writing the answers.")
+		}
 
 		composerManifest, err := composer.NewManifest(filepath.Join(composerRoot, composerDirectoryArg, "composer.json"))
 		if err != nil {
@@ -565,36 +574,27 @@ func prepareAppForComposer(app *ddevapp.DdevApp) {
 }
 
 // readPipedInput reads piped stdin in the background, because some callers
-// never close it. The returned function gives the input once stdin is closed,
-// and nil before that. os.Stdin becomes the null device, so commands run
-// before the Composer scripts can't consume the input.
-func readPipedInput() func() []byte {
+// never close it. The channel gives the input once stdin closes, or once more
+// than maxPipedInput has arrived. os.Stdin becomes the null device, so
+// commands run before the Composer scripts can't consume the input.
+func readPipedInput() <-chan []byte {
+	received := make(chan []byte, 1)
 	if isatty.IsTerminal(os.Stdin.Fd()) {
-		return func() []byte { return nil }
+		received <- nil
+		return received
 	}
 	devNull, err := os.Open(os.DevNull)
 	if err != nil {
-		return func() []byte { return nil }
+		received <- nil
+		return received
 	}
 	stdin := os.Stdin
 	os.Stdin = devNull
-
-	received := make(chan []byte, 1)
 	go func() {
 		data, _ := io.ReadAll(io.LimitReader(stdin, maxPipedInput+1))
-		if len(data) > maxPipedInput {
-			data = nil
-		}
 		received <- data
 	}()
-	var data []byte
-	return func() []byte {
-		select {
-		case data = <-received:
-		default:
-		}
-		return data
-	}
+	return received
 }
 
 // maxPipedInput is the most piped input kept. More is a stream like `yes`,
