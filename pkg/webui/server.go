@@ -54,6 +54,10 @@ type Server struct {
 	ddevBinary string
 	// embedded is set when no port is open and a webview delivers requests.
 	embedded bool
+	// desktop is set when a desktop window, not a browser, shows the page.
+	desktop bool
+	// wrap, when set, wraps the handler that Serve uses.
+	wrap func(http.Handler) http.Handler
 
 	// OnJobDone, when set before serving, is called as each job ends.
 	OnJobDone func(title, project, errText string)
@@ -95,8 +99,19 @@ func New(port int) (*Server, error) {
 		s.hosts[hp] = true
 		s.origins["http://"+hp] = true
 	}
-	s.http = &http.Server{Handler: s.Handler(), ReadHeaderTimeout: 10 * time.Second}
+	s.http = &http.Server{ReadHeaderTimeout: 10 * time.Second}
 	return s, nil
+}
+
+// SetDesktop prepares a server from New for a desktop window that loads its
+// URL: subcommands run with ddevBinary when it is set, links open through
+// the server, and wrap, when set, wraps the handler. Call it before Serve.
+func (s *Server) SetDesktop(ddevBinary string, wrap func(http.Handler) http.Handler) {
+	s.desktop = true
+	if ddevBinary != "" {
+		s.ddevBinary = ddevBinary
+	}
+	s.wrap = wrap
 }
 
 // NewEmbedded returns a server without a listener, for a desktop webview
@@ -125,6 +140,11 @@ func (s *Server) URL() string {
 
 // Serve serves until Shutdown.
 func (s *Server) Serve() error {
+	h := s.Handler()
+	if s.wrap != nil {
+		h = s.wrap(h)
+	}
+	s.http.Handler = h
 	err := s.http.Serve(s.listener)
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
@@ -170,8 +190,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/jobs/{id}", s.handleJobStream)
 	mux.HandleFunc("GET /api/project-types", s.handleProjectTypes)
 	mux.HandleFunc("GET /api/addons/registry", s.handleAddonRegistry)
-	if s.embedded {
+	if s.embedded || s.desktop {
 		mux.HandleFunc("POST /api/open-url", s.handleOpenURL)
+	}
+	if s.embedded {
 		return s.secureEmbedded(mux)
 	}
 	return s.secure(mux)
