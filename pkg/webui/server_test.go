@@ -18,6 +18,8 @@ import (
 func TestMain(m *testing.M) {
 	if code := os.Getenv("WEBUI_FAKE_DDEV"); code != "" {
 		fmt.Println("args:", strings.Join(os.Args[1:], " "))
+		wd, _ := os.Getwd()
+		fmt.Println("dir:", wd)
 		fmt.Fprintln(os.Stderr, "\x1b[31mcolored\x1b[0m stderr")
 		fmt.Println("progress 10%\rprogress 100%")
 		if code == "sleep" {
