@@ -42,10 +42,6 @@ func TestPlatformPull(t *testing.T) {
 	if token = os.Getenv("DDEV_PLATFORM_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PLATFORM_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
-	var err error
-
-	require.True(t, isPullSiteValid(platformPullSiteURL, platformSiteExpectation), "platformPullSiteURL %s isn't working right", platformPullSiteURL)
-
 	origDir, _ := os.Getwd()
 
 	app, provider, err := setupPlatformProject(t, platformPullTestSiteEnvironment)
@@ -57,9 +53,11 @@ func TestPlatformPull(t *testing.T) {
 		_ = os.RemoveAll(app.AppRoot)
 	})
 
+	resumeEnvironmentAndCheckSite(t, app, "platform", "PLATFORMSH_CLI_TOKEN", token, platformTestSiteID, platformPullTestSiteEnvironment, platformPullSiteURL, platformSiteExpectation)
+
 	// variant using .platform/local/project.yaml
 	t.Run("local-config", func(t *testing.T) {
-		err = writePlatformLocalConfig(t, app, token)
+		err = writePlatformLocalConfig(t, app, provider, token)
 		require.NoError(t, err)
 		startAndCheckPlatformPull(t, app, provider, "")
 	})
@@ -93,7 +91,7 @@ func TestPlatformPush(t *testing.T) {
 	})
 
 	t.Run("local-config", func(t *testing.T) {
-		err = writePlatformLocalConfig(t, app, token)
+		err = writePlatformLocalConfig(t, app, provider, token)
 		require.NoError(t, err)
 		startAndCheckPlatformPush(t, app, provider, token, "")
 	})
@@ -109,14 +107,14 @@ func TestPlatformPush(t *testing.T) {
 
 // writePlatformLocalConfig writes the .platform/local directory with a project.yaml file
 // And sets the required environment variables for the provider.
-func writePlatformLocalConfig(t *testing.T, app *ddevapp.DdevApp, token string) error {
+func writePlatformLocalConfig(t *testing.T, app *ddevapp.DdevApp, provider *ddevapp.Provider, token string) error {
 	err := os.MkdirAll(filepath.Join(app.AppRoot, ".platform/local"), 0755)
 	require.NoError(t, err)
 	// Provide a project.yaml to
 	err = os.WriteFile(filepath.Join(app.AppRoot, ".platform/local/project.yaml"), fmt.Appendf(nil, "id: %s\nhost: api.platform.sh", platformTestSiteID), 0644)
 	require.NoError(t, err)
 
-	app.ProviderInstance.EnvironmentVariables["PLATFORMSH_CLI_TOKEN"] = token
+	provider.EnvironmentVariables["PLATFORMSH_CLI_TOKEN"] = token
 	return nil
 }
 
