@@ -1,0 +1,96 @@
+name: Web UI browser tests
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "pkg/webui/**"
+      - "cmd/ddev/cmd/serve.go"
+      - ".github/workflows/webui-e2e.yml"
+  pull_request:
+    paths:
+      - "pkg/webui/**"
+      - "cmd/ddev/cmd/serve.go"
+      - ".github/workflows/webui-e2e.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  mocked:
+    name: Dashboard against a fake API
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: pkg/webui/e2e
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --project=mocked
+        env:
+          CI: true
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: webui-mocked-report
+          path: pkg/webui/e2e/playwright-report/
+          retention-days: 7
+
+  real:
+    name: Dashboard against real projects
+    runs-on: ubuntu-26.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Wait for pushed images
+        # The runner holds no push credentials, so it can race image-push.yml;
+        # see containers/wait-for-images.sh.
+        run: containers/wait-for-images.sh
+
+      - name: Install Docker and deps (Linux)
+        run: ./.github/workflows/linux-setup.sh
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Install Playwright
+        working-directory: pkg/webui/e2e
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Run the real dashboard test
+        env:
+          CI: true
+        run: make webui-e2e-real
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: webui-real-report
+          path: |
+            pkg/webui/e2e/playwright-report/
+            pkg/webui/e2e/test-results/
+          retention-days: 7
