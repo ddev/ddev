@@ -829,7 +829,7 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 
 	// An interrupt removes the container by name, so track the name before
 	// the daemon can list the container.
-	created, untrack := func() {}, func() {}
+	created, untrack := func(string, error) {}, func() {}
 	if removeContainerAfterRun {
 		if name == "" {
 			name = "temporary-" + util.RandString(8)
@@ -837,7 +837,7 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		created, untrack = trackContainer(name)
 	}
 	c, err := apiClient.ContainerCreate(ctx, client.ContainerCreateOptions{Config: config, HostConfig: hostConfig, Name: name})
-	created()
+	created(c.ID, err)
 	if err != nil {
 		untrack()
 		util.Debug("RunSimpleContainer: failed to create container %s with config=%+v and hostConfig=%+v: %v", name, config, hostConfig, err)

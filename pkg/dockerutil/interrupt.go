@@ -15,31 +15,47 @@ import (
 // inFlight holds the temporary containers RunSimpleContainerExtended() is
 // creating or has created and not yet removed, keyed by name, and the restore
 // function of a terminal setupRawTerminal() has put in raw mode, so an
-// interrupt can undo both. Each container's channel is closed once its
-// ContainerCreate call has returned.
+// interrupt can undo both.
 var inFlight = struct {
 	sync.Mutex
-	containers      map[string]chan struct{}
+	containers      map[string]*trackedContainer
 	restoreTerminal func()
-}{containers: map[string]chan struct{}{}}
+}{containers: map[string]*trackedContainer{}}
+
+// trackedContainer's done is closed once ContainerCreate has returned, and
+// target is then what an interrupt should remove, or empty for nothing.
+type trackedContainer struct {
+	done   chan struct{}
+	target string
+}
 
 func init() {
 	interrupt.OnInterrupt(cleanUpInFlight)
 }
 
 // trackContainer registers name before the container is created, because
-// the daemon can list it before ContainerCreate returns. Call created once
-// ContainerCreate has returned, whether or not it succeeded.
-func trackContainer(name string) (created func(), untrack func()) {
-	ch := make(chan struct{})
+// the daemon can list it before ContainerCreate returns. Call created with
+// ContainerCreate's result once it has returned.
+func trackContainer(name string) (created func(id string, err error), untrack func()) {
+	tc := &trackedContainer{done: make(chan struct{})}
 	inFlight.Lock()
 	defer inFlight.Unlock()
-	inFlight.containers[name] = ch
-	created = sync.OnceFunc(func() { close(ch) })
+	inFlight.containers[name] = tc
+	var once sync.Once
+	created = func(id string, err error) {
+		once.Do(func() {
+			// After an error the name may belong to some other container, and
+			// socktainer reports a name conflict as a 500, not a 409.
+			if err == nil {
+				tc.target = id
+			}
+			close(tc.done)
+		})
+	}
 	untrack = func() {
 		inFlight.Lock()
 		defer inFlight.Unlock()
-		if inFlight.containers[name] == ch {
+		if inFlight.containers[name] == tc {
 			delete(inFlight.containers, name)
 		}
 	}
@@ -79,12 +95,16 @@ func cleanUpInFlight(ctx context.Context) {
 		return
 	}
 	var wg sync.WaitGroup
-	for name, created := range containers {
+	for _, tc := range containers {
 		wg.Go(func() {
 			// Removing before the create returns would find nothing and leak it.
 			select {
-			case <-created:
+			case <-tc.done:
 			case <-ctx.Done():
+				return
+			}
+			name := tc.target
+			if name == "" {
 				return
 			}
 			_, err := apiClient.ContainerRemove(ctx, name, client.ContainerRemoveOptions{Force: true})
