@@ -827,14 +827,24 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:"+hostDockerInternal.ExtraHost)
 	}
 
+	// An interrupt removes the container by name, so track the name before
+	// the daemon can list the container.
+	created, untrack := func() {}, func() {}
+	if removeContainerAfterRun {
+		if name == "" {
+			name = "temporary-" + util.RandString(8)
+		}
+		created, untrack = trackContainer(name)
+	}
 	c, err := apiClient.ContainerCreate(ctx, client.ContainerCreateOptions{Config: config, HostConfig: hostConfig, Name: name})
+	created()
 	if err != nil {
+		untrack()
 		util.Debug("RunSimpleContainer: failed to create container %s with config=%+v and hostConfig=%+v: %v", name, config, hostConfig, err)
 		return "", "", fmt.Errorf("failed to create container %s: %v", name, err)
 	}
 
 	if removeContainerAfterRun {
-		untrack := trackContainer(c.ID)
 		defer func() {
 			_ = RemoveContainer(c.ID)
 			untrack()
