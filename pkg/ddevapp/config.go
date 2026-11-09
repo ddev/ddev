@@ -254,17 +254,24 @@ func (app *DdevApp) writeConfig(omitName bool) error {
 	if appcopy.DBImage == docker.GetDBImage(appcopy.Database.Type, appcopy.Database.Version) {
 		appcopy.DBImage = ""
 	}
-	if appcopy.RouterHTTPPort == nodeps.DdevDefaultRouterHTTPPort {
-		appcopy.RouterHTTPPort = ""
-	}
-	if appcopy.RouterHTTPSPort == nodeps.DdevDefaultRouterHTTPSPort {
-		appcopy.RouterHTTPSPort = ""
-	}
-	if appcopy.MailpitHTTPPort == nodeps.DdevDefaultMailpitHTTPPort {
-		appcopy.MailpitHTTPPort = ""
-	}
-	if appcopy.MailpitHTTPSPort == nodeps.DdevDefaultMailpitHTTPSPort {
-		appcopy.MailpitHTTPSPort = ""
+	// Start() resolves the router, Mailpit and XHGui ports into app, so a port
+	// that only comes from the default or the global config must not be pinned
+	// into the project's config.
+	for _, p := range []struct {
+		port       *string
+		defaultVal string
+		globalVal  string
+	}{
+		{&appcopy.RouterHTTPPort, nodeps.DdevDefaultRouterHTTPPort, globalconfig.DdevGlobalConfig.RouterHTTPPort},
+		{&appcopy.RouterHTTPSPort, nodeps.DdevDefaultRouterHTTPSPort, globalconfig.DdevGlobalConfig.RouterHTTPSPort},
+		{&appcopy.MailpitHTTPPort, nodeps.DdevDefaultMailpitHTTPPort, globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort},
+		{&appcopy.MailpitHTTPSPort, nodeps.DdevDefaultMailpitHTTPSPort, globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort},
+		{&appcopy.XHGuiHTTPPort, nodeps.DdevDefaultXHGuiHTTPPort, globalconfig.DdevGlobalConfig.RouterXHGuiHTTPPort},
+		{&appcopy.XHGuiHTTPSPort, nodeps.DdevDefaultXHGuiHTTPSPort, globalconfig.DdevGlobalConfig.RouterXHGuiHTTPSPort},
+	} {
+		if *p.port == p.defaultVal || *p.port == p.globalVal {
+			*p.port = ""
+		}
 	}
 	if appcopy.ProjectTLD == globalconfig.DdevGlobalConfig.ProjectTldGlobal {
 		appcopy.ProjectTLD = ""
