@@ -20,8 +20,6 @@ teardown() {
 
   _extra_info
 
-  run -0 ddev composer config --global allow-plugins.php-http/discovery true
-
   # Username: [admin] admin
   # Email: admin@example.com
   # Password: Password123
