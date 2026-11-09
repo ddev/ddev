@@ -181,10 +181,14 @@ jobs:
           DDEV_DESKTOP_MODE=loopback .gotmp/bin/darwin_arm64/DDEV.app/Contents/MacOS/ddev-desktop
 
   desktop-linux:
-    name: Desktop app on Linux, and Windows builds
-    runs-on: ubuntu-26.04
+    name: Desktop app on Linux ${{ matrix.arch }}${{ matrix.arch == 'amd64' && ', and Windows builds' || '' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     continue-on-error: true
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -204,26 +208,33 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev xvfb
 
+      # Wails needs CGO on Linux, so each architecture builds on its own runner.
       - name: Build ddev and the app
         run: |
-          make linux_amd64
+          make linux_${{ matrix.arch }}
           make -C desktop
+
+      - name: Build the Windows apps
+        if: matrix.arch == 'amd64'
+        run: |
           make -C desktop GOOS=windows GOARCH=amd64 binary
           make -C desktop GOOS=windows GOARCH=arm64 binary
 
-      - name: Upload linux-amd64 app
+      - name: Upload linux-${{ matrix.arch }} app
         uses: actions/upload-artifact@v7
         with:
-          name: ddev-desktop-linux-amd64
-          path: .gotmp/bin/linux_amd64/ddev-desktop
+          name: ddev-desktop-linux-${{ matrix.arch }}
+          path: .gotmp/bin/linux_${{ matrix.arch }}/ddev-desktop
 
       - name: Upload windows-amd64 app
+        if: matrix.arch == 'amd64'
         uses: actions/upload-artifact@v7
         with:
           name: ddev-desktop-windows-amd64
           path: .gotmp/bin/windows_amd64/ddev-desktop.exe
 
       - name: Upload windows-arm64 app
+        if: matrix.arch == 'amd64'
         uses: actions/upload-artifact@v7
         with:
           name: ddev-desktop-windows-arm64
@@ -232,16 +243,16 @@ jobs:
       - name: Go tests
         working-directory: desktop
         env:
-          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_amd64/ddev
+          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_${{ matrix.arch }}/ddev
         run: go test -v ./...
 
       - name: Self-test in the app window
         env:
           DDEV_DESKTOP_SELFTEST: "true"
-          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_amd64/ddev
+          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_${{ matrix.arch }}/ddev
         run: |
-          DDEV_DESKTOP_MODE=embedded xvfb-run --auto-servernum .gotmp/bin/linux_amd64/ddev-desktop
-          DDEV_DESKTOP_MODE=loopback xvfb-run --auto-servernum .gotmp/bin/linux_amd64/ddev-desktop
+          DDEV_DESKTOP_MODE=embedded xvfb-run --auto-servernum .gotmp/bin/linux_${{ matrix.arch }}/ddev-desktop
+          DDEV_DESKTOP_MODE=loopback xvfb-run --auto-servernum .gotmp/bin/linux_${{ matrix.arch }}/ddev-desktop
 
   # WebView2 cannot stream, so on Windows the window loads a local URL.
   desktop-windows:
