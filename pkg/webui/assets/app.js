@@ -63,12 +63,15 @@ async function post(url, params) {
   return res.status === 204 ? null : res.json();
 }
 
+// runJob starts a job and shows its output, and returns whether it started.
 async function runJob(url, params) {
   try {
     const job = await post(url, params);
     showJob(job.id, true);
+    return true;
   } catch (e) {
     toast(e.message, true);
+    return false;
   }
 }
 
@@ -324,9 +327,14 @@ function overviewTab(p, d) {
           type: 'checkbox',
           checked: wanted ?? xdebugOn,
           disabled: !running || !!runningJobFor(p.name),
-          onchange: (e) => {
+          onchange: async (e) => {
             state.xdebugWanted[p.name] = e.target.checked;
-            runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/xdebug-' + (e.target.checked ? 'on' : 'off'));
+            if (!await runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/xdebug-' + (e.target.checked ? 'on' : 'off'))) {
+              // The panel may not rebuild, since its key can match the last one.
+              delete state.xdebugWanted[p.name];
+              e.target.checked = !e.target.checked;
+              renderDetail();
+            }
           },
         }),
         'Xdebug ', h('span', { class: 'muted' }, !running ? '(project stopped)'

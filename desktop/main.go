@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"os"
 	"slices"
+	"sync/atomic"
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -96,11 +97,6 @@ func main() {
 			log.Fatal(err)
 		}
 		srv.SetDesktop(ddevBinary, wrap)
-		go func() {
-			if err := srv.Serve(); err != nil {
-				log.Print(err)
-			}
-		}()
 		windowURL = srv.URL()
 	case modeWSL:
 		if remote, err = startRemote(ddevBinary); err != nil {
@@ -109,8 +105,33 @@ func main() {
 		windowURL = remote.URL()
 		be = remote
 	}
+	notifier := notifications.New()
+	// notifyOn is set once the notifier has started; jobs may end before.
+	var notifyOn atomic.Bool
+	var window *application.WebviewWindow
 	if srv != nil {
 		be = srv
+		srv.OnJobDone = func(title, project, errText string) {
+			// A notification is only useful when the window is not in front.
+			if !notifyOn.Load() || (window.IsVisible() && window.IsFocused()) {
+				return
+			}
+			n := notifications.NotificationOptions{ID: fmt.Sprintf("job-%d", time.Now().UnixNano()), Title: title, Body: "Finished"}
+			if errText != "" {
+				n.Body = "Failed: " + errText
+			}
+			if project != "" {
+				n.Subtitle = project
+			}
+			_ = notifier.SendNotification(n)
+		}
+	}
+	if m == modeLoopback {
+		go func() {
+			if err := srv.Serve(); err != nil {
+				log.Print(err)
+			}
+		}()
 	}
 	shutdown := func() {
 		if srv != nil {
@@ -129,7 +150,6 @@ func main() {
 		// A self-test runs beside the user's own copy of the app.
 		singleInstance = nil
 	}
-	notifier := notifications.New()
 
 	app := application.New(application.Options{
 		Name:        "DDEV",
@@ -146,7 +166,7 @@ func main() {
 		OnShutdown:     shutdown,
 	})
 
-	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
+	window = app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:      "main",
 		Title:     "DDEV",
 		Width:     1280,
@@ -188,20 +208,7 @@ func main() {
 				_, _ = notifier.RequestNotificationAuthorization()
 			}
 		}
-		// A notification is only useful when the window is not in front.
-		srv.OnJobDone = func(title, project, errText string) {
-			if window.IsVisible() && window.IsFocused() {
-				return
-			}
-			n := notifications.NotificationOptions{ID: fmt.Sprintf("job-%d", time.Now().UnixNano()), Title: title, Body: "Finished"}
-			if errText != "" {
-				n.Body = "Failed: " + errText
-			}
-			if project != "" {
-				n.Subtitle = project
-			}
-			_ = notifier.SendNotification(n)
-		}
+		notifyOn.Store(true)
 	})
 
 	tray := app.SystemTray.New()
