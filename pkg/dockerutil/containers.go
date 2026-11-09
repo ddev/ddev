@@ -311,7 +311,6 @@ func hasLabels(have map[string]string, labels map[string]string) bool {
 }
 
 // FindContainersByVolume includes exited containers, since those still block volume removal.
-// It matches Mounts itself because socktainer ignores the "volume" list filter.
 func FindContainersByVolume(volumeName string) ([]container.Summary, error) {
 	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
