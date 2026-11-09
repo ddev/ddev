@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -47,18 +48,20 @@ func testMain(m *testing.M) int {
 		"com.docker.compose.oneoff": "False",
 	}
 
-	// Prep Docker container for Docker util tests
-	imageExists, err := dockerutil.ImageExistsLocally(ddevImages.GetWebImage())
+	// Prep Docker container for Docker util tests. The tag can be local for
+	// another platform only, as TestPlatformOverride leaves it on OrbStack.
+	serverVersion, err := dockerutil.GetServerVersion()
 	if err != nil {
-		output.UserErr.Errorf("Failed to check for local image %s: %v", ddevImages.GetWebImage(), err)
+		output.UserErr.Errorf("Failed to get Docker server version: %v", err)
 		return 6
 	}
-	if !imageExists {
-		err := dockerutil.Pull(ddevImages.GetWebImage())
-		if err != nil {
-			output.UserErr.Errorf("Failed to pull test image: %v", err)
-			return 7
-		}
+	err = dockerutil.PullImages([]types.ServiceConfig{{
+		Image:    ddevImages.GetWebImage(),
+		Platform: serverVersion.Os + "/" + serverVersion.Arch,
+	}}, false)
+	if err != nil {
+		output.UserErr.Errorf("Failed to pull test image: %v", err)
+		return 7
 	}
 
 	foundContainer, _ := dockerutil.FindContainerByLabels(labels)
