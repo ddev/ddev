@@ -41,9 +41,10 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
       writes each file with `sh -c 'cat > f && chmod mode f'`; before it, Apple
       Container's `copyIn(source:destination:mode:)` took no owner or time either, so
       ownership was likely lost before #511 too; mtime unknown. Docker Engine keeps both.
-      DDEV impact is small: `CopyIntoContainer` extracts with `tar` in the container,
-      and the CA copy into web goes through the pre-start staging path. Not filed;
-      searched upstream 2026-11-09.
+      DDEV impact is small: `CopyIntoContainer` extracts with `tar` in the container.
+      A never-started container loses both too; a stopped one keeps them. Filed
+      2026-11-09 as [socktainer#514](https://github.com/socktainer/socktainer/issues/514),
+      repro `handoff/cpmetarepro/repro.sh`.
     - `TestCmdDescribe`: `ddev describe` omits `web:5492`, a Compose `expose:` port. Cause:
       inspect builds `Config.ExposedPorts` from `configuration.publishedPorts` only
       (`ContainerInspectRoute`). The request's `ExposedPorts` and the image's `EXPOSE` are
@@ -633,6 +634,8 @@ take `DOCKER_CONTEXT=orbstack` to compare with Docker Engine.
   (socktainer#495).
 - `handoff/cpvolrepro/repro.sh` — `docker cp` of a directory into a running container, at a
   volume mount and on the rootfs.
+- `handoff/cpmetarepro/repro.sh` — owner and mtime of files after `docker cp` into a running
+  container (socktainer#514).
 - `handoff/testdata/execrepro/` — non-interactive exec through the moby Go client, as DDEV does
   it: `go run ./handoff/testdata/execrepro <container> '<cmd>'` with
   `DOCKER_HOST=unix://$HOME/.socktainer/container.sock`; `CLOSEWRITE=1` half-closes like the
