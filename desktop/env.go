@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -37,10 +39,7 @@ func findDdev() (string, error) {
 	if b := os.Getenv("DDEV_BINARY"); b != "" {
 		return b, nil
 	}
-	name := "ddev"
-	if runtime.GOOS == "windows" {
-		name += ".exe"
-	}
+	name := ddevName()
 	if exe, err := os.Executable(); err == nil {
 		if b := filepath.Join(filepath.Dir(exe), name); isFile(b) {
 			return b, nil
@@ -50,6 +49,43 @@ func findDdev() (string, error) {
 		return b, nil
 	}
 	return "", errors.New("ddev was not found on PATH (" + strings.ReplaceAll(os.Getenv("PATH"), string(os.PathListSeparator), ", ") + "). Install DDEV, or set DDEV_BINARY.")
+}
+
+func ddevName() string {
+	if runtime.GOOS == "windows" {
+		return "ddev.exe"
+	}
+	return "ddev"
+}
+
+var ddevVersionLine = regexp.MustCompile(`ddev version (\S+)`)
+
+// versionMismatches returns a line for each of bins whose version is not
+// want. The app reads projects with its own built-in code, so it can show
+// them differently from a ddev of another version, and two versions that
+// take turns starting the same projects keep rewriting each other's files.
+func versionMismatches(want string, bins []string) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, b := range bins {
+		if b == "" || seen[b] {
+			continue
+		}
+		seen[b] = true
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		res, err := exec.CommandContext(ctx, b, "--version").Output()
+		cancel()
+		m := ddevVersionLine.FindSubmatch(res)
+		switch {
+		case err != nil:
+			out = append(out, fmt.Sprintf("%s: %v", b, err))
+		case m == nil:
+			out = append(out, b+" printed no version")
+		case string(m[1]) != want:
+			out = append(out, fmt.Sprintf("%s is %s", b, m[1]))
+		}
+	}
+	return out
 }
 
 func isFile(p string) bool {

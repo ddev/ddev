@@ -28,6 +28,25 @@ func TestFindDdev(t *testing.T) {
 	require.ErrorContains(t, err, "ddev was not found on PATH")
 }
 
+func TestVersionMismatches(t *testing.T) {
+	dir := t.TempDir()
+	script := func(name, body string) string {
+		p := filepath.Join(dir, name)
+		require.NoError(t, os.WriteFile(p, []byte("#!/bin/sh\n"+body+"\n"), 0o755))
+		return p
+	}
+	same := script("same", "echo 'ddev version v1.25.5'")
+	older := script("older", "echo 'A notice'; echo 'ddev version v1.24.10'")
+	silent := script("silent", "true")
+
+	require.Empty(t, versionMismatches("v1.25.5", []string{same, "", same}))
+	bad := versionMismatches("v1.25.5", []string{same, older, silent, filepath.Join(dir, "missing")})
+	require.Len(t, bad, 3)
+	require.Equal(t, older+" is v1.24.10", bad[0])
+	require.Equal(t, silent+" printed no version", bad[1])
+	require.Contains(t, bad[2], "missing")
+}
+
 func TestStatusMark(t *testing.T) {
 	require.Equal(t, "●", statusMark("running"))
 	require.Equal(t, "○", statusMark("stopped"))
