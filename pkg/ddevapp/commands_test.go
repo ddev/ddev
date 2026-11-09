@@ -19,7 +19,7 @@ import (
 
 func TestPopulateGlobalCustomCommandFiles(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508; socktainer's docker cp into a running container also drops file mtimes")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508; socktainer's docker cp into a running container also drops file mtimes, https://github.com/socktainer/socktainer/issues/514")
 	}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
