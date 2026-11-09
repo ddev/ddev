@@ -34,26 +34,40 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
     - `TestGetWebContainerDirectURLsWithGenericWebserver` needs router ports 80/443; it now
       skips for privileged ports.
     - `TestPopulateGlobalCustomCommandFiles` fails its mtime check intermittently (2 of 4
-      runs): the container's mtime is 1 s ahead of the host's mtime rounded to the second.
-      Not investigated; possibly how Apple Container's copy-in sets sub-second times.
-    - `TestCmdDescribe`: `ddev describe` omits `web:5492`, an exposed-but-unpublished port.
-      socktainer leaves `--expose`-only ports out of `Config.ExposedPorts` (only published
-      ones appear). Not filed; searched upstream 2026-11-09 and found nothing.
+      runs). Cause: `docker cp` into a running container drops the archive's mtime and
+      ownership. Every file gets the time of the copy and `0:0` (tested with a tar of six
+      files dated 12:00:01–06 owned 33:33). The test passes only when the copy lands in
+      the same rounded second the files were created. Since #511, `putArchiveViaCopyIn`
+      writes each file with `sh -c 'cat > f && chmod mode f'`; before it, Apple
+      Container's `copyIn(source:destination:mode:)` took no owner or time either, so
+      ownership was likely lost before #511 too; mtime unknown. Docker Engine keeps both.
+      DDEV impact is small: `CopyIntoContainer` extracts with `tar` in the container,
+      and the CA copy into web goes through the pre-start staging path. Not filed;
+      searched upstream 2026-11-09.
+    - `TestCmdDescribe`: `ddev describe` omits `web:5492`, a Compose `expose:` port. Cause:
+      inspect builds `Config.ExposedPorts` from `configuration.publishedPorts` only
+      (`ContainerInspectRoute`). The request's `ExposedPorts` and the image's `EXPOSE` are
+      read at create only for `PublishAllPorts` and never stored, since Apple Container's
+      configuration has no field for them. A fix would persist them in a label, as the
+      healthcheck already is. DDEV reads unpublished ports only from there. Not filed;
+      searched upstream 2026-11-09.
 - **After the next socktainer release:** raise `SocktainerMinVersion`, upgrade the testbots,
   drop the #508 skips, the #479 exception in `TestEnvironmentVariables`, the `*.sock`
   warning (#496), and the #493 exit-code skips.
 - **`CopyIntoContainer` keeps its `tar` workaround** even with #511: socktainer ignores a
   gzipped archive ([#484](https://github.com/socktainer/socktainer/issues/484)). Sending an
   uncompressed tar from DDEV would let it go once #511 is released.
-- **socktainer fix for #505** (aliases on reconnect): branch `fix/network-connect-aliases`
-  in `~/workspace/socktainer-worktrees/network-connect-aliases`, one signed, signed-off
-  commit, not pushed. Unit tests pass (1314 total; the 6 new ones fail with the fix
+- **socktainer fix for #505** (aliases on reconnect): PR
+  [socktainer#513](https://github.com/socktainer/socktainer/pull/513), opened 2026-11-09
+  from `rfay:fix/network-connect-aliases` (worktree
+  `~/workspace/socktainer-worktrees/network-connect-aliases`). Push it with an explicit
+  refspec: `push.default` is `tracking`, so a branch made from `upstream/main` pushes to
+  `rfay/main` otherwise. Unit tests pass (1314 total; the 6 new ones fail with the fix
   removed). Live: the #505 repro's reconnect alias resolves, a later reconnect replaces it,
   it follows the container's new IP after a restart, and removal drops it.
   `TestTraefikSharedTLDCerts` passes with its skip removed. `TestRouterNotRebuiltOnHostnameChange`
   still fails, reading the router's aliases from inspect, which this leaves to
   [#487](https://github.com/socktainer/socktainer/pull/487) (it touches the same files).
-  PR draft: `~/tmp/sk-upstream/network-connect-aliases-pr.md`.
 - **Skips:** `SkipUnlessDefaultEnvironment` no longer lists Apple Container, but on the
   socktainer pipeline its Mutagen check still skips those 17 tests, since Mutagen is the
   macOS default. Every Apple Container skip now names an issue except healthcheck output
