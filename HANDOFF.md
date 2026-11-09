@@ -6,7 +6,7 @@ only take effect when the Docker provider is socktainer, and this file is expect
 deleted before any of it merges.
 
 Environment as last verified: Apple `container` 1.6.1 (signed installer, **not** Homebrew — see
-below), `socktainer` built from upstream `main` `71f2415` (2026-11-09) with no fork fixes,
+below), `socktainer` built from upstream `main` as of 2026-11-09 with no fork fixes,
 docker CLI 29.9.2, docker context `socktainer`, macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment),
 rebased on `upstream/main` as of 2026-11-09, after #9072.
@@ -15,11 +15,10 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
 
 ### State (2026-11-09)
 
-- **Machine needs a reboot.** A `brew upgrade` at 16:18 upgraded Homebrew's `container` to
-  1.7.1 and booted out the running apiserver. Restarting the signed 1.6.1 install then hung:
-  vmnet fails with status 1001 creating `ddev_default`. After the reboot, run
-  `/usr/local/bin/container system start --disable-kernel-install`, start socktainer, and
-  `ddev poweroff`. Homebrew's `container` (now 1.7.1) is ahead of `/usr/local/bin` on PATH.
+- **A `brew upgrade` stops Apple Container.** On 2026-11-09 it upgraded Homebrew's
+  `container` to 1.7.1 and booted out the running apiserver mid-test; restarting the signed
+  1.6.1 install then hit vmnet 1001 until a reboot. Homebrew's `container` (now 1.7.1) is
+  ahead of `/usr/local/bin` on PATH.
 - **socktainer `main` fixes the main blocker.** #509 (hostname uniqueness), #506 (#479),
   #507 (`created` state) and #511 (#467, `docker cp` under mounts) all merged 2026-11-09;
   the latest release is still v1.6.0. On `main`: `ddev snapshot restore` and `ddev start`
@@ -28,28 +27,33 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
   `TestDdevRestoreSnapshot`, `TestProjectPortOverride`, `TestUseRouterSubstitutePort`,
   `TestCorepackEnable`, `TestTimezoneConfig`, `TestConfigDefaultContainerTimeout`,
   `TestMailpit`, `TestRestartServices`, `TestExtraPortExpose`, `TestGetLocalHTTPResponse`,
-  `TestLaunchCommand`, `TestNpmNpxYarnCommands` pass, as do `TestGlobalPortOverride` (now
-  un-skipped) and `TestEnvironmentVariables`. `TestGetWebContainerDirectURLsWithGenericWebserver`
-  needs router ports 80/443, so it now skips for privileged ports. `TestPopulateGlobalCustomCommandFiles`
-  failed on its mtime check (container 1 s ahead of the host's rounded mtime), not on
-  hostnames; reruns were cut off by the apiserver going down, so it's unknown whether it's
-  intermittent. `TestCmdDescribe` failed when the apiserver went down; it and
-  `TestCmdStartOptionalProfiles`, `TestCmdSnapshotRestore`, `TestCmdSnapshotRestoreFile`,
-  `TestCmdRestartProfilesAndServices` still need a run.
+  `TestLaunchCommand`, `TestNpmNpxYarnCommands`, `TestCmdStartOptionalProfiles`,
+  `TestCmdSnapshotRestore`, `TestCmdSnapshotRestoreFile`, `TestCmdRestartProfilesAndServices`
+  pass, as do `TestGlobalPortOverride` (now un-skipped) and `TestEnvironmentVariables`.
+  Three won't pass on a release with #509 alone:
+    - `TestGetWebContainerDirectURLsWithGenericWebserver` needs router ports 80/443; it now
+      skips for privileged ports.
+    - `TestPopulateGlobalCustomCommandFiles` fails its mtime check intermittently (2 of 4
+      runs): the container's mtime is 1 s ahead of the host's mtime rounded to the second.
+      Not investigated; possibly how Apple Container's copy-in sets sub-second times.
+    - `TestCmdDescribe`: `ddev describe` omits `web:5492`, an exposed-but-unpublished port.
+      socktainer leaves `--expose`-only ports out of `Config.ExposedPorts` (only published
+      ones appear). Not filed; searched upstream 2026-11-09 and found nothing.
 - **After the next socktainer release:** raise `SocktainerMinVersion`, upgrade the testbots,
   drop the #508 skips, the #479 exception in `TestEnvironmentVariables`, the `*.sock`
   warning (#496), and the #493 exit-code skips.
 - **`CopyIntoContainer` keeps its `tar` workaround** even with #511: socktainer ignores a
   gzipped archive ([#484](https://github.com/socktainer/socktainer/issues/484)). Sending an
   uncompressed tar from DDEV would let it go once #511 is released.
-- **socktainer PR in progress for #505** (aliases on reconnect): branch
-  `fix/network-connect-aliases` in `~/workspace/socktainer-worktrees/network-connect-aliases`,
-  not committed or pushed yet. Unit tests pass (1314 total; the 6 new ones fail with the
-  fix removed). Still to do: live test (repro in #505; DDEV's `TestRouterNotRebuiltOnHostnameChange`
-  and `TestTraefikSharedTLDCerts` with their skips removed), then commit with
-  `--signoff` (GPG through 1Password needs the user present), push to `rfay`, open the PR.
-  It leaves inspect's `Aliases` to [#487](https://github.com/socktainer/socktainer/pull/487),
-  which touches the same files.
+- **socktainer fix for #505** (aliases on reconnect): branch `fix/network-connect-aliases`
+  in `~/workspace/socktainer-worktrees/network-connect-aliases`, one signed, signed-off
+  commit, not pushed. Unit tests pass (1314 total; the 6 new ones fail with the fix
+  removed). Live: the #505 repro's reconnect alias resolves, a later reconnect replaces it,
+  it follows the container's new IP after a restart, and removal drops it.
+  `TestTraefikSharedTLDCerts` passes with its skip removed. `TestRouterNotRebuiltOnHostnameChange`
+  still fails, reading the router's aliases from inspect, which this leaves to
+  [#487](https://github.com/socktainer/socktainer/pull/487) (it touches the same files).
+  PR draft: `~/tmp/sk-upstream/network-connect-aliases-pr.md`.
 - **Skips:** `SkipUnlessDefaultEnvironment` no longer lists Apple Container, but on the
   socktainer pipeline its Mutagen check still skips those 17 tests, since Mutagen is the
   macOS default. Every Apple Container skip now names an issue except healthcheck output
@@ -428,7 +432,7 @@ upstream as #9040: `FindImagesByLabels`'s client-side label re-check.
 ### Hostname uniqueness collides with Compose's recreate — fixed on socktainer `main`
 
 Fixed by [socktainer#509](https://github.com/socktainer/socktainer/pull/509), merged
-2026-11-09 and not yet released. On `main` (`71f2415`), `ddev snapshot restore` and `ddev
+2026-11-09 and not yet released. On `main` as of 2026-11-09, `ddev snapshot restore` and `ddev
 start` over a running project with changed config both work. The history below stays until
 a release has it.
 
@@ -631,14 +635,16 @@ To capture raw API traffic, put a logging proxy in front of the socket:
 `socat -v UNIX-LISTEN:$HOME/tmp/proxy.sock,fork UNIX-CONNECT:$HOME/.socktainer/container.sock 2> ~/tmp/socat.log`,
 then point `DOCKER_HOST` at the proxy.
 
-## Current machine state (2026-11-09, before the reboot)
+## Current machine state (2026-11-09)
 
 - Apple `container` **1.6.1** from the signed installer at `/usr/local`
   (`container-apiserver` running). Homebrew's `container` is also 1.6.1.
-- socktainer running by hand from `~/workspace/socktainer/.build/release/socktainer`, built
-  2026-11-09 from `tmp/upstream-main-test` at upstream `main` `71f2415` (#506, #507, #509,
-  #511 included). Log: `~/tmp/socktainer.log`. Start `container system start
-  --disable-kernel-install`; without the flag it waits on a prompt.
+- socktainer running by hand from
+  `~/workspace/socktainer-worktrees/network-connect-aliases/.build/release/socktainer`:
+  branch `fix/network-connect-aliases`, upstream `main` of 2026-11-09 plus the #505 fix.
+  `~/workspace/socktainer/.build/release/socktainer` is stock `main` of the same day.
+  Log: `~/tmp/socktainer.log`. Start `container system start --disable-kernel-install`;
+  without the flag it waits on a prompt.
 - Docker context **`socktainer`**.
 - Global router ports 8080/8443, `traefik_monitor_port` 11999.
 - `appletest` and `appletest2` (`~/tmp/`) powered off, both served 200 when last up; both have
