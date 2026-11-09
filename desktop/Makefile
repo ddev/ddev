@@ -20,6 +20,8 @@ LDFLAGS += -H windowsgui
 else
 CGO := 1
 EXE :=
+# Wails' Linux C code calls GTK 4's deprecated X11 functions.
+export CGO_CFLAGS ?= -O2 -g -Wno-deprecated-declarations
 endif
 
 SIGNING_TOOLS_RAW_URL ?= https://raw.githubusercontent.com/ddev/signing_tools/main
