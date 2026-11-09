@@ -11,28 +11,52 @@ import (
 	"github.com/moby/moby/client"
 )
 
-// inFlight holds the temporary containers RunSimpleContainerExtended() has
-// created and not yet removed, and the restore function of a terminal
-// setupRawTerminal() has put in raw mode, so an interrupt can undo both.
+// inFlight holds the temporary containers RunSimpleContainerExtended() is
+// creating or has created and not yet removed, and the restore function of a
+// terminal setupRawTerminal() has put in raw mode, so an interrupt can undo
+// both.
 var inFlight = struct {
 	sync.Mutex
-	containers      map[string]struct{}
+	containers      map[*trackedContainer]struct{}
 	restoreTerminal func()
-}{containers: map[string]struct{}{}}
+}{containers: map[*trackedContainer]struct{}{}}
+
+// trackedContainer's done is closed once ContainerCreate has returned, and
+// target is then what an interrupt should remove, or empty for nothing.
+type trackedContainer struct {
+	done   chan struct{}
+	target string
+}
 
 func init() {
 	interrupt.OnInterrupt(cleanUpInFlight)
 }
 
-func trackContainer(id string) (untrack func()) {
+// trackContainer registers a container before it is created, because the
+// daemon can list it before ContainerCreate returns. Call created with
+// ContainerCreate's result once it has returned.
+func trackContainer() (created func(id string, err error), untrack func()) {
+	tc := &trackedContainer{done: make(chan struct{})}
 	inFlight.Lock()
 	defer inFlight.Unlock()
-	inFlight.containers[id] = struct{}{}
-	return func() {
+	inFlight.containers[tc] = struct{}{}
+	var once sync.Once
+	created = func(id string, err error) {
+		once.Do(func() {
+			// After an error the name may belong to some other container, and
+			// socktainer reports a name conflict as a 500, not a 409.
+			if err == nil {
+				tc.target = id
+			}
+			close(tc.done)
+		})
+	}
+	untrack = func() {
 		inFlight.Lock()
 		defer inFlight.Unlock()
-		delete(inFlight.containers, id)
+		delete(inFlight.containers, tc)
 	}
+	return created, untrack
 }
 
 func trackRawTerminal(restore func()) (untrack func()) {
@@ -52,27 +76,34 @@ func cleanUpInFlight(ctx context.Context) {
 	inFlight.Lock()
 	restore := inFlight.restoreTerminal
 	inFlight.restoreTerminal = nil
-	ids := make([]string, 0, len(inFlight.containers))
-	for id := range inFlight.containers {
-		ids = append(ids, id)
-	}
-	clear(inFlight.containers)
+	containers := inFlight.containers
+	inFlight.containers = map[*trackedContainer]struct{}{}
 	inFlight.Unlock()
 
 	if restore != nil {
 		restore()
 	}
-	if len(ids) == 0 {
+	if len(containers) == 0 {
 		return
 	}
-	util.Warning("Interrupted, removing %d temporary %s...", len(ids), util.FormatPlural(len(ids), "container", "containers"))
+	util.Warning("Interrupted, removing %d temporary %s...", len(containers), util.FormatPlural(len(containers), "container", "containers"))
 	_, apiClient, err := GetDockerClient()
 	if err != nil {
 		return
 	}
 	var wg sync.WaitGroup
-	for _, id := range ids {
+	for tc := range containers {
 		wg.Go(func() {
+			// Removing before the create returns would find nothing and leak it.
+			select {
+			case <-tc.done:
+			case <-ctx.Done():
+				return
+			}
+			id := tc.target
+			if id == "" {
+				return
+			}
 			_, err := apiClient.ContainerRemove(ctx, id, client.ContainerRemoveOptions{Force: true})
 			if err == nil || cerrdefs.IsNotFound(err) {
 				return
