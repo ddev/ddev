@@ -189,6 +189,21 @@ serve() {
     > "$CURL_FIXTURES/$(page_url "$1" "$2" | sed 's/[^A-Za-z0-9]/_/g')"
 }
 
+SIZES_URL="${HUB}?page_size=100"
+
+# serve_sizes <repo> <bytes> [<repo> <bytes>...] serves the Docker Hub storage
+# size of each repository in the organization.
+serve_sizes() {
+  local results=""
+  while [ "$#" -gt 0 ]; do results+="{\"name\":\"$1\",\"storage_size\":$2},"; shift 2; done
+  echo "{\"next\":null,\"results\":[${results%,}]}" > "$CURL_FIXTURES/$(printf '%s' "$SIZES_URL" | sed 's/[^A-Za-z0-9]/_/g')"
+}
+
+# filler <count> prints that many tags pushed after v1.1.0, which are kept.
+filler() {
+  seq -f 'filler%02g' "$1" | while read -r t; do tag "$t" 10; done
+}
+
 reset_stub() {
   rm -rf "$CURL_FIXTURES"
   mkdir -p "$CURL_FIXTURES"
@@ -220,6 +235,7 @@ serve_fixture() {
     tag 20240101_web-7777777777 400    # kept: an alias of a hash main uses
     tag 20240101_old_branch 400        # goes, with ddev-webserver-prod's
     tag 20240101_old_branch-amd64 400  # goes
+    filler 79                          # kept: fills the page, so `next` is followed
   } | serve ddev-webserver 1 "$(page_url ddev-webserver 2)"
   tag junk 450 | serve ddev-webserver 2 -  # goes first: the oldest
   { tag latest 400; tag 20240101_old_branch 400; } | serve ddev-webserver-prod 1 -
@@ -242,14 +258,14 @@ log_count() {
 
 # Candidates as "<tags> <images>", oldest first, then by tag; a hash and its
 # aliases share a line.
-CANDIDATES="junk ddev-webserver
-0000000001 ddev-webserver
-20190101_drud_web ddev-webserver
-20240101_old_branch ddev-webserver, ddev-webserver-prod
-20240101_old_branch-amd64 ddev-webserver
-2222222222, main-2222222222 ddev-webserver
-5555555555 ddev-webserver
-0a0a0a0a0a ddev-webserver"
+CANDIDATES="junk ddev/ddev-webserver
+0000000001 ddev/ddev-webserver
+20190101_drud_web ddev/ddev-webserver
+20240101_old_branch ddev/ddev-webserver, ddev/ddev-webserver-prod
+20240101_old_branch-amd64 ddev/ddev-webserver
+2222222222, main-2222222222 ddev/ddev-webserver
+5555555555 ddev/ddev-webserver
+0a0a0a0a0a ddev/ddev-webserver"
 
 # listed <heading> [<arg>...] prints "<tag> <images>" for the rows a run
 # lists under the headings that start with <heading>.
@@ -259,7 +275,7 @@ listed() {
 
 serve_fixture
 assert_eq "$CANDIDATES" "$(listed "Batch")" "a dry run lists every candidate by tag, oldest first, across pages and images"
-assert_eq "Batch 1: pushed $(days_ago 450) to $(days_ago 150), 10 tags:"$'\n'"  $(days_ago 450)  junk  ddev-webserver" \
+assert_eq "Batch 1: pushed $(days_ago 450) to $(days_ago 150), 10 tags:"$'\n'"  $(days_ago 450)  junk  ddev/ddev-webserver" \
   "$("$CLEANUP_SH" 2>/dev/null | head -2)" "a dry run shows the batch, and when each tag was pushed"
 assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "a dry run neither logs in nor deletes"
 assert_eq "" "$(git for-each-ref refs/image-tag-cleanup/)" "the fetched refs are removed after the run"
@@ -267,7 +283,7 @@ summary="$("$CLEANUP_SH" 2>&1 >/dev/null)"
 for line in "cutoff v1.1.0" $'keep\tquestionable' $'keep\tused by a release' $'keep\tused by main' $'keep\tused by a pull request' $'delete\tpushed before v1.1.0'; do
   if [[ "$summary" == *"$line"* ]]; then pass "the summary says '$line'"; else fail "the summary should say '$line': $summary"; fi
 done
-assert_eq "$(awk '{ print } /^2222222222, / { print "4444444444 ddev-webserver" }' <<< "$CANDIDATES")" \
+assert_eq "$(awk '{ print } /^2222222222, / { print "4444444444 ddev/ddev-webserver" }' <<< "$CANDIDATES")" \
   "$(GH_PRS="" listed "Batch")" "a closed pull request keeps nothing"
 
 serve_fixture
@@ -300,18 +316,60 @@ export GITHUB_STEP_SUMMARY="$WORKDIR/step-summary.md"
 "$CLEANUP_SH" >/dev/null 2>&1
 unset GITHUB_STEP_SUMMARY
 for line in "| delete | pushed before v1.1.0 | 10 |" "<details><summary>10 tags</summary>" \
-  "| $(days_ago 450) | \`junk\` | ddev-webserver |" \
+  "| $(days_ago 450) | \`junk\` | ddev/ddev-webserver |" \
   "<details><summary>Kept, used by main: 3 tags</summary>" \
-  "<details><summary>Kept, pushed after v1.1.0: 1 tag</summary>" \
+  "<details><summary>Kept, pushed after v1.1.0: 80 tags</summary>" \
   "<details><summary>Kept, questionable: 3 tags</summary>" \
-  "| $(days_ago 400) | \`v1.2.0\` (not a release) | ddev-webserver |" \
-  "| $(days_ago 400) | \`7777777777\`, \`20240101_web-7777777777\` | ddev-webserver |" \
-  "| $(days_ago 400) | \`5555555556\` (v0.9.5) | ddev-webserver |" \
-  "| $(days_ago 400) | \`4444444444\` (#1) | ddev-webserver |"; do
+  "| $(days_ago 400) | \`v1.2.0\` (not a release) | ddev/ddev-webserver |" \
+  "| $(days_ago 400) | \`7777777777\`, \`20240101_web-7777777777\` | ddev/ddev-webserver |" \
+  "| $(days_ago 400) | \`5555555556\` (v0.9.5) | ddev/ddev-webserver |" \
+  "| $(days_ago 400) | \`4444444444\` (#1) | ddev/ddev-webserver |"; do
   if grep -qxF "$line" "$WORKDIR/step-summary.md"; then pass "the step summary has '$line'"; else fail "the step summary should have '$line': $(cat "$WORKDIR/step-summary.md")"; fi
 done
 batch="$(grep '^ddev/' "$WORKDIR/step-summary.md")"
 assert_eq "$CANDIDATES" "$(listed "Would delete" "$batch")" "a batch's line, pasted back, would delete that batch"
+
+# Docker Hub's count lags behind deletions, so `next` can link past a short last page.
+reset_stub
+{ tag 7777777777 400; tag junk 400; } | serve ddev-webserver 1 "$(page_url ddev-webserver 2)"
+page_url ddev-webserver 2 > "$CURL_FAIL_URLS"
+assert_eq "junk ddev/ddev-webserver" "$(listed "Batch")" "a short page is the last one, whatever its next link says"
+assert_eq "0" "$(grep -c 'page=2' "$CURL_LOG" || true)" "a short page's next link isn't followed"
+
+# ---------------------------------------------------------------------------
+# Storage size
+# ---------------------------------------------------------------------------
+
+serve_fixture
+# 1.5, 0.7, and 0.5 GB
+serve_sizes ddev-webserver 1610612736 ddev-php-base 751619277 ddev-webserver-prod 536870912 ddev-unsized null
+assert_eq "$(printf '%s\n' "Storage: 2.7 GB, 2.0 GB of it in cleaned-up repositories" "    1.5 GB  ddev/ddev-webserver" \
+  "    0.7 GB  ddev/ddev-php-base (not cleaned up)" "    0.5 GB  ddev/ddev-webserver-prod")" \
+  "$("$CLEANUP_SH" 2>&1 >/dev/null | sed -n '/^Storage:/,/ddev-webserver-prod$/p')" \
+  "the summary shows the storage of every repository, largest first, and which aren't cleaned up"
+GITHUB_STEP_SUMMARY="$WORKDIR/size.md" "$CLEANUP_SH" >/dev/null 2>&1
+if grep -qF "**10 candidates**. Storage: **2.7 GB**, 2.0 GB of it in cleaned-up repositories." "$WORKDIR/size.md"; then
+  pass "the step summary shows the storage"
+else
+  fail "the step summary should show the storage: $(head -3 "$WORKDIR/size.md")"
+fi
+assert_eq "$(printf '%s\n' "<details><summary>Storage by repository</summary>" "" "| Repository | Size | Note |" "| --- | ---: | --- |" \
+  "| ddev/ddev-webserver | 1.5 GB |  |" "| ddev/ddev-php-base | 0.7 GB | not cleaned up |" "| ddev/ddev-webserver-prod | 0.5 GB |  |")" \
+  "$(sed -n '/^<details><summary>Storage by repository/,/^| ddev\/ddev-webserver-prod /p' "$WORKDIR/size.md")" \
+  "the step summary lists the storage of every repository, largest first"
+
+echo "$SIZES_URL" > "$CURL_FAIL_URLS"
+if summary="$("$CLEANUP_SH" 2>&1 >/dev/null)" && [[ "$summary" != *"Storage:"* ]]; then
+  pass "a failed size listing shows no storage and doesn't fail the run"
+else
+  fail "a failed size listing should show no storage and not fail the run: $summary"
+fi
+
+serve_fixture
+summary="$("$CLEANUP_SH" 2>&1 >/dev/null)"
+if [[ "$summary" != *"Storage:"* ]]; then pass "without sizes, the summary shows none"; else fail "without sizes, the summary should show none: $summary"; fi
+GITHUB_STEP_SUMMARY="$WORKDIR/nosize.md" "$CLEANUP_SH" >/dev/null 2>&1
+if grep -q "Storage" "$WORKDIR/nosize.md"; then fail "without sizes, the step summary should show none"; else pass "without sizes, the step summary shows none"; fi
 
 # ---------------------------------------------------------------------------
 # Given tags
@@ -319,7 +377,7 @@ assert_eq "$CANDIDATES" "$(listed "Would delete" "$batch")" "a batch's line, pas
 
 REQUESTED=("ddev/ddev-webserver:5555555555, ddev/ddev-webserver:junk" ddev/ddev-webserver:4444444444 ddev/ddev-webserver:gone)
 serve_fixture
-assert_eq "$(printf '%s ddev-webserver\n' junk 5555555555)" "$(listed "Would delete" "${REQUESTED[@]}")" \
+assert_eq "$(printf '%s ddev/ddev-webserver\n' junk 5555555555)" "$(listed "Would delete" "${REQUESTED[@]}")" \
   "given tags that are candidates are shown, oldest first"
 assert_eq "$(printf '  ddev/ddev-webserver:%s  %s\n' 4444444444 "used by a pull request (#1)" gone "not on Docker Hub")" \
   "$("$CLEANUP_SH" "${REQUESTED[@]}" 2>/dev/null | sed -n '/^Skipped/,$p' | tail -n +2)" "given tags that aren't candidates are skipped, with why"
@@ -358,7 +416,7 @@ assert_eq "2" "$(log_count DELETE)" "--execute deletes the candidates among the 
 
 CANDIDATE_TAGS="ddev/ddev-webserver:5555555555, ddev/ddev-webserver:junk"
 serve_fixture
-assert_eq "$(printf '%s ddev-webserver\n' junk 5555555555)" \
+assert_eq "$(printf '%s ddev/ddev-webserver\n' junk 5555555555)" \
   "$(DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t listed "Deleted" --execute "$CANDIDATE_TAGS")" "--execute reports what it deleted"
 assert_eq "$(printf '%s\n' \
   "DELETE https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/junk/ Authorization: JWT stub-token" \
@@ -392,7 +450,7 @@ reset_stub
 assert_fails_with "lists no tags" "an empty listing aborts" "$CLEANUP_SH"
 
 reset_stub
-tag junk 400 | serve ddev-webserver 1 "https://evil.example.com/tags?page=2"
+{ tag junk 400; filler 99; } | serve ddev-webserver 1 "https://evil.example.com/tags?page=2"
 assert_fails_with "refusing to follow pagination" "pagination off Docker Hub aborts" "$CLEANUP_SH"
 
 reset_stub
