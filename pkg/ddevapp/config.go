@@ -255,8 +255,9 @@ func (app *DdevApp) writeConfig(omitName bool) error {
 		appcopy.DBImage = ""
 	}
 	// Start() resolves the router, Mailpit and XHGui ports into app, so a port
-	// that only comes from the default or the global config must not be pinned
-	// into the project's config.
+	// that only comes from the default, the global config, or a substitute must
+	// not be pinned into the project's config.
+	appcopy.restoreConfiguredRouterPorts()
 	for _, p := range []struct {
 		port       *string
 		defaultVal string
