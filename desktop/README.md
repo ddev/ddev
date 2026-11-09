@@ -8,6 +8,8 @@ This is an experimental desktop app for DDEV, built with
   with its status, starts, stops, or restarts it, and opens its site. It also
   has Start all, Stop all, and Power off.
 - A Dock or taskbar icon. Closing the window keeps the app in the tray.
+  Launching the app again shows the window, which is the way back on a
+  desktop without a tray, such as GNOME without the AppIndicator extension.
 - A native notification when an action ends while the window is in the
   background. Notifications need the app bundle on macOS and a session bus on
   Linux; without them the app runs without notifications.
@@ -96,7 +98,7 @@ automated test.
 
 | Workflow | Builds | Signing |
 | --- | --- | --- |
-| `pr-build.yml` | `DDEV.app` for macOS arm64 and amd64, Linux amd64, and Windows amd64 and arm64, each as a `ddev-desktop-*` artifact listed in the PR's download comment. It runs the Go tests and the self-test on macOS, Linux, and Windows. | None. macOS blocks an unsigned download, so run `xattr -dr com.apple.quarantine DDEV.app` after unzipping. |
+| `pr-build.yml` | `DDEV.app` for macOS arm64 and amd64, Linux amd64 and arm64, and Windows amd64 and arm64, each as a `ddev-desktop-*` artifact listed in the PR's download comment. It runs the Go tests and the self-test on macOS, Linux, and Windows. | None. macOS blocks an unsigned download, so run `xattr -dr com.apple.quarantine DDEV.app` after unzipping. |
 | `main-build.yml` | The same apps, as workflow artifacts only | `make -C desktop sign notarize` signs the bundled `ddev` and the bundle with DDEV's Developer ID, then notarizes and staples it. `signtool` on the Windows signing runner signs the Windows apps. |
 
 These jobs may fail without failing their workflow, so the app cannot hold
@@ -111,4 +113,9 @@ up a DDEV release or the PR download comment.
 - **Versions:** the macOS bundle carries its own `ddev`. The Linux and
   Windows builds do not, so in `embedded` and `loopback` modes they read
   projects with the app's built-in DDEV code and act on them with the `ddev`
-  from `PATH`, which can be another version.
+  from `PATH`, which can be another version. The app warns at startup when
+  the `ddev` it runs, or the first `ddev` on `PATH`, is not its own version.
+- **Linux:** the builds need glibc 2.38 or later, GTK 4, and WebKitGTK 6, as
+  in Ubuntu 24.04 or Debian 13. Debian 12 and Ubuntu 22.04 cannot run them.
+- **`wsl` mode:** the `ddev` in WSL2 needs `ddev serve`, which no release has
+  yet.

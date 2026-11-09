@@ -493,6 +493,39 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  # Wails needs CGO on Linux, so arm64 builds on its own runner.
+  desktop-build-linux-arm64:
+    name: Build the desktop app for Linux arm64
+    runs-on: ubuntu-26.04-arm
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: |
+            go.sum
+            desktop/go.sum
+
+      - name: Install GTK 4 and WebKitGTK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev
+
+      - name: Build
+        run: make -C desktop
+
+      - name: Upload linux-arm64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-linux-arm64
+          path: .gotmp/bin/linux_arm64/ddev-desktop
+          if-no-files-found: error
+
   # Same rules as sign-windows-binaries: no checkout, no repository code.
   sign-desktop-windows:
     name: Sign the desktop app for Windows

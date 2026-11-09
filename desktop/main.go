@@ -15,12 +15,15 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"slices"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/ddev/ddev/pkg/webui"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
@@ -145,7 +148,18 @@ func main() {
 		}
 	}
 
-	singleInstance := &application.SingleInstanceOptions{UniqueID: "com.ddev.desktop"}
+	showWindow := func() {
+		window.Show()
+		window.Focus()
+	}
+	singleInstance := &application.SingleInstanceOptions{
+		UniqueID: "com.ddev.desktop",
+		// Launching the app again is how a closed window comes back where
+		// there is no tray or Dock icon, such as GNOME without AppIndicator.
+		OnSecondInstanceLaunch: func(application.SecondInstanceData) {
+			application.InvokeAsync(showWindow)
+		},
+	}
 	if st != nil {
 		// A self-test runs beside the user's own copy of the app.
 		singleInstance = nil
@@ -175,10 +189,6 @@ func main() {
 		MinHeight: 480,
 		URL:       windowURL,
 	})
-	showWindow := func() {
-		window.Show()
-		window.Focus()
-	}
 	// Closing the window keeps the app in the tray, as Docker Desktop does.
 	window.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		window.Hide()
@@ -193,6 +203,10 @@ func main() {
 		}
 		if ddevBinary == "" && m != modeWSL {
 			app.Dialog.Error().SetTitle("ddev not found").SetMessage(findErr.Error()).Show()
+		}
+		// WSL2 mode reads and acts on projects with the one ddev inside WSL2.
+		if ddevBinary != "" && m != modeWSL && st == nil {
+			go warnVersionMismatch(app, ddevBinary)
 		}
 		if srv == nil {
 			return
@@ -243,6 +257,24 @@ func runSelfTest(srv *webui.Server, st *selfTest) {
 	_ = srv.Shutdown(ctx)
 	st.cleanup()
 	os.Exit(code)
+}
+
+// warnVersionMismatch warns when the ddev that actions run, or the ddev a
+// terminal would run, is not the version this app was built from.
+func warnVersionMismatch(app *application.App, ddevBinary string) {
+	bins := []string{ddevBinary}
+	if b, err := exec.LookPath(ddevName()); err == nil {
+		bins = append(bins, b)
+	}
+	bad := versionMismatches(versionconstants.DdevVersion, bins)
+	if len(bad) == 0 {
+		return
+	}
+	msg := fmt.Sprintf("This app is DDEV %s, but:\n\n%s\n\nThe app can show projects wrongly, and two versions that both start a project keep rewriting its files. Use one DDEV version for the app and the terminal.", versionconstants.DdevVersion, strings.Join(bad, "\n"))
+	log.Print(msg)
+	application.InvokeAsync(func() {
+		app.Dialog.Warning().SetTitle("DDEV versions differ").SetMessage(msg).Show()
+	})
 }
 
 // logRequests logs each request the webview makes, since the window has no
