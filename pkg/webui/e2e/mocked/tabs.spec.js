@@ -22,6 +22,16 @@ test('toggles Xdebug', async ({ page, backend }) => {
   expect((await nthPost(backend, 2)).path).toBe('/api/projects/d11/actions/xdebug-off');
 });
 
+test('resets the Xdebug switch when its job is refused', async ({ page, backend }) => {
+  backend.postReply = () => ({ status: 409, body: 'already running: Stopping all projects' });
+  const toggle = page.getByRole('checkbox');
+  // check() would fail when the switch flips back before it looks.
+  await toggle.click();
+  await expect(page.locator('#toasts .toast.error')).toHaveText('already running: Stopping all projects');
+  await expect(page.locator('.switch')).toContainText('disabled');
+  await expect(toggle).not.toBeChecked();
+});
+
 test('installs, updates and removes add-ons', async ({ page, backend, browserName }) => {
   await page.getByRole('button', { name: 'Add-ons' }).click();
   await expect(page.locator('#addon-registry option')).toHaveCount(2);

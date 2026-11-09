@@ -108,6 +108,7 @@ up a DDEV release or the PR download comment.
   notifications in `wsl` mode are untested, and `wsl` mode sends no
   notifications.
 - **Releases:** the app is not part of any release or package.
-- **Versions:** the bundle carries its own `ddev`. A copy of the app that runs
-  a different `ddev` from `PATH` can read projects with one version and act
-  on them with another.
+- **Versions:** the macOS bundle carries its own `ddev`. The Linux and
+  Windows builds do not, so in `embedded` and `loopback` modes they read
+  projects with the app's built-in DDEV code and act on them with the `ddev`
+  from `PATH`, which can be another version.

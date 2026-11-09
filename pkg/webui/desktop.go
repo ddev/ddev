@@ -1,9 +1,9 @@
 package webui
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 )
 
@@ -37,16 +37,30 @@ func (s *Server) Changed() <-chan struct{} {
 // started from a tray menu shows in the page's activity list. A server from
 // New gets the token, as a script would send it.
 func (s *Server) Post(path string) error {
-	r := httptest.NewRequest(http.MethodPost, path, nil)
+	r, err := http.NewRequest(http.MethodPost, path, http.NoBody)
+	if err != nil {
+		return err
+	}
 	r.Header.Set(dashboardHeader, "1")
 	if s.listener != nil {
 		r.Host = s.listener.Addr().String()
 		r.Header.Set("Authorization", "Bearer "+s.token)
 	}
-	w := httptest.NewRecorder()
+	w := &postRecorder{header: http.Header{}, code: http.StatusOK}
 	s.Handler().ServeHTTP(w, r)
-	if w.Code >= 400 {
-		return errors.New(strings.TrimSpace(w.Body.String()))
+	if w.code >= 400 {
+		return errors.New(strings.TrimSpace(w.body.String()))
 	}
 	return nil
 }
+
+// postRecorder keeps the status and body of a response to Post.
+type postRecorder struct {
+	header http.Header
+	code   int
+	body   bytes.Buffer
+}
+
+func (w *postRecorder) Header() http.Header         { return w.header }
+func (w *postRecorder) Write(b []byte) (int, error) { return w.body.Write(b) }
+func (w *postRecorder) WriteHeader(code int)        { w.code = code }
