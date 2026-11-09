@@ -11,6 +11,9 @@
       - "os=wsl2-mirrored"
       - "architecture=amd64"
       - "dockertype=wsl2"
+      # tb-wsl-12 also matches the tags above, and its browser installs stall
+      # far more often. One machine keeps the leg's history comparable.
+      - "testbot=tb-wsl-14"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds

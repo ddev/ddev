@@ -19,6 +19,10 @@
 # pick up a given step. Order doesn't matter; `continue_on_failure: true`
 # on each `wait` means one provider failing doesn't skip the rest.
 #
+# Every step is pinned to one machine with its testbot= tag, so a leg's
+# history compares runs on the same hardware. The other two machines stay
+# free for the correctness tests.
+#
 # Configure this in the Buildkite dashboard as its own pipeline pointed at
 # this file, with a single nightly Scheduled Build (not a push/PR trigger).
 # See perf/README.md.
@@ -32,6 +36,7 @@
       - "colima=true"
       - "colima_vz=true"
       - "architecture=arm64"
+      - "testbot=tb-macos-arm64-5"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
@@ -51,6 +56,7 @@
       - "os=macos"
       - "lima=true"
       - "architecture=arm64"
+      - "testbot=tb-macos-arm64-5"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
@@ -70,6 +76,7 @@
       - "os=macos"
       - "orbstack=true"
       - "architecture=arm64"
+      - "testbot=tb-macos-arm64-5"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
@@ -88,6 +95,7 @@
       - "os=macos"
       - "podman-rootless=true"
       - "architecture=arm64"
+      - "testbot=tb-macos-arm64-5"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
@@ -106,6 +114,7 @@
       - "os=macos"
       - "rancher-desktop=true"
       - "architecture=arm64"
+      - "testbot=tb-macos-arm64-5"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
@@ -132,6 +141,7 @@
       - "os=macos"
       - "orbstack=true"
       - "architecture=arm64"
+      - "testbot=tb-macos-arm64-5"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds

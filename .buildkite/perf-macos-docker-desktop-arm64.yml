@@ -16,6 +16,8 @@
       - "os=macos"
       - "docker-desktop=true"
       - "architecture=arm64"
+      # One machine, so the leg's history compares the same hardware.
+      - "testbot=tb-macos-arm64-4"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds

@@ -160,6 +160,11 @@ branch="${BUILDKITE_BRANCH:-${GITHUB_REF_NAME:-$(git -C "$DIR" rev-parse --abbre
 # "orbstack", "docker-desktop") instead of a bare "unknown" lets local runs
 # report a real provider too.
 docker_provider="${DOCKER_PROVIDER_LABEL:-${DOCKER_TYPE:-$(jq -r '.raw["docker-platform"] // "unknown"' <<<"$version_json")}}"
+# The machine that ran the benchmark. A leg's agent tags can match more than
+# one testbot, and machines differ enough to look like a regression when the
+# job moves between them. BUILDKITE_AGENT_NAME matches the runner names on the
+# CI test-runtime dashboard; RUNNER_NAME is the GitHub Actions equivalent.
+runner="${BUILDKITE_AGENT_NAME:-${RUNNER_NAME:-$(hostname 2>/dev/null || echo unknown)}}"
 
 result_json=$(jq -nc \
   --argjson metrics "$metrics_json" \
@@ -170,6 +175,7 @@ result_json=$(jq -nc \
   --arg os "$os_name" \
   --arg arch "$arch_name" \
   --arg docker_provider "$docker_provider" \
+  --arg runner "$runner" \
   '{
     timestamp: $timestamp,
     commit_sha: $commit_sha,
@@ -178,6 +184,7 @@ result_json=$(jq -nc \
     os: $os,
     arch: $arch,
     docker_provider: $docker_provider,
+    runner: $runner,
     metrics: $metrics
   }')
 
@@ -192,6 +199,7 @@ echo "$result_json"
   printf '  %-11s %s\n' "commit:" "${commit_sha:0:9}"
   printf '  %-11s %s\n' "branch:" "$branch"
   printf '  %-11s %s\n' "ddev:" "$ddev_version"
+  printf '  %-11s %s\n' "runner:" "$runner"
   echo
   jq -r '.metrics | to_entries[] | "\(.key)\t\(.value)"' <<<"$result_json" |
     while IFS=$'\t' read -r key value; do

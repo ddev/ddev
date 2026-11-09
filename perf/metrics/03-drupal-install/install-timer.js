@@ -48,6 +48,22 @@ function sleep(ms) {
     // stuck immediately instead of going silent for the full 10 minutes.
     const stage = (s) => console.error(`[install-timer] ${s}`);
 
+    // A stuck page is quiet: no request in flight and none finishing. A working
+    // one, the install batch above all, keeps making requests. So the helper
+    // below reloads after idleMs of quiet, and after hungMs if a request hangs.
+    let inFlight = 0;
+    let lastActivity = Date.now();
+    page.on('request', () => {
+      inFlight++;
+      lastActivity = Date.now();
+    });
+    for (const event of ['requestfinished', 'requestfailed']) {
+      page.on(event, () => {
+        inFlight = Math.max(0, inFlight - 1);
+        lastActivity = Date.now();
+      });
+    }
+
     // Every step below clicks a submit-like control that triggers a full page
     // navigation (not just a DOM update), and each one of those has now been
     // caught -- on different runs -- with Puppeteer's navigation tracking
@@ -57,18 +73,26 @@ function sleep(ms) {
     // page is actually live now, sidestepping the stuck navigation state
     // instead of waiting on it indefinitely. Applied to every post-click wait
     // in this script, not just the ones that have hung so far.
-    const waitForSelectorWithReload = async (selector, { attempts = 5, timeoutMs = 60000 } = {}) => {
+    const waitForSelectorWithReload = async (selector, { attempts = 5, idleMs = 10000, hungMs = 60000 } = {}) => {
       for (let i = 1; i <= attempts; i++) {
-        try {
-          await page.waitForSelector(selector, { timeout: timeoutMs });
-          return;
-        } catch (err) {
-          if (i === attempts) throw err;
-          stage(`${selector} not found after ${timeoutMs}ms (attempt ${i}/${attempts}), reloading`);
-          await page.reload({ waitUntil: 'domcontentloaded' }).catch((reloadErr) => {
-            stage(`reload failed, will retry anyway: ${reloadErr.message}`);
-          });
+        const since = Date.now();
+        let idle = 0;
+        for (;;) {
+          try {
+            await page.waitForSelector(selector, { timeout: 1000 });
+            return;
+          } catch (err) {
+            // TimeoutError, or a destroyed context while a navigation is under way: poll again.
+          }
+          idle = Date.now() - Math.max(since, lastActivity);
+          if ((inFlight === 0 && idle >= idleMs) || idle >= hungMs) break;
         }
+        if (i === attempts) throw new Error(`${selector} not found after ${attempts - 1} reloads`);
+        stage(`${selector} not found, no network activity for ${Math.round(idle / 1000)}s with ${inFlight} request(s) in flight (attempt ${i}/${attempts}), reloading`);
+        inFlight = 0;
+        await page.reload({ waitUntil: 'domcontentloaded' }).catch((reloadErr) => {
+          stage(`reload failed, will retry anyway: ${reloadErr.message}`);
+        });
       }
     };
     page.on('console', (msg) => console.error(`[install-timer] page console: ${msg.text()}`));

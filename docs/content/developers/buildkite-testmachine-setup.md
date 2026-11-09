@@ -572,7 +572,7 @@ Each provider on a shared macOS testbot keeps its own VM disk, which grows to it
 * `testbot_maintenance.sh`, run around every job, removes dangling images, returns freed blocks to the host with `fstrim`, deletes orphaned Mutagen caches and old `buildx` refs, and prunes all unused images when less than `LOW_DISK_GB` (40) GB is free.
 * `testbot_disk_cleanup.sh`, run weekly by the `testbot-disk-cleanup.yml` pipeline, starts each provider in turn, removes everything it holds, and recreates a Podman or Lima VM whose container storage is still more than 70% full. It also prunes Apple Container's own storage with the `container` CLI.
 
-To target one machine, the scheduled pipeline needs a `testbot=<hostname>` tag on each agent, for example `tags="...,testbot=tb-macos-arm64-5"`. Configure the pipeline in the Buildkite dashboard pointed at `.buildkite/testbot-disk-cleanup.yml`, with a weekly Scheduled Build.
+To target one machine, the scheduled pipeline needs a `testbot=<hostname>` tag on each agent, for example `tags="...,testbot=tb-macos-arm64-5"`. The nightly `perf-*.yml` pipelines use the same tag to run each leg on one machine. `wsl2-test-runner-setup.sh` adds it on WSL2 testbots; add it by hand on macOS and Windows. Configure the pipeline in the Buildkite dashboard pointed at `.buildkite/testbot-disk-cleanup.yml`, with a weekly Scheduled Build.
 
 ## Performance Benchmark Harness Prerequisites
 
