@@ -222,7 +222,8 @@ list_tags() {
       | (.tag_last_pushed // .last_updated // "" | sub("\\.[0-9]+Z$"; "Z")) as $pushed
       | [$ref + ":" + .name, .name, (if $pushed == "" then "" else ($pushed | fromdateiso8601) end), $pushed[0:10]]
       | @tsv' <<< "${page}"
-    url="$(jq -r '.next // empty' <<< "${page}")"
+    # After deletions, Docker Hub's stale count can link `next` to a missing page.
+    url="$(jq -r 'if (.results | length) < 100 then empty else .next // empty end' <<< "${page}")"
   done
 }
 
