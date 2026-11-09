@@ -68,6 +68,21 @@ The app shows a window and a DDEV icon in the menu bar. Closing the window
 keeps the app running; click the Dock icon or launch the app again to get it
 back. Quit from the menu bar icon.
 
+From a terminal:
+
+```bash
+# Start it as the Finder does, detached from the terminal
+open .gotmp/bin/darwin_arm64/DDEV.app
+# open passes none of your shell's variables; --env passes one
+open --env DDEV_DESKTOP_DEBUG=true .gotmp/bin/darwin_arm64/DDEV.app
+# Or run it in the foreground, with its log in the terminal
+.gotmp/bin/darwin_arm64/DDEV.app/Contents/MacOS/ddev-desktop
+# Quit it
+osascript -e 'quit app "DDEV"'
+```
+
+`open --env` has no effect when the app is already running.
+
 ### Linux
 
 Building needs the GTK 4 and WebKitGTK 6 development packages, such as
@@ -81,7 +96,16 @@ make desktop
 Running needs glibc 2.38 or later, GTK 4, and WebKitGTK 6, as in Ubuntu
 24.04 or Debian 13. On Ubuntu that is `libgtk-4-1` and `libwebkitgtk-6.0-4`.
 The app is a single binary with no desktop launcher; start it from a
-terminal.
+terminal:
+
+```bash
+# Run it in the background, with its log in the terminal
+.gotmp/bin/linux_amd64/ddev-desktop &
+# Or detach it from the terminal
+nohup .gotmp/bin/linux_amd64/ddev-desktop >/dev/null 2>&1 &
+# Quit it, or use Quit in the tray menu
+pkill -x ddev-desktop
+```
 
 The tray icon needs a StatusNotifierItem host. Ubuntu's GNOME and KDE Plasma
 have one; GNOME elsewhere needs the AppIndicator extension.
@@ -105,6 +129,20 @@ one of two modes:
   no release has yet.
 - Otherwise it serves the dashboard itself on `127.0.0.1`, and runs the
   `ddev.exe` next to `ddev-desktop.exe`, or the first one on `PATH`.
+
+From PowerShell:
+
+```powershell
+# Start it; it returns at once, since it is a GUI app
+.\ddev-desktop.exe
+# Choose a mode for this PowerShell session
+$env:DDEV_DESKTOP_MODE = "loopback"; .\ddev-desktop.exe
+# Quit it, or use Quit in the tray menu
+Stop-Process -Name ddev-desktop
+```
+
+A GUI app prints nothing to the console. To see its log, pipe it, as
+`./ddev-desktop.exe | cat` in Git Bash.
 
 Set `DDEV_BINARY` to choose the `ddev` the app runs, and
 `DDEV_DESKTOP_DEBUG=true` to log each request the window makes.
