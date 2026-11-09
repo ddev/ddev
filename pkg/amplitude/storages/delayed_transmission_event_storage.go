@@ -1,12 +1,14 @@
 package storages
 
 import (
+	"context"
 	"encoding/gob"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/amplitude/analytics-go/amplitude/types"
+	"github.com/gofrs/flock"
 )
 
 // NewDelayedTransmissionEventStorage initializes a new EventStorage of type delayedTransmissionEventStorage.
@@ -19,7 +21,6 @@ func NewDelayedTransmissionEventStorage(
 	return &delayedTransmissionEventStorage{
 		logger:   logger,
 		fileName: fileName,
-		loaded:   false,
 		capacity: capacity,
 		interval: interval,
 	}
@@ -28,7 +29,6 @@ func NewDelayedTransmissionEventStorage(
 type delayedTransmissionEventStorage struct {
 	logger   types.Logger
 	fileName string
-	loaded   bool
 	capacity int
 	interval time.Duration
 	cache    eventCache
@@ -61,6 +61,11 @@ func (s *delayedTransmissionEventStorage) push(prepend bool, events ...*types.St
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// Without the lock, pushing anyway risks only the old race.
+	if unlock, ok := s.lockFile(); ok {
+		defer unlock()
+	}
+
 	err := s.readCache()
 	if err != nil {
 		s.logger.Errorf("Error '%s', while reading event cache.", err)
@@ -84,6 +89,13 @@ func (s *delayedTransmissionEventStorage) push(prepend bool, events ...*types.St
 func (s *delayedTransmissionEventStorage) Pull(count int, before time.Time) []*types.StorageEvent {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	// Without the lock, a later Pull tries again.
+	unlock, ok := s.lockFile()
+	if !ok {
+		return make([]*types.StorageEvent, 0)
+	}
+	defer unlock()
 
 	err := s.readCache()
 	if err != nil {
@@ -130,8 +142,12 @@ func (s *delayedTransmissionEventStorage) Pull(count int, before time.Time) []*t
 
 // Count returns the number of events ready for transmission.
 func (s *delayedTransmissionEventStorage) Count(before time.Time) int {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if unlock, ok := s.lockFile(); ok {
+		defer unlock()
+	}
 
 	err := s.readCache()
 	if err != nil {
@@ -157,21 +173,35 @@ func (s *delayedTransmissionEventStorage) addNonRetriedEvent(event *types.Storag
 	}
 }
 
-// readCache reads the events from the cache file.
-func (s *delayedTransmissionEventStorage) readCache() error {
-	// The cache is read once per run time, early exit if already loaded.
-	if s.loaded {
-		return nil
+// lockFile holds an exclusive lock that keeps other ddev processes from
+// changing the cache file between reading and writing it. It gives up after
+// a second, because a command shouldn't wait on instrumentation.
+func (s *delayedTransmissionEventStorage) lockFile() (unlock func(), ok bool) {
+	fl := flock.New(s.fileName + ".lock")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	if locked, err := fl.TryLockContext(ctx, 20*time.Millisecond); err != nil || !locked {
+		_ = fl.Close()
+		return nil, false
 	}
 
+	return func() {
+		_ = fl.Unlock()
+		_ = fl.Close()
+	}, true
+}
+
+// readCache reads the events from the cache file. It reads the file every
+// time, because other ddev processes may have changed it since the last read.
+func (s *delayedTransmissionEventStorage) readCache() error {
+	s.cache = eventCache{}
+
 	file, err := os.Open(s.fileName)
-	// If the file does not exist, early exit with success
 	if err != nil {
 		if os.IsNotExist(err) {
-			s.loaded = true
 			return nil
 		}
-		// For other errors, return the error
 		return err
 	}
 
@@ -179,23 +209,21 @@ func (s *delayedTransmissionEventStorage) readCache() error {
 
 	stat, err := file.Stat()
 	if err != nil || stat.Size() == 0 {
-		s.loaded = true
 		s.logger.Infof("Event cache is empty")
 
 		return nil
 	}
 
 	decoder := gob.NewDecoder(file)
-	err = decoder.Decode(&s.cache)
-
-	// If the file was properly read, mark the cache as loaded.
-	if err == nil {
-		s.loaded = true
-
-		s.logger.Debugf("Read %d events from the cache.", len(s.cache.Events))
+	if err = decoder.Decode(&s.cache); err != nil {
+		// Don't keep a partly decoded cache.
+		s.cache = eventCache{}
+		return err
 	}
 
-	return err
+	s.logger.Debugf("Read %d events from the cache.", len(s.cache.Events))
+
+	return nil
 }
 
 // writeCache writes the events to the cache file.

@@ -128,11 +128,6 @@ func weekStart(t time.Time) string {
 // lockFile holds an exclusive lock on path. It gives up after a second,
 // because losing one count is better than delaying a command.
 func lockFile(path string) (unlock func(), ok bool) {
-	// A lock file created by root would lock out the user's own ddev.
-	if os.Geteuid() == 0 {
-		return func() {}, true
-	}
-
 	fl := flock.New(path)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()

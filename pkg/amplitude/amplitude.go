@@ -131,12 +131,13 @@ func FlushForce() {
 	ampli.Instance.Flush()
 }
 
-// Clean removes the cache file, the record of reported events, and the
-// command counts.
+// Clean removes the cache file, the record of reported events, the command
+// counts, and their lock files.
 func Clean() {
-	_ = os.Remove(getCacheFileName())
-	_ = os.Remove(getReportedFileName())
-	_ = os.Remove(getCommandsFileName())
+	for _, file := range []string{getCacheFileName(), getReportedFileName(), getCommandsFileName()} {
+		_ = os.Remove(file)
+		_ = os.Remove(file + ".lock")
+	}
 }
 
 // CheckSetUp shows a warning to the user if the API key is not available.

@@ -61,7 +61,12 @@ func TestAlreadyReportedUnchanged(t *testing.T) {
 	require.True(t, alreadyReported(file, "2026-11-06", "identify", docker28, true))
 
 	require.False(t, alreadyReported(file, "2026-11-06", "identify", docker29, true))
-	require.True(t, alreadyReported(file, "2026-11-20", "identify", docker29, true))
+	require.True(t, alreadyReported(file, "2026-11-12", "identify", docker29, true))
+
+	// An unchanged event is sent again after unchangedResendDays, in case
+	// the earlier one was dropped, and that restarts the wait.
+	require.False(t, alreadyReported(file, "2026-11-13", "identify", docker29, true))
+	require.True(t, alreadyReported(file, "2026-11-19", "identify", docker29, true))
 
 	// Only the latest state counts, so a change back is sent again.
 	require.False(t, alreadyReported(file, "2026-11-20", "identify", docker28, true))

@@ -124,3 +124,25 @@ func (t *DelayedTransmissionEventStorageSuite) TestCache() {
 	chunk = s2.Pull(2, time.Time{})
 	require.Equal([]*types.StorageEvent{event3, event4}, chunk)
 }
+
+func (t *DelayedTransmissionEventStorageSuite) TestTwoProcesses() {
+	event1 := &types.StorageEvent{Event: &types.Event{EventType: "event-A"}}
+	event2 := &types.StorageEvent{Event: &types.Event{EventType: "event-B"}}
+	event3 := &types.StorageEvent{Event: &types.Event{EventType: "event-C"}}
+
+	require := t.Require()
+
+	// Two storages on one file stand in for two ddev processes.
+	file := filepath.Join(t.T().TempDir(), `TestTwoProcesses.cache`)
+	longRunning := storages.NewDelayedTransmissionEventStorage(loggers.NewDdevLogger(true, true), 0, 0, file)
+	other := storages.NewDelayedTransmissionEventStorage(loggers.NewDdevLogger(true, true), 0, 0, file)
+
+	longRunning.PushNew(event1)
+	other.PushNew(event2)
+	longRunning.PushNew(event3)
+	require.Equal(3, other.Count(time.Time{}))
+
+	require.Equal([]*types.StorageEvent{event1, event2}, other.Pull(2, time.Time{}))
+	require.Equal([]*types.StorageEvent{event3}, longRunning.Pull(3, time.Time{}))
+	require.Empty(other.Pull(3, time.Time{}))
+}
