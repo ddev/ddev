@@ -46,29 +46,68 @@ Windows app cross-builds anywhere.
 
 ## Build and run
 
-On macOS:
+`make desktop` builds `ddev` for this OS, then the app next to it in
+`.gotmp/bin/<os>_<arch>/`. The app runs the `ddev` next to it, so the window
+and its actions use one version. It warns at startup when the `ddev` it runs,
+or the first `ddev` on `PATH`, is another version.
+
+### macOS
+
+Building needs the Xcode command-line tools.
 
 ```bash
 make desktop
 open .gotmp/bin/darwin_arm64/DDEV.app
 ```
 
-On Linux, install the GTK 4 and WebKitGTK 6 development packages first, such
-as `libgtk-4-dev` and `libwebkitgtk-6.0-dev` on Debian and Ubuntu:
+`DDEV.app` carries its own `ddev` and `ddev-hostname`, and `DDEV.app.zip`
+next to it is the same bundle zipped. For an Intel Mac, run
+`make darwin_amd64` and `make -C desktop GOARCH=amd64`.
+
+The app shows a window and a DDEV icon in the menu bar. Closing the window
+keeps the app running; click the Dock icon or launch the app again to get it
+back. Quit from the menu bar icon.
+
+### Linux
+
+Building needs the GTK 4 and WebKitGTK 6 development packages, such as
+`libgtk-4-dev` and `libwebkitgtk-6.0-dev` on Debian and Ubuntu:
 
 ```bash
 make desktop
-.gotmp/bin/linux_amd64/ddev-desktop
+.gotmp/bin/linux_amd64/ddev-desktop &
 ```
 
-For Windows, from any OS:
+Running needs glibc 2.38 or later, GTK 4, and WebKitGTK 6, as in Ubuntu
+24.04 or Debian 13. On Ubuntu that is `libgtk-4-1` and `libwebkitgtk-6.0-4`.
+The app is a single binary with no desktop launcher; start it from a
+terminal.
+
+The tray icon needs a StatusNotifierItem host. Ubuntu's GNOME and KDE Plasma
+have one; GNOME elsewhere needs the AppIndicator extension.
+Without a tray, launch the app again to show a closed window.
+
+### Windows
+
+The app needs no CGO on Windows, so it cross-builds from any OS:
 
 ```bash
 make -C desktop GOOS=windows GOARCH=amd64 binary
 # .gotmp/bin/windows_amd64/ddev-desktop.exe
 ```
 
-Set `DDEV_DESKTOP_DEBUG=true` to log each request the window makes.
+Running needs the WebView2 runtime, which Windows 11 includes. The app picks
+one of two modes:
+
+- With `ddev` installed in WSL2, it runs `ddev serve --desktop` there through
+  `wsl.exe -e bash -lc`, and the window shows your WSL2 projects. That `ddev`
+  must be on the PATH of a bash login shell, and it needs `ddev serve`, which
+  no release has yet.
+- Otherwise it serves the dashboard itself on `127.0.0.1`, and runs the
+  `ddev.exe` next to `ddev-desktop.exe`, or the first one on `PATH`.
+
+Set `DDEV_BINARY` to choose the `ddev` the app runs, and
+`DDEV_DESKTOP_DEBUG=true` to log each request the window makes.
 
 ## Tests
 
@@ -110,12 +149,7 @@ up a DDEV release or the PR download comment.
   notifications in `wsl` mode are untested, and `wsl` mode sends no
   notifications.
 - **Releases:** the app is not part of any release or package.
-- **Versions:** the macOS bundle carries its own `ddev`. The Linux and
-  Windows builds do not, so in `embedded` and `loopback` modes they read
-  projects with the app's built-in DDEV code and act on them with the `ddev`
-  from `PATH`, which can be another version. The app warns at startup when
-  the `ddev` it runs, or the first `ddev` on `PATH`, is not its own version.
-- **Linux:** the builds need glibc 2.38 or later, GTK 4, and WebKitGTK 6, as
-  in Ubuntu 24.04 or Debian 13. Debian 12 and Ubuntu 22.04 cannot run them.
-- **`wsl` mode:** the `ddev` in WSL2 needs `ddev serve`, which no release has
-  yet.
+- **Versions:** the Linux and Windows downloads hold the app alone. Put it
+  next to a `ddev` of the same version, such as the one from
+  `ddev utility download-ddev --pr N`. Otherwise it runs the `ddev` on `PATH`
+  and warns when that is another version.
