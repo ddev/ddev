@@ -197,6 +197,8 @@ start_listing() {
     done
   done
   log "Listing ${#LISTING_PIDS[@]} repositories of ${DOCKER_ORG} on Docker Hub"
+  list_sizes > "${WORKDIR}/sizes.tsv" &
+  LISTING_PIDS+=("${!}")
 }
 
 # Prints "<org/repo:tag> <tag> <pushed, epoch> <pushed, date>" for every tag.
@@ -274,9 +276,44 @@ reasons() {
     LC_ALL=C sort -t$'\t' -k1,1n -k4,4 | cut -f2-
 }
 
+# Prints "<bytes> <repo>" for every repository of ${DOCKER_ORG}, cleaned up or
+# not. The sizes are informational, so a failed page prints nothing.
+list_sizes() {
+  local url="${HUB_API}/v2/namespaces/${DOCKER_ORG}/repositories?page_size=100" page sizes=""
+  while [[ -n "${url}" ]]; do
+    [[ "${url}" == "${HUB_API}/"* ]] || return 0
+    page="$(curl -fsSL --retry 5 --retry-delay 10 "${url}")" || return 0
+    sizes+="$(jq -r '.results[] | select(.storage_size != null) | "\(.storage_size)\t\(.name)"' <<< "${page}")"$'\n' || return 0
+    url="$(jq -r 'if (.results | length) < 100 then empty else .next // empty end' <<< "${page}")" || return 0
+  done
+  printf '%s' "${sizes}" | sed '/^$/d'
+}
+
+# Prints "<bytes> <org/repo> <note>" for each repository, largest first. The note
+# is "not cleaned up" for a repository missing from image-configs.sh.
+repo_sizes() {
+  sort -t$'\t' -k1,1rn "${WORKDIR}/sizes.tsv" |
+    awk -F'\t' -v OFS='\t' -v org="${DOCKER_ORG}" -v listed="$(cd "${WORKDIR}/tags" && printf '%s\n' *)" '
+      BEGIN { n = split(listed, names, "\n"); for (i = 1; i <= n; i++) cleaned[names[i]] }
+      { print $1, org "/" $2, ($2 in cleaned ? "" : "not cleaned up") }'
+}
+
+# Prints "<total> <in cleaned-up repositories>", such as "1.5 GB 1.2 GB", or
+# nothing without sizes. GB is 1024^3 bytes here, as in the Docker Hub web UI.
+storage() {
+  repo_sizes | awk -F'\t' '{ total += $1; if ($3 == "") cleaned += $1 }
+    END { if (NR) printf "%.1f GB\t%.1f GB\n", total / 2^30, cleaned / 2^30 }'
+}
+
 summarize() {
+  local total cleaned
+  IFS=$'\t' read -r total cleaned <<< "$(storage)" || true
   echo "${DOCKER_ORG}: $(count decisions.tsv) tags checked, cutoff ${BEFORE_RELEASE}"
   reasons | awk -F'\t' '{ printf "%7d %s\t%s\n", $1, $2, $3 }'
+  if [[ -n "${total}" ]]; then
+    echo "Storage: ${total}, ${cleaned} of it in cleaned-up repositories"
+    repo_sizes | awk -F'\t' '{ printf "%7.1f GB  %s%s\n", $1 / 2^30, $2, ($3 == "" ? "" : " (" $3 ")") }'
+  fi
 }
 
 # Prints the candidates in batches to delete, or what the tags given come to.
@@ -321,7 +358,7 @@ group() {
   awk -F'\t' -v OFS='\t' '
     {
       tag = $2; sub(/^[^:]*:/, "", tag)
-      repo = $2; sub(/:.*/, "", repo); sub(/^[^\/]*\//, "", repo)
+      repo = $2; sub(/:.*/, "", repo)
       key = tag
       if (match(tag, /-[0-9a-f]+$/) && RLENGTH == 11) key = substr(tag, RSTART + 1)
       if (!(key in n)) { order[++builds] = key; pushed[key] = $3; if (match($4, /\(.*\)$/)) by[key] = substr($4, RSTART + 1, RLENGTH - 2) }
@@ -329,12 +366,12 @@ group() {
       if (!((key, tag) in seen)) { seen[key, tag]; tags[key] = (tag == key ? tag (tags[key] == "" ? "" : ", " tags[key]) : tags[key] (tags[key] == "" ? "" : ", ") tag) }
       if ((key, repo) in seen) next
       seen[key, repo]
-      if (repo ~ /^ddev-dbserver-/) db[key]++; else images[key] = images[key] (images[key] == "" ? "" : ", ") repo
+      if (repo ~ /\/ddev-dbserver-/) { db[key]++; dbrepo = repo; sub(/\/.*/, "/ddev-dbserver", dbrepo) } else images[key] = images[key] (images[key] == "" ? "" : ", ") repo
     }
     END {
       for (i = 1; i <= builds; i++) {
         key = order[i]
-        if (db[key]) images[key] = images[key] (images[key] == "" ? "" : ", ") db[key] " ddev-dbserver"
+        if (db[key]) images[key] = images[key] (images[key] == "" ? "" : ", ") db[key] " " dbrepo
         print pushed[key], tags[key], n[key], images[key], substr(refs[key], 2), by[key]
       }
     }' "${WORKDIR}/${1}"
@@ -382,11 +419,19 @@ listing() {
 
 # shellcheck disable=SC2016 # the backticks are Markdown
 write_step_summary() {
-  printf '## Image tag cleanup for %s\n\nCutoff **%s**: %d tags checked, **%d candidates**.\n\n' \
-    "${DOCKER_ORG}" "${BEFORE_RELEASE}" "$(count decisions.tsv)" "$(grep -c '^delete' "${WORKDIR}/decisions.tsv" || true)"
+  local total cleaned
+  IFS=$'\t' read -r total cleaned <<< "$(storage)" || true
+  printf '## Image tag cleanup for %s\n\nCutoff **%s**: %d tags checked, **%d candidates**.%s\n\n' \
+    "${DOCKER_ORG}" "${BEFORE_RELEASE}" "$(count decisions.tsv)" "$(grep -c '^delete' "${WORKDIR}/decisions.tsv" || true)" \
+    "${total:+ Storage: **${total}**, ${cleaned} of it in cleaned-up repositories.}"
   echo "| Decision | Why | Tags |"
   echo "| --- | --- | --- |"
   reasons | awk -F'\t' '{ print "| " $2 " | " $3 " | " $1 " |" }'
+  if [[ -n "${total}" ]]; then
+    printf '\n<details><summary>Storage by repository</summary>\n\n| Repository | Size | Note |\n| --- | ---: | --- |\n'
+    repo_sizes | awk -F'\t' '{ printf "| %s | %.1f GB | %s |\n", $2, $1 / 2^30, $3 }'
+    printf '\n</details>\n'
+  fi
   if [[ -n "${REQUESTED}" ]]; then
     printf '\n<details><summary>Tags given: %d</summary>\n\n```text\n%s\n```\n\n</details>\n' "$(wc -l <<< "${REQUESTED}")" "${REQUESTED}"
   fi
