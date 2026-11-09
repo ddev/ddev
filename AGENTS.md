@@ -37,7 +37,8 @@ rules below by hand. With it:
   `.claude/git-hooks/` refuses pushes to `ddev/ddev`, deletions, and
   non-fast-forwards.
 - Common forms of `docker push`, `go build`, and clearing `GOTEST_SHORT` are
-  denied; the rules below still apply to any other form.
+  denied; the rules below still apply to any other form. A denied `go build`
+  returns a message that says to use `make` instead.
 - The PATH from `.envrc`, with the built `ddev` and the docs tools, applies to
   every Bash call.
 
