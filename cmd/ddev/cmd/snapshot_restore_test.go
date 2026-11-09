@@ -17,7 +17,7 @@ import (
 // TestCmdSnapshotRestore runs `ddev snapshot restore` on the test apps
 func TestCmdSnapshotRestore(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	assert := asrt.New(t)
 	// Gather reporting about goroutines at exit
@@ -61,7 +61,7 @@ func TestCmdSnapshotRestore(t *testing.T) {
 // added for that restore.
 func TestCmdSnapshotRestoreFile(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]

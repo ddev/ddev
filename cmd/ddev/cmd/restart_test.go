@@ -83,7 +83,7 @@ func TestCmdRestartJSON(t *testing.T) {
 // See https://github.com/ddev/ddev/issues/7904
 func TestCmdRestartProfilesAndServices(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	site := TestSites[0]
 	origDir, _ := os.Getwd()

@@ -120,7 +120,7 @@ func TestStartWithExitedProfileContainer(t *testing.T) {
 // See https://github.com/ddev/ddev/issues/8817
 func TestStartProfileImages(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]

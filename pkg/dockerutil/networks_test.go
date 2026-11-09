@@ -23,7 +23,7 @@ import (
 // See https://github.com/moby/moby/pull/46251
 func TestNetworkDuplicates(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: socktainer rejects network names with uppercase letters")
+		t.Skip("Skipping: socktainer rejects network names with uppercase letters, https://github.com/socktainer/socktainer/issues/498")
 	}
 	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {

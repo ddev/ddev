@@ -25,9 +25,6 @@ import (
 
 // TestGlobalPortOverride tests global router_http_port and router_https_port
 func TestGlobalPortOverride(t *testing.T) {
-	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: the global router port is 8080 here, and WriteConfig after Start pins it into the test site's config")
-	}
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() || dockerutil.IsPodmanRootlessmacOS()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
@@ -77,7 +74,7 @@ func TestGlobalPortOverride(t *testing.T) {
 // then tests to see that the right ports have been started up on the router.
 func TestProjectPortOverride(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	assert := asrt.New(t)
 
@@ -270,7 +267,7 @@ func startRetryingHostPortRace(t *testing.T, app *ddevapp.DdevApp) error {
 // Test that the app assigns a substitute port if the default one is not available.
 func TestUseRouterSubstitutePort(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536

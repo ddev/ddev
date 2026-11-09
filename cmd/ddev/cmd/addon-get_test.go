@@ -222,7 +222,7 @@ func TestCmdAddonDdevVersionConstraint(t *testing.T) {
 // env vars are expanded in .ddev/docker-compose.*.yaml files.
 func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: an add-on service mounts a named volume a running container holds, which Apple Container can't attach twice")
+		t.Skip("Skipping: an add-on service mounts a named volume a running container holds, which Apple Container can't attach twice, https://github.com/apple/container/issues/1133")
 	}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]

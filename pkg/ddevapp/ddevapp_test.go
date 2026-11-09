@@ -4053,7 +4053,7 @@ func TestGetWebContainerDirectURLsErrorHandling(t *testing.T) {
 // generic webserver project with web_extra_exposed_ports serves the project
 func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	if dockerutil.IsPodmanRootlessmacOS() {
 		t.Skip("Skipping: podman rootless on macOS cannot bind privileged ports 80/443")
