@@ -479,7 +479,7 @@ services:
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave
 func TestLaunchCommand(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	assert := asrt.New(t)
 
@@ -690,7 +690,7 @@ func TestPsqlCommand(t *testing.T) {
 // run in expected relative directory.
 func TestNpmNpxYarnCommands(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists")
+		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	assert := asrt.New(t)
 

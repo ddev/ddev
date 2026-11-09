@@ -116,7 +116,7 @@ func TestDescribeHTTPFailure(t *testing.T) {
 // AssertLocalHTTPContent, and RequireLocalHTTPContent against it. Needs Docker.
 func TestGetLocalHTTPResponse(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: changing router ports recreates ddev-router, and Apple Container rejects the new container's hostname while the old one exists")
+		t.Skip("Skipping: changing router ports recreates ddev-router, and Apple Container rejects the new container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
 	}
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() || nodeps.IsWSL2MirroredMode()) {
 		t.Skip("Skipping on Windows/Colima/Lima/Rancher/WSL2-mirrored as it always seems to fail")
