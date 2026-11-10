@@ -15,6 +15,18 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
 
 ### State (2026-11-09)
 
+- **Review pass of 2026-11-09 (uncommitted):** `CheckDockerVersion` no longer returns an
+  error when socktainer reports no `socktainer` component, since that would have made
+  every `ddev start` warn; the version is just not compared. `ddev utility dockercheck`
+  prints the socktainer version. `ddev auth ssh` with `ssh_agent_upstream` already set
+  but unusable (a `*.sock` socket) now points at the warning instead of telling the user
+  to set `--ssh-agent-upstream=host` again. `perf.sh` no longer omits `ddev-ssh-agent`
+  globally, since DDEV omits it itself. The user docs no longer tell people to omit
+  `ddev-ssh-agent` per project or list the mkcert CA as a limitation; they document
+  `--ssh-agent-upstream=host`, the `*.sock` relay, `docker-buildx`, and
+  `host.docker.internal` listening on all interfaces. The PR description is stale (bind
+  global cache, `FindImagesByLabels`, the split-out PRs, the per-project omit); a draft
+  replacement is in `~/tmp/pr-8656-body.md`.
 - **A `brew upgrade` stops Apple Container.** On 2026-11-09 it upgraded Homebrew's
   `container` to 1.7.1 and booted out the running apiserver mid-test; restarting the signed
   1.6.1 install then hit vmnet 1001 until a reboot. Homebrew's `container` (now 1.7.1) is
