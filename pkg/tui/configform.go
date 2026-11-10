@@ -359,11 +359,15 @@ func (f configForm) versionFor(family string) string {
 	return version
 }
 
-// setType sets the project type, and the PHP version, database, and
-// webserver type it calls for unless the user has set them.
+// setType sets the project type, and the docroot, PHP version, database,
+// and webserver type it calls for unless the user has set them.
 func (f *configForm) setType(appType string) {
 	f.choices.Type = appType
+	if !f.changed[rowDocroot] {
+		f.choices.Docroot = f.suggested.Docroot
+	}
 	defaults := f.app.ConfigTypeDefaults(f.choices)
+	f.choices.Docroot = defaults.Docroot
 	if !f.changed[rowPHP] {
 		f.choices.PHPVersion = defaults.PHPVersion
 	}
@@ -420,7 +424,7 @@ func (f configForm) rowView(row int) string {
 	focused := f.focus == row && !f.saved
 	name := configRowLabels[row]
 	if row == rowTypeVersion {
-		name = ddevapp.ProjectTypeDisplayName(f.value(rowType)) + " version"
+		name = ddevapp.ProjectTypeVersionLabel(f.value(rowType))
 	}
 	label := fmt.Sprintf("%-*s", configLabelWidth, name)
 	value := f.value(row)
@@ -431,6 +435,8 @@ func (f configForm) rowView(row int) string {
 		value = f.styles.Muted.Render("(project root)")
 	case row == rowDBType:
 		value = ddevapp.DatabaseDisplayName(value)
+	case row == rowTypeVersion:
+		value = ddevapp.ProjectTypeOptionDisplay(f.value(rowType), value)
 	}
 	if !focused {
 		return "  " + label + value
@@ -450,8 +456,11 @@ func (f configForm) pickerView() string {
 	}
 	for i := start; i < end; i++ {
 		text := values[i]
-		if f.focus == rowDBType {
+		switch f.focus {
+		case rowDBType:
 			text = ddevapp.DatabaseDisplayName(text)
+		case rowTypeVersion:
+			text = ddevapp.ProjectTypeOptionDisplay(f.value(rowType), text)
 		}
 		note := ""
 		if values[i] == f.suggestedValue(f.focus) {

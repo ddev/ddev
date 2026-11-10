@@ -91,6 +91,38 @@ func TestConfigForm(t *testing.T) {
 		require.Equal(t, rowPHP, f.focus)
 	})
 
+	t.Run("bedrock brings its docroot", func(t *testing.T) {
+		f := newForm(t)
+		f.suggested.Docroot, f.choices.Docroot = "", ""
+		f.focus, f.picking = rowType, true
+		f.picked = indexOf(f.values(rowType), nodeps.AppTypeWordPress)
+		f, _ = send(f, "enter")
+		require.Equal(t, nodeps.AppTypeWordPress, f.choices.Type)
+		require.Contains(t, ansi.Strip(f.View().Content), "WordPress variant standard")
+		require.Empty(t, f.choices.Docroot)
+
+		f, _ = send(f, "down", "enter", "b", "enter")
+		require.Equal(t, nodeps.AppTypeWPBedrock, f.choices.Type)
+		require.Equal(t, "web", f.choices.Docroot)
+
+		// Back to standard WordPress, the docroot is the detected one again.
+		f, _ = send(f, "enter", "s", "enter")
+		require.Equal(t, nodeps.AppTypeWordPress, f.choices.Type)
+		require.Empty(t, f.choices.Docroot)
+	})
+
+	t.Run("magento 1 is shown with OpenMage", func(t *testing.T) {
+		f := newForm(t)
+		f.focus, f.picking = rowType, true
+		f.picked = indexOf(f.values(rowType), nodeps.AppTypeMagento)
+		f, _ = send(f, "enter")
+		require.Equal(t, nodeps.AppTypeMagento2, f.choices.Type)
+		f, _ = send(f, "down", "enter")
+		view := ansi.Strip(f.View().Content)
+		require.Contains(t, view, "  1 / OpenMage")
+		require.Contains(t, view, "❯ 2 (suggested)")
+	})
+
 	t.Run("terminal colors restyle the form", func(t *testing.T) {
 		f := newForm(t)
 		m, _ := f.Update(tea.BackgroundColorMsg{Color: color.Black})
