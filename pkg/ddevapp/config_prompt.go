@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -117,6 +118,62 @@ func (app *DdevApp) ApplyConfigChoices(c ConfigChoices) error {
 	}
 
 	return app.ValidateConfig()
+}
+
+// ProjectTypeFamilies returns the valid project types with the versioned
+// Drupal types, like drupal11, listed once as drupal.
+func ProjectTypeFamilies() []string {
+	var families []string
+	for _, t := range GetValidAppTypes() {
+		if family, _ := SplitProjectType(t); !slices.Contains(families, family) {
+			families = append(families, family)
+		}
+	}
+	return families
+}
+
+// SplitProjectType returns the family and version of a versioned project
+// type, like drupal and 11 for drupal11, or appType and "" for any other.
+func SplitProjectType(appType string) (family, version string) {
+	if v, ok := strings.CutPrefix(appType, nodeps.AppTypeDrupal); ok && v != "" && strings.Trim(v, "0123456789") == "" {
+		return nodeps.AppTypeDrupal, v
+	}
+	return appType, ""
+}
+
+// JoinProjectType returns the project type of family at version, as
+// SplitProjectType splits it.
+func JoinProjectType(family, version string) string {
+	return family + version
+}
+
+// ProjectTypeVersions returns the versions family comes in, oldest first, and
+// the one offered by default, or nil if it has none.
+func ProjectTypeVersions(family string) ([]string, string) {
+	if family != nodeps.AppTypeDrupal {
+		return nil, ""
+	}
+	var versions []string
+	for _, t := range GetValidAppTypes() {
+		if f, v := SplitProjectType(t); f == family && v != "" {
+			versions = append(versions, v)
+		}
+	}
+	slices.SortFunc(versions, func(a, b string) int {
+		x, _ := strconv.Atoi(a)
+		y, _ := strconv.Atoi(b)
+		return x - y
+	})
+	_, latestStable := SplitProjectType(nodeps.AppTypeDrupalLatestStable)
+	return versions, latestStable
+}
+
+// ProjectTypeDisplayName returns the name family is shown with, like Drupal.
+func ProjectTypeDisplayName(family string) string {
+	if family == nodeps.AppTypeDrupal {
+		return "Drupal"
+	}
+	return family
 }
 
 // DatabaseTypes returns the database types in the order they are offered.
@@ -309,11 +366,22 @@ func (app *DdevApp) docrootPrompt() error {
 }
 
 // AppTypePrompt asks for the project type, defaulting to the configured or
-// detected one.
+// detected one, and then for the version of a type like Drupal that comes in
+// versions. A full type like drupal10 is accepted as the answer too.
 func (app *DdevApp) AppTypePrompt() error {
 	util.Success("Found a %s codebase at %s.", app.DetectAppType(), app.GetAbsDocroot(false))
 
-	app.Type = util.PromptChoice("project type", GetValidAppTypes(), app.defaultAppType())
+	defaultType := app.defaultAppType()
+	defaultFamily, defaultVersion := SplitProjectType(defaultType)
+	answer := util.PromptChoiceFrom("project type", ProjectTypeFamilies(), GetValidAppTypes(), defaultFamily)
+	app.Type = answer
+	if versions, latest := ProjectTypeVersions(answer); versions != nil {
+		if defaultFamily != answer || defaultVersion == "" {
+			defaultVersion = latest
+		}
+		version := util.PromptChoice(ProjectTypeDisplayName(answer)+" version", versions, defaultVersion)
+		app.Type = JoinProjectType(answer, version)
+	}
 
 	return nil
 }

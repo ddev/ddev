@@ -583,6 +583,34 @@ func TestConfigCommandSuggested(t *testing.T) {
 		require.Equal(t, nodeps.WebserverApacheFPM, app.WebserverType)
 	})
 
+	t.Run("drupal version", func(t *testing.T) {
+		app := newApp()
+		// After "drupal" comes its version; an empty answer means the latest stable.
+		_ = prompt(app, "no\n\n\ndrupal\n\n")
+		require.Equal(t, nodeps.AppTypeDrupalLatestStable, app.Type)
+
+		app = newApp()
+		out := prompt(app, "no\n\n\ndrupal\n13\n7\n")
+		require.Contains(t, out, "'13' is not a valid Drupal version")
+		require.Equal(t, nodeps.AppTypeDrupal7, app.Type)
+		require.Equal(t, nodeps.PHP82, app.PHPVersion)
+	})
+
+	t.Run("project type families", func(t *testing.T) {
+		families := ddevapp.ProjectTypeFamilies()
+		require.Contains(t, families, nodeps.AppTypeDrupal)
+		require.NotContains(t, families, nodeps.AppTypeDrupal11)
+		require.Contains(t, families, nodeps.AppTypeBackdrop)
+		versions, latest := ddevapp.ProjectTypeVersions(nodeps.AppTypeDrupal)
+		require.Equal(t, []string{"6", "7", "8", "9", "10", "11", "12"}, versions)
+		require.Equal(t, "11", latest)
+		family, version := ddevapp.SplitProjectType(nodeps.AppTypeDrupal10)
+		require.Equal(t, nodeps.AppTypeDrupal10, ddevapp.JoinProjectType(family, version))
+		family, version = ddevapp.SplitProjectType(nodeps.AppTypeMagento2)
+		require.Equal(t, nodeps.AppTypeMagento2, family)
+		require.Empty(t, version)
+	})
+
 	t.Run("configured type", func(t *testing.T) {
 		app := newApp()
 		app.Type = nodeps.AppTypeDrupal11

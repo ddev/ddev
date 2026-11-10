@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"image/color"
 	"os"
 	"path/filepath"
 	"testing"
@@ -56,23 +57,46 @@ func TestConfigForm(t *testing.T) {
 	t.Run("project type sets what follows from it", func(t *testing.T) {
 		f, _ := send(newForm(t), "up", "up", "up", "up", "up", "enter")
 		require.True(t, f.picking)
-		require.Contains(t, ansi.Strip(f.View().Content), "❯ php (suggested)")
+		view := ansi.Strip(f.View().Content)
+		require.Contains(t, view, "❯ php (suggested)")
+		require.NotContains(t, view, "drupal7")
+		require.NotContains(t, view, "Drupal version")
 		// Escape closes the list without leaving the form.
 		f, quit := send(f, "home", "esc")
 		require.False(t, quit)
 		require.Equal(t, nodeps.AppTypePHP, f.choices.Type)
 
-		f.picking, f.picked = true, indexOf(f.values(rowType), nodeps.AppTypeDrupal7)
+		f.picking, f.picked = true, indexOf(f.values(rowType), nodeps.AppTypeDrupal)
 		f, _ = send(f, "enter")
+		require.Equal(t, nodeps.AppTypeDrupalLatestStable, f.choices.Type)
+		require.Contains(t, ansi.Strip(f.View().Content), "Drupal version    11")
+
+		// The Drupal version brings its own PHP version.
+		f, _ = send(f, "down", "enter", "7", "enter")
 		require.Equal(t, nodeps.AppTypeDrupal7, f.choices.Type)
 		require.Equal(t, nodeps.PHP82, f.choices.PHPVersion)
 
-		// A PHP version the user chose outlasts another project type.
+		// A PHP version the user chose outlasts another Drupal version.
 		f, _ = send(f, "down", "enter", "home", "enter")
 		require.Equal(t, nodeps.GetValidPHPVersions()[0], f.choices.PHPVersion)
-		f, _ = send(f, "up", "enter", "home", "enter")
-		require.Equal(t, ddevapp.GetValidAppTypes()[0], f.choices.Type)
+		f, _ = send(f, "up", "enter", "end", "enter")
+		require.Equal(t, nodeps.AppTypeDrupal12, f.choices.Type)
 		require.Equal(t, nodeps.GetValidPHPVersions()[0], f.choices.PHPVersion)
+
+		// Without Drupal the version row is gone again.
+		f, _ = send(f, "up", "enter", "home", "enter")
+		require.Equal(t, ddevapp.ProjectTypeFamilies()[0], f.choices.Type)
+		require.NotContains(t, ansi.Strip(f.View().Content), "Drupal version")
+		f, _ = send(f, "down")
+		require.Equal(t, rowPHP, f.focus)
+	})
+
+	t.Run("terminal colors restyle the form", func(t *testing.T) {
+		f := newForm(t)
+		m, _ := f.Update(tea.BackgroundColorMsg{Color: color.Black})
+		m, _ = m.(configForm).Update(tea.ForegroundColorMsg{Color: color.White})
+		f = m.(configForm)
+		require.Equal(t, NewStyles(color.White, color.Black), f.styles)
 	})
 
 	t.Run("database type sets its default version", func(t *testing.T) {

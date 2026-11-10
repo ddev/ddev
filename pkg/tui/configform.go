@@ -3,7 +3,9 @@ package tui
 import (
 	"errors"
 	"fmt"
+	"image/color"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 	"syscall"
@@ -44,6 +46,9 @@ const (
 	rowName = iota
 	rowDocroot
 	rowType
+	// rowTypeVersion is shown only for a project type that comes in
+	// versions, like Drupal.
+	rowTypeVersion
 	rowPHP
 	rowDBType
 	rowDBVersion
@@ -55,7 +60,7 @@ const (
 // pickerHeight is how many of a setting's values are listed at a time.
 const pickerHeight = 8
 
-var configRowLabels = [rowCount]string{"Project name", "Docroot", "Project type", "PHP version", "Database type", "Database version", "Webserver type"}
+var configRowLabels = [rowCount]string{"Project name", "Docroot", "Project type", "", "PHP version", "Database type", "Database version", "Webserver type"}
 
 type configFormKeys struct {
 	Up, Down, Edit, Choose, Save, Close, Cancel key.Binding
@@ -79,8 +84,10 @@ type configForm struct {
 	saved   bool
 	quit    bool
 	styles  Styles
-	help    help.Model
-	keys    configFormKeys
+	// fg and bg are the terminal's colors, which the styles are made for.
+	fg, bg color.Color
+	help   help.Model
+	keys   configFormKeys
 }
 
 func newConfigForm(app *ddevapp.DdevApp) configForm {
@@ -113,7 +120,14 @@ func newConfigForm(app *ddevapp.DdevApp) configForm {
 }
 
 func (f configForm) Init() tea.Cmd {
-	return nil
+	return tea.Batch(tea.RequestForegroundColor, tea.RequestBackgroundColor)
+}
+
+func (f configForm) restyle() configForm {
+	f.styles = NewStyles(f.fg, f.bg)
+	f.input.SetStyles(f.styles.filter())
+	f.help.Styles = f.styles.help()
+	return f
 }
 
 func (f configForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -122,6 +136,12 @@ func (f configForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		f.help.SetWidth(msg.Width)
 		f.input.SetWidth(max(10, msg.Width-configLabelWidth-4))
 		return f, nil
+	case tea.ForegroundColorMsg:
+		f.fg = msg.Color
+		return f.restyle(), nil
+	case tea.BackgroundColorMsg:
+		f.bg = msg.Color
+		return f.restyle(), nil
 	case tea.KeyPressMsg:
 		if msg.String() == "ctrl+c" {
 			f.quit = true
@@ -146,9 +166,9 @@ func (f configForm) updateRows(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		f.quit = true
 		return f, tea.Quit
 	case key.Matches(msg, f.keys.Up):
-		return f.moveTo((f.focus + rowCount - 1) % rowCount)
+		return f.moveTo(f.nextRow(-1))
 	case key.Matches(msg, f.keys.Down):
-		return f.moveTo((f.focus + 1) % rowCount)
+		return f.moveTo(f.nextRow(1))
 	case msg.String() == "enter":
 		switch {
 		case f.focus == rowSave:
@@ -160,7 +180,7 @@ func (f configForm) updateRows(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			f.saved = true
 			return f, tea.Quit
 		case f.isText(f.focus):
-			return f.moveTo(f.focus + 1)
+			return f.moveTo(f.nextRow(1))
 		}
 		f.picking = true
 		f.picked = max(0, indexOf(f.values(f.focus), f.value(f.focus)))
@@ -173,6 +193,25 @@ func (f configForm) updateRows(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return f, cmd
 	}
 	return f, nil
+}
+
+// rows returns the rows that are shown, in order.
+func (f configForm) rows() []int {
+	var rows []int
+	for row := range rowCount {
+		if row != rowTypeVersion || f.values(rowTypeVersion) != nil {
+			rows = append(rows, row)
+		}
+	}
+	return rows
+}
+
+// nextRow returns the shown row delta rows from the focused one, wrapping
+// around at the ends.
+func (f configForm) nextRow(delta int) int {
+	rows := f.rows()
+	i := max(0, slices.Index(rows, f.focus))
+	return rows[(i+delta+len(rows))%len(rows)]
 }
 
 // moveTo gives row the focus, and the text input if it is typed into.
@@ -234,7 +273,11 @@ func (f configForm) value(row int) string {
 	case rowDocroot:
 		return f.choices.Docroot
 	case rowType:
-		return f.choices.Type
+		family, _ := ddevapp.SplitProjectType(f.choices.Type)
+		return family
+	case rowTypeVersion:
+		_, version := ddevapp.SplitProjectType(f.choices.Type)
+		return version
 	case rowPHP:
 		return f.choices.PHPVersion
 	case rowDBType:
@@ -251,7 +294,10 @@ func (f configForm) value(row int) string {
 func (f configForm) values(row int) []string {
 	switch row {
 	case rowType:
-		return ddevapp.GetValidAppTypes()
+		return ddevapp.ProjectTypeFamilies()
+	case rowTypeVersion:
+		versions, _ := ddevapp.ProjectTypeVersions(f.value(rowType))
+		return versions
 	case rowPHP:
 		return nodeps.GetValidPHPVersions()
 	case rowDBType:
@@ -281,17 +327,9 @@ func (f *configForm) setValue(row int, value string) {
 	case rowDocroot:
 		f.choices.Docroot = strings.Trim(value, `"'`)
 	case rowType:
-		f.choices.Type = value
-		defaults := f.app.ConfigTypeDefaults(f.choices)
-		if !f.changed[rowPHP] {
-			f.choices.PHPVersion = defaults.PHPVersion
-		}
-		if !f.changed[rowDBType] && !f.changed[rowDBVersion] {
-			f.choices.Database = defaults.Database
-		}
-		if !f.changed[rowWebserver] {
-			f.choices.WebserverType = defaults.WebserverType
-		}
+		f.setType(ddevapp.JoinProjectType(value, f.versionFor(value)))
+	case rowTypeVersion:
+		f.setType(ddevapp.JoinProjectType(f.value(rowType), value))
 	case rowPHP:
 		f.choices.PHPVersion = value
 	case rowDBType:
@@ -303,6 +341,37 @@ func (f *configForm) setValue(row int, value string) {
 		f.choices.Database.Version = value
 	case rowWebserver:
 		f.choices.WebserverType = value
+	}
+}
+
+// versionFor returns the version family gets when it is chosen: the one
+// already chosen, else the suggested one, else the default.
+func (f configForm) versionFor(family string) string {
+	versions, version := ddevapp.ProjectTypeVersions(family)
+	if versions == nil {
+		return ""
+	}
+	for _, t := range []string{f.choices.Type, f.suggested.Type} {
+		if fam, v := ddevapp.SplitProjectType(t); fam == family && v != "" {
+			return v
+		}
+	}
+	return version
+}
+
+// setType sets the project type, and the PHP version, database, and
+// webserver type it calls for unless the user has set them.
+func (f *configForm) setType(appType string) {
+	f.choices.Type = appType
+	defaults := f.app.ConfigTypeDefaults(f.choices)
+	if !f.changed[rowPHP] {
+		f.choices.PHPVersion = defaults.PHPVersion
+	}
+	if !f.changed[rowDBType] && !f.changed[rowDBVersion] {
+		f.choices.Database = defaults.Database
+	}
+	if !f.changed[rowWebserver] {
+		f.choices.WebserverType = defaults.WebserverType
 	}
 }
 
@@ -322,7 +391,10 @@ func (f configForm) View() tea.View {
 		title = "Configuration:"
 	}
 	b.WriteString(f.styles.Title.Render(title) + "\n\n")
-	for row := range rowSave {
+	for _, row := range f.rows() {
+		if row == rowSave {
+			break
+		}
 		b.WriteString(f.rowView(row) + "\n")
 		if f.picking && f.focus == row {
 			b.WriteString(f.pickerView())
@@ -346,7 +418,11 @@ func (f configForm) View() tea.View {
 
 func (f configForm) rowView(row int) string {
 	focused := f.focus == row && !f.saved
-	label := fmt.Sprintf("%-*s", configLabelWidth, configRowLabels[row])
+	name := configRowLabels[row]
+	if row == rowTypeVersion {
+		name = ddevapp.ProjectTypeDisplayName(f.value(rowType)) + " version"
+	}
+	label := fmt.Sprintf("%-*s", configLabelWidth, name)
 	value := f.value(row)
 	switch {
 	case focused && f.isText(row):
@@ -357,7 +433,7 @@ func (f configForm) rowView(row int) string {
 		value = ddevapp.DatabaseDisplayName(value)
 	}
 	if !focused {
-		return "  " + f.styles.Label.Render(label) + value
+		return "  " + label + value
 	}
 	return f.styles.Selected.Render("❯ "+label) + value
 }
@@ -396,8 +472,14 @@ func (f configForm) pickerView() string {
 // suggestedValue is the value DDEV would choose for row, given the settings
 // above it: the detected project type, or what the chosen one calls for.
 func (f configForm) suggestedValue(row int) string {
-	if row == rowType {
-		return f.suggested.Type
+	switch row {
+	case rowType:
+		family, _ := ddevapp.SplitProjectType(f.suggested.Type)
+		return family
+	case rowTypeVersion:
+		suggested := f
+		suggested.choices.Type = f.suggested.Type
+		return suggested.versionFor(f.value(rowType))
 	}
 	defaults := f.app.ConfigTypeDefaults(f.choices)
 	if row == rowDBVersion && f.choices.Database.Type != defaults.Database.Type {
