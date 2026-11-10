@@ -167,10 +167,9 @@ jobs:
           path: .gotmp/bin/darwin_amd64/DDEV.app.zip
 
       - name: Go tests
-        working-directory: desktop
         env:
           DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/darwin_arm64/ddev
-        run: go test -v ./...
+        run: make -C desktop test
 
       # Drives the dashboard in the app's own window; see desktop/selftest.js.
       - name: Self-test in the app window
@@ -241,10 +240,9 @@ jobs:
           path: .gotmp/bin/windows_arm64/ddev-desktop.exe
 
       - name: Go tests
-        working-directory: desktop
         env:
           DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_${{ matrix.arch }}/ddev
-        run: go test -v ./...
+        run: make -C desktop test
 
       - name: Self-test in the app window
         env:

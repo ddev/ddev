@@ -36,9 +36,9 @@ preflight, which the handler never answers. The other modes use the token
 checks of `ddev serve`.
 
 Actions run as `ddev` subcommands, as they do in `ddev serve`. The app runs
-the `ddev` next to its own executable, which the macOS app bundle includes.
-Without one, it uses `$DDEV_BINARY`, or the first `ddev` on the `PATH` of
-your login shell.
+`$DDEV_BINARY` when it is set. Otherwise it runs the `ddev` next to its own
+executable, which the macOS app bundle includes, or else the first `ddev` on
+the `PATH` of your login shell.
 
 This is a separate Go module, so that Wails stays out of the `ddev` binary
 and `vendor/`. Wails needs CGO on macOS and Linux, but not on Windows, so the
@@ -149,8 +149,9 @@ Set `DDEV_BINARY` to choose the `ddev` the app runs, and
 
 ## Tests
 
-- `go test ./...` in `desktop/` covers how the app finds `ddev` and picks a
-  mode. With `DDEV_BINARY` set, it also drives the code path of `wsl` mode
+- `make -C desktop test` runs the Go tests with CGO on, which Wails needs
+  on macOS and Linux. They cover how the app finds `ddev` and picks a mode.
+  With `DDEV_BINARY` set, they also drive the code path of `wsl` mode
   against a local `ddev serve`.
 - `DDEV_DESKTOP_SELFTEST=true` runs `selftest.js` inside the app's own
   window, then exits with its result. The script waits for the status stream,
@@ -183,9 +184,9 @@ up a DDEV release or the PR download comment.
 
 ## Known limits
 
-- **Windows:** nobody has run the app on Windows by hand. The tray and
-  notifications in `wsl` mode are untested, and `wsl` mode sends no
-  notifications.
+- **Windows:** nobody has used the tray menu or seen a notification there.
+  The app has no icon resource, so a notification has no icon. `wsl` mode
+  sends no notifications.
 - **Releases:** the app is not part of any release or package.
 - **Versions:** the Linux and Windows downloads hold the app alone. Put it
   next to a `ddev` of the same version, such as the one from

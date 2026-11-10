@@ -28,6 +28,21 @@ func TestFindDdev(t *testing.T) {
 	require.ErrorContains(t, err, "ddev was not found on PATH")
 }
 
+func TestUseLoginShellPath(t *testing.T) {
+	// Startup files often print, such as "Agent pid 1234" from ssh-agent.
+	shell := filepath.Join(t.TempDir(), "noisy-shell")
+	body := "#!/bin/sh\necho 'Agent pid 1234'\nexport PATH=/opt/login/bin:/usr/bin:/bin\nshift\nexec /bin/sh \"$@\"\n"
+	require.NoError(t, os.WriteFile(shell, []byte(body), 0o755))
+	t.Setenv("SHELL", shell)
+	t.Setenv("PATH", "/usr/bin:/bin")
+	useLoginShellPath()
+	require.Equal(t, "/opt/login/bin:/usr/bin:/bin", os.Getenv("PATH"))
+
+	t.Setenv("SHELL", filepath.Join(t.TempDir(), "missing"))
+	useLoginShellPath()
+	require.Equal(t, "/opt/login/bin:/usr/bin:/bin", os.Getenv("PATH"))
+}
+
 func TestVersionMismatches(t *testing.T) {
 	dir := t.TempDir()
 	script := func(name, body string) string {

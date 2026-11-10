@@ -43,6 +43,7 @@ func main() {
 	if os.Geteuid() == 0 {
 		log.Fatal("DDEV is not designed to run as root")
 	}
+	shareHiddenConsole()
 	useLoginShellPath()
 	ddevBinary, findErr := findDdev()
 	if findErr != nil {
@@ -212,8 +213,11 @@ func main() {
 			return
 		}
 		// Notifications need an app bundle on macOS and a session bus on
-		// Linux; without them the app runs without notifications.
-		if err := notifier.ServiceStartup(context.Background(), application.ServiceOptions{}); err != nil {
+		// Linux; without them the app runs without notifications. Windows
+		// registers a COM class, which needs the main thread.
+		if err := application.InvokeSyncWithError(func() error {
+			return notifier.ServiceStartup(context.Background(), application.ServiceOptions{})
+		}); err != nil {
 			log.Printf("Notifications are off: %v", err)
 			return
 		}
