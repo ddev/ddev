@@ -498,14 +498,19 @@ golangci-lint:
 desktop-lint:
 	@echo "desktop-lint: "
 	$(call require_tool,golangci-lint,$(GOLANGCI_LINT_HINT))
-	@cd desktop && GOOS=windows PATH="$(DEV_TOOLS_PATH):$$PATH" golangci-lint run --modules-download-mode=mod ./...
+	@cd desktop && GOOS=windows PATH="$(DEV_TOOLS_PATH):$$PATH" golangci-lint run --modules-download-mode=mod $(DESKTOP_LINT_ARGS) ./...
 
 # `run --fix` applies the gofmt formatter too, so there is no gofmt target.
-# DDEV_GO_FILES overrides the default $(SRC_AND_UNDER) scope
+# DDEV_GO_FILES overrides the default $(SRC_AND_UNDER) scope; a path in
+# desktop/ is fixed in that module instead.
 .PHONY: golangci-lint-fix
 golangci-lint-fix:
 	@echo "golangci-lint --fix: "
+ifneq ($(filter desktop% $(CURDIR)/desktop%,$(DDEV_GO_FILES)),)
+	@$(MAKE) --no-print-directory desktop-lint DESKTOP_LINT_ARGS=--fix
+else
 	$(call run_tool,golangci-lint,run --fix $(if $(DDEV_GO_FILES),$(DDEV_GO_FILES),$(SRC_AND_UNDER)),$(GOLANGCI_LINT_HINT))
+endif
 
 go-mod-update:
 	@echo "bump golang dependencies: "

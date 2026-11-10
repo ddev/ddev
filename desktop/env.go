@@ -26,11 +26,17 @@ func useLoginShellPath() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	out, err := exec.CommandContext(ctx, shell, "-l", "-c", `printf '%s' "$PATH"`).Output()
-	if err != nil || len(out) == 0 {
+	// The markers set PATH apart from what the shell's startup files print.
+	const mark = "__DDEV_PATH__"
+	out, err := exec.CommandContext(ctx, shell, "-l", "-c", `printf '`+mark+`%s`+mark+`' "$PATH"`).Output()
+	if err != nil {
 		return
 	}
-	_ = os.Setenv("PATH", string(out))
+	parts := strings.Split(string(out), mark)
+	if len(parts) != 3 || parts[1] == "" {
+		return
+	}
+	_ = os.Setenv("PATH", parts[1])
 }
 
 // findDdev returns the ddev binary that actions run: $DDEV_BINARY, a ddev
