@@ -29,7 +29,7 @@ DDEV_MACOS_CERT_NAME ?= Developer ID Application: DDEV Foundation (9HQ298V2BW)
 DDEV_MACOS_APPLE_ID ?= notarizer@ddev.com
 DDEV_MACOS_TEAM_ID ?= 9HQ298V2BW
 
-.PHONY: all binary app zip sign notarize
+.PHONY: all binary test app zip sign notarize
 
 ifeq ($(GOOS),darwin)
 all: app zip
@@ -39,6 +39,10 @@ endif
 
 binary:
 	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO) go build -trimpath -ldflags "$(LDFLAGS)" -o $(OUT)/ddev-desktop$(EXE) .
+
+# Set DDEV_BINARY to a ddev with `ddev serve` to cover wsl mode as well.
+test:
+	CGO_ENABLED=$(CGO) go test -v -count=1 ./...
 
 # A bundle gives macOS an identity for notifications and the Dock. The ddev
 # next to the app's executable is the one it runs. It is signed ad hoc here;
