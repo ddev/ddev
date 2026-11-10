@@ -1,7 +1,6 @@
 package amplitude
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -10,9 +9,9 @@ import (
 	"time"
 
 	"github.com/amplitude/analytics-go/amplitude"
+	"github.com/ddev/ddev/pkg/amplitude/storages"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/third_party/ampli"
-	"github.com/gofrs/flock"
 )
 
 // CommandSummaryEventType is the event that reports one command's runs in one week.
@@ -42,10 +41,10 @@ func (e commandSummaryEvent) ToAmplitudeEvent() amplitude.Event {
 }
 
 // countCommand adds one run of commandPath to this week's counts in file.
-// In a new week it returns the earlier week's counts for the caller to send,
+// In a later week it returns the earlier week's counts for the caller to send,
 // or, if canSend() is false, keeps them and skips this run.
 func countCommand(file string, week string, commandPath string, canSend func() bool) *commandCounts {
-	unlock, ok := lockFile(file + ".lock")
+	unlock, ok := storages.LockFile(file + ".lock")
 	if !ok {
 		return nil
 	}
@@ -57,8 +56,12 @@ func countCommand(file string, week string, commandPath string, canSend func() b
 	}
 
 	var previous *commandCounts
-	if state.Week != week || state.Counts == nil {
-		if state.Week != "" && len(state.Counts) > 0 {
+	// An earlier week, from a clock set back or another time zone, counts
+	// into the stored one.
+	if _, err := time.Parse(time.DateOnly, state.Week); err != nil || state.Counts == nil {
+		state = commandCounts{Week: week, Counts: map[string]int{}}
+	} else if week > state.Week {
+		if len(state.Counts) > 0 {
 			if !canSend() {
 				return nil
 			}
@@ -69,11 +72,9 @@ func countCommand(file string, week string, commandPath string, canSend func() b
 
 	state.Counts[commandPath]++
 
-	if content, err := json.Marshal(state); err == nil {
-		tmpFile := file + ".tmp"
-		if os.WriteFile(tmpFile, content, 0644) == nil {
-			_ = os.Rename(tmpFile, file)
-		}
+	content, err := json.Marshal(state)
+	if err != nil || storages.WriteFileAtomic(file, content) != nil {
+		return nil
 	}
 
 	return previous
@@ -126,24 +127,6 @@ func sendCommandSummaries(counts commandCounts) {
 func weekStart(t time.Time) string {
 	daysSinceMonday := (int(t.Weekday()) + 6) % 7
 	return time.Date(t.Year(), t.Month(), t.Day()-daysSinceMonday, 0, 0, 0, 0, t.Location()).Format(time.DateOnly)
-}
-
-// lockFile holds an exclusive lock on path. It gives up after a second,
-// because losing one count is better than delaying a command.
-func lockFile(path string) (unlock func(), ok bool) {
-	fl := flock.New(path)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	if locked, err := fl.TryLockContext(ctx, 20*time.Millisecond); err != nil || !locked {
-		_ = fl.Close()
-		return nil, false
-	}
-
-	return func() {
-		_ = fl.Unlock()
-		_ = fl.Close()
-	}, true
 }
 
 // getCommandsFileName returns the path of the command counts file.

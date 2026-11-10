@@ -145,5 +145,6 @@ func (t *DelayedTransmissionEventStorageSuite) TestTwoProcesses() {
 	require.Equal([]*types.StorageEvent{event1, event2}, other.Pull(2, time.Time{}))
 	require.Equal([]*types.StorageEvent{event3}, longRunning.Pull(3, time.Time{}))
 	require.Empty(other.Pull(3, time.Time{}))
-	require.NoFileExists(file + ".tmp")
+	tmpFiles, _ := filepath.Glob(file + ".*.tmp")
+	require.Empty(tmpFiles)
 }

@@ -10,6 +10,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/ddev/ddev/pkg/amplitude/storages"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/ddev/ddev/third_party/ampli"
@@ -34,25 +35,25 @@ type reportedState struct {
 }
 
 // AlreadyReportedToday returns true if an event with the same key and the
-// same properties was already queued today. Otherwise it records the event
-// and returns false, so the caller should send it.
+// same properties was already queued today, or if DDEV is offline. Otherwise
+// it records the event and returns false, so the caller should send it.
 func AlreadyReportedToday(key string, event ampli.Event) bool {
-	return alreadyReported(getReportedFileName(), time.Now().Format(time.DateOnly), key, event, false)
+	return alreadyReported(getReportedFileName(), time.Now().Format(time.DateOnly), key, event, false, globalconfig.IsInternetActive)
 }
 
 // AlreadyReportedUnchanged returns true if the last event queued with the
 // same key had the same properties and was queued less than
-// unchangedResendDays ago. Otherwise it records the event and returns false,
-// so the caller should send it.
+// unchangedResendDays ago, or if DDEV is offline. Otherwise it records the
+// event and returns false, so the caller should send it.
 func AlreadyReportedUnchanged(key string, event ampli.Event) bool {
-	return alreadyReported(getReportedFileName(), time.Now().Format(time.DateOnly), key, event, true)
+	return alreadyReported(getReportedFileName(), time.Now().Format(time.DateOnly), key, event, true, globalconfig.IsInternetActive)
 }
 
-func alreadyReported(file string, today string, key string, event ampli.Event, onlyOnChange bool) bool {
+func alreadyReported(file string, today string, key string, event ampli.Event, onlyOnChange bool, canSend func() bool) bool {
 	hash := hashEvent(event)
 
 	// Without the lock, sending the event risks only a duplicate.
-	unlock, ok := lockFile(file + ".lock")
+	unlock, ok := storages.LockFile(file + ".lock")
 	if !ok {
 		return false
 	}
@@ -79,20 +80,25 @@ func alreadyReported(file string, today string, key string, event ampli.Event, o
 		if state.Latest[key] == hash && daysBetween(state.LatestDate[key], today) < unchangedResendDays {
 			return true
 		}
+	} else if slices.Contains(state.Hashes[key], hash) {
+		return true
+	}
+
+	// Offline, main() exits without waiting for the queue, so the event would
+	// be lost but recorded as sent.
+	if !canSend() {
+		return true
+	}
+
+	if onlyOnChange {
 		state.Latest[key] = hash
 		state.LatestDate[key] = today
 	} else {
-		if slices.Contains(state.Hashes[key], hash) {
-			return true
-		}
 		state.Hashes[key] = append(state.Hashes[key], hash)
 	}
 
 	if content, err := json.Marshal(state); err == nil {
-		tmpFile := file + ".tmp"
-		if os.WriteFile(tmpFile, content, 0644) == nil {
-			_ = os.Rename(tmpFile, file)
-		}
+		_ = storages.WriteFileAtomic(file, content)
 	}
 
 	return false

@@ -1,14 +1,13 @@
 package storages
 
 import (
-	"context"
+	"bytes"
 	"encoding/gob"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/amplitude/analytics-go/amplitude/types"
-	"github.com/gofrs/flock"
 )
 
 // NewDelayedTransmissionEventStorage initializes a new EventStorage of type delayedTransmissionEventStorage.
@@ -62,7 +61,7 @@ func (s *delayedTransmissionEventStorage) push(prepend bool, events ...*types.St
 	defer s.mu.Unlock()
 
 	// Without the lock, pushing anyway risks only the old race.
-	if unlock, ok := s.lockFile(); ok {
+	if unlock, ok := LockFile(s.fileName + ".lock"); ok {
 		defer unlock()
 	}
 
@@ -91,7 +90,7 @@ func (s *delayedTransmissionEventStorage) Pull(count int, before time.Time) []*t
 	defer s.mu.Unlock()
 
 	// Without the lock, a later Pull tries again.
-	unlock, ok := s.lockFile()
+	unlock, ok := LockFile(s.fileName + ".lock")
 	if !ok {
 		return make([]*types.StorageEvent, 0)
 	}
@@ -145,7 +144,7 @@ func (s *delayedTransmissionEventStorage) Count(before time.Time) int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if unlock, ok := s.lockFile(); ok {
+	if unlock, ok := LockFile(s.fileName + ".lock"); ok {
 		defer unlock()
 	}
 
@@ -171,25 +170,6 @@ func (s *delayedTransmissionEventStorage) addNonRetriedEvent(event *types.Storag
 	} else {
 		s.cache.Events = append(s.cache.Events, event)
 	}
-}
-
-// lockFile holds an exclusive lock that keeps other ddev processes from
-// changing the cache file between reading and writing it. It gives up after
-// a second, because a command shouldn't wait on instrumentation.
-func (s *delayedTransmissionEventStorage) lockFile() (unlock func(), ok bool) {
-	fl := flock.New(s.fileName + ".lock")
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	if locked, err := fl.TryLockContext(ctx, 20*time.Millisecond); err != nil || !locked {
-		_ = fl.Close()
-		return nil, false
-	}
-
-	return func() {
-		_ = fl.Unlock()
-		_ = fl.Close()
-	}, true
 }
 
 // readCache reads the events from the cache file. It reads the file every
@@ -226,24 +206,13 @@ func (s *delayedTransmissionEventStorage) readCache() error {
 	return nil
 }
 
-// writeCache replaces the cache file by renaming, so an exit mid-write can't
-// truncate it.
+// writeCache writes the events to the cache file.
 func (s *delayedTransmissionEventStorage) writeCache() error {
-	tmpFile := s.fileName + ".tmp"
-	file, err := os.Create(tmpFile)
-	if err != nil {
+	var content bytes.Buffer
+	if err := gob.NewEncoder(&content).Encode(&s.cache); err != nil {
 		return err
 	}
-
-	err = gob.NewEncoder(file).Encode(&s.cache)
-	if closeErr := file.Close(); err == nil {
-		err = closeErr
-	}
-	if err == nil {
-		err = os.Rename(tmpFile, s.fileName)
-	}
-	if err != nil {
-		_ = os.Remove(tmpFile)
+	if err := WriteFileAtomic(s.fileName, content.Bytes()); err != nil {
 		return err
 	}
 

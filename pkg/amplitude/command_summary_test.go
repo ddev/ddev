@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,6 +36,31 @@ func TestCountCommand(t *testing.T) {
 	require.NotNil(t, previous)
 	require.Equal(t, week2, previous.Week)
 	require.Equal(t, map[string]int{"ddev start": 2}, previous.Counts)
+}
+
+func TestCountCommandEarlierWeek(t *testing.T) {
+	file := filepath.Join(t.TempDir(), commandsFile)
+
+	require.Nil(t, countCommand(file, "2026-11-09", "ddev exec", online))
+	require.Nil(t, countCommand(file, "2026-11-02", "ddev exec", online))
+	previous := countCommand(file, "2026-11-16", "ddev exec", online)
+	require.NotNil(t, previous)
+	require.Equal(t, commandCounts{Week: "2026-11-09", Counts: map[string]int{"ddev exec": 2}}, *previous)
+}
+
+func TestCountCommandWriteFails(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("A read-only directory doesn't block writes on Windows")
+	}
+	file := filepath.Join(t.TempDir(), commandsFile)
+	require.Nil(t, countCommand(file, "2026-11-02", "ddev exec", online))
+	require.NoError(t, os.Chmod(filepath.Dir(file), 0500))
+	t.Cleanup(func() { _ = os.Chmod(filepath.Dir(file), 0700) })
+
+	// The earlier week stays in the file, so it is returned only once written.
+	require.Nil(t, countCommand(file, "2026-11-09", "ddev exec", online))
+	require.NoError(t, os.Chmod(filepath.Dir(file), 0700))
+	require.NotNil(t, countCommand(file, "2026-11-09", "ddev exec", online))
 }
 
 func TestCountCommandCorruptFile(t *testing.T) {

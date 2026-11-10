@@ -140,7 +140,10 @@ func Clean() {
 	for _, file := range []string{getCacheFileName(), getReportedFileName(), getCommandsFileName()} {
 		_ = os.Remove(file)
 		_ = os.Remove(file + ".lock")
-		_ = os.Remove(file + ".tmp")
+		tmpFiles, _ := filepath.Glob(file + ".*.tmp")
+		for _, tmpFile := range tmpFiles {
+			_ = os.Remove(tmpFile)
+		}
 	}
 }
 
