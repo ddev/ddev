@@ -474,7 +474,7 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create an example input buffer that writes the sitename, a valid document root,
 		// an invalid app type, and finally a valid app type (from test matrix)
-		input := fmt.Sprintf("%s\ndocroot\n%s\n%s", name, invalidAppType, testValues[apptypePos])
+		input := fmt.Sprintf("no\n%s\ndocroot\n%s\n%s", name, invalidAppType, testValues[apptypePos])
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
@@ -489,7 +489,7 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create an example input buffer that writes an invalid projectname, then a valid-project-name,
 		// a valid document root, a valid app type
-		input = fmt.Sprintf("invalid_project_name\n%s\ndocroot\n%s", name, testValues[apptypePos])
+		input = fmt.Sprintf("no\ninvalid_project_name\n%s\ndocroot\n%s", name, testValues[apptypePos])
 		scanner = bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
@@ -510,6 +510,85 @@ func TestConfigCommand(t *testing.T) {
 		err = ddevapp.PrepDdevDirectory(app)
 		assert.NoError(err)
 	}
+}
+
+// TestConfigCommandSuggested checks the configuration PromptForConfig offers,
+// and that the PHP version, database, and webserver can be chosen instead.
+func TestConfigCommandSuggested(t *testing.T) {
+	origDir, _ := os.Getwd()
+	testDir := testcommon.CreateTmpDir(t.Name())
+	require.NoError(t, os.MkdirAll(filepath.Join(testDir, "web", "core"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(testDir, "web", "index.php"), nil, 0644))
+	defaultName := ddevapp.NormalizeProjectName(filepath.Base(testDir))
+
+	newApp := func() *ddevapp.DdevApp {
+		app, err := ddevapp.NewApp(testDir, true)
+		require.NoError(t, err)
+		return app
+	}
+	t.Cleanup(func() {
+		_ = newApp().Stop(true, false)
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(testDir)
+	})
+	prompt := func(app *ddevapp.DdevApp, input string) string {
+		util.SetInputScanner(bufio.NewScanner(strings.NewReader(input)))
+		restoreOutput := util.CaptureUserOut()
+		err := app.PromptForConfig()
+		out := restoreOutput()
+		require.NoError(t, err, "output=%s", out)
+		return out
+	}
+
+	t.Run("accepted", func(t *testing.T) {
+		app := newApp()
+		out := prompt(app, "\n")
+		require.Contains(t, out, "DDEV suggests this configuration:")
+		require.Contains(t, out, "Docroot:   web")
+		require.Equal(t, defaultName, app.Name)
+		require.Equal(t, "web", app.Docroot)
+		require.Equal(t, nodeps.AppTypePHP, app.Type)
+		require.Equal(t, nodeps.PHPDefault, app.PHPVersion)
+		require.Equal(t, ddevapp.DatabaseDefault, app.Database)
+	})
+
+	t.Run("defaults", func(t *testing.T) {
+		app := newApp()
+		_ = prompt(app, "no\n")
+		require.Equal(t, defaultName, app.Name)
+		require.Equal(t, "web", app.Docroot)
+		require.Equal(t, nodeps.AppTypePHP, app.Type)
+		require.Equal(t, nodeps.PHPDefault, app.PHPVersion)
+		require.Equal(t, ddevapp.DatabaseDefault, app.Database)
+		require.Equal(t, nodeps.WebserverDefault, app.WebserverType)
+	})
+
+	t.Run("customized", func(t *testing.T) {
+		app := newApp()
+		// Each invalid answer is asked again; the empty one takes MySQL's default version.
+		input := strings.Join([]string{
+			"no", "customized", "", "drupal7",
+			"9.9", nodeps.PHP83,
+			"oracle", nodeps.MySQL, "11.8", "",
+			nodeps.WebserverApacheFPM,
+		}, "\n")
+		out := prompt(app, input)
+		require.Contains(t, out, "'9.9' is not a valid PHP version")
+		require.Contains(t, out, "'oracle' is not a valid database type")
+		require.Contains(t, out, "'11.8' is not a valid MySQL version")
+		require.Equal(t, "customized", app.Name)
+		require.Equal(t, nodeps.AppTypeDrupal7, app.Type)
+		require.Equal(t, nodeps.PHP83, app.PHPVersion)
+		require.Equal(t, ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL84}, app.Database)
+		require.Equal(t, nodeps.WebserverApacheFPM, app.WebserverType)
+	})
+
+	t.Run("kept database version", func(t *testing.T) {
+		app := newApp()
+		app.Database = ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.Postgres17}
+		_ = prompt(app, "no\n")
+		require.Equal(t, ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.Postgres17}, app.Database)
+	})
 }
 
 // TestConfigCommandProjectNormalization tests behavior when normalizing project names.
@@ -587,7 +666,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Create an example input buffer that writes the site name, accepts the
 		// default document root and provides a valid app type.
-		input := fmt.Sprintf("%s\n\ndrupal8", name)
+		input := fmt.Sprintf("no\n%s\n\ndrupal8", name)
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
@@ -646,7 +725,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Create an example input buffer that writes the site name, accepts the
 	// default document root and provides a valid app type.
-	input := fmt.Sprintf("%s\n\ndrupal8", name)
+	input := fmt.Sprintf("no\n%s\n\ndrupal8", name)
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 

@@ -401,6 +401,8 @@ ddev composer create-project drupal/recommended-project .
 
 Create or modify a DDEV project’s configuration in the current directory. By default, `ddev config` will not change configuration that already exists in your `.ddev/config.yaml`, it will only make changes you specify with flags. However, if you want to autodetect everything, `ddev config --update` will usually do everything you need.
 
+Without flags, `ddev config` is interactive. It shows the configuration it detects for the project (name, URL, project type, docroot, PHP version, database, and web server) and asks whether to use it. Press <kbd>Enter</kbd> to accept it, or answer `no` to choose each setting in turn: project name, docroot, project type, PHP version, database type and version, and web server type. Each question lists the valid values and shows its default in parentheses, so <kbd>Enter</kbd> keeps the default. The defaults for PHP version, database, and web server are the ones recommended for the project type you chose.
+
 !!!tip "You can also set these via YAML!"
     These settings, plus a few more, can be set by editing stored [Config Options](../configuration/config.md).
 
@@ -410,8 +412,8 @@ Example:
 # Start interactive project configuration
 ddev config
 
-# Accept defaults on a new project. This is the same as hitting <RETURN>
-# on every question in `ddev config`
+# Accept defaults on a new project. This is the same as accepting
+# the suggested configuration in `ddev config`
 ddev config --auto
 
 # Detect docroot, project type (except for `generic` type),
