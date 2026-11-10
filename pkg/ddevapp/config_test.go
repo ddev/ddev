@@ -449,6 +449,11 @@ func TestConfigCommand(t *testing.T) {
 
 	for testName, testValues := range testMatrix {
 		testDir := testcommon.CreateTmpDir(t.Name() + "_" + testName)
+		// "magento" is followed by a Magento version question.
+		typeAnswer := testValues[apptypePos]
+		if typeAnswer == nodeps.AppTypeMagento {
+			typeAnswer += "\n1"
+		}
 
 		// Create a docroot folder.
 		err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
@@ -474,7 +479,7 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create an example input buffer that writes the sitename, a valid document root,
 		// an invalid app type, and finally a valid app type (from test matrix)
-		input := fmt.Sprintf("no\n%s\ndocroot\n%s\n%s", name, invalidAppType, testValues[apptypePos])
+		input := fmt.Sprintf("no\n%s\ndocroot\n%s\n%s", name, invalidAppType, typeAnswer)
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
@@ -489,7 +494,7 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create an example input buffer that writes an invalid projectname, then a valid-project-name,
 		// a valid document root, a valid app type
-		input = fmt.Sprintf("no\ninvalid_project_name\n%s\ndocroot\n%s", name, testValues[apptypePos])
+		input = fmt.Sprintf("no\ninvalid_project_name\n%s\ndocroot\n%s", name, typeAnswer)
 		scanner = bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
@@ -596,19 +601,58 @@ func TestConfigCommandSuggested(t *testing.T) {
 		require.Equal(t, nodeps.PHP82, app.PHPVersion)
 	})
 
+	t.Run("magento and wordpress", func(t *testing.T) {
+		app := newApp()
+		// An empty answer after "magento" means Magento 2.
+		_ = prompt(app, "no\n\n\nmagento\n\n")
+		require.Equal(t, nodeps.AppTypeMagento2, app.Type)
+
+		app = newApp()
+		_ = prompt(app, "no\n\n\nmagento\n1\n")
+		require.Equal(t, nodeps.AppTypeMagento, app.Type)
+
+		app = newApp()
+		_ = prompt(app, "no\n\n\nwordpress\nbedrock\n")
+		require.Equal(t, nodeps.AppTypeWPBedrock, app.Type)
+
+		// A full type is accepted without the second question.
+		app = newApp()
+		_ = prompt(app, "no\n\n\nwp-bedrock\n")
+		require.Equal(t, nodeps.AppTypeWPBedrock, app.Type)
+	})
+
 	t.Run("project type families", func(t *testing.T) {
 		families := ddevapp.ProjectTypeFamilies()
-		require.Contains(t, families, nodeps.AppTypeDrupal)
-		require.NotContains(t, families, nodeps.AppTypeDrupal11)
-		require.Contains(t, families, nodeps.AppTypeBackdrop)
-		versions, latest := ddevapp.ProjectTypeVersions(nodeps.AppTypeDrupal)
+		for _, family := range []string{nodeps.AppTypeDrupal, nodeps.AppTypeMagento, nodeps.AppTypeWordPress, nodeps.AppTypeMaho, nodeps.AppTypeBackdrop} {
+			require.Contains(t, families, family)
+		}
+		for _, member := range []string{nodeps.AppTypeDrupal11, nodeps.AppTypeMagento2, nodeps.AppTypeWPBedrock} {
+			require.NotContains(t, families, member)
+		}
+
+		versions, fallback := ddevapp.ProjectTypeVersions(nodeps.AppTypeDrupal)
 		require.Equal(t, []string{"6", "7", "8", "9", "10", "11", "12"}, versions)
-		require.Equal(t, "11", latest)
-		family, version := ddevapp.SplitProjectType(nodeps.AppTypeDrupal10)
-		require.Equal(t, nodeps.AppTypeDrupal10, ddevapp.JoinProjectType(family, version))
-		family, version = ddevapp.SplitProjectType(nodeps.AppTypeMagento2)
-		require.Equal(t, nodeps.AppTypeMagento2, family)
-		require.Empty(t, version)
+		require.Equal(t, "11", fallback)
+		versions, fallback = ddevapp.ProjectTypeVersions(nodeps.AppTypeMagento)
+		require.Equal(t, []string{"1", "2"}, versions)
+		require.Equal(t, "2", fallback)
+		versions, _ = ddevapp.ProjectTypeVersions(nodeps.AppTypeMaho)
+		require.Nil(t, versions)
+
+		for appType, want := range map[string][2]string{
+			nodeps.AppTypeDrupal10:  {nodeps.AppTypeDrupal, "10"},
+			nodeps.AppTypeMagento:   {nodeps.AppTypeMagento, "1"},
+			nodeps.AppTypeMagento2:  {nodeps.AppTypeMagento, "2"},
+			nodeps.AppTypeWordPress: {nodeps.AppTypeWordPress, "standard"},
+			nodeps.AppTypeWPBedrock: {nodeps.AppTypeWordPress, "bedrock"},
+			nodeps.AppTypeMaho:      {nodeps.AppTypeMaho, ""},
+		} {
+			family, option := ddevapp.SplitProjectType(appType)
+			require.Equal(t, want, [2]string{family, option}, appType)
+			require.Equal(t, appType, ddevapp.JoinProjectType(family, option))
+		}
+		require.Equal(t, "1 / OpenMage", ddevapp.ProjectTypeOptionDisplay(nodeps.AppTypeMagento, "1"))
+		require.Equal(t, "WordPress variant", ddevapp.ProjectTypeVersionLabel(nodeps.AppTypeWordPress))
 	})
 
 	t.Run("configured type", func(t *testing.T) {
