@@ -33,7 +33,7 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
   Three won't pass on a release with #509 alone:
     - `TestGetWebContainerDirectURLsWithGenericWebserver` needs router ports 80/443; it now
       skips for privileged ports.
-    - `TestPopulateGlobalCustomCommandFiles` fails its mtime check intermittently (2 of 4
+    - `TestPopulateGlobalCustomCommandFiles` fails its mtime check intermittently (2 of 3
       runs). Cause: `docker cp` into a running container drops the archive's mtime and
       ownership. Every file gets the time of the copy and `0:0` (tested with a tar of six
       files dated 12:00:01–06 owned 33:33). The test passes only when the copy lands in
@@ -44,7 +44,10 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
       DDEV impact is small: `CopyIntoContainer` extracts with `tar` in the container.
       A never-started container loses both too; a stopped one keeps them. Filed
       2026-11-09 as [socktainer#514](https://github.com/socktainer/socktainer/issues/514),
-      repro `handoff/cpmetarepro/repro.sh`.
+      repro `handoff/cpmetarepro/repro.sh`. Fix for the running case in PR
+      [socktainer#515](https://github.com/socktainer/socktainer/pull/515) (branch
+      `fix/archive-owner-mtime`, worktree `~/workspace/socktainer-worktrees/archive-owner-mtime`);
+      the test passed 4 of 4 runs on it. The never-started case is still open.
     - `TestCmdDescribe`: `ddev describe` omits `web:5492`, a Compose `expose:` port. Cause:
       inspect builds `Config.ExposedPorts` from `configuration.publishedPorts` only
       (`ContainerInspectRoute`). The request's `ExposedPorts` and the image's `EXPOSE` are
@@ -657,8 +660,9 @@ then point `DOCKER_HOST` at the proxy.
 - Apple `container` **1.6.1** from the signed installer at `/usr/local`
   (`container-apiserver` running). Homebrew's `container` is also 1.6.1.
 - socktainer running by hand from
-  `~/workspace/socktainer-worktrees/network-connect-aliases/.build/release/socktainer`:
-  branch `fix/network-connect-aliases`, upstream `main` of 2026-11-09 plus the #505 fix.
+  `~/workspace/socktainer-worktrees/archive-owner-mtime/.build/release/socktainer`: branch
+  `fix/archive-owner-mtime` (PR #515), upstream `main` of 2026-11-09 plus the #514 fix.
+  The #513 build is in `~/workspace/socktainer-worktrees/network-connect-aliases`.
   `~/workspace/socktainer/.build/release/socktainer` is stock `main` of the same day.
   Log: `~/tmp/socktainer.log`. Start `container system start --disable-kernel-install`;
   without the flag it waits on a prompt.
