@@ -583,6 +583,24 @@ func TestConfigCommandSuggested(t *testing.T) {
 		require.Equal(t, nodeps.WebserverApacheFPM, app.WebserverType)
 	})
 
+	t.Run("configured type", func(t *testing.T) {
+		app := newApp()
+		app.Type = nodeps.AppTypeDrupal11
+		require.Equal(t, nodeps.AppTypeDrupal11, app.SuggestedConfigChoices().Type)
+	})
+
+	t.Run("applied choices", func(t *testing.T) {
+		app := newApp()
+		choices := app.ConfigTypeDefaults(ddevapp.ConfigChoices{Name: "applied", Docroot: "web", Type: nodeps.AppTypeDrupal7})
+		require.Equal(t, nodeps.PHP82, choices.PHPVersion)
+		choices.Database = ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.Postgres17}
+		require.NoError(t, app.ApplyConfigChoices(choices))
+		require.Equal(t, choices, ddevapp.ConfigChoices{Name: app.Name, Docroot: app.Docroot, Type: app.Type, PHPVersion: app.PHPVersion, Database: app.Database, WebserverType: app.WebserverType})
+
+		choices.Name = "not_valid"
+		require.ErrorContains(t, newApp().ApplyConfigChoices(choices), "not a valid project name")
+	})
+
 	t.Run("kept database version", func(t *testing.T) {
 		app := newApp()
 		app.Database = ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.Postgres17}

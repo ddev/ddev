@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,33 +14,172 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
+// ConfigChoices are the settings interactive `ddev config` asks for.
+type ConfigChoices struct {
+	Name          string
+	Docroot       string
+	Type          string
+	PHPVersion    string
+	Database      DatabaseDesc
+	WebserverType string
+}
+
+// SuggestedConfigChoices returns the name, docroot, and project type DDEV
+// detects, and the settings that project type calls for, as `ddev config --auto` would use.
+func (app *DdevApp) SuggestedConfigChoices() ConfigChoices {
+	c := ConfigChoices{Name: app.defaultProjectName(), Docroot: DiscoverDefaultDocroot(app)}
+	// Some apptype detectors look in the docroot.
+	withDocroot := *app
+	withDocroot.Docroot = c.Docroot
+	c.Type = withDocroot.defaultAppType()
+	return app.ConfigTypeDefaults(c)
+}
+
+// ConfigTypeDefaults returns c with the PHP version, database, and webserver
+// type that project type c.Type calls for in a new project, and with app's
+// own where the project type has no preference or app is already configured.
+// It reports nothing, unlike ConfigFileOverrideAction, but the project type
+// may still prepare the codebase as it does there.
+func (app *DdevApp) ConfigTypeDefaults(c ConfigChoices) ConfigChoices {
+	c.PHPVersion, c.Database, c.WebserverType = app.PHPVersion, app.Database, app.WebserverType
+	preview := app.withChoices(c)
+	if appFuncs, ok := appTypeMatrix[c.Type]; ok && appFuncs.configOverrideAction != nil && !app.ConfigExists() {
+		_ = appFuncs.configOverrideAction(preview)
+	}
+	c.PHPVersion, c.Database, c.WebserverType = preview.PHPVersion, preview.Database, preview.WebserverType
+	return c
+}
+
+// withChoices returns a copy of app that has the settings in c.
+func (app *DdevApp) withChoices(c ConfigChoices) *DdevApp {
+	preview := *app
+	preview.Name, preview.Docroot, preview.Type = c.Name, c.Docroot, c.Type
+	preview.PHPVersion, preview.Database, preview.WebserverType = c.PHPVersion, c.Database, c.WebserverType
+	return &preview
+}
+
+// ConfigChoicesSummary describes app's configuration with the settings in c.
+func (app *DdevApp) ConfigChoicesSummary(c ConfigChoices) string {
+	return app.withChoices(c).AutoConfigSummary()
+}
+
+// ValidateConfigChoices returns what is wrong with the settings in c, if anything.
+func (app *DdevApp) ValidateConfigChoices(c ConfigChoices) error {
+	if err := ValidateProjectName(c.Name); err != nil {
+		return fmt.Errorf("'%s' is not a valid project name; use letters, digits, hyphens, and dots", c.Name)
+	}
+	if problem := app.withChoices(c).AutoConfigProblem(); problem != "" {
+		return errors.New(problem)
+	}
+	if err := ValidateDocroot(c.Docroot); err != nil {
+		return err
+	}
+	if !IsValidAppType(c.Type) {
+		return fmt.Errorf("'%s' is not a valid project type", c.Type)
+	}
+	if !nodeps.IsValidPHPVersion(c.PHPVersion) {
+		return fmt.Errorf("'%s' is not a valid PHP version", c.PHPVersion)
+	}
+	if !nodeps.IsValidDatabaseVersion(c.Database.Type, c.Database.Version) {
+		return fmt.Errorf("'%s:%s' is not a valid database", c.Database.Type, c.Database.Version)
+	}
+	if !nodeps.IsValidWebserverType(c.WebserverType) {
+		return fmt.Errorf("'%s' is not a valid webserver type", c.WebserverType)
+	}
+	return nil
+}
+
+// ApplyConfigChoices configures app with the settings in c, creating the
+// docroot if needed. A database is set only if it isn't the one the project
+// type calls for, which ConfigFileOverrideAction sets unless a database exists.
+func (app *DdevApp) ApplyConfigChoices(c ConfigChoices) error {
+	if err := app.ValidateConfigChoices(c); err != nil {
+		return err
+	}
+	typeDatabase := app.ConfigTypeDefaults(c).Database
+
+	app.Name = c.Name
+	if err := app.CheckExistingAppInApproot(); err != nil {
+		return err
+	}
+	app.Docroot = c.Docroot
+	if err := app.CreateDocroot(); err != nil {
+		return err
+	}
+	app.Type = c.Type
+	if err := app.ConfigFileOverrideAction(false); err != nil {
+		return err
+	}
+	app.PHPVersion, app.WebserverType = c.PHPVersion, c.WebserverType
+	if c.Database != typeDatabase && c.Database != app.Database {
+		app.Database = c.Database
+		app.warnIfDatabaseMismatch()
+	}
+
+	return app.ValidateConfig()
+}
+
+// DatabaseTypes returns the database types in the order they are offered.
+func DatabaseTypes() []string {
+	return []string{nodeps.MariaDB, nodeps.MySQL, nodeps.Postgres}
+}
+
+// DatabaseVersions returns the valid versions of dbType and the one offered
+// by default.
+func DatabaseVersions(dbType string) ([]string, string) {
+	switch dbType {
+	case nodeps.MySQL:
+		return nodeps.GetValidMySQLVersions(), nodeps.MySQL84
+	case nodeps.Postgres:
+		return nodeps.GetValidPostgresVersions(), nodeps.PostgresDefaultVersion
+	}
+	return nodeps.GetValidMariaDBVersions(), nodeps.MariaDBDefaultVersion
+}
+
+// DatabaseDisplayName returns the name dbType is shown with, like PostgreSQL.
+func DatabaseDisplayName(dbType string) string {
+	switch dbType {
+	case nodeps.MariaDB:
+		return "MariaDB"
+	case nodeps.MySQL:
+		return "MySQL"
+	case nodeps.Postgres:
+		return "PostgreSQL"
+	}
+	return dbType
+}
+
+// warnIfDatabaseMismatch warns if a database volume left by an earlier
+// configuration holds another database than the one configured.
+func (app *DdevApp) warnIfDatabaseMismatch() {
+	if !app.ConfigExists() {
+		return
+	}
+	existing, err := app.GetExistingDBType()
+	if err == nil && existing != "" && existing != app.Database.Type+":"+app.Database.Version {
+		util.Warning("This %s", app.DatabaseMismatchMessage(existing))
+	}
+}
+
 // PromptForConfig shows the configuration DDEV detects for the project and
 // asks whether to use it. If the answer is no, or the detected configuration
 // can't be used, it asks about each setting as PromptForCustomConfig does.
 func (app *DdevApp) PromptForConfig() error {
 	app.WarnIfConfigReplace()
 
-	// The questions start from the app as it was, not from the suggestion.
-	orig := *app
-	if err := app.applySuggestedConfig(); err != nil {
-		return err
-	}
+	suggested := app.SuggestedConfigChoices()
 	heading := "DDEV suggests this configuration:"
 	if app.ConfigExists() {
 		heading = "DDEV suggests keeping this configuration:"
 	}
-	output.UserOut.Printf("%s\n\n%s\n\n", heading, app.AutoConfigSummary())
+	output.UserOut.Printf("%s\n\n%s\n\n", heading, app.ConfigChoicesSummary(suggested))
 
-	if problem := app.AutoConfigProblem(); problem != "" {
-		util.Warning("%s", problem)
+	if err := app.ValidateConfigChoices(suggested); err != nil {
+		util.Warning("%v", err)
 	} else if confirmSuggestedConfig() {
-		if err := app.CreateDocroot(); err != nil {
-			return err
-		}
-		return app.ValidateConfig()
+		return app.ApplyConfigChoices(suggested)
 	}
 
-	*app = orig
 	return app.promptForSettings()
 }
 
@@ -70,15 +210,6 @@ func (app *DdevApp) promptForSettings() error {
 	app.webserverTypePrompt()
 
 	return app.ValidateConfig()
-}
-
-// applySuggestedConfig sets the name, docroot, and project type DDEV detects,
-// and the settings that project type calls for, as `ddev config --auto` does.
-func (app *DdevApp) applySuggestedConfig() error {
-	app.Name = app.defaultProjectName()
-	app.Docroot = DiscoverDefaultDocroot(app)
-	app.Type = app.defaultAppType()
-	return app.ConfigFileOverrideAction(false)
 }
 
 // confirmSuggestedConfig asks whether to use the configuration just shown.
@@ -202,42 +333,23 @@ func (app *DdevApp) databasePrompt() {
 	if slices.Contains(app.GetOmittedContainers(), "db") {
 		return
 	}
-	versions := map[string][]string{
-		nodeps.MariaDB:  nodeps.GetValidMariaDBVersions(),
-		nodeps.MySQL:    nodeps.GetValidMySQLVersions(),
-		nodeps.Postgres: nodeps.GetValidPostgresVersions(),
-	}
-	defaultVersions := map[string]string{
-		nodeps.MariaDB:  nodeps.MariaDBDefaultVersion,
-		nodeps.MySQL:    nodeps.MySQL84,
-		nodeps.Postgres: nodeps.PostgresDefaultVersion,
-	}
-	names := []string{nodeps.MariaDB, nodeps.MySQL, nodeps.Postgres}
-	displayNames := map[string]string{nodeps.MariaDB: "MariaDB", nodeps.MySQL: "MySQL", nodeps.Postgres: "PostgreSQL"}
-
 	orig := app.Database
 	defaultType := orig.Type
-	if !slices.Contains(names, defaultType) {
+	if !slices.Contains(DatabaseTypes(), defaultType) {
 		defaultType = nodeps.MariaDB
 	}
-	dbType := util.PromptChoice("database type", names, defaultType)
+	dbType := util.PromptChoice("database type", DatabaseTypes(), defaultType)
 
-	defaultVersion := defaultVersions[dbType]
+	versions, defaultVersion := DatabaseVersions(dbType)
 	if dbType == orig.Type && nodeps.IsValidDatabaseVersion(dbType, orig.Version) {
 		defaultVersion = orig.Version
 	}
 	app.Database = DatabaseDesc{
 		Type:    dbType,
-		Version: util.PromptChoice(displayNames[dbType]+" version", versions[dbType], defaultVersion),
+		Version: util.PromptChoice(DatabaseDisplayName(dbType)+" version", versions, defaultVersion),
 	}
-
-	// A database volume can only be left over from an earlier configuration.
-	if app.Database == orig || !app.ConfigExists() {
-		return
-	}
-	existing, err := app.GetExistingDBType()
-	if err == nil && existing != "" && existing != app.Database.Type+":"+app.Database.Version {
-		util.Warning("This %s", app.DatabaseMismatchMessage(existing))
+	if app.Database != orig {
+		app.warnIfDatabaseMismatch()
 	}
 }
 

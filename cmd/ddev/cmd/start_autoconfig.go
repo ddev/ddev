@@ -63,7 +63,7 @@ func configureProjectHere(skipConfirmation bool) {
 func chooseCustomConfig(onlyCustom bool) bool {
 	const (
 		useShown  = "Yes, configure as shown and start"
-		customize = "Customize (answer the 'ddev config' questions), then start"
+		customize = "Customize the settings, then start"
 		cancel    = "Cancel"
 	)
 	items := []string{useShown, customize, cancel}
