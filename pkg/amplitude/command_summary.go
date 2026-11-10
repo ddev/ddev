@@ -42,9 +42,9 @@ func (e commandSummaryEvent) ToAmplitudeEvent() amplitude.Event {
 }
 
 // countCommand adds one run of commandPath to this week's counts in file.
-// When the file holds counts from an earlier week, it starts a new week and
-// returns those counts, so the caller can send them.
-func countCommand(file string, week string, commandPath string) *commandCounts {
+// In a new week it returns the earlier week's counts for the caller to send,
+// or, if canSend() is false, keeps them and skips this run.
+func countCommand(file string, week string, commandPath string, canSend func() bool) *commandCounts {
 	unlock, ok := lockFile(file + ".lock")
 	if !ok {
 		return nil
@@ -59,6 +59,9 @@ func countCommand(file string, week string, commandPath string) *commandCounts {
 	var previous *commandCounts
 	if state.Week != week || state.Counts == nil {
 		if state.Week != "" && len(state.Counts) > 0 {
+			if !canSend() {
+				return nil
+			}
 			previous = &commandCounts{Week: state.Week, Counts: state.Counts}
 		}
 		state = commandCounts{Week: week, Counts: map[string]int{}}

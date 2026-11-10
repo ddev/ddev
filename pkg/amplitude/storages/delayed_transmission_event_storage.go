@@ -226,21 +226,28 @@ func (s *delayedTransmissionEventStorage) readCache() error {
 	return nil
 }
 
-// writeCache writes the events to the cache file.
+// writeCache replaces the cache file by renaming, so an exit mid-write can't
+// truncate it.
 func (s *delayedTransmissionEventStorage) writeCache() error {
-	file, err := os.Create(s.fileName)
+	tmpFile := s.fileName + ".tmp"
+	file, err := os.Create(tmpFile)
 	if err != nil {
 		return err
 	}
 
-	defer file.Close()
-
-	encoder := gob.NewEncoder(file)
-	err = encoder.Encode(&s.cache)
-
+	err = gob.NewEncoder(file).Encode(&s.cache)
+	if closeErr := file.Close(); err == nil {
+		err = closeErr
+	}
 	if err == nil {
-		s.logger.Debugf("Wrote %d events to the cache.", len(s.cache.Events))
+		err = os.Rename(tmpFile, s.fileName)
+	}
+	if err != nil {
+		_ = os.Remove(tmpFile)
+		return err
 	}
 
-	return err
+	s.logger.Debugf("Wrote %d events to the cache.", len(s.cache.Events))
+
+	return nil
 }

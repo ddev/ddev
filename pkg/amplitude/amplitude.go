@@ -75,9 +75,12 @@ func TrackCommand(cmd *cobra.Command) {
 		return
 	}
 
-	previous := countCommand(getCommandsFileName(), weekStart(time.Now()), cmd.CommandPath())
+	// Events reach the queue in a goroutine that main() doesn't wait for
+	// offline or after os.Exit. So roll over only online, and wait here.
+	previous := countCommand(getCommandsFileName(), weekStart(time.Now()), cmd.CommandPath(), globalconfig.IsInternetActive)
 	if previous != nil {
 		sendCommandSummaries(*previous)
+		Flush()
 	}
 }
 
@@ -132,11 +135,12 @@ func FlushForce() {
 }
 
 // Clean removes the cache file, the record of reported events, the command
-// counts, and their lock files.
+// counts, and their lock and temporary files.
 func Clean() {
 	for _, file := range []string{getCacheFileName(), getReportedFileName(), getCommandsFileName()} {
 		_ = os.Remove(file)
 		_ = os.Remove(file + ".lock")
+		_ = os.Remove(file + ".tmp")
 	}
 }
 

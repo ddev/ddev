@@ -9,23 +9,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func online() bool  { return true }
+func offline() bool { return false }
+
 func TestCountCommand(t *testing.T) {
 	file := filepath.Join(t.TempDir(), commandsFile)
 	week1 := "2026-11-02"
 	week2 := "2026-11-09"
 
-	require.Nil(t, countCommand(file, week1, "ddev exec"))
-	require.Nil(t, countCommand(file, week1, "ddev exec"))
-	require.Nil(t, countCommand(file, week1, "ddev utility instrumentation flush"))
+	require.Nil(t, countCommand(file, week1, "ddev exec", online))
+	require.Nil(t, countCommand(file, week1, "ddev exec", offline))
+	require.Nil(t, countCommand(file, week1, "ddev utility instrumentation flush", online))
 
-	previous := countCommand(file, week2, "ddev start")
+	// Offline, the earlier week waits and this run isn't counted.
+	require.Nil(t, countCommand(file, week2, "ddev start", offline))
+
+	previous := countCommand(file, week2, "ddev start", online)
 	require.NotNil(t, previous)
 	require.Equal(t, week1, previous.Week)
 	require.Equal(t, map[string]int{"ddev exec": 2, "ddev utility instrumentation flush": 1}, previous.Counts)
 
-	require.Nil(t, countCommand(file, week2, "ddev start"))
+	require.Nil(t, countCommand(file, week2, "ddev start", online))
 
-	previous = countCommand(file, "2026-11-30", "ddev exec")
+	previous = countCommand(file, "2026-11-30", "ddev exec", online)
 	require.NotNil(t, previous)
 	require.Equal(t, week2, previous.Week)
 	require.Equal(t, map[string]int{"ddev start": 2}, previous.Counts)
@@ -35,8 +41,8 @@ func TestCountCommandCorruptFile(t *testing.T) {
 	file := filepath.Join(t.TempDir(), commandsFile)
 	require.NoError(t, os.WriteFile(file, []byte("not json"), 0644))
 
-	require.Nil(t, countCommand(file, "2026-11-02", "ddev exec"))
-	previous := countCommand(file, "2026-11-09", "ddev exec")
+	require.Nil(t, countCommand(file, "2026-11-02", "ddev exec", online))
+	previous := countCommand(file, "2026-11-09", "ddev exec", online)
 	require.NotNil(t, previous)
 	require.Equal(t, map[string]int{"ddev exec": 1}, previous.Counts)
 }
