@@ -62,8 +62,13 @@ func Prompt(prompt string, defaultValue string) string {
 // until it gets one, and returns it. An empty answer means defaultValue.
 // If the input ends without a valid answer it returns defaultValue as is.
 func PromptChoice(what string, choices []string, defaultValue string) string {
+	return PromptChoiceFrom(what, choices, choices, defaultValue)
+}
+
+// PromptChoiceFrom is PromptChoice that lists shown but accepts any of choices.
+func PromptChoiceFrom(what string, shown []string, choices []string, defaultValue string) string {
 	for {
-		fmt.Printf("%s%s [%s] (%s): ", strings.ToUpper(what[:1]), what[1:], strings.Join(choices, ", "), defaultValue)
+		fmt.Printf("%s%s [%s] (%s): ", strings.ToUpper(what[:1]), what[1:], strings.Join(shown, ", "), defaultValue)
 		answer, ok := GetInputOK(defaultValue)
 		for _, choice := range choices {
 			if strings.EqualFold(choice, answer) {
