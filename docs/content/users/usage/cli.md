@@ -58,7 +58,7 @@ The dashboard automatically detects your terminal's color capabilities and adapt
 * **Set `TERM` appropriately**: If your terminal supports color but DDEV doesn't detect it, make sure your `TERM` environment variable is set correctly (e.g., `xterm-256color`). Some SSH clients or multiplexers like `tmux` or `screen` may need explicit configuration.
 * **Disable the dashboard entirely**: If the interactive dashboard doesn't work well in your environment (e.g., a very limited terminal or CI), use `DDEV_NO_TUI=true` or set [`no_tui: true`](../configuration/config.md#no_tui) in `$HOME/.ddev/global_config.yaml` to fall back to the classic help output.
 
-* [`ddev config`](../usage/commands.md#config) configures a project’s type and docroot, either interactively or with flags.
+* [`ddev config`](../usage/commands.md#config) configures a project’s type, docroot, PHP version, database, and other settings, either interactively or with flags.
 * [`ddev start`](../usage/commands.md#start) starts up a project.
 * [`ddev launch`](../usage/commands.md#launch) opens a web browser showing the project.
 * [`ddev list`](../usage/commands.md#list) shows current projects and their state.
