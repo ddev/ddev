@@ -60,13 +60,11 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 		return nil
 	}
 
-	// A matrix without SocktainerVersion is only asking about the Docker API version
+	// A matrix without SocktainerVersion asks only about the Docker API version,
+	// and a socktainer that reports no release version isn't compared.
 	if dockerVersionMatrix.SocktainerVersion != "" && IsSocktainer() {
 		socktainerVersion, err := GetSocktainerVersion()
-		if err != nil {
-			return err
-		}
-		if socktainerReleaseVersion.MatchString(socktainerVersion) && !versions.GreaterThanOrEqualTo(socktainerVersion, dockerVersionMatrix.SocktainerVersion) {
+		if err == nil && socktainerReleaseVersion.MatchString(socktainerVersion) && !versions.GreaterThanOrEqualTo(socktainerVersion, dockerVersionMatrix.SocktainerVersion) {
 			return fmt.Errorf("installed socktainer version %s is not supported, please update to version %s or newer", socktainerVersion, dockerVersionMatrix.SocktainerVersion)
 		}
 	}

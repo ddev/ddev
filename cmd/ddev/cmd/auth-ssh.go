@@ -47,8 +47,14 @@ var AuthSSHCommand = &cobra.Command{
 
 		if dockerutil.IsAppleContainer() {
 			sock := ddevapp.AppleContainerSSHAgentSocket()
-			if sock == "" || sshKeyFiles != nil || sshKeyDirs != nil {
-				util.Failed("On Apple Container, web can't reach DDEV's own SSH agent, so keys can't be added to it.\nUse the host's agent instead: 'ddev config global --ssh-agent-upstream=host', then 'ddev restart'.")
+			upstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
+			switch {
+			case sshKeyFiles != nil || sshKeyDirs != nil:
+				util.Failed("On Apple Container, web can't reach DDEV's own SSH agent, so keys can't be added to it.\nWeb uses the host's agent instead: 'ddev config global --ssh-agent-upstream=host', then 'ddev restart'.")
+			case upstream == "":
+				util.Failed("On Apple Container, web can't reach DDEV's own SSH agent.\nUse the host's agent instead: 'ddev config global --ssh-agent-upstream=host', then 'ddev restart'.")
+			case sock == "":
+				util.Failed("Web can't use the SSH agent named by ssh_agent_upstream=%s; see the warning above.", upstream)
 			}
 			util.Success("Web containers use the SSH agent at %s directly; 'ssh-add -l' on the host lists its keys.", sock)
 			return
