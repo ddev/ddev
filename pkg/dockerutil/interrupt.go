@@ -101,10 +101,11 @@ func cleanUpInFlight(ctx context.Context) {
 		return
 	}
 	// Leave time to remove by label a container whose create hasn't returned.
+	// Docker Desktop on macOS can take more than a second to force-remove one.
 	waitCtx := ctx
 	if deadline, ok := ctx.Deadline(); ok {
 		var cancel context.CancelFunc
-		waitCtx, cancel = context.WithDeadline(ctx, deadline.Add(-time.Second))
+		waitCtx, cancel = context.WithDeadline(ctx, deadline.Add(-2*time.Second))
 		defer cancel()
 	}
 	var wg sync.WaitGroup

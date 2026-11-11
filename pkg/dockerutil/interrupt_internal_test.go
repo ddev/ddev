@@ -46,7 +46,8 @@ func TestCleanUpInFlightCreateNeverReturns(t *testing.T) {
 
 	_, err := createTestContainer(name, map[string]string{temporaryLabel: label})
 	require.NoError(t, err)
-	done := startCleanUpInFlight(t, 3*time.Second)
+	// The Unix interrupt budget, so this checks that it is long enough.
+	done := startCleanUpInFlight(t, 5*time.Second)
 	waitForCleanUp(t, done)
 	requireContainerExists(t, name, false)
 }
