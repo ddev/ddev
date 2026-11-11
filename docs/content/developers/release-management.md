@@ -125,7 +125,7 @@ Don't create or publish a release by hand in the GitHub UI: a release published 
 These are set once per repository, on `ddev/ddev` and on `ddev-test/ddev`:
 
 * Settings → General → Releases: **Enable release immutability**.
-* A tag ruleset for `refs/tags/v*` with **Restrict creations**, **Restrict updates**, and **Restrict deletions**, whose only bypass actor is the identity behind `DDEV_GITHUB_TOKEN`. The release workflow creates tags with that token, so publishing a release whose tag doesn't exist yet fails for everyone else.
+* A tag ruleset for `refs/tags/v*` with **Restrict creations**, **Restrict updates**, and **Restrict deletions**. The release workflow creates the tag with `DDEV_GITHUB_TOKEN`, so the identity behind that token has to be able to bypass the ruleset. Rulesets can't name a single user as a bypass actor, so today that identity bypasses it as a repository admin, and so does every other admin. The ruleset stops non-admins from publishing a release whose tag doesn't exist yet; admins have to follow the rule above themselves. Moving `DDEV_GITHUB_TOKEN` to a GitHub App, or to a bot account in a bypass team, would let the ruleset stop admins too.
 
 ## Automatic Image Build and Push
 

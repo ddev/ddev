@@ -243,6 +243,8 @@ release:
   # appends its changelog, attaches every asset, then publishes the draft,
   # which makes the release immutable.
   use_existing_draft: true
+  # A rerun after a partial upload replaces the assets already on the draft.
+  replace_existing_artifacts: true
   mode: append
   github:
     owner: "{{ .Env.REPOSITORY_OWNER }}"
