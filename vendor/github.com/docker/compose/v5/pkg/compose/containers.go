@@ -27,6 +27,7 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 
+	"github.com/docker/compose/v5/internal/naming"
 	"github.com/docker/compose/v5/pkg/api"
 )
 
@@ -61,7 +62,7 @@ func (s *composeService) getContainers(ctx context.Context, projectName string, 
 // (see createPreStartContainer), so they are invisible to getContainers'
 // default filters and must be listed by project+hook label alone.
 func (s *composeService) getHookContainers(ctx context.Context, projectName string) (Containers, error) {
-	f := projectFilter(projectName)
+	f := naming.ProjectFilter(projectName)
 	f.Add("label", hookFilter(preStartHookType))
 	res, err := s.apiClient().ContainerList(ctx, client.ContainerListOptions{
 		All:     true,
@@ -88,9 +89,9 @@ func (s *composeService) getContainersByService(ctx context.Context, projectName
 }
 
 func getDefaultFilters(projectName string, oneOff oneOff, selectedServices ...string) client.Filters {
-	f := projectFilter(projectName)
+	f := naming.ProjectFilter(projectName)
 	if len(selectedServices) == 1 {
-		f.Add("label", serviceFilter(selectedServices[0]))
+		f.Add("label", naming.ServiceFilter(selectedServices[0]))
 	}
 	f.Add("label", api.ConfigHashLabel)
 	switch oneOff {
@@ -194,10 +195,6 @@ func isNotHookContainer(c container.Summary) bool {
 	return c.Labels[api.HookLabel] == ""
 }
 
-func isNotRunning(c container.Summary) bool {
-	return c.State != container.StateRunning
-}
-
 // filter return Containers with elements to match predicate
 func (containers Containers) filter(predicates ...containerPredicate) Containers {
 	var filtered Containers
@@ -209,25 +206,10 @@ func (containers Containers) filter(predicates ...containerPredicate) Containers
 	return filtered
 }
 
-// forEachContainerConcurrent runs fn for every container concurrently and
-// waits for all goroutines. Use forEachWithLimiter (compose.go)
-// instead when the concurrency budget must be shared across several
-// concurrently-dispatched calls, e.g. one per service visited by
-// InDependencyOrder.
-func forEachContainerConcurrent(ctx context.Context, maxConcurrency int, containers Containers, fn func(context.Context, container.Summary) error) error {
-	eg, ctx := newLimitedErrgroup(ctx, maxConcurrency)
-	for _, ctr := range containers {
-		eg.Go(func() error {
-			return fn(ctx, ctr)
-		})
-	}
-	return eg.Wait()
-}
-
 // sorted sorts containers in place by canonical name and returns the (same) slice.
 func (containers Containers) sorted() Containers {
 	sort.Slice(containers, func(i, j int) bool {
-		return getCanonicalContainerName(containers[i]) < getCanonicalContainerName(containers[j])
+		return naming.CanonicalContainerName(containers[i]) < naming.CanonicalContainerName(containers[j])
 	})
 	return containers
 }

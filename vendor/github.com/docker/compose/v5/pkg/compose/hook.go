@@ -28,6 +28,7 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 
+	"github.com/docker/compose/v5/internal/naming"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/utils"
 )
@@ -52,7 +53,7 @@ func (s *composeService) runHook(ctx context.Context, ctr container.Summary, ser
 	wErr = tailErr
 
 	if listener != nil {
-		source := getContainerNameWithoutProject(ctr) + " ->"
+		source := naming.ContainerNameWithoutProject(ctr) + " ->"
 		// stdout and stderr share one listener writer: ContainerEvent has no stream
 		// field, so both appear identically in the live display.
 		lw := utils.GetWriter(func(line string) {
@@ -122,7 +123,7 @@ func (s *composeService) runHook(ctx context.Context, ctr container.Summary, ser
 		// Close the connection to unblock the blocked Read in the copy goroutine,
 		// then wait for it to exit before returning so there is no goroutine leak.
 		attach.Close()
-		<-copyDone
+		<-copyDone //nolint:errcheck // the copy error is irrelevant: the context error is returned
 		return ctx.Err()
 	}
 

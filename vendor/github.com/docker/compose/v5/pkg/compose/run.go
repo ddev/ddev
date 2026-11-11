@@ -126,9 +126,21 @@ func (s *composeService) prepareRun(ctx context.Context, project *types.Project,
 		return prepareRunResult{}, err
 	}
 
+	// the whole preparation (dependencies, image pull, container creation)
+	// shares one "run" operation, so the progress display renders it as a
+	// single block instead of falling back to a plain line per event for the
+	// steps that would run once a narrower bracket has closed.
+	var result prepareRunResult
 	err = Run(ctx, func(ctx context.Context) error {
-		return s.startDependencies(ctx, project, options)
+		var err error
+		result, err = s.doPrepareRun(ctx, project, options)
+		return err
 	}, "run", s.events)
+	return result, err
+}
+
+func (s *composeService) doPrepareRun(ctx context.Context, project *types.Project, options api.RunOptions) (prepareRunResult, error) {
+	err := s.startDependencies(ctx, project, options)
 	if err != nil {
 		return prepareRunResult{}, err
 	}
@@ -170,7 +182,7 @@ func (s *composeService) prepareRun(ctx context.Context, project *types.Project,
 	}
 
 	if !options.NoDeps {
-		if err := s.waitDependencies(ctx, project, service.Name, service.DependsOn, observedState, 0); err != nil {
+		if err := s.waitDependencies(ctx, project, service.Name, service.DependsOn, observedState); err != nil {
 			return prepareRunResult{}, err
 		}
 	}
@@ -189,6 +201,11 @@ func (s *composeService) prepareRun(ctx context.Context, project *types.Project,
 	if err != nil {
 		return prepareRunResult{}, err
 	}
+
+	// the run target is created here, not by create(), which only handles its
+	// dependencies; warn from the local copy, whose scale is forced to one: the
+	// project entry may be scaled to zero, which `run` does not honor
+	warnServiceFileReferences(project, service)
 
 	created, err := s.createContainer(ctx, project, service, service.ContainerName, -1, createOpts)
 	if err != nil {
@@ -288,6 +305,13 @@ func (s *composeService) startDependencies(ctx context.Context, project *types.P
 		IgnoreOrphans: options.IgnoreOrphans,
 		RemoveOrphans: options.RemoveOrphans,
 		QuietPull:     options.QuietPull,
+		// empty means the default "diverged" policy; `run --no-recreate`
+		// passes "never" so an existing dependency is reused as-is
+		Recreate:             options.Recreate,
+		RecreateDependencies: options.RecreateDependencies,
+		// a recreated dependency keeps its anonymous volumes, as with `up`:
+		// run has no --renew-anon-volumes to opt out
+		Inherit: true,
 	})
 	if err != nil {
 		return err
@@ -296,7 +320,7 @@ func (s *composeService) startDependencies(ctx context.Context, project *types.P
 	if len(project.Services) > 0 {
 		return s.start(ctx, project.Name, api.StartOptions{
 			Project: project,
-		}, nil)
+		})
 	}
 	return nil
 }

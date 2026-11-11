@@ -19,7 +19,7 @@ import (
 
 // An exec that reads the terminal runs in a child ddev process. docker/cli's
 // RunExec returns without stopping its stdin reader (beginInputStream in
-// https://github.com/docker/cli/blob/v29.9.2/cli/command/container/hijack.go#L167-L173),
+// https://github.com/docker/cli/blob/v29.9.3/cli/command/container/hijack.go#L167-L173),
 // which then drops the next line typed at the terminal. ddev can't stop it
 // in-process: docker/cli takes a terminal only as an *os.File, and Go can't
 // interrupt a blocking read on one. The read ends when the child exits.

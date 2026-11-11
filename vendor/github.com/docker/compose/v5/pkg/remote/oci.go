@@ -33,10 +33,12 @@ import (
 	"github.com/containerd/containerd/v2/core/remotes"
 	"github.com/distribution/reference"
 	"github.com/docker/cli/cli/command"
+	"github.com/opencontainers/go-digest"
 	spec "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"github.com/docker/compose/v5/internal/desktop"
 	"github.com/docker/compose/v5/internal/oci"
+	"github.com/docker/compose/v5/internal/registry"
 	"github.com/docker/compose/v5/pkg/api"
 )
 
@@ -101,6 +103,9 @@ type ociRemoteLoader struct {
 	// detection happens once per loader rather than per Load() call.
 	transportOnce sync.Once
 	transport     http.RoundTripper
+
+	credentialsOnce sync.Once
+	credentials     registry.AuthProvider
 }
 
 func (g *ociRemoteLoader) httpTransport(ctx context.Context) http.RoundTripper {
@@ -108,6 +113,13 @@ func (g *ociRemoteLoader) httpTransport(ctx context.Context) http.RoundTripper {
 		g.transport = desktop.ProxyTransportFor(ctx, g.dockerCli.Client())
 	})
 	return g.transport
+}
+
+func (g *ociRemoteLoader) authProvider() registry.AuthProvider {
+	g.credentialsOnce.Do(func() {
+		g.credentials = registry.NewDesktopAuthProvider(g.dockerCli.ConfigFile())
+	})
+	return g.credentials
 }
 
 func (g *ociRemoteLoader) Accept(path string) bool {
@@ -146,7 +158,7 @@ func (g *ociRemoteLoader) pullComposeArtifact(ctx context.Context, path string) 
 		return "", err
 	}
 
-	resolver := oci.NewResolver(g.dockerCli.ConfigFile(), g.httpTransport(ctx), g.insecureRegistries...)
+	resolver := oci.NewResolver(g.authProvider(), g.httpTransport(ctx), g.insecureRegistries...)
 
 	descriptor, content, err := oci.Get(ctx, resolver, ref)
 	if err != nil {
@@ -157,14 +169,23 @@ func (g *ociRemoteLoader) pullComposeArtifact(ctx context.Context, path string) 
 	if err != nil {
 		return "", fmt.Errorf("initializing remote resource cache: %w", err)
 	}
+	cache = filepath.Join(cache, cacheOCIDir)
 
-	local := filepath.Join(cache, descriptor.Digest.Hex())
-	if _, err = os.Stat(local); !os.IsNotExist(err) {
+	local := cacheEntryDir(cache, descriptor.Digest)
+	if cacheEntryMatches(cache, descriptor.Digest) {
 		return local, nil
 	}
 
+	// the manifest the digest is the one of, which the entry holds to tell it is of
+	// that digest, and not of what has been put there otherwise
+	root := content
+
 	// a Compose application bundle is published as an image index
-	if images.IsIndexType(descriptor.MediaType) {
+	isIndex, err := isIndexDocument(descriptor, content)
+	if err != nil {
+		return "", fmt.Errorf("failed to pull OCI resource %q: %w", ref, err)
+	}
+	if isIndex {
 		content, err = g.resolveComposeManifest(ctx, resolver, ref, content)
 		if err != nil {
 			return "", err
@@ -177,13 +198,144 @@ func (g *ociRemoteLoader) pullComposeArtifact(ctx context.Context, path string) 
 		return "", err
 	}
 
-	err = g.pullComposeFiles(ctx, local, manifest, ref, resolver)
+	// the entry is extracted aside and moved in place once complete, so that what
+	// is in the cache is never half written, by an interrupted or a concurrent run
+	if err := os.MkdirAll(cache, 0o700); err != nil {
+		return "", fmt.Errorf("initializing remote resource cache: %w", err)
+	}
+	tmp, err := os.MkdirTemp(cache, ".pull-")
 	if err != nil {
-		// we need to clean up the directory to be sure we won't leave empty files behind
-		_ = os.RemoveAll(local)
+		return "", err
+	}
+	defer func() { _ = os.RemoveAll(tmp) }() // nothing left to remove once moved
+
+	err = g.pullComposeFiles(ctx, tmp, manifest, ref, resolver)
+	if err != nil {
+		return "", err
+	}
+	// what is loaded from the entry: one that holds none is not complete, however
+	// the manifest it was extracted from was served
+	if info, err := os.Stat(filepath.Join(tmp, "compose.yaml")); err != nil || !info.Mode().IsRegular() {
+		return "", fmt.Errorf("%s holds no compose file", ref)
+	}
+	// last, so that nothing the artifact says can leave an entry without it
+	if err := writeCacheEntryManifest(tmp, root); err != nil {
+		return "", fmt.Errorf("failed to pull OCI resource %q: %w", ref, err)
+	}
+	if err := moveCacheEntry(cache, tmp, descriptor.Digest); err != nil {
 		return "", err
 	}
 	return local, nil
+}
+
+// isIndexDocument tells whether the document the registry served for the
+// reference is an image index, from what the document says it is. The media type
+// the registry reports with it is not authenticated, the digest is the one of
+// the content only: a registry that reports another one for authentic bytes is
+// refused, rather than have them read as what they are not.
+func isIndexDocument(descriptor spec.Descriptor, content []byte) (bool, error) {
+	var document struct {
+		MediaType string          `json:"mediaType"`
+		Manifests json.RawMessage `json:"manifests"`
+	}
+	if err := json.Unmarshal(content, &document); err != nil {
+		return false, fmt.Errorf("invalid manifest %s: %w", descriptor.Digest, err)
+	}
+	isIndex := images.IsIndexType(document.MediaType) || (document.MediaType == "" && document.Manifests != nil)
+	reported := descriptor.MediaType
+	if (images.IsIndexType(reported) || images.IsManifestType(reported)) && images.IsIndexType(reported) != isIndex {
+		return false, fmt.Errorf("manifest %s is reported as %s, which it is not", descriptor.Digest, reported)
+	}
+	return isIndex, nil
+}
+
+// cacheOCIDir is the directory of the cache which holds the entries of the OCI
+// artifacts, one directory of the extracted project for each digest. Earlier
+// releases cached them at the root of the cache, where they are no longer looked
+// for: nothing which one of them left, and which an artifact could have filled
+// with what it chose, is taken for an entry.
+const cacheOCIDir = "oci"
+
+// cacheEntryManifestDir is the directory of an entry which holds its manifest, in
+// the file cacheEntryManifestFile: the one the entry was extracted from, as the
+// registry served it, which is the index when the reference is an image index.
+// An artifact writes the files of an entry by names which have no path separator
+// (see validatePathInBase), so it can't write inside a directory of it: what is
+// there was put by Compose, and the entry is not taken for one without it.
+const (
+	cacheEntryManifestDir  = ".manifest"
+	cacheEntryManifestFile = "manifest.json"
+)
+
+// cacheEntryDir is the directory of the entry of the cache for the digest.
+func cacheEntryDir(cache string, dgst digest.Digest) string {
+	return filepath.Join(cache, dgst.Hex())
+}
+
+// writeCacheEntryManifest puts the manifest in the directory extracted in dir,
+// which fails when the artifact has a file of the name of the directory that
+// holds it.
+func writeCacheEntryManifest(dir string, manifest []byte) error {
+	holder := filepath.Join(dir, cacheEntryManifestDir)
+	if err := os.Mkdir(holder, 0o700); err != nil {
+		return fmt.Errorf("invalid OCI artifact: %w", err)
+	}
+	return os.WriteFile(filepath.Join(holder, cacheEntryManifestFile), manifest, 0o600)
+}
+
+// cacheEntryMatches tells whether the cache holds a complete entry for the digest:
+// a directory named after it which holds the manifest that has it. A directory
+// without one is not an entry, which is what releases that did not verify what
+// they fetched left, or an extraction that was interrupted, and neither is one
+// holding the manifest of another digest.
+func cacheEntryMatches(cache string, dgst digest.Digest) bool {
+	if dgst.Validate() != nil {
+		return false
+	}
+	manifest, err := os.ReadFile(filepath.Join(cacheEntryDir(cache, dgst), cacheEntryManifestDir, cacheEntryManifestFile))
+	if err != nil {
+		return false
+	}
+	return dgst.Algorithm().FromBytes(manifest) == dgst
+}
+
+// moveCacheEntry puts the entry extracted in tmp in place, unless another run
+// did already, and replaces what is there when it is not an entry of the cache
+// for the digest. The entry holds its manifest, so that it is complete as soon as
+// it is in place.
+//
+// What is replaced is first set aside, in a directory of its own, which takes
+// it out of the cache in one step, and only then removed: a run that replaces
+// it at the same time does not remove the entry that another one has put in
+// place in the meantime, and the cache is left with a complete entry whichever
+// of them is last. What was set aside is not put back when the replacement
+// fails, whatever it is: another run may have set aside the entry that took its
+// place, and would then find it in its way, and the worst that follows is that
+// the artifact is extracted again. A run that loses to another may still return
+// an error: what it gets is the state of the cache when it is over, not the
+// result of its own move.
+func moveCacheEntry(cache, tmp string, dgst digest.Digest) error {
+	local := cacheEntryDir(cache, dgst)
+	err := os.Rename(tmp, local)
+	if err == nil || cacheEntryMatches(cache, dgst) {
+		return nil
+	}
+
+	aside, err := os.MkdirTemp(cache, ".stale-")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = os.RemoveAll(aside) }()
+	if err := os.Rename(local, filepath.Join(aside, filepath.Base(local))); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if err := os.Rename(tmp, local); err != nil {
+		if cacheEntryMatches(cache, dgst) {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 // resolveComposeManifest returns the content of the compose artifact manifest

@@ -100,12 +100,16 @@ type OCIOptions struct {
 // named, and only drive side concerns (recreation policy, log scoping) as
 // documented on each field.
 type Compose interface {
-	// Build executes the equivalent to a `compose build`
-	Build(ctx context.Context, project *types.Project, options BuildOptions) error
-	// Push executes the equivalent to a `compose push`
-	Push(ctx context.Context, project *types.Project, options PushOptions) error
-	// Pull executes the equivalent of a `compose pull`
-	Pull(ctx context.Context, project *types.Project, options PullOptions) error
+	Lifecycle
+	Inspector
+	ImageManager
+	Runner
+	Watcher
+	ProjectLoader
+}
+
+// Lifecycle groups the operations that create, run, change and remove a project's resources.
+type Lifecycle interface {
 	// Create executes the equivalent to a `compose create`
 	Create(ctx context.Context, project *types.Project, options CreateOptions) error
 	// Start executes the equivalent to a `compose start`
@@ -118,61 +122,87 @@ type Compose interface {
 	Up(ctx context.Context, project *types.Project, options UpOptions) error
 	// Down executes the equivalent to a `compose down`
 	Down(ctx context.Context, projectName string, options DownOptions) error
-	// Logs executes the equivalent to a `compose logs`
-	Logs(ctx context.Context, projectName string, consumer LogConsumer, options LogOptions) error
+	// Kill executes the equivalent to a `compose kill`
+	Kill(ctx context.Context, projectName string, options KillOptions) error
+	// Pause executes the equivalent to a `compose pause`
+	Pause(ctx context.Context, projectName string, options PauseOptions) error
+	// UnPause executes the equivalent to a `compose unpause`
+	UnPause(ctx context.Context, projectName string, options PauseOptions) error
+	// Scale sets the number of replicas of the selected services
+	// (ScaleOptions.Replicas) and converges the project to it, creating,
+	// removing and starting containers as needed
+	Scale(ctx context.Context, project *types.Project, options ScaleOptions) error
+	// Remove executes the equivalent to a `compose rm`
+	Remove(ctx context.Context, projectName string, options RemoveOptions) error
+	// Wait blocks until at least one of the services' container exits
+	Wait(ctx context.Context, projectName string, options WaitOptions) (int64, error)
+}
+
+// Inspector groups the read-only operations that report on a project and its resources.
+type Inspector interface {
 	// Ps executes the equivalent to a `compose ps`
 	Ps(ctx context.Context, projectName string, options PsOptions) ([]ContainerSummary, error)
 	// List executes the equivalent to a `docker stack ls`
 	List(ctx context.Context, options ListOptions) ([]Stack, error)
-	// Kill executes the equivalent to a `compose kill`
-	Kill(ctx context.Context, projectName string, options KillOptions) error
+	// Top executes the equivalent to a `compose top`
+	Top(ctx context.Context, projectName string, services []string) ([]ContainerProcSummary, error)
+	// Ports executes the equivalent to a `compose port`
+	Ports(ctx context.Context, projectName string, service string, port uint16, options PortOptions) (PortPublishers, error)
+	// Images executes the equivalent of a `compose images`
+	Images(ctx context.Context, projectName string, options ImagesOptions) (map[string]ImageSummary, error)
+	// Volumes executes the equivalent to a `docker volume ls`
+	Volumes(ctx context.Context, project string, options VolumesOptions) ([]VolumesSummary, error)
+	// Events executes the equivalent to a `compose events`
+	Events(ctx context.Context, projectName string, options EventsOptions) error
+	// Logs executes the equivalent to a `compose logs`
+	Logs(ctx context.Context, projectName string, consumer LogConsumer, options LogOptions) error
+	// Viz generates a graphviz graph of the project services
+	Viz(ctx context.Context, project *types.Project, options VizOptions) (string, error)
+}
+
+// ImageManager groups the operations on the images of a project: building them and moving them to or from a registry.
+type ImageManager interface {
+	// Build executes the equivalent to a `compose build`
+	Build(ctx context.Context, project *types.Project, options BuildOptions) error
+	// Push executes the equivalent to a `compose push`
+	Push(ctx context.Context, project *types.Project, options PushOptions) error
+	// Pull executes the equivalent of a `compose pull`
+	Pull(ctx context.Context, project *types.Project, options PullOptions) error
+	// Publish executes the equivalent to a `compose publish`
+	Publish(ctx context.Context, project *types.Project, repository string, options PublishOptions) error
+}
+
+// Runner groups the operations that run, or interact with, a command in a service container.
+type Runner interface {
 	// RunOneOffContainer creates a service oneoff container and starts its dependencies
 	RunOneOffContainer(ctx context.Context, project *types.Project, opts RunOptions) (int, error)
-	// Remove executes the equivalent to a `compose rm`
-	Remove(ctx context.Context, projectName string, options RemoveOptions) error
 	// Exec executes a command in a running service container
 	Exec(ctx context.Context, projectName string, options RunOptions) (int, error)
 	// Attach STDIN,STDOUT,STDERR to a running service container
 	Attach(ctx context.Context, projectName string, options AttachOptions) error
 	// Copy copies a file/folder between a service container and the local filesystem
 	Copy(ctx context.Context, projectName string, options CopyOptions) error
-	// Pause executes the equivalent to a `compose pause`
-	Pause(ctx context.Context, projectName string, options PauseOptions) error
-	// UnPause executes the equivalent to a `compose unpause`
-	UnPause(ctx context.Context, projectName string, options PauseOptions) error
-	// Top executes the equivalent to a `compose top`
-	Top(ctx context.Context, projectName string, services []string) ([]ContainerProcSummary, error)
-	// Events executes the equivalent to a `compose events`
-	Events(ctx context.Context, projectName string, options EventsOptions) error
-	// Ports executes the equivalent to a `compose port`
-	Ports(ctx context.Context, projectName string, service string, port uint16, options PortOptions) (PortPublishers, error)
-	// Publish executes the equivalent to a `compose publish`
-	Publish(ctx context.Context, project *types.Project, repository string, options PublishOptions) error
-	// Images executes the equivalent of a `compose images`
-	Images(ctx context.Context, projectName string, options ImagesOptions) (map[string]ImageSummary, error)
-	// Watch services' development context and sync/notify/rebuild/restart on changes
-	Watch(ctx context.Context, project *types.Project, options WatchOptions) error
-	// Viz generates a graphviz graph of the project services
-	Viz(ctx context.Context, project *types.Project, options VizOptions) (string, error)
-	// Wait blocks until at least one of the services' container exits
-	Wait(ctx context.Context, projectName string, options WaitOptions) (int64, error)
-	// Scale sets the number of replicas of the selected services
-	// (ScaleOptions.Replicas) and converges the project to it, creating,
-	// removing and starting containers as needed
-	Scale(ctx context.Context, project *types.Project, options ScaleOptions) error
 	// Export a service container's filesystem as a tar archive
 	Export(ctx context.Context, projectName string, options ExportOptions) error
 	// Create a new image from a service container's changes
 	Commit(ctx context.Context, projectName string, options CommitOptions) error
-	// Generate generates a Compose Project from existing containers
-	Generate(ctx context.Context, options GenerateOptions) (*types.Project, error)
-	// Volumes executes the equivalent to a `docker volume ls`
-	Volumes(ctx context.Context, project string, options VolumesOptions) ([]VolumesSummary, error)
+}
+
+// Watcher groups the development-loop operations.
+type Watcher interface {
+	// Watch services' development context and sync/notify/rebuild/restart on changes
+	Watch(ctx context.Context, project *types.Project, options WatchOptions) error
+}
+
+// ProjectLoader groups the operations that obtain a Compose project, from configuration files or from existing containers.
+type ProjectLoader interface {
 	// LoadProject loads and validates a Compose project from configuration files.
 	// Set ProjectLoadOptions.OnUnsupportedAttribute to also be notified of
 	// compose-file attributes accepted by the schema but not honored by this
 	// runtime outside Swarm mode.
 	LoadProject(ctx context.Context, options ProjectLoadOptions) (*types.Project, error)
+	// Generate generates a Compose Project from existing containers
+	Generate(ctx context.Context, options GenerateOptions) (*types.Project, error)
 }
 
 // UnsupportedAttribute reports a compose-file attribute that is accepted by
@@ -334,7 +364,8 @@ type CreateOptions struct {
 
 // StartOptions group options of the Start API
 type StartOptions struct {
-	// Project is the compose project used to define this app. Might be nil if user ran command just with project name
+	// Project is the compose project used to define this app. Might be nil if user ran command just with project name.
+	// Ignored by Up, which works on the project it is given.
 	Project *types.Project
 	// Attach receives the containers' logs during Up's foreground session.
 	// It doubles as the mode switch: when nil, Up returns once containers
@@ -352,7 +383,9 @@ type StartOptions struct {
 	// ExitCodeFrom reports the exit code of the specified service. Honored
 	// by Up's foreground session only; ignored by Start.
 	ExitCodeFrom string
-	// Wait won't return until containers reached the running|healthy state
+	// Wait won't return until containers reached the running|healthy state.
+	// Up honors it in detached mode only (Attach nil): combined with Attach it
+	// is rejected, see UpOptions.Validate.
 	Wait        bool
 	WaitTimeout time.Duration
 	// Services names the services the user explicitly targeted; it only
@@ -403,6 +436,31 @@ type UpOptions struct {
 	Start  StartOptions
 }
 
+// ImagePruneMode controls how aggressively `down` removes the images
+// associated with the project.
+type ImagePruneMode string
+
+const (
+	// ImagePruneNone keeps all project images.
+	ImagePruneNone ImagePruneMode = ""
+	// ImagePruneLocal removes only the images built locally by Compose
+	// (no custom tag).
+	ImagePruneLocal ImagePruneMode = "local"
+	// ImagePruneAll removes every project-associated image, remote ones
+	// included.
+	ImagePruneAll ImagePruneMode = "all"
+)
+
+// Valid reports whether the mode is one of the declared values.
+func (m ImagePruneMode) Valid() bool {
+	switch m {
+	case ImagePruneNone, ImagePruneLocal, ImagePruneAll:
+		return true
+	default:
+		return false
+	}
+}
+
 // DownOptions group options of the Down API
 type DownOptions struct {
 	// RemoveOrphans will cleanup containers that are not declared on the compose model but own the same labels
@@ -411,8 +469,11 @@ type DownOptions struct {
 	Project *types.Project
 	// Timeout override container stop timeout
 	Timeout *time.Duration
-	// Images remove image used by services. 'all': Remove all images. 'local': Remove only images that don't have a tag
-	Images string
+	// Images removes images used by the services: ImagePruneAll removes
+	// every project image, ImagePruneLocal only those without a custom tag,
+	// ImagePruneNone (the zero value) keeps them all. Down rejects any other
+	// value before touching a single resource.
+	Images ImagePruneMode
 	// Volumes remove volumes, both declared in the `volumes` section and anonymous ones
 	Volumes bool
 	// Services passed in the command line to be stopped
@@ -433,6 +494,8 @@ type ConfigOptions struct {
 type PushOptions struct {
 	Quiet          bool
 	IgnoreFailures bool
+	// IgnoreMissing skips the images that are not available locally instead of failing to push them
+	IgnoreMissing  bool
 	ImageMandatory bool
 }
 

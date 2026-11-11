@@ -18,276 +18,69 @@ package compose
 
 import (
 	"context"
-	"io"
-	"sync"
-	"time"
 
-	"github.com/containerd/errdefs"
-	"github.com/moby/moby/api/pkg/stdcopy"
+	"github.com/compose-spec/compose-go/v2/types"
+	"github.com/docker/cli/cli/command"
 	"github.com/moby/moby/api/types/container"
-	"github.com/moby/moby/client"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 
+	"github.com/docker/compose/v5/internal/logstream"
 	"github.com/docker/compose/v5/pkg/api"
-	"github.com/docker/compose/v5/pkg/utils"
 )
 
-func (s *composeService) Logs(
-	ctx context.Context,
-	projectName string,
-	consumer api.LogConsumer,
-	options api.LogOptions,
-) error {
-	containers, err := s.selectLogsContainers(ctx, projectName, &options)
-	if err != nil {
-		return err
-	}
+// logs and attach live in internal/logstream: composeService serves them by
+// handing that package the engine they stream from.
 
-	var eg *errgroup.Group
-	// limiter bounds how many containers are connecting (ContainerInspect +
-	// opening ContainerLogs) at once, in follow mode only: the streams
-	// themselves run indefinitely once opened, so gating the whole call
-	// (like the non-follow case does) would pin every slot forever and
-	// starve the monitor and any later container, the same reason
-	// waitDependencies is excluded from the concurrency cap.
-	var limiter *semaphore.Weighted
-	if options.Follow {
-		eg, ctx = errgroup.WithContext(ctx)
-		limiter = newOptionalLimiter(s.maxConcurrency)
-	} else {
-		eg, ctx = newLimitedErrgroup(ctx, s.maxConcurrency)
-	}
-	for _, ctr := range containers {
-		eg.Go(func() error {
-			return s.logContainer(ctx, limiter, consumer, ctr, options)
-		})
-	}
-
-	if options.Follow {
-		printer := newLogPrinter(consumer)
-
-		monitor := newMonitor(s.apiClient(), projectName)
-		if len(options.Services) > 0 {
-			monitor.withServices(options.Services)
-		} else if options.Project != nil {
-			monitor.withServices(options.Project.ServiceNames())
-		}
-		monitor.withListener(printer.HandleEvent)
-		monitor.withListener(s.followStartedContainersLogs(ctx, eg, limiter, consumer, options))
-		eg.Go(func() error {
-			// pass ctx so monitor will immediately stop on SIGINT
-			return monitor.Start(ctx)
-		})
-	}
-
-	return eg.Wait()
+func (s *composeService) logStream() *logstream.Service {
+	return logstream.New(logStreamBackend{engineBackend{s}})
 }
 
-// selectLogsContainers returns the containers to stream logs from, per the
-// requested services, container index, and project
-func (s *composeService) selectLogsContainers(ctx context.Context, projectName string, options *api.LogOptions) (Containers, error) {
-	if options.Index > 0 {
-		ctr, err := s.getSpecifiedContainer(ctx, projectName, oneOffExclude, true, options.Services[0], options.Index)
-		if err != nil {
-			return nil, err
-		}
-		return Containers{ctr}, nil
-	}
-	containers, err := s.getContainers(ctx, projectName, oneOffExclude, true, options.Services...)
-	if err != nil {
-		return nil, err
-	}
-	if options.Project != nil && len(options.Services) == 0 {
-		// we run with an explicit compose.yaml, so only consider services defined in this file
-		options.Services = options.Project.ServiceNames()
-		containers = containers.filter(isService(options.Services...))
-	}
-	return containers, nil
+func (s *composeService) Logs(ctx context.Context, projectName string, consumer api.LogConsumer, options api.LogOptions) error {
+	return s.logStream().Logs(ctx, projectName, consumer, options)
 }
 
-// inspectWithSlot acquires limiter's slot, then inspects the container,
-// releasing the slot on error since no caller reaches doLogContainer (which
-// owns the slot from here on) in that case.
+func (s *composeService) Attach(ctx context.Context, projectName string, options api.AttachOptions) error {
+	return s.logStream().Attach(ctx, projectName, options)
+}
+
+// logPrinter watches application containers and collects their logs.
+type logPrinter = logstream.Printer
+
+func newLogPrinter(consumer api.LogConsumer) logPrinter {
+	return logstream.NewPrinter(consumer)
+}
+
+// attach is what `up` attaches to its containers with.
+func (s *composeService) attach(ctx context.Context, project *types.Project, listener api.ContainerEventListener, selectedServices []string) (Containers, error) {
+	return s.logStream().AttachContainers(ctx, project, listener, selectedServices)
+}
+
+func (s *composeService) doAttachContainer(ctx context.Context, service, id, name string, listener api.ContainerEventListener) error {
+	return s.logStream().AttachContainer(ctx, service, id, name, listener)
+}
+
 func (s *composeService) inspectWithSlot(ctx context.Context, limiter *semaphore.Weighted, id string) (container.InspectResponse, error) {
-	if err := acquireSlot(ctx, limiter); err != nil {
-		return container.InspectResponse{}, err
-	}
-	defer panicSafeReleaseSlot(limiter)
-	res, err := s.apiClient().ContainerInspect(ctx, id, client.ContainerInspectOptions{})
-	if err != nil {
-		releaseSlot(limiter)
-		return container.InspectResponse{}, err
-	}
-	return res.Container, nil
+	return s.logStream().InspectWithSlot(ctx, limiter, id)
 }
 
-// logContainer streams a container's logs, warning when its logging driver
-// doesn't support reading logs
-func (s *composeService) logContainer(ctx context.Context, limiter *semaphore.Weighted, consumer api.LogConsumer, ctr container.Summary, options api.LogOptions) error {
-	res, err := s.inspectWithSlot(ctx, limiter, ctr.ID)
-	if err != nil {
-		return err
-	}
-	err = s.doLogContainer(ctx, limiter, consumer, getContainerNameWithoutProject(ctr), res, options)
-	if errdefs.IsNotImplemented(err) {
-		logrus.Warnf("Can't retrieve logs for %q: %s", getCanonicalContainerName(ctr), err.Error())
-		return nil
-	}
-	return err
-}
-
-// followStartedContainersLogs streams the logs of containers (re)started
-// while following, ignoring those whose logging driver doesn't support
-// reading logs
-func (s *composeService) followStartedContainersLogs(
+func (s *composeService) doLogContainer(
 	ctx context.Context,
-	eg *errgroup.Group,
 	limiter *semaphore.Weighted,
 	consumer api.LogConsumer,
+	name string,
+	ctr container.InspectResponse,
 	options api.LogOptions,
-) api.ContainerEventListener {
-	runEnds := newRunEndTracker()
-	return func(event api.ContainerEvent) {
-		runEnds.Observe(event)
-		if event.Type != api.ContainerEventStarted {
-			return
-		}
-		// Captured synchronously: the monitor delivers events in order, so
-		// the recorded end cannot yet include THIS run's own exit — reading
-		// it inside the goroutine below could (fast run), and the window
-		// would drop the whole run.
-		since := runEnds.Since(event.ID)
-		eg.Go(func() error {
-			res, err := s.inspectWithSlot(ctx, limiter, event.ID)
-			if err != nil {
-				return err
-			}
-			if since == "" {
-				since = logsSinceLastRun(res)
-			}
-
-			err = s.doLogContainer(ctx, limiter, consumer, event.Source, res, api.LogOptions{
-				Follow:     options.Follow,
-				Since:      since,
-				Until:      options.Until,
-				Tail:       options.Tail,
-				Timestamps: options.Timestamps,
-			})
-			if errdefs.IsNotImplemented(err) {
-				// ignore
-				return nil
-			}
-			return err
-		})
-	}
+	cur *logstream.Cursor,
+) error {
+	return s.logStream().DoLogContainer(ctx, limiter, consumer, name, ctr, options, cur)
 }
 
-// runEndTracker remembers, per container, when the session last saw it exit —
-// the re-attach anchor that stays correct even when the NEW run is already
-// over: the event stream is ordered, so at start-event time the recorded
-// value is necessarily the PREVIOUS run's end. The inspected FinishedAt
-// (logsSinceLastRun) cannot give that guarantee — by the time we inspect, a
-// fast run's own FinishedAt has overwritten it and the window would exclude
-// everything the run printed.
-type runEndTracker struct {
-	mu   sync.Mutex
-	ends map[string]int64 // container ID → TimeNano of the last observed exit
+// logStreamBackend is the engine of a composeService, as internal/logstream sees it:
+// the base engine, and the Docker CLI whose terminal streams it drives.
+type logStreamBackend struct {
+	engineBackend
 }
 
-func newRunEndTracker() *runEndTracker {
-	return &runEndTracker{ends: map[string]int64{}}
-}
-
-// Observe records exit events (other event types are ignored). An exit
-// carrying no timestamp is deliberately dropped rather than patched with the
-// local clock: the anchor is compared by the DAEMON against its own
-// container-log timestamps, so substituting our clock would trade a
-// hypothetical daemon quirk for real clock-skew mis-anchoring. Dropping it
-// merely degrades that container to the logsSinceLastRun fallback — the
-// exact pre-tracker behavior, imperfect only for a run fast enough to have
-// finished again by inspection time.
-func (t *runEndTracker) Observe(e api.ContainerEvent) {
-	if e.Type != api.ContainerEventExited || e.Time == 0 {
-		return
-	}
-	t.mu.Lock()
-	t.ends[e.ID] = e.Time
-	t.mu.Unlock()
-}
-
-// Since returns the log-window anchor for a container being re-attached: the
-// recorded end of its previous run in RFC3339Nano — the same format the
-// FinishedAt fallback feeds the logs API — or "" when the session never saw
-// it exit (first start).
-func (t *runEndTracker) Since(containerID string) string {
-	t.mu.Lock()
-	nano, ok := t.ends[containerID]
-	t.mu.Unlock()
-	if !ok {
-		return ""
-	}
-	return time.Unix(0, nano).UTC().Format(time.RFC3339Nano)
-}
-
-// logsSinceLastRun returns the FALLBACK log window anchor for a container
-// (re)started while we follow the project, used when the session has not
-// observed a previous exit (runEndTracker): the previous run's FinishedAt.
-// The new run's StartedAt looks like the natural anchor but loses output —
-// the daemon starts copying stdout before it records StartedAt, so a fast
-// process can get its first lines timestamped just before it, and
-// `since=StartedAt` then drops them forever. Nothing can be logged between
-// the previous run's end and the new run's start, so FinishedAt captures the
-// entire new run without replaying the previous one — UNLESS the new run
-// already finished by inspection time (its own FinishedAt shadows the
-// previous run's), which is exactly what the tracker protects against. A
-// container with no previous run has a zero FinishedAt, which means "no
-// lower bound" — equally exact for a fresh container.
-func logsSinceLastRun(ctr container.InspectResponse) string {
-	finished := ctr.State.FinishedAt
-	if t, err := time.Parse(time.RFC3339Nano, finished); err != nil || t.Unix() <= 0 {
-		return ""
-	}
-	return finished
-}
-
-// doLogContainer opens the container's log stream and copies it to consumer
-// until it ends. The caller must have already acquired limiter's slot (see
-// acquireSlot); it is released here right after ContainerLogs returns, so a
-// long-lived --follow stream never keeps blocking new connections or the
-// monitor.
-func (s *composeService) doLogContainer(ctx context.Context, limiter *semaphore.Weighted, consumer api.LogConsumer, name string, ctr container.InspectResponse, options api.LogOptions) error {
-	// Scoped to a closure so panicSafeReleaseSlot's defer only guards the
-	// acquire-to-release window: releaseSlot below is unconditional once
-	// ContainerLogs returns, so a panic during the copy loop that follows
-	// must not re-trigger it and release the same slot twice.
-	r, err := func() (io.ReadCloser, error) {
-		defer panicSafeReleaseSlot(limiter)
-		r, err := s.apiClient().ContainerLogs(ctx, ctr.ID, client.ContainerLogsOptions{
-			ShowStdout: true,
-			ShowStderr: true,
-			Follow:     options.Follow,
-			Since:      options.Since,
-			Until:      options.Until,
-			Tail:       options.Tail,
-			Timestamps: options.Timestamps,
-		})
-		releaseSlot(limiter)
-		return r, err
-	}()
-	if err != nil {
-		return err
-	}
-	defer r.Close() //nolint:errcheck
-
-	w := utils.GetWriter(func(line string) {
-		consumer.Log(name, line)
-	})
-	if ctr.Config.Tty {
-		_, err = io.Copy(w, r)
-	} else {
-		_, err = stdcopy.StdCopy(w, w, r)
-	}
-	return err
+func (b logStreamBackend) CLI() command.Cli {
+	return b.s.dockerCli
 }
