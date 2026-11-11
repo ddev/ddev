@@ -120,6 +120,23 @@ gh release verify v1.25.6 --repo ddev/ddev
 
 Don't create or publish a release by hand in the GitHub UI: a release published before its assets are attached can't get them, and its version number is lost.
 
+### If Something Fails
+
+First check the [releases page](https://github.com/ddev/ddev/releases): is the release still a draft?
+
+**Still a draft.** Nothing is public yet. Use **Re-run failed jobs** on the workflow run. The tag is already at the draft's commit, so `prepare-release` accepts it again, and GoReleaser replaces any assets a failed run had already uploaded to the draft. If the draft itself is wrong, such as the wrong commit, delete the draft, ask an admin to delete the tag, and start again with `scripts/release.sh`.
+
+**Already published.** The release and its assets are locked. Rerunning the `Upload artifacts` job runs GoReleaser against the published release again, which is expected to fail. Instead, find the step that failed in the job log and finish what's left of that step and the ones after it by hand:
+
+* **GoReleaser, after publishing**: it publishes the release first, then the Homebrew formulas, the AUR packages, and the Linux packages on Gemfury and Cloudsmith. Check which of these got the new version, and push the missing ones by hand from the assets on the release.
+* **Attest build provenance**: the release is fine without it, but `gh attestation verify` fails for its assets.
+* **Chocolatey windows release**: build and push the package by hand, the way that step does.
+* **Push devcontainer feature**: this job only runs after `Upload artifacts` succeeds. If it failed on its own, re-run just this job; if `Upload artifacts` failed, publish the feature by hand.
+
+If an asset on the published release is wrong, it can't be replaced. Mark the release as not the latest one, say so in its notes, and release the next patch version.
+
+This recovery path hasn't been tried yet. Update this section with what actually works the first time it is needed.
+
 ### Repository Settings for Immutable Releases
 
 These are set once per repository, on `ddev/ddev` and on `ddev-test/ddev`:
