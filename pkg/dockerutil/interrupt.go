@@ -28,7 +28,7 @@ var inFlight = struct {
 }{containers: map[*trackedContainer]struct{}{}}
 
 // trackedContainer's done is closed once ContainerCreate has returned, and
-// target is then what an interrupt should remove, or empty for nothing.
+// target is then the ID an interrupt should remove, or empty after an error.
 // label is the temporaryLabel value the container is created with.
 type trackedContainer struct {
 	done   chan struct{}
@@ -53,7 +53,8 @@ func trackContainer(label string) (created func(id string, err error), untrack f
 	created = func(id string, err error) {
 		once.Do(func() {
 			// After an error the name may belong to some other container, and
-			// socktainer reports a name conflict as a 500, not a 409.
+			// socktainer reports a name conflict as a 500, not a 409. Cleanup
+			// then removes by label, which only this call's container has.
 			if err == nil {
 				tc.target = id
 			}
@@ -119,6 +120,9 @@ func cleanUpInFlight(ctx context.Context) {
 			}
 			id := tc.target
 			if id == "" {
+				// The create failed, but the daemon may have made the
+				// container anyway, for example before a dropped connection.
+				removeByTemporaryLabel(ctx, apiClient, tc.label)
 				return
 			}
 			_, err := apiClient.ContainerRemove(ctx, id, client.ContainerRemoveOptions{Force: true})

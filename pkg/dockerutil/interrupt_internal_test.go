@@ -2,6 +2,7 @@ package dockerutil
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -47,6 +48,24 @@ func TestCleanUpInFlightCreateNeverReturns(t *testing.T) {
 	_, err := createTestContainer(name, map[string]string{temporaryLabel: label})
 	require.NoError(t, err)
 	done := startCleanUpInFlight(t, 3*time.Second)
+	waitForCleanUp(t, done)
+	requireContainerExists(t, name, false)
+}
+
+// TestCleanUpInFlightCreateFails stands in for a create whose connection
+// dropped after the daemon had made the container, so it returned an error.
+func TestCleanUpInFlightCreateFails(t *testing.T) {
+	name := "TestCleanUpInFlightFailed-" + util.RandString(6)
+	label := util.RandString(16)
+	created, untrack := trackContainer(label)
+	t.Cleanup(untrack)
+	t.Cleanup(func() { _ = RemoveContainer(name) })
+
+	id, err := createTestContainer(name, map[string]string{temporaryLabel: label})
+	require.NoError(t, err)
+	require.NotEmpty(t, id)
+	created("", errors.New("connection reset by peer"))
+	done := startCleanUpInFlight(t, time.Minute)
 	waitForCleanUp(t, done)
 	requireContainerExists(t, name, false)
 }
