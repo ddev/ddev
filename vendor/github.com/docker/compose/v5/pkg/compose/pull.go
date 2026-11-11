@@ -18,10 +18,8 @@ package compose
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 	"sync"
 	"time"
@@ -38,6 +36,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/docker/compose/v5/internal/concurrency"
+	"github.com/docker/compose/v5/internal/progress"
 	"github.com/docker/compose/v5/internal/registry"
 	"github.com/docker/compose/v5/pkg/api"
 )
@@ -70,7 +70,7 @@ func (s *composeService) pull(ctx context.Context, project *types.Project, opts 
 		return err
 	}
 
-	eg, ctx := newLimitedErrgroup(ctx, s.maxConcurrency)
+	eg, ctx := concurrency.NewErrgroup(ctx, s.maxConcurrency)
 
 	p := &imagePuller{
 		composeService: s,
@@ -298,13 +298,13 @@ func getUnwrappedErrorMessage(err error) string {
 
 func (s *composeService) pullServiceImage(ctx context.Context, service types.ServiceConfig, quietPull bool, defaultPlatform string) error {
 	resource := "Image " + service.Image
-	s.events.On(newEvent(resource, api.Working, api.StatusPulling))
+	s.events.On(progress.New(resource, api.Working, api.StatusPulling))
 	ref, err := reference.ParseNormalizedNamed(service.Image)
 	if err != nil {
 		return err
 	}
 
-	encodedAuth, err := registry.EncodedAuth(ref, s.configFile())
+	encodedAuth, err := registry.EncodedAuth(ref, s.authProvider())
 	if err != nil {
 		return err
 	}
@@ -349,27 +349,18 @@ func (s *composeService) pullServiceImage(ctx context.Context, service types.Ser
 	}
 
 	if err != nil {
-		s.events.On(errorEvent(resource, getUnwrappedErrorMessage(err)))
+		s.events.On(progress.Error(resource, getUnwrappedErrorMessage(err)))
 		return err
 	}
 
-	dec := json.NewDecoder(stream)
-	for {
-		var jm jsonstream.Message
-		if err := dec.Decode(&jm); err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return err
-		}
-		if jm.Error != nil {
-			return errors.New(jm.Error.Message)
-		}
+	if err := decodeProgressStream(stream, func(jm jsonstream.Message) {
 		if !quietPull {
 			toPullProgressEvent(resource, jm, s.events)
 		}
+	}); err != nil {
+		return err
 	}
-	s.events.On(newEvent(resource, api.Done, api.StatusPulled))
+	s.events.On(progress.New(resource, api.Done, api.StatusPulled))
 
 	return nil
 }
@@ -385,9 +376,15 @@ func (s *composeService) pullServiceImage(ctx context.Context, service types.Ser
 // runnable manifest to compare a running container with a fresh build/pull;
 // never funnel this resolution through the local content-digest producer, and
 // never pin a published reference with a per-platform digest.
+//
+// Docker Hub credentials come from the Docker Desktop session first.
 func ImageDigestResolver(ctx context.Context, file *configfile.ConfigFile, apiClient client.APIClient) func(named reference.Named) (digest.Digest, error) {
+	return imageDigestResolver(ctx, registry.NewDesktopAuthProvider(file), apiClient)
+}
+
+func imageDigestResolver(ctx context.Context, credentials registry.AuthProvider, apiClient client.APIClient) func(named reference.Named) (digest.Digest, error) {
 	return func(named reference.Named) (digest.Digest, error) {
-		auth, err := registry.EncodedAuth(named, file)
+		auth, err := registry.EncodedAuth(named, credentials)
 		if err != nil {
 			return "", err
 		}
@@ -441,7 +438,7 @@ func (s *composeService) pullRequiredImages(ctx context.Context, project *types.
 
 	// the errgroup context is canceled as soon as Wait returns; the post-pull
 	// resolution below needs the caller's context
-	eg, pullCtx := newLimitedErrgroup(ctx, s.maxConcurrency)
+	eg, pullCtx := concurrency.NewErrgroup(ctx, s.maxConcurrency)
 	pulled := map[string]bool{}
 	var mutex sync.Mutex
 	for name, service := range needPull {
@@ -618,7 +615,7 @@ func toPullProgressEvent(parent string, jm jsonstream.Message, events api.EventP
 			current = jm.Progress.Current
 			total = jm.Progress.Total
 			if jm.Progress.Total > 0 {
-				percent = min(int(jm.Progress.Current*100/jm.Progress.Total), 100)
+				percent = progressPercent(jm.Progress.Current, jm.Progress.Total)
 			}
 		}
 	case DownloadCompletePhase, AlreadyExistsPhase, PullCompletePhase:

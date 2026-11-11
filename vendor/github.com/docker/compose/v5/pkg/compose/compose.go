@@ -21,22 +21,23 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
-	"strings"
 	"sync"
+	"time"
 
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/config/configfile"
+	clitypes "github.com/docker/cli/cli/config/types"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/cli/streams"
-	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/swarm"
 	"github.com/moby/moby/client"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/sync/semaphore"
 
+	"github.com/docker/compose/v5/internal/naming"
+	"github.com/docker/compose/v5/internal/progress"
+	"github.com/docker/compose/v5/internal/projectloader"
+	"github.com/docker/compose/v5/internal/registry"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/dryrun"
 )
@@ -68,7 +69,13 @@ func NewComposeService(dockerCli command.Cli, options ...Option) (api.Compose, e
 		dockerCli:      dockerCli,
 		maxConcurrency: -1,
 		dryRun:         false,
+
+		logStreamDrainTimeout: defaultLogStreamDrainTimeout,
 	}
+	// Look the config file up lazily: WithDryRun replaces s.dockerCli.
+	s.auth = registry.NewDesktopAuthProvider(registry.AuthProviderFunc(func(registryHostname string) (clitypes.AuthConfig, error) {
+		return s.configFile().GetAuthConfig(registryHostname)
+	}))
 	for _, option := range options {
 		if err := option(s); err != nil {
 			return nil, err
@@ -82,7 +89,7 @@ func NewComposeService(dockerCli command.Cli, options ...Option) (api.Compose, e
 		}
 	}
 	if s.events == nil {
-		s.events = &ignore{}
+		s.events = progress.Noop{}
 	}
 
 	// If custom streams were provided, wrap the Docker CLI to use them
@@ -160,79 +167,6 @@ func WithMaxConcurrency(maxConcurrency int) Option {
 	}
 }
 
-// newLimitedErrgroup returns an errgroup.Group bounded to maxConcurrency
-// concurrent goroutines. maxConcurrency<=0 (including the Go zero-value)
-// leaves it unlimited, since errgroup.SetLimit(0) means "allow zero
-// goroutines", not "unlimited".
-func newLimitedErrgroup(ctx context.Context, maxConcurrency int) (*errgroup.Group, context.Context) {
-	eg, ctx := errgroup.WithContext(ctx)
-	if maxConcurrency > 0 {
-		eg.SetLimit(maxConcurrency)
-	}
-	return eg, ctx
-}
-
-// newOptionalLimiter returns a semaphore bounding concurrency to
-// maxConcurrency, or nil when maxConcurrency<=0 (unlimited). Use it, with
-// acquireSlot/releaseSlot, to gate only part of a goroutine's work — e.g. an
-// indefinite stream's opening call, not the stream itself — where
-// newLimitedErrgroup's whole-goroutine bound doesn't apply.
-func newOptionalLimiter(maxConcurrency int) *semaphore.Weighted {
-	if maxConcurrency <= 0 {
-		return nil
-	}
-	return semaphore.NewWeighted(int64(maxConcurrency))
-}
-
-// acquireSlot acquires a slot from limiter, or is a no-op when limiter is nil.
-func acquireSlot(ctx context.Context, limiter *semaphore.Weighted) error {
-	if limiter == nil {
-		return nil
-	}
-	return limiter.Acquire(ctx, 1)
-}
-
-// releaseSlot releases a slot acquired via acquireSlot, or is a no-op when
-// limiter is nil.
-func releaseSlot(limiter *semaphore.Weighted) {
-	if limiter != nil {
-		limiter.Release(1)
-	}
-}
-
-// panicSafeReleaseSlot is deferred by callers that release a slot earlier
-// than function exit on the success path (see inspectWithSlot and
-// doLogContainer) to avoid leaking it if the guarded call panics before
-// reaching that point. It is a no-op unless the deferring goroutine is
-// unwinding from a panic, in which case it releases the slot and re-panics.
-func panicSafeReleaseSlot(limiter *semaphore.Weighted) {
-	if p := recover(); p != nil {
-		releaseSlot(limiter)
-		panic(p)
-	}
-}
-
-// forEachWithLimiter runs fn concurrently for each item, bounded by limiter.
-// Unlike newLimitedErrgroup, limiter is built by the caller and can be
-// shared across several concurrently-dispatched calls (e.g. one per service
-// visited by InDependencyOrder, or one per sibling down op), so the combined
-// concurrency across all of them never exceeds the configured budget.
-// Use forEachContainerConcurrent (containers.go) instead when the call is
-// standalone and doesn't need to share its budget with any other call.
-func forEachWithLimiter[T any](ctx context.Context, limiter *semaphore.Weighted, items []T, fn func(context.Context, T) error) error {
-	eg, ctx := errgroup.WithContext(ctx)
-	for _, item := range items {
-		eg.Go(func() error {
-			if err := acquireSlot(ctx, limiter); err != nil {
-				return err
-			}
-			defer releaseSlot(limiter)
-			return fn(ctx, item)
-		})
-	}
-	return eg.Wait()
-}
-
 // WithDryRun configure Compose to run without actually applying changes
 func WithDryRun(s *composeService) error {
 	s.dryRun = true
@@ -275,6 +209,8 @@ type composeService struct {
 	dockerCli command.Cli
 	// prompt is used to interact with user and confirm actions
 	prompt Prompt
+	// navigationMenu creates the interactive menu of a foreground `up`, if any
+	navigationMenu NavigationMenuFactory
 	// eventBus collects tasks execution events
 	events api.EventProcessor
 
@@ -288,7 +224,20 @@ type composeService struct {
 	maxConcurrency int
 	dryRun         bool
 
+	auth registry.AuthProvider
+
 	runtimeAPIVersion runtimeVersionCache
+
+	// swarm caches the daemon's swarm mode, see isSwarmEnabled.
+	swarm swarmState
+
+	// pluginMu guards the project's services while concurrent provider runs
+	// inject their variables into the services depending on them, see runPlugin.
+	pluginMu sync.Mutex
+
+	// logStreamDrainTimeout bounds the shutdown drain of re-attached log
+	// streams, see drainTimeout.
+	logStreamDrainTimeout time.Duration
 }
 
 // Close releases any connections/resources held by the underlying clients.
@@ -309,6 +258,15 @@ func (s *composeService) apiClient() client.APIClient {
 
 func (s *composeService) configFile() *configfile.ConfigFile {
 	return s.dockerCli.ConfigFile()
+}
+
+// authProvider uses the config file only for services not built by
+// NewComposeService, so unit tests never reach Docker Desktop.
+func (s *composeService) authProvider() registry.AuthProvider {
+	if s.auth != nil {
+		return s.auth
+	}
+	return s.configFile()
 }
 
 // getContextInfo returns the context info - either custom override or dockerCli adapter
@@ -408,32 +366,6 @@ func (w *streamOverrideWrapper) In() *streams.In {
 	return w.Cli.In()
 }
 
-func getCanonicalContainerName(c container.Summary) string {
-	if len(c.Names) == 0 {
-		// corner case, sometime happens on removal. return short ID as a safeguard value
-		return c.ID[:12]
-	}
-	// Names return container canonical name /foo  + link aliases /linked_by/foo
-	for _, name := range c.Names {
-		if strings.LastIndex(name, "/") == 0 {
-			return name[1:]
-		}
-	}
-
-	return strings.TrimPrefix(c.Names[0], "/")
-}
-
-func getContainerNameWithoutProject(c container.Summary) string {
-	project := c.Labels[api.ProjectLabel]
-	defaultName := getDefaultContainerName(project, c.Labels[api.ServiceLabel], c.Labels[api.ContainerNumberLabel])
-	name := getCanonicalContainerName(c)
-	if name != defaultName {
-		// service declares a custom container_name
-		return name
-	}
-	return name[len(project)+1:]
-}
-
 // projectFromName builds a types.Project based on actual resources with compose labels set
 func (s *composeService) projectFromName(containers Containers, projectName string, services ...string) (*types.Project, error) {
 	project := &types.Project{
@@ -445,44 +377,13 @@ func (s *composeService) projectFromName(containers Containers, projectName stri
 	}
 	set := types.Services{}
 	for _, ctr := range containers {
-		serviceLabel, ok := ctr.Labels[api.ServiceLabel]
-		if !ok {
-			serviceLabel = getCanonicalContainerName(ctr)
-		}
-		service, ok := set[serviceLabel]
-		if !ok {
-			service = types.ServiceConfig{
-				Name: serviceLabel,
-				ContainerSpec: types.ContainerSpec{
-					Image:  ctr.Image,
-					Labels: ctr.Labels,
-				},
-			}
-		}
-		service.Scale = increment(service.Scale)
+		serviceLabel, service := projectloader.ServiceOfContainer(set, ctr)
 		set[serviceLabel] = service
 	}
 	for name, service := range set {
 		dependencies := service.Labels[api.DependenciesLabel]
 		if dependencies != "" {
-			service.DependsOn = types.DependsOnConfig{}
-			for dc := range strings.SplitSeq(dependencies, ",") {
-				dcArr := strings.Split(dc, ":")
-				condition := ServiceConditionRunningOrHealthy
-				// Let's restart the dependency by default if we don't have the info stored in the label
-				restart := true
-				required := true
-				dependency := dcArr[0]
-
-				// backward compatibility
-				if len(dcArr) > 1 {
-					condition = dcArr[1]
-					if len(dcArr) > 2 {
-						restart, _ = strconv.ParseBool(dcArr[2])
-					}
-				}
-				service.DependsOn[dependency] = types.ServiceDependency{Condition: condition, Restart: restart, Required: required}
-			}
+			service.DependsOn = decodeDependsOnLabel(dependencies)
 			set[name] = service
 		}
 	}
@@ -505,17 +406,9 @@ SERVICES:
 	return project, nil
 }
 
-func increment(scale *int) *int {
-	i := 1
-	if scale != nil {
-		i = *scale + 1
-	}
-	return &i
-}
-
 func (s *composeService) actualVolumes(ctx context.Context, projectName string) (types.Volumes, error) {
 	options := client.VolumeListOptions{
-		Filters: projectFilter(projectName),
+		Filters: naming.ProjectFilter(projectName),
 	}
 	volumes, err := s.apiClient().VolumeList(ctx, options)
 	if err != nil {
@@ -535,7 +428,7 @@ func (s *composeService) actualVolumes(ctx context.Context, projectName string) 
 
 func (s *composeService) actualNetworks(ctx context.Context, projectName string) (types.Networks, error) {
 	networks, err := s.apiClient().NetworkList(ctx, client.NetworkListOptions{
-		Filters: projectFilter(projectName),
+		Filters: naming.ProjectFilter(projectName),
 	})
 	if err != nil {
 		return nil, err
@@ -558,26 +451,30 @@ func (s *composeService) actualNetworks(ctx context.Context, projectName string)
 	return actual, nil
 }
 
-var swarmEnabled = struct {
+// swarmState caches whether the daemon this service talks to runs in swarm
+// mode. The answer belongs to the daemon behind the service's client, so it is
+// held per composeService rather than shared by every instance in the process.
+type swarmState struct {
 	once sync.Once
 	val  bool
 	err  error
-}{}
+}
 
 func (s *composeService) isSwarmEnabled(ctx context.Context) (bool, error) {
-	swarmEnabled.once.Do(func() {
+	st := &s.swarm
+	st.once.Do(func() {
 		res, err := s.apiClient().Info(ctx, client.InfoOptions{})
 		if err != nil {
-			swarmEnabled.err = err
+			st.err = err
 		}
 		switch res.Info.Swarm.LocalNodeState {
 		case swarm.LocalNodeStateInactive, swarm.LocalNodeStateLocked:
-			swarmEnabled.val = false
+			st.val = false
 		default:
-			swarmEnabled.val = true
+			st.val = true
 		}
 	})
-	return swarmEnabled.val, swarmEnabled.err
+	return st.val, st.err
 }
 
 // runtimeVersionCache caches a version string after a successful lookup.

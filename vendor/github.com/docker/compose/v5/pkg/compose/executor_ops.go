@@ -18,14 +18,17 @@ package compose
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/containerd/errdefs"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/sirupsen/logrus"
 
+	"github.com/docker/compose/v5/internal/progress"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/utils"
 )
@@ -127,11 +130,190 @@ func (exec *planExecutor) execCreateContainer(ctx context.Context, node *PlanNod
 	return nil
 }
 
+// execStartContainer starts a container. A bare operation (no Service —
+// today only the create phase's exceptional-state restart of a paused/dead
+// container) is a plain ContainerStart. A start-phase operation (Service set)
+// performs the full service start — secret/config injection right before
+// ContainerStart; its target resolves
+// either from the observed container or, for a replica the plan itself
+// creates, from the CreateContainer node's result (the same mechanism
+// OpRenameContainer already uses).
 func (exec *planExecutor) execStartContainer(ctx context.Context, op Operation) error {
+	if op.Service == nil {
+		startMx.Lock()
+		defer startMx.Unlock()
+		_, err := exec.compose.apiClient().ContainerStart(ctx, op.Container.ID, client.ContainerStartOptions{})
+		return err
+	}
+
+	// run()'s failedDependency check (see its comment) already keeps this
+	// node from ever reaching here when a direct dependency of this replica's
+	// chain (a wait, pre_start) failed for a genuine reason — that window is
+	// closed, not just narrowed. This guard stays as defense in depth for
+	// everything else that can cancel ctx: an unrelated branch of the same
+	// plan failing, or an external cancellation/timeout. Redundant for the
+	// direct-dependency case, authoritative for those others.
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	id, err := exec.resolveContainerID(op)
+	if err != nil {
+		return err
+	}
+	if err := exec.compose.injectSecrets(ctx, exec.project, *op.Service, id); err != nil {
+		return err
+	}
+	if err := exec.compose.injectConfigs(ctx, exec.project, *op.Service, id); err != nil {
+		return err
+	}
+
 	startMx.Lock()
 	defer startMx.Unlock()
-	_, err := exec.compose.apiClient().ContainerStart(ctx, op.Container.ID, client.ContainerStartOptions{})
+	_, err = exec.compose.apiClient().ContainerStart(ctx, id, client.ContainerStartOptions{})
 	return err
+}
+
+// resolveContainerID returns the ID of the container an operation targets:
+// the observed container when the reconciler already had one, otherwise the
+// result of the CreateContainer node it references.
+func (exec *planExecutor) resolveContainerID(op Operation) (string, error) {
+	if op.Container != nil {
+		return op.Container.ID, nil
+	}
+	res := exec.pctx.get(op.CreateNodeID)
+	if res.ContainerID == "" {
+		return "", fmt.Errorf("internal: no materialized container for %s", op.ResourceID)
+	}
+	return res.ContainerID, nil
+}
+
+// resolveContainerSummary is resolveContainerID plus the rest of the
+// container.Summary that hook execution (runHook) needs — preferring the
+// observed container, falling back to the live view populated by the create
+// node execCreateContainer already ran (a dependency of every start-phase
+// node targeting that replica).
+func (exec *planExecutor) resolveContainerSummary(op Operation) (container.Summary, error) {
+	if op.Container != nil {
+		return *op.Container, nil
+	}
+	id, err := exec.resolveContainerID(op)
+	if err != nil {
+		return container.Summary{}, err
+	}
+	exec.containersMu.Lock()
+	defer exec.containersMu.Unlock()
+	for _, c := range exec.containersByService[op.Service.Name] {
+		if c.ID == id {
+			return c, nil
+		}
+	}
+	return container.Summary{ID: id, Names: []string{"/" + exec.pctx.get(op.CreateNodeID).ContainerName}}, nil
+}
+
+// execWaitCondition polls the dependency service named by the operation
+// until it satisfies the declared depends_on condition or the context ends —
+// the plan-side equivalent of one waitDependencies edge, reusing the exact
+// same polling primitive (waitDependency) and per-condition checks as
+// waitDependencies, so events and error messages cannot drift between the
+// two. required: false dependencies are marked BestEffort by the
+// reconciler: a missing dependency or a failed/timed-out condition is then a
+// warning, not a plan failure — matching waitDependencies' own
+// optional-dependency handling.
+//
+// This applies no timeout of its own -- ctx is used exactly as given,
+// already wrapped (or not) by executeNode's OpWaitCondition dispatch in
+// executor.go. origCtx is ctx as it stood right before that wrap, passed
+// through unchanged to waitDependency, which needs it to tell its own wait
+// timeout apart from an inherited deadline (see its doc comment).
+// planExecutor.waitTimeout (set by upDetached and start) is what gives this
+// node its own fresh per-wait window, without also bounding unrelated Create
+// or Start work the way wrapping the whole plan's ctx would.
+func (exec *planExecutor) execWaitCondition(ctx, origCtx context.Context, op Operation) error {
+	s := exec.compose
+	exec.containersMu.Lock()
+	waitingFor := exec.containersByService[op.Name].filter(isNotOneOff, isNotHookContainer)
+	exec.containersMu.Unlock()
+
+	config := types.ServiceDependency{Condition: op.Condition, Required: !op.BestEffort}
+
+	if len(waitingFor) == 0 {
+		if config.Required {
+			return fmt.Errorf("missing dependency %s", op.Name)
+		}
+		logrus.Warnf("missing dependency %s", op.Name)
+		return nil
+	}
+
+	s.events.On(containerEvents(waitingFor, progress.Waiting)...)
+	// The wait node is shared across every dependent awaiting the same
+	// (dependency, condition) pair (see waitConditionNode), so no single
+	// requester name would be accurate; op.ResourceID identifies the wait
+	// itself instead. waitDependency only ever reads this for one
+	// practically unreachable log line (an unsupported depends_on condition,
+	// filtered out before a plan is ever built).
+	//
+	reached, err := s.waitDependencyReached(ctx, origCtx, op.ResourceID, op.Name, config, waitingFor)
+	if err == nil && !reached {
+		return &waitInterrupted{}
+	}
+	if err != nil && errors.Is(ctx.Err(), context.Canceled) && errors.Is(err, context.Canceled) {
+		// a required dependency's check that failed because ctx was canceled
+		// meanwhile (an inspection cut short) is no failure of the dependency:
+		// the wait is interrupted all the same
+		return &waitInterrupted{cause: err}
+	}
+	return err
+}
+
+// execRunPreStart runs the service's pre_start hooks against the runner
+// containers the create phase prepared (see execCreateHookContainer). The
+// "once per service, no replica running at observation" rule is a plan-time
+// decision; this re-checks the daemon first so a replica started in the
+// window between observation and execution — the drift the plan design
+// accepts — skips a second, redundant run of the hooks rather than erroring
+// on runners already consumed.
+func (exec *planExecutor) execRunPreStart(ctx context.Context, op Operation) error {
+	// Same relationship to run()'s failedDependency check as
+	// execStartContainer's guard above (see its comment): closed for this
+	// node's own direct dependency (the replica's create node) failing,
+	// defense in depth for everything else that can cancel ctx.
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	running, err := exec.compose.getContainers(ctx, exec.project.Name, oneOffExclude, false, op.Service.Name)
+	if err != nil {
+		return err
+	}
+	if len(running) > 0 {
+		logrus.Debugf("skipping pre_start hooks of service %s: a replica is already running", op.Service.Name)
+		return nil
+	}
+	return exec.compose.runPreStart(ctx, exec.project, *op.Service, exec.listener)
+}
+
+// execRunPostStart runs the service's post_start hooks against the replica
+// the start chain just brought up.
+func (exec *planExecutor) execRunPostStart(ctx context.Context, op Operation) error {
+	// Same relationship to run()'s failedDependency check as
+	// execStartContainer's guard above (see its comment): closed for this
+	// node's own direct dependency (StartContainer) failing, defense in depth
+	// for everything else that can cancel ctx.
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	ctr, err := exec.resolveContainerSummary(op)
+	if err != nil {
+		return err
+	}
+	for _, hook := range op.Service.PostStart {
+		if err := exec.compose.runHook(ctx, ctr, *op.Service, hook, exec.listener); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (exec *planExecutor) execStopContainer(ctx context.Context, op Operation) error {
@@ -216,5 +398,43 @@ func (exec *planExecutor) execRenameContainer(ctx context.Context, node *PlanNod
 	_, err := exec.compose.apiClient().ContainerRename(ctx, createdID, client.ContainerRenameOptions{
 		NewName: op.Name,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	// Update the create node's own result in place rather than publishing a
+	// separate entry under this node's ID: plannedReplica deliberately keeps
+	// every start-phase reference (resolveContainerID, groupEventName)
+	// pointed at CreateNodeID, not at this rename node, so they all see the
+	// rename take effect without each needing their own case for "was this
+	// replica's container ever renamed". The ID is unchanged by a rename;
+	// only the name this node is renaming-TO replaces the create's own
+	// temporary one.
+	exec.pctx.set(op.CreateNodeID, operationResult{ContainerID: createdID, ContainerName: op.Name})
+
+	// execCreateContainer published this container into the live view under
+	// its temporary name (the only name it had at that point); refresh it in
+	// place now that the rename landed, or OpWaitCondition and any sibling
+	// execCreateContainer resolving a service reference keep seeing the
+	// temporary one for the rest of the plan's execution.
+	if op.Service != nil {
+		exec.containersMu.Lock()
+		found := false
+		for i, ctr := range exec.containersByService[op.Service.Name] {
+			if ctr.ID == createdID {
+				exec.containersByService[op.Service.Name][i].Names = []string{"/" + op.Name}
+				found = true
+				break
+			}
+		}
+		exec.containersMu.Unlock()
+		if !found {
+			// Shouldn't happen: the DAG guarantees execCreateContainer's
+			// append ran before this node does. Logged rather than silently
+			// skipped, so a future regression that breaks that invariant is
+			// at least visible instead of just quietly serving the
+			// temporary name downstream again.
+			logrus.Warnf("execRenameContainer: container %s not found in live view for service %s; dependents may see the stale temporary name", createdID, op.Service.Name)
+		}
+	}
+	return nil
 }

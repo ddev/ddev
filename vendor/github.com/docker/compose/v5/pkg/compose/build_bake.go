@@ -31,11 +31,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/containerd/console"
 	"github.com/containerd/errdefs"
+	"github.com/distribution/reference"
 	"github.com/docker/cli/cli-plugins/manager"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/command/image/build"
@@ -43,10 +45,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/moby/buildkit/client"
 	gitutil "github.com/moby/buildkit/frontend/dockerfile/dfgitutil"
+	buildkitgit "github.com/moby/buildkit/util/gitutil"
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/moby/moby/client/pkg/versions"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/tonistiigi/go-csvvalue"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/docker/compose/v5/pkg/api"
@@ -121,12 +125,14 @@ type buildStatus struct {
 // drive `buildx bake`: the bake file definition, plus the settings that travel
 // as command arguments or environment variables rather than in the file.
 type bakeBuild struct {
-	cfg            bakeConfig
-	targetNames    map[string]string // service name -> bake target name
-	expectedImages map[string]string // service name -> expected image
-	localPaths     []string          // local build contexts bake needs `--allow fs.read` for
-	privileged     bool
-	secretsEnv     []string
+	cfg             bakeConfig
+	targetNames     map[string]string // service name -> bake target name
+	expectedImages  map[string]string // service name -> expected image
+	localPaths      []string          // local build inputs bake needs `--allow fs.read` for
+	localWritePaths []string          // local cache destinations bake needs `--allow fs.write` for
+	entitlements    []string
+	secretsEnv      []string
+	jobs            int // bake `--jobs` limit, 0 for unlimited
 }
 
 func (s *composeService) doBuildBake(ctx context.Context, project *types.Project, serviceToBeBuild types.Services, options api.BuildOptions) (map[string]string, error) {
@@ -173,6 +179,7 @@ func (s *composeService) doBuildBake(ctx context.Context, project *types.Project
 	if err != nil {
 		return nil, err
 	}
+	bake.jobs = bakeJobs(bake.cfg, s.maxConcurrency, buildx.Version)
 	args := bakeArgs(bake, metadataFile, options)
 	logrus.Debugf("Executing bake with args: %v", args)
 
@@ -204,15 +211,13 @@ func (s *composeService) doBuildBake(ctx context.Context, project *types.Project
 	if err != nil {
 		return nil, err
 	}
-	eg.Go(cmd.Wait)
 
-	errMessage, err := forwardBakeStatus(pipe, ch)
-	if err != nil {
-		return nil, err
-	}
+	errMessage, err := waitBake(cmd, pipe, ch)
 	close(ch) // stop build progress UI
 
-	err = eg.Wait()
+	if displayErr := eg.Wait(); err == nil {
+		err = displayErr
+	}
 	if err != nil {
 		if len(errMessage) > 0 {
 			return nil, errors.New(strings.Join(errMessage, "\n"))
@@ -250,9 +255,26 @@ func (s *composeService) prepareBakeBuild(project *types.Project, serviceToBeBui
 			args[k] = strings.ReplaceAll(v, "${", "$${")
 		}
 
-		entitlements, privileged := bakeEntitlements(buildConfig)
-		bake.privileged = bake.privileged || privileged
-		bake.localPaths = append(bake.localPaths, localBuildPaths(buildConfig)...)
+		entitlements := bakeEntitlements(buildConfig)
+		bake.entitlements = append(bake.entitlements, entitlements...)
+		bake.localPaths = append(bake.localPaths, localBuildPaths(project, buildConfig)...)
+		bake.localPaths = append(bake.localPaths, localCachePaths(buildConfig.CacheFrom, "src")...)
+		bake.localWritePaths = append(bake.localWritePaths, localCachePaths(buildConfig.CacheTo, "dest")...)
+
+		ssh := slices.Concat(buildConfig.SSH, options.SSHs)
+		for _, key := range ssh {
+			if key.Path == "" {
+				bake.entitlements = append(bake.entitlements, "ssh")
+			} else {
+				bake.localPaths = append(bake.localPaths, strings.Split(key.Path, ",")...)
+			}
+		}
+		// Bake implicitly forwards the default agent for SSH Git contexts.
+		if len(ssh) == 0 {
+			if u, err := buildkitgit.ParseURL(buildConfig.Context); err == nil && u.Scheme == buildkitgit.SSHProtocol {
+				bake.entitlements = append(bake.entitlements, "ssh")
+			}
+		}
 
 		image := api.GetImageNameOrDefault(service, project.Name)
 		if _, ok := serviceToBeBuild[serviceName]; ok {
@@ -280,7 +302,7 @@ func (s *composeService) prepareBakeBuild(project *types.Project, serviceToBeBui
 			Platforms:     buildConfig.Platforms,
 			Target:        buildConfig.Target,
 			Secrets:       secrets,
-			SSH:           toBakeSSH(append(buildConfig.SSH, options.SSHs...)),
+			SSH:           toBakeSSH(ssh),
 			Pull:          buildConfig.Pull || options.Pull,
 			NoCache:       buildConfig.NoCache || options.NoCache,
 			ShmSize:       buildConfig.ShmSize,
@@ -325,16 +347,16 @@ func bakeTargetNames(project *types.Project) map[string]string {
 	return targets
 }
 
-// bakeEntitlements returns the entitlements for a build target, and whether
-// bake must be granted `security.insecure`.
-func bakeEntitlements(buildConfig types.BuildConfig) ([]string, bool) {
-	entitlements := buildConfig.Entitlements
-	privileged := slices.Contains(buildConfig.Entitlements, "security.insecure")
-	if buildConfig.Privileged {
+// bakeEntitlements returns the entitlements requested by a build target.
+func bakeEntitlements(buildConfig types.BuildConfig) []string {
+	entitlements := slices.Clone(buildConfig.Entitlements)
+	if buildConfig.Privileged && !slices.Contains(entitlements, "security.insecure") {
 		entitlements = append(entitlements, "security.insecure")
-		privileged = true
 	}
-	return entitlements, privileged
+	if buildConfig.Network == "host" && !slices.Contains(entitlements, "network.host") {
+		entitlements = append(entitlements, "network.host")
+	}
+	return entitlements
 }
 
 // bakeOutputs selects the bake output type — or the lint call for `--check` —
@@ -353,20 +375,89 @@ func bakeOutputs(service types.ServiceConfig, options api.BuildOptions) (outputs
 	}
 }
 
-// localBuildPaths returns the build context paths that live on the local
-// filesystem — remote (git or URL) contexts need no fs.read entitlement.
-func localBuildPaths(buildConfig types.BuildConfig) []string {
+// localBuildPaths returns local build inputs that need an fs.read grant.
+func localBuildPaths(project *types.Project, buildConfig types.BuildConfig) []string {
 	paths := []string{buildConfig.Context}
 	for _, path := range buildConfig.AdditionalContexts {
 		paths = append(paths, path)
 	}
 	var local []string
 	for _, path := range paths {
-		if _, _, err := gitutil.ParseGitRef(path); !strings.Contains(path, "://") && err != nil {
+		if cwdPath, ok := strings.CutPrefix(path, "cwd://"); ok {
+			local = append(local, cwdPath)
+		} else if layout, ok := strings.CutPrefix(path, "oci-layout://"); ok {
+			local = append(local, ociLayoutPath(layout))
+		} else if strings.HasPrefix(path, types.ServicePrefix) || strings.HasPrefix(path, "target:") || strings.HasPrefix(path, "docker-image:") {
+			continue
+		} else if _, _, err := gitutil.ParseGitRef(path); !strings.Contains(path, "://") && err != nil {
 			local = append(local, path)
 		}
 	}
+	contextPath := strings.TrimPrefix(buildConfig.Context, "cwd://")
+	if buildConfig.Dockerfile != "" && buildConfig.DockerfileInline == "" &&
+		(!isRemoteContext(contextPath) || filepath.IsAbs(buildConfig.Dockerfile)) {
+		local = append(local, dockerFilePath(contextPath, buildConfig.Dockerfile))
+	}
+	for _, ref := range buildConfig.Secrets {
+		secret := project.Secrets[ref.Source]
+		if secret.Environment == "" && secret.File != "" {
+			local = append(local, secret.File)
+		}
+	}
 	return local
+}
+
+// ociLayoutPath extracts the filesystem path using Buildx's OCI layout syntax.
+// The caller removes the scheme; Bake validates the original reference.
+// Path extraction adapted from https://github.com/docker/buildx/blob/c7748d0a0bdbdad73fb939cb62fcd4e634e3d7e6/util/ocilayout/parse.go
+func ociLayoutPath(path string) string {
+	if i := strings.LastIndex(path, "@"); i >= 0 && reference.DigestRegexp.MatchString(path[i+1:]) {
+		path = path[:i]
+	}
+	if i := strings.LastIndex(path, ":"); i >= 0 && !isWindowsDrivePath(path, i) {
+		if reference.TagRegexp.MatchString(path[i+1:]) {
+			path = path[:i]
+		}
+	}
+	return path
+}
+
+// isWindowsDrivePath reports whether colon marks an absolute Windows drive prefix.
+// Adapted from https://github.com/docker/buildx/blob/c7748d0a0bdbdad73fb939cb62fcd4e634e3d7e6/util/ocilayout/parse.go
+func isWindowsDrivePath(path string, colon int) bool {
+	if colon != 1 || len(path) < 3 {
+		return false
+	}
+	if path[2] != '/' && path[2] != '\\' {
+		return false
+	}
+	c := path[0]
+	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+}
+
+// localCachePaths extracts local cache sources or destinations. Bake reports
+// invalid cache definitions; they must not produce grants here.
+func localCachePaths(entries []string, key string) []string {
+	var paths []string
+	for _, entry := range entries {
+		fields, err := csvvalue.Fields(entry, nil)
+		if err != nil {
+			continue
+		}
+		attrs := make(map[string]string, len(fields))
+		for _, field := range fields {
+			name, value, ok := strings.Cut(field, "=")
+			if !ok {
+				attrs = nil
+				break
+			}
+			attrs[strings.ToLower(name)] = value
+		}
+		if attrs["type"] == "local" && attrs[key] != "" {
+			paths = append(paths, attrs[key])
+		}
+	}
+	return paths
 }
 
 // bakeMetadataPath picks a fresh temporary path for bake's --metadata-file.
@@ -392,11 +483,14 @@ func bakeMetadataPath() (string, error) {
 func bakeArgs(bake *bakeBuild, metadataFile string, options api.BuildOptions) []string {
 	args := []string{"bake", "--file", "-", "--progress", "rawjson", "--metadata-file", metadataFile}
 	// FIXME we should prompt user about this, but this is a breaking change in UX
-	for _, path := range bake.localPaths {
+	for _, path := range slices.Compact(slices.Sorted(slices.Values(bake.localPaths))) {
 		args = append(args, "--allow", "fs.read="+path)
 	}
-	if bake.privileged {
-		args = append(args, "--allow", "security.insecure")
+	for _, path := range slices.Compact(slices.Sorted(slices.Values(bake.localWritePaths))) {
+		args = append(args, "--allow", "fs.write="+path)
+	}
+	for _, entitlement := range slices.Compact(slices.Sorted(slices.Values(bake.entitlements))) {
+		args = append(args, "--allow", entitlement)
 	}
 	if options.SBOM != "" {
 		args = append(args, "--sbom="+options.SBOM)
@@ -407,15 +501,79 @@ func bakeArgs(bake *bakeBuild, metadataFile string, options api.BuildOptions) []
 	if options.Builder != "" {
 		args = append(args, "--builder", options.Builder)
 	}
+	if bake.jobs > 0 {
+		args = append(args, "--jobs", strconv.Itoa(bake.jobs))
+	}
 	if options.Quiet {
 		args = append(args, "--progress=quiet")
 	}
 	return args
 }
 
-// forwardBakeStatus reads bake's rawjson stderr stream, forwarding solve
-// statuses to the progress UI channel. Lines that are not solve statuses are
-// collected as error messages, to be reported if bake exits non-zero.
+// bakeJobs returns how many targets bake can build concurrently
+func bakeJobs(cfg bakeConfig, maxConcurrency int, buildxVersion string) int {
+	// no limit
+	if maxConcurrency <= 0 {
+		return 0
+	}
+	// limit doesn't hold target back
+	targets, linked := bakeTargets(cfg)
+	if maxConcurrency >= targets {
+		return 0
+	}
+	if versions.LessThan(buildxVersion[1:], buildxJobsMinVersion) {
+		logrus.Warnf("limiting build concurrency requires buildx %s or later, ignoring parallel limit", buildxJobsMinVersion)
+		return 0
+	}
+	// bake rejects a limit lower than its target count once any are linked by `target:` contexts
+	if linked {
+		logrus.Warnf("bake does not support a parallel limit lower than its %d linked build targets, ignoring parallel limit", targets)
+		return 0
+	}
+	return maxConcurrency
+}
+
+// bakeTargets counts the targets bake builds for the default group, those
+// linked in by `target:` contexts included, and reports whether any link exists.
+func bakeTargets(cfg bakeConfig) (int, bool) {
+	targets := slices.Clone(cfg.Groups["default"].Targets)
+	linked := false
+	for i := 0; i < len(targets); i++ {
+		for _, source := range cfg.Targets[targets[i]].Contexts {
+			if target, ok := strings.CutPrefix(source, "target:"); ok {
+				linked = true
+				if !slices.Contains(targets, target) {
+					targets = append(targets, target)
+				}
+			}
+		}
+	}
+	return len(targets), linked
+}
+
+// waitBake forwards the solve statuses of a started bake command's rawjson
+// stderr stream to ch, then waits for the command to exit. It returns the
+// lines of the stream that are not solve statuses — where bake tells why it
+// failed — along with the error of the command.
+//
+// The stream is read to EOF before Wait is called, not while it runs: Wait
+// closes the pipe as soon as the process exits, and what was not read yet is
+// lost. That is the end of the stream, bake's last words and so its error,
+// whenever the consumer of ch lags behind the process.
+func waitBake(cmd *exec.Cmd, stderr io.Reader, ch chan<- *client.SolveStatus) ([]string, error) {
+	errMessage, err := forwardBakeStatus(stderr, ch)
+	if err != nil {
+		// bake may be blocked writing to a stream nobody reads any more
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
+		return nil, err
+	}
+	return errMessage, cmd.Wait()
+}
+
+// forwardBakeStatus reads bake's rawjson stderr stream until EOF, forwarding
+// solve statuses to the progress UI channel. Lines that are not solve statuses
+// are collected as error messages, to be reported if bake exits non-zero.
 func forwardBakeStatus(pipe io.Reader, ch chan<- *client.SolveStatus) ([]string, error) {
 	var errMessage []string
 	reader := bufio.NewReader(pipe)
@@ -424,12 +582,10 @@ func forwardBakeStatus(pipe io.Reader, ch chan<- *client.SolveStatus) ([]string,
 		if readErr == io.EOF {
 			return errMessage, nil
 		}
-		if errors.Is(readErr, os.ErrClosed) {
-			logrus.Debugf("bake stopped")
-			return errMessage, nil
-		}
 		if readErr != nil {
-			return nil, fmt.Errorf("failed to execute bake: %w", readErr)
+			// not wrapped here: doBuildBake does, once, for every error that
+			// comes without a message from bake itself
+			return nil, readErr
 		}
 		decoder := json.NewDecoder(strings.NewReader(line))
 		var status client.SolveStatus
@@ -573,7 +729,11 @@ func toBakeUlimits(ulimits map[string]*types.UlimitsConfig) []string {
 func toBakeSSH(ssh types.SSHConfig) []string {
 	var s []string
 	for _, key := range ssh {
-		s = append(s, fmt.Sprintf("%s=%s", key.ID, key.Path))
+		if key.Path == "" {
+			s = append(s, key.ID)
+		} else {
+			s = append(s, fmt.Sprintf("%s=%s", key.ID, key.Path))
+		}
 	}
 	return s
 }
@@ -618,15 +778,17 @@ func appendAttest(attests []string, attestType, value string) []string {
 	return attests
 }
 
+// isRemoteContext reports whether the Dockerfile is resolved within a remote source.
+func isRemoteContext(ctxName string) bool {
+	contextType, _ := build.DetectContextType(ctxName)
+	return contextType == build.ContextTypeGit || contextType == build.ContextTypeRemote || strings.Contains(ctxName, "://")
+}
+
 func dockerFilePath(ctxName string, dockerfile string) string {
 	if dockerfile == "" {
 		return ""
 	}
-	contextType, _ := build.DetectContextType(ctxName)
-	if contextType == build.ContextTypeGit || contextType == build.ContextTypeRemote {
-		return dockerfile
-	}
-	if strings.Contains(ctxName, "://") {
+	if isRemoteContext(ctxName) {
 		return dockerfile
 	}
 	if !filepath.IsAbs(dockerfile) {

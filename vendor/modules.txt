@@ -13,6 +13,10 @@ charm.land/bubbletea/v2
 # charm.land/lipgloss/v2 v2.0.6
 ## explicit; go 1.25.0
 charm.land/lipgloss/v2
+# connectrpc.com/connect v1.19.1
+## explicit; go 1.24.0
+connectrpc.com/connect
+connectrpc.com/connect/internal/gen/connectext/grpc/status/v1
 # dario.cat/mergo v1.0.2
 ## explicit; go 1.13
 dario.cat/mergo
@@ -224,7 +228,7 @@ github.com/dimchansky/utfbom
 # github.com/distribution/reference v0.6.0
 ## explicit; go 1.20
 github.com/distribution/reference
-# github.com/docker/cli v29.9.2+incompatible
+# github.com/docker/cli v29.9.3+incompatible
 ## explicit
 github.com/docker/cli/cli
 github.com/docker/cli/cli-plugins/hooks
@@ -266,16 +270,28 @@ github.com/docker/cli/internal/volumespec
 github.com/docker/cli/opts
 github.com/docker/cli/pkg/kvfile
 github.com/docker/cli/templates
-# github.com/docker/compose/v5 v5.6.1
-## explicit; go 1.26.8
+# github.com/docker/compose/v5 v5.7.1
+## explicit; go 1.26.10
 github.com/docker/compose/v5/cmd/display
-github.com/docker/compose/v5/cmd/formatter
 github.com/docker/compose/v5/internal
+github.com/docker/compose/v5/internal/concurrency
+github.com/docker/compose/v5/internal/confighash
+github.com/docker/compose/v5/internal/containerops
+github.com/docker/compose/v5/internal/depgraph
 github.com/docker/compose/v5/internal/desktop
+github.com/docker/compose/v5/internal/engine
+github.com/docker/compose/v5/internal/images
+github.com/docker/compose/v5/internal/inspect
+github.com/docker/compose/v5/internal/logstream
 github.com/docker/compose/v5/internal/memnet
+github.com/docker/compose/v5/internal/naming
 github.com/docker/compose/v5/internal/oci
 github.com/docker/compose/v5/internal/paths
+github.com/docker/compose/v5/internal/progress
+github.com/docker/compose/v5/internal/projectloader
+github.com/docker/compose/v5/internal/provider
 github.com/docker/compose/v5/internal/registry
+github.com/docker/compose/v5/internal/relay
 github.com/docker/compose/v5/internal/sync
 github.com/docker/compose/v5/internal/tracing
 github.com/docker/compose/v5/pkg/api
@@ -297,9 +313,23 @@ github.com/docker/go-connections/tlsconfig
 # github.com/docker/go-units v0.5.0
 ## explicit
 github.com/docker/go-units
-# github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
-## explicit; go 1.18
-github.com/eiannone/keyboard
+# github.com/docker/secrets-engine/client v0.2.2
+## explicit; go 1.26.10
+github.com/docker/secrets-engine/client
+github.com/docker/secrets-engine/client/dockerhub
+github.com/docker/secrets-engine/client/realms
+# github.com/docker/secrets-engine/x v0.8.5
+## explicit; go 1.26.10
+github.com/docker/secrets-engine/x/api
+github.com/docker/secrets-engine/x/api/health/v1
+github.com/docker/secrets-engine/x/api/health/v1/healthv1connect
+github.com/docker/secrets-engine/x/api/plugins/v1
+github.com/docker/secrets-engine/x/api/plugins/v1/pluginsv1connect
+github.com/docker/secrets-engine/x/api/resolver
+github.com/docker/secrets-engine/x/api/resolver/v1
+github.com/docker/secrets-engine/x/api/resolver/v1/resolverv1connect
+github.com/docker/secrets-engine/x/realms
+github.com/docker/secrets-engine/x/secrets
 # github.com/fatih/color v1.19.0
 ## explicit; go 1.25.0
 github.com/fatih/color
@@ -630,9 +660,6 @@ github.com/shopspring/decimal
 ## explicit; go 1.23
 github.com/sirupsen/logrus
 github.com/sirupsen/logrus/hooks/slog
-# github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-## explicit
-github.com/skratchdot/open-golang/open
 # github.com/spf13/afero v1.15.0
 ## explicit; go 1.23.0
 github.com/spf13/afero
@@ -832,11 +859,17 @@ go.opentelemetry.io/proto/otlp/trace/v1
 # go.yaml.in/yaml/v3 v3.0.5
 ## explicit; go 1.16
 go.yaml.in/yaml/v3
-# go.yaml.in/yaml/v4 v4.0.0-rc.6
+# go.yaml.in/yaml/v4 v4.0.0
 ## explicit; go 1.18
 go.yaml.in/yaml/v4
 go.yaml.in/yaml/v4/internal/libyaml
-go.yaml.in/yaml/v4/plugin/limit
+go.yaml.in/yaml/v4/internal/plugin
+go.yaml.in/yaml/v4/internal/plugin/mergekey
+go.yaml.in/yaml/v4/plugin/aliasdata
+go.yaml.in/yaml/v4/plugin/errorformat/v3
+go.yaml.in/yaml/v4/plugin/errorformat/v4
+go.yaml.in/yaml/v4/plugin/loaderlimits
+go.yaml.in/yaml/v4/plugin/mergekey
 # golang.org/x/crypto v0.58.0
 ## explicit; go 1.26.0
 golang.org/x/crypto/bcrypt
@@ -914,8 +947,8 @@ google.golang.org/genproto/googleapis/api/httpbody
 ## explicit; go 1.26.0
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.84.0
-## explicit; go 1.25.0
+# google.golang.org/grpc v1.85.0
+## explicit; go 1.26.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff

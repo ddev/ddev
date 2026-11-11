@@ -39,6 +39,14 @@ const (
 	IndexServer = "https://" + IndexHostname + "/v1/"
 	// IndexName is the name of the index
 	IndexName = "docker.io"
+	// StagingRegistryHost is the Docker Hub staging registry.
+	StagingRegistryHost = "registry-1-stage.docker.io"
+	// StagingIndexServer is the credentials key for StagingRegistryHost.
+	StagingIndexServer = "https://" + StagingRegistryHost + "/"
+	// DHIRegistryHost is the Docker Hardened Images registry.
+	DHIRegistryHost = "dhi.io"
+	// DHIIndexServer is the credentials key for DHIRegistryHost.
+	DHIIndexServer = "https://" + DHIRegistryHost
 )
 
 // GetAuthConfigKey special-cases using the full index address of the official
@@ -59,6 +67,14 @@ func GetAuthConfigKey(indexName string) string {
 // implemented by the docker CLI's configfile.
 type AuthProvider interface {
 	GetAuthConfig(registryHostname string) (clitypes.AuthConfig, error)
+}
+
+// AuthProviderFunc adapts a function to AuthProvider.
+type AuthProviderFunc func(registryHostname string) (clitypes.AuthConfig, error)
+
+// GetAuthConfig calls f.
+func (f AuthProviderFunc) GetAuthConfig(registryHostname string) (clitypes.AuthConfig, error) {
+	return f(registryHostname)
 }
 
 // EncodedAuth returns the credentials for the registry hosting the given
