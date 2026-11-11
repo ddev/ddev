@@ -964,6 +964,93 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	return proposedPort, substitutePortStr, true
 }
 
+// resolvedRouterPorts holds the router ports as the project configured them
+// and as Start() resolved them from defaults, the global config, and substitutes.
+type resolvedRouterPorts struct {
+	configured     map[string]string
+	resolved       map[string]string
+	configuredWebX *WebExposedPort
+	resolvedWebX   *WebExposedPort
+}
+
+// routerPortFields returns the router port fields that Start() resolves.
+func (app *DdevApp) routerPortFields() map[string]*string {
+	return map[string]*string{
+		"router_http_port":   &app.RouterHTTPPort,
+		"router_https_port":  &app.RouterHTTPSPort,
+		"mailpit_http_port":  &app.MailpitHTTPPort,
+		"mailpit_https_port": &app.MailpitHTTPSPort,
+		"xhgui_http_port":    &app.XHGuiHTTPPort,
+		"xhgui_https_port":   &app.XHGuiHTTPSPort,
+	}
+}
+
+// routerPortValues returns the current values of the router port fields and
+// a copy of the primary web_extra_exposed_ports entry, if there is one.
+func (app *DdevApp) routerPortValues() (map[string]string, *WebExposedPort) {
+	values := map[string]string{}
+	for name, field := range app.routerPortFields() {
+		values[name] = *field
+	}
+	var primary *WebExposedPort
+	if len(app.WebExtraExposedPorts) > 0 {
+		p := app.WebExtraExposedPorts[0]
+		primary = &p
+	}
+	return values, primary
+}
+
+// restoreConfiguredRouterPorts puts back the configured value of each router
+// port that still holds the value Start() resolved for it. A port changed
+// since Start() keeps its new value.
+func (app *DdevApp) restoreConfiguredRouterPorts() {
+	r := app.resolvedRouterPorts
+	if r == nil {
+		return
+	}
+	for name, field := range app.routerPortFields() {
+		if *field == r.resolved[name] {
+			*field = r.configured[name]
+		}
+	}
+	if r.configuredWebX != nil && r.resolvedWebX != nil && len(app.WebExtraExposedPorts) > 0 && app.WebExtraExposedPorts[0] == *r.resolvedWebX {
+		// Clone so that restoring on a copy of app leaves the original's slice alone.
+		app.WebExtraExposedPorts = slices.Clone(app.WebExtraExposedPorts)
+		app.WebExtraExposedPorts[0].HTTPPort = r.configuredWebX.HTTPPort
+		app.WebExtraExposedPorts[0].HTTPSPort = r.configuredWebX.HTTPSPort
+	}
+}
+
+// resolveRouterPorts sets the router ports from the project, global, and
+// default values, and lets substitute replace the ones that are busy. It starts
+// from the configured ports, not from what an earlier call resolved, and
+// records both so that writeConfig() can keep resolved ports out of config.yaml.
+func (app *DdevApp) resolveRouterPorts(substitute func(ports []*string)) {
+	app.restoreConfiguredRouterPorts()
+	configured, configuredWebX := app.routerPortValues()
+
+	app.RouterHTTPPort = app.GetPrimaryRouterHTTPPort()
+	app.RouterHTTPSPort = app.GetPrimaryRouterHTTPSPort()
+	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
+	app.MailpitHTTPSPort = app.GetMailpitHTTPSPort()
+	app.XHGuiHTTPPort = app.GetXHGuiHTTPPort()
+	app.XHGuiHTTPSPort = app.GetXHGuiHTTPSPort()
+
+	AssignRouterPortsToGenericWebserverPorts(app)
+
+	substitute([]*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort, &app.XHGuiHTTPPort, &app.XHGuiHTTPSPort})
+
+	SyncGenericWebserverPortsWithRouterPorts(app)
+
+	resolved, resolvedWebX := app.routerPortValues()
+	app.resolvedRouterPorts = &resolvedRouterPorts{
+		configured:     configured,
+		resolved:       resolved,
+		configuredWebX: configuredWebX,
+		resolvedWebX:   resolvedWebX,
+	}
+}
+
 // GetSubstitutePortsIfNeeded replaces the provided ports with a substitute if they need it.
 func GetSubstitutePortsIfNeeded(ports []*string, verbose bool) {
 	for _, port := range ports {
