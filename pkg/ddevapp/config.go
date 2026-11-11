@@ -254,26 +254,10 @@ func (app *DdevApp) writeConfig(omitName bool) error {
 	if appcopy.DBImage == docker.GetDBImage(appcopy.Database.Type, appcopy.Database.Version) {
 		appcopy.DBImage = ""
 	}
-	// Start() resolves the router, Mailpit and XHGui ports into app, so a port
-	// that only comes from the default, the global config, or a substitute must
-	// not be pinned into the project's config.
+	// Start() resolves the router, Mailpit and XHGui ports into app. Write only
+	// the ports the project configured, even when one equals the default or
+	// the global value.
 	appcopy.restoreConfiguredRouterPorts()
-	for _, p := range []struct {
-		port       *string
-		defaultVal string
-		globalVal  string
-	}{
-		{&appcopy.RouterHTTPPort, nodeps.DdevDefaultRouterHTTPPort, globalconfig.DdevGlobalConfig.RouterHTTPPort},
-		{&appcopy.RouterHTTPSPort, nodeps.DdevDefaultRouterHTTPSPort, globalconfig.DdevGlobalConfig.RouterHTTPSPort},
-		{&appcopy.MailpitHTTPPort, nodeps.DdevDefaultMailpitHTTPPort, globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort},
-		{&appcopy.MailpitHTTPSPort, nodeps.DdevDefaultMailpitHTTPSPort, globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort},
-		{&appcopy.XHGuiHTTPPort, nodeps.DdevDefaultXHGuiHTTPPort, globalconfig.DdevGlobalConfig.RouterXHGuiHTTPPort},
-		{&appcopy.XHGuiHTTPSPort, nodeps.DdevDefaultXHGuiHTTPSPort, globalconfig.DdevGlobalConfig.RouterXHGuiHTTPSPort},
-	} {
-		if *p.port == p.defaultVal || *p.port == p.globalVal {
-			*p.port = ""
-		}
-	}
 	if appcopy.ProjectTLD == globalconfig.DdevGlobalConfig.ProjectTldGlobal {
 		appcopy.ProjectTLD = ""
 	}

@@ -119,3 +119,61 @@ func TestWriteConfigOmitsSubstituteGenericWebserverPorts(t *testing.T) {
 	require.Equal(t, 443, written.WebExtraExposedPorts[0].HTTPSPort)
 	require.Equal(t, 33000, app.WebExtraExposedPorts[0].HTTPPort)
 }
+
+func setGlobalPrimaryRouterPorts(t *testing.T, http, https string) {
+	t.Helper()
+	g := &globalconfig.DdevGlobalConfig
+	origHTTP, origHTTPS := g.RouterHTTPPort, g.RouterHTTPSPort
+	t.Cleanup(func() {
+		g.RouterHTTPPort, g.RouterHTTPSPort = origHTTP, origHTTPS
+	})
+	g.RouterHTTPPort, g.RouterHTTPSPort = http, https
+}
+
+func TestWriteConfigOmitsGlobalRouterPorts(t *testing.T) {
+	setGlobalPrimaryRouterPorts(t, "8080", "8443")
+	setGlobalRouterPorts(t, "18025", "18026", "18143", "18142")
+	app := newRouterPortsTestApp(t)
+
+	resolvePortsLikeStart(app, nil)
+	require.Equal(t, "8080", app.RouterHTTPPort)
+	require.Equal(t, "18025", app.MailpitHTTPPort)
+	require.Equal(t, "18143", app.XHGuiHTTPPort)
+	require.NoError(t, app.WriteConfig())
+
+	config := readWrittenConfig(t, app)
+	for name := range app.routerPortFields() {
+		require.NotContains(t, config, name)
+	}
+}
+
+// TestWriteConfigKeepsProjectPortsMatchingDefaultOrGlobal checks that a port
+// the project set is written even when it equals the DDEV default or the
+// global value, so the project keeps it when the global config changes.
+func TestWriteConfigKeepsProjectPortsMatchingDefaultOrGlobal(t *testing.T) {
+	setGlobalPrimaryRouterPorts(t, "8080", "8443")
+	setGlobalRouterPorts(t, "18025", "18026", "", "")
+	app := newRouterPortsTestApp(t)
+	// The default, where the global config differs.
+	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
+	app.MailpitHTTPPort = nodeps.DdevDefaultMailpitHTTPPort
+	// The same value as the global config.
+	app.RouterHTTPSPort = "8443"
+	app.MailpitHTTPSPort = "18026"
+
+	resolvePortsLikeStart(app, nil)
+	require.Equal(t, nodeps.DdevDefaultRouterHTTPPort, app.RouterHTTPPort)
+	require.NoError(t, app.WriteConfig())
+
+	config := readWrittenConfig(t, app)
+	require.Equal(t, nodeps.DdevDefaultRouterHTTPPort, config["router_http_port"])
+	require.Equal(t, "8443", config["router_https_port"])
+	require.Equal(t, nodeps.DdevDefaultMailpitHTTPPort, config["mailpit_http_port"])
+	require.Equal(t, "18026", config["mailpit_https_port"])
+	require.NotContains(t, config, "xhgui_http_port")
+	require.NotContains(t, config, "xhgui_https_port")
+
+	written, err := NewApp(app.AppRoot, false)
+	require.NoError(t, err)
+	require.Equal(t, nodeps.DdevDefaultRouterHTTPPort, written.GetPrimaryRouterHTTPPort())
+}
