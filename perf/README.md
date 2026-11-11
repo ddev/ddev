@@ -20,6 +20,7 @@ One JSON result object per run per leg (platform + Docker provider combination):
   "os": "darwin",
   "arch": "arm64",
   "docker_provider": "colima_vz",
+  "runner": "tb-macos-arm64-5",
   "metrics": {
     "ddev_rebuild_s": 33.8,
     "ddev_start_cold_s": 8.3,
@@ -93,6 +94,13 @@ under `perf/fixtures/large-tree/` (gitignored) and reused on subsequent runs.
   pool for correctness tests during the run.
 - **Windows/WSL2**: `.buildkite/perf-windows10dockerforwindows.yml` and `.buildkite/perf-wsl2-*.yml`,
   one per existing leg in `.buildkite/*.yml`, reusing the same `agents:` tags.
+- The macOS legs and `wsl2-mirrored-dockerinside` are pinned to one machine each with a
+  `testbot=<hostname>` agent tag: `tb-macos-arm64-5` for the shared providers, `tb-macos-arm64-4`
+  for macOS Docker Desktop, and `tb-wsl-14` for `wsl2-mirrored-dockerinside`. Two machines can
+  differ by several times on the same metric, so a leg that moves between them looks like a
+  regression. A pinned leg waits while its machine is offline. To move a leg, change its tag and
+  expect a step in its history. The Windows Docker Desktop and WSL2 Docker Desktop legs are not
+  pinned, so check their `runner` values before reading a step as a regression.
 - All of the above must be configured in the Buildkite dashboard as pipelines with a **nightly
   Scheduled Build** (not a push/PR trigger) — that step can't be done from this repo; see the
   comment at the top of each `perf-*.yml` file.
@@ -116,8 +124,12 @@ under `perf/fixtures/large-tree/` (gitignored) and reused on subsequent runs.
   with cold image, Composer, and OS page caches. Every Buildkite leg reuses a persistent codebase
   and warm caches. Trends *within* the Linux leg are meaningful; a Linux-vs-macOS bar comparison
   mostly measures that difference.
-- **Over time, within one leg**: meaningful, with the caveat that the round-robin pools
-  (`tb-macos-arm64-5/6/7`) can land a given provider on a different physical machine each night.
+- **Over time, within one leg**: meaningful, as long as the leg stays on one machine (see CI
+  wiring above). `runner` records which machine ran each result: `BUILDKITE_AGENT_NAME` on
+  Buildkite, `github-hosted` on GitHub-hosted runners (whose names change every run), the
+  runner name on self-hosted GitHub runners, else the hostname. Results from before November
+  2026 have no `runner` and may mix machines, because legs were not yet pinned. Use the
+  dashboard's runner filter to view one machine at a time.
 
 ## Regression alerts
 

@@ -57,6 +57,7 @@ function nightly(legRows, metric) {
   return [...byDate].map(([date, dayRows]) => ({
     date,
     value: median(dayRows.map((r) => r.metrics[metric])),
+    runners: [...new Set(dayRows.map((r) => r.runner).filter(Boolean))],
     first: dayRows[0],
     last: dayRows[dayRows.length - 1],
   }));
@@ -100,7 +101,14 @@ function detect(rows, now = Date.now()) {
       const recentValues = recent.map((n) => n.value);
       if (!recentValues.every((v) => v > threshold)) continue;
 
-      regressed.push({ metric, baseline, threshold, recent: recentValues });
+      regressed.push({
+        metric,
+        baseline,
+        threshold,
+        recent: recentValues,
+        recentRunners: recent.map((n) => n.runners),
+        baseRunners: base.flatMap((n) => n.runners),
+      });
       // The slowdown may have begun before the recent window, with a single
       // noisy fast night breaking the streak, so walk back past slow nights
       // and past any lone fast night that has a slow night before it.
@@ -126,6 +134,21 @@ function shortSha(sha) {
   return sha ? sha.slice(0, 10) : 'unknown';
 }
 
+// "201.1s" or, when the night recorded where it ran, "201.1s on tb-wsl-12-1".
+function fmtNight(value, runners) {
+  return runners && runners.length ? `${fmt(value)} on ${runners.join('+')}` : fmt(value);
+}
+
+// "tb-wsl-14-1 ×8, tb-wsl-12-1 ×6", most frequent first; '' when none recorded.
+function runnerCounts(runners) {
+  const counts = new Map();
+  for (const r of runners) counts.set(r, (counts.get(r) || 0) + 1);
+  return [...counts]
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+    .map(([r, n]) => `${r} ×${n}`)
+    .join(', ');
+}
+
 function issueTitle(leg) {
   return `Nightly perf regression: ${leg}`;
 }
@@ -139,10 +162,20 @@ function report(finding, repo) {
     '|---|---|---|---|',
     ...metrics.map((m) => {
       const pct = ((median(m.recent) / m.baseline - 1) * 100).toFixed(0);
-      return `| \`${m.metric}\` | ${fmt(m.baseline)} | ${fmt(m.threshold)} | ${m.recent.map(fmt).join(', ')} (+${pct}%) |`;
+      const nights = m.recent.map((v, i) => fmtNight(v, m.recentRunners && m.recentRunners[i])).join(', ');
+      return `| \`${m.metric}\` | ${fmt(m.baseline)} | ${fmt(m.threshold)} | ${nights} (+${pct}%) |`;
     }),
     '',
   ];
+  // A leg's metrics come from the same nightly runs, so the first regressed
+  // metric's runners stand for all of them.
+  const baseRunners = runnerCounts(metrics[0].baseRunners || []);
+  if (baseRunners) {
+    lines.push(
+      `The baseline nights ran on ${baseRunners}. If the last nights all ran on one machine and the baseline mostly on another, compare against that machine's own history on the dashboard (runner filter) before looking for a code change.`,
+      ''
+    );
+  }
   const goodSha = lastGood && lastGood.commit_sha;
   const badSha = firstBad.commit_sha;
   const badDate = firstBad.timestamp.slice(0, 10);
