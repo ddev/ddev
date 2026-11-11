@@ -12,6 +12,13 @@
 
 const puppeteer = require('puppeteer');
 
+// Errors from a 1s waitForSelector poll that mean "not there yet": the poll
+// timed out, or a navigation replaced the page's execution context mid-poll.
+function isRetryableWaitError(err) {
+  if (err?.name === 'TimeoutError') return true;
+  return /Execution context was destroyed|Cannot find context with specified id|frame was detached/i.test(err?.message ?? '');
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -82,7 +89,11 @@ function sleep(ms) {
             await page.waitForSelector(selector, { timeout: 1000 });
             return;
           } catch (err) {
-            // TimeoutError, or a destroyed context while a navigation is under way: poll again.
+            // A TimeoutError, or a destroyed context while a navigation is
+            // under way, means poll again. Anything else (the browser died,
+            // the target closed) won't fix itself, so surface the real cause
+            // instead of spinning until the attempts run out.
+            if (!isRetryableWaitError(err)) throw err;
           }
           idle = Date.now() - Math.max(since, lastActivity);
           if ((inFlight === 0 && idle >= idleMs) || idle >= hungMs) break;

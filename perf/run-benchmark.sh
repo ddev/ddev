@@ -164,7 +164,13 @@ docker_provider="${DOCKER_PROVIDER_LABEL:-${DOCKER_TYPE:-$(jq -r '.raw["docker-p
 # one testbot, and machines differ enough to look like a regression when the
 # job moves between them. BUILDKITE_AGENT_NAME matches the runner names on the
 # CI test-runtime dashboard; RUNNER_NAME is the GitHub Actions equivalent.
-runner="${BUILDKITE_AGENT_NAME:-${RUNNER_NAME:-$(hostname 2>/dev/null || echo unknown)}}"
+# GitHub-hosted runners get a new RUNNER_NAME every run, which would make
+# every night look like a different machine, so record them all as one.
+if [ "${RUNNER_ENVIRONMENT:-}" = "github-hosted" ]; then
+  runner="github-hosted"
+else
+  runner="${BUILDKITE_AGENT_NAME:-${RUNNER_NAME:-$(hostname 2>/dev/null || echo unknown)}}"
+fi
 
 result_json=$(jq -nc \
   --argjson metrics "$metrics_json" \

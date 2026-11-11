@@ -194,8 +194,9 @@ Two signals use the same history:
   `Nightly perf regression: <leg>`, with the metrics, values, and a compare link for the
   commits between the last good and first slow night. When results record a `runner`, the issue
   names the machine behind each recent night and counts the baseline nights per machine, because
-  a leg whose agent tags match several testbots can look slower just by moving to another one. The first slow night is the start of
-  the unbroken run of nights above the threshold, which can begin before the last 3. While that
+  a leg whose agent tags match several testbots can look slower just by moving to another one.
+  The first slow night is the start of the unbroken run of nights above the threshold, which can
+  begin before the last 3. While that
   issue is open, the check comments on it only when another metric on that leg regresses;
   closing it is left to a person. After that, an issue closed since the slowdown began still
   counts as covering it, so a regression accepted as explained is not filed again. The check
