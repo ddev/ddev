@@ -88,6 +88,12 @@ if gh api "repos/${REPO}/git/ref/tags/${TAG}" >/dev/null 2>&1; then
   tag_sha="$(gh api "repos/${REPO}/commits/${TAG}" --jq .sha)"
   [ "$tag_sha" = "$SHA" ] || die "tag ${TAG} already exists at ${tag_sha}, not at ${BRANCH} (${SHA})"
 fi
+if [ "$REUSE_DRAFT" = true ]; then
+  # The draft keeps the target it was created with, so a later run would
+  # release that commit, not ${BRANCH} as it is now.
+  draft_target="$(jq -r '.[0].target_commitish' <<<"$existing")"
+  [ "$draft_target" = "$SHA" ] || die "the draft for ${TAG} targets ${draft_target}, but ${BRANCH} is now at ${SHA}. Delete the draft (gh release delete ${TAG} --repo ${REPO}) and run again"
+fi
 
 if [ "$IMAGE_CHECK" = true ]; then
   # release-prep sets every image's *TagBranch to the release.
@@ -148,7 +154,7 @@ if [ "$DRY_RUN" = true ]; then
 fi
 
 if [ "$REUSE_DRAFT" = true ]; then
-  echo "A draft for ${TAG} already exists; leaving it as it is."
+  echo "A draft for ${TAG} at ${SHA} already exists; leaving it as it is."
 else
   args=(--repo "$REPO" --draft --target "$SHA" --title "$TAG"
         --notes-file "$notes" --generate-notes --notes-start-tag "$SINCE")
