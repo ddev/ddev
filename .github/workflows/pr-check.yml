@@ -1,15 +1,11 @@
 name: PR Check
 
 on:
-  pull_request_target:
-    types: [opened, edited, reopened, synchronize, ready_for_review, review_requested]
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
-  statuses: write
-  checks: write
 
 jobs:
   check_pr_title:
@@ -23,13 +19,3 @@ jobs:
           flags: ''
           excludeDescription: true
           error: 'Title does not follow our conventions see https://docs.ddev.com/en/stable/developers/building-contributing/#pull-request-title-guidelines'
-
-  assign_labels:
-    name: Assign Labels
-    needs: check_pr_title
-    runs-on: ubuntu-26.04
-    steps:
-      - name: Assign and check labels
-        uses: fuxingloh/multi-labeler@v5
-        with:
-          config-path: .github/pr-labeler.yml
