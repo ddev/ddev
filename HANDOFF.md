@@ -1,21 +1,81 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-11-09; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-11-09, release status updated 2026-11-11; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
 Environment as last verified: Apple `container` 1.6.1 (signed installer, **not** Homebrew — see
-below), `socktainer` built from upstream `main` as of 2026-11-09 with no fork fixes,
-docker CLI 29.9.2, docker context `socktainer`, macOS 27.0.1 (26A434), `ddev` from branch
+below), `socktainer` built from upstream `main` as of 2026-11-09 with no fork fixes (the same
+commit as the v1.6.1 release, `71f2415`), docker CLI 29.9.2, docker context `socktainer`,
+macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment),
 rebased on `upstream/main` as of 2026-11-09, after #9072.
 
 ## Resume here
 
+### socktainer v1.6.1 (released 2026-11-09)
+
+[v1.6.1](https://github.com/socktainer/socktainer/releases/tag/v1.6.1) is upstream `main` as
+of 2026-11-09 (`71f2415`); nothing has merged since. It has every fix this work was waiting
+on: #492 (image `label` filter), #494 (`State.ExitCode`), #496 (`*.sock` bind mounts), #506
+(#479, peer hostname rewrite), #507 (`created` state), #509 (#508, hostname
+uniqueness) and #511 (#467, `docker cp` under mounts). It also builds against apple container 1.6.1 and
+containerization 0.53.0 (#485), not 1.7.1. Homebrew has socktainer 1.6.1, installed here and
+first on `PATH`.
+
+Still open upstream as of 2026-11-11: issues #484, #497, #498, #499, #502, #504, #505,
+the newer issues #510, #514, #517 and #518, and the pull requests #487, #513
+(ours, for #505), #515 (ours, for #514) and #516 (apple container 1.7.1 and containerization 0.54.0).
+
+Done on the branch 2026-11-11 (uncommitted), run against Homebrew's socktainer 1.6.1:
+
+- `SocktainerMinVersion` is 1.6.1; `ddev utility dockercheck` reports `socktainer version: 1.6.1`.
+- Removed the #508 hostname-uniqueness skips (11 in `pkg/ddevapp` and `pkg/testcommon`, 6 in
+  `cmd/ddev/cmd`) and the four #493 exit-code skips; six test files now match upstream.
+  `TestPopulateGlobalCustomCommandFiles` and `TestCmdDescribe` keep a skip, now naming only
+  #514 and the `ExposedPorts` gap.
+- Removed the #479 `DDEV_PRIMARY_URL` exception in `TestEnvironmentVariables`.
+- Removed the `*.sock` check in `AppleContainerSSHAgentSocket`; `TestAppleContainerSSHAgent`
+  now uses a socket named `agent.sock`. The user docs drop the socat relay and the 1.6.0
+  hostname limitation, and require socktainer 1.6.1.
+- **`CopyIntoContainer` keeps its in-container `tar`**, deliberately: socktainer's archive
+  copy-in still ignores gzip (#484) and drops owner and mtime (#514), which `tar` keeps.
+  Revisit when #515 is released.
+- The testbots run socktainer 1.6.1 (per rfay, 2026-11-11).
+
+Tests on Homebrew socktainer 1.6.1 (2026-11-11, with OrbStack stopped; logs in
+`~/tmp/sk161-tests2/`): all 21 un-skipped tests pass, plus `TestEnvironmentVariables` and
+`TestAppleContainerSSHAgent` (now with an `agent.sock` socket), except two that needed fixes:
+
+- `TestTimezoneConfig` failed every run: **an upstream test bug, not socktainer's**. It
+  calls `t.Setenv("TZ", "")` before anything has used `time.Local`, and Go loads
+  `time.Local` lazily, so it becomes UTC and the test expects `timezone=UTC` while the
+  container correctly says `MST`. It passes elsewhere only when something earlier in the
+  process touched `time.Local`. Fixed in `config_test.go` by reading the host zone before
+  clearing `TZ`; passes after the fix. Worth its own upstream PR.
+- `TestStartProfileImages` failed 3 of 5 runs: **a new socktainer bug**, filed 2026-11-11 as
+  [socktainer#518](https://github.com/socktainer/socktainer/issues/518); PR to follow once #513 or #515 lands.
+  Two `docker load`s at once can leave one tag on its old image: 4 of 16 tags stale with
+  concurrent loads, 0 of 16 serially (`handoff/inlinerecreaterepro/concurrent-load.sh`,
+  `SERIAL=1` for the control). Compose's bake build loads every built image at once, so
+  after `ddev start` rebuilds, a service can keep its old image; Compose then sees no
+  change and doesn't recreate it (`handoff/inlinerecreaterepro/repro.sh`). Users hit it
+  too, since every `ddev start` builds web and db together. Cause: socktainer makes a new
+  containerization `ImageStore` per request (`ClientImageService.swift:609`, also 704 and
+  790), and `ReferenceManager.create` does an unlocked read-modify-write of `state.json`;
+  each actor serializes only its own calls, so the later save puts back the other
+  reference. Fix upstream: share one `ImageStore` (or serialize the writes). DDEV
+  workaround: `composeBuild` builds one service per `Build` call on Apple Container
+  (`compose_build.go`); `WithMaxConcurrency` doesn't reach the bake path. With it, the
+  test passed 3 of 3 runs; builds are slower than parallel ones.
+- Also seen, unfiled and harmless to DDEV so far: inspect's `.Image` is the reference rather
+  than the image ID, and `docker images -q` reports an ID that differs from inspect's and
+  changes on every load of the same image.
+
 ### State (2026-11-09)
 
-- **Review pass of 2026-11-09 (uncommitted):** `CheckDockerVersion` no longer returns an
+- **Review pass of 2026-11-09 (committed in `fix(apple-container): version check, auth ssh hints, docs`):** `CheckDockerVersion` no longer returns an
   error when socktainer reports no `socktainer` component, since that would have made
   every `ddev start` warn; the version is just not compared. `ddev utility dockercheck`
   prints the socktainer version. `ddev auth ssh` with `ssh_agent_upstream` already set
@@ -24,16 +84,16 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
   globally, since DDEV omits it itself. The user docs no longer tell people to omit
   `ddev-ssh-agent` per project or list the mkcert CA as a limitation; they document
   `--ssh-agent-upstream=host`, the `*.sock` relay, `docker-buildx`, and
-  `host.docker.internal` listening on all interfaces. The PR description is stale (bind
-  global cache, `FindImagesByLabels`, the split-out PRs, the per-project omit); a draft
-  replacement is in `~/tmp/pr-8656-body.md`.
+  `host.docker.internal` listening on all interfaces. The PR description was
+  replaced 2026-11-11 from `~/tmp/pr-8656-body.md` (1.6.1, #517, #518; the 2026-11-09 draft
+  is `~/tmp/pr-8656-body.2026-11-09.md`).
 - **A `brew upgrade` stops Apple Container.** On 2026-11-09 it upgraded Homebrew's
   `container` to 1.7.1 and booted out the running apiserver mid-test; restarting the signed
   1.6.1 install then hit vmnet 1001 until a reboot. Homebrew's `container` (now 1.7.1) is
   ahead of `/usr/local/bin` on PATH.
 - **socktainer `main` fixes the main blocker.** #509 (hostname uniqueness), #506 (#479),
-  #507 (`created` state) and #511 (#467, `docker cp` under mounts) all merged 2026-11-09;
-  the latest release is still v1.6.0. On `main`: `ddev snapshot restore` and `ddev start`
+  #507 (`created` state) and #511 (#467, `docker cp` under mounts) all merged 2026-11-09
+  and are in v1.6.1. On `main`: `ddev snapshot restore` and `ddev start`
   over changed config work, and `DDEV_PRIMARY_URL` survives a router recreate.
 - **The #508 skips on `main`, run with the skips removed:** `TestStartProfileImages`,
   `TestDdevRestoreSnapshot`, `TestProjectPortOverride`, `TestUseRouterSubstitutePort`,
@@ -67,12 +127,6 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
       configuration has no field for them. A fix would persist them in a label, as the
       healthcheck already is. DDEV reads unpublished ports only from there. Not filed;
       searched upstream 2026-11-09.
-- **After the next socktainer release:** raise `SocktainerMinVersion`, upgrade the testbots,
-  drop the #508 skips, the #479 exception in `TestEnvironmentVariables`, the `*.sock`
-  warning (#496), and the #493 exit-code skips.
-- **`CopyIntoContainer` keeps its `tar` workaround** even with #511: socktainer ignores a
-  gzipped archive ([#484](https://github.com/socktainer/socktainer/issues/484)). Sending an
-  uncompressed tar from DDEV would let it go once #511 is released.
 - **socktainer fix for #505** (aliases on reconnect): PR
   [socktainer#513](https://github.com/socktainer/socktainer/pull/513), opened 2026-11-09
   from `rfay:fix/network-connect-aliases` (worktree
@@ -87,13 +141,13 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
 - **Skips:** `SkipUnlessDefaultEnvironment` no longer lists Apple Container, but on the
   socktainer pipeline its Mutagen check still skips those 17 tests, since Mutagen is the
   macOS default. Every Apple Container skip now names an issue except healthcheck output
-  and `Os: macOS` (both unfiled) and the structural ones (ssh-agent, privileged ports).
+  (unfiled) and the structural ones (ssh-agent, privileged ports).
 - **Try apple container 1.7.1** (released 2026-11-06) locally and on the testbots once
-  socktainer supports it; socktainer `main` builds against 1.6.1.
+  socktainer supports it; v1.6.1 builds against 1.6.1, and open PR #516 bumps it to 1.7.1.
 - **Remove `HANDOFF.md` and `handoff/`** before review. Move what matters into the PR
   description or #7372.
-- **Decide the release stance:** ship marked experimental with the hand steps documented,
-  or wait for a socktainer release with #509.
+- **Decide the release stance:** ship marked experimental with the hand steps documented;
+  v1.6.1 removed the wait on #509.
 - **Buildkite:** widen `macos-socktainer`'s branch filter after merge, and decide whether
   it's a required check.
 
@@ -109,10 +163,10 @@ The test suite now has a socktainer pipeline, following the plan in
   `*20260802_rfay_apple_container_experiment`, and doesn't build branches, since `main` has
   no `macos-socktainer.yml` yet. Widen both when this merges. Its GitHub webhook is on
   ddev/ddev.
-- The testbots have Homebrew's apple container 1.6.1 and socktainer 1.6.0, neither run as a
+- The testbots have Homebrew's apple container 1.6.1 and socktainer 1.6.1, neither run as a
   service; [#9037](https://github.com/ddev/ddev/pull/9037) (testbot disk cleanup) prepares
-  them. 1.6.0 lacks socktainer#492, so upstream DDEV's client-side label re-check (#9040) is
-  what keeps `ddev delete images` in `testbot_maintenance.sh` from deleting every image.
+  them. 1.6.1 honors the image `label` filter (#492); upstream DDEV also re-checks labels
+  client-side (#9040), which kept `testbot_maintenance.sh` safe on 1.6.0.
 - `lib-provider.sh`'s `socktainer` case runs `container system start
   --disable-kernel-install`, starts `socktainer --no-auto-start` in the background (log
   `~/tmp/socktainer.log`), waits for it, and removes leftover containers.
@@ -198,8 +252,8 @@ test). Of its 18 failures:
       only after `TestCustomCerts`, whose `PowerOff()` recreates the router with the
       alias. Users hit it too (`drush uli` links). Fix PR
       [socktainer#506](https://github.com/socktainer/socktainer/pull/506) makes the peer
-      rewrite opt-in by label, as the loopback rewrite already is; merged 2026-11-09, not
-      released. Verified on `main`: after `ddev poweroff; ddev start; ddev restart`,
+      rewrite opt-in by label, as the loopback rewrite already is; merged 2026-11-09,
+      released in v1.6.1. Verified on `main`: after `ddev poweroff; ddev start; ddev restart`,
       `DDEV_PRIMARY_URL` stays `https://appletest.ddev.site:8443`.
 
 ### Test skips to rethink (audited 2026-11-03)
@@ -220,10 +274,12 @@ runtime, as the ssh-agent skips plus `test.sh`'s global omit did. In order of co
    build 11 `TestPopulateGlobalCustomCommandFiles`, `TestTimezoneConfig`,
    `TestConfigDefaultContainerTimeout`, `TestLaunchCommand`, `TestNpmNpxYarnCommands`,
    `TestCmdDescribe`, `TestCmdRestartProfilesAndServices`, `TestCmdStartOptionalProfiles`.
-   Real blocker; keep until it's fixed upstream. These whole-test skips hide the most.
-4. **socktainer gaps, remove when fixed**: `State.ExitCode`, #493/#494 (`volumes_test.go`, `containers_test.go`,
-   `TestCmdAddonPHP`, `TestValidatePHPIncludesAndRequires`); healthcheck output
-   (`containers_test.go`, 2); `Os: macOS` (`images_test.go`, `TestFindServiceImages`);
+   Fixed in v1.6.1 (#509); skips removed 2026-11-11, except `TestPopulateGlobalCustomCommandFiles`
+   (#514) and `TestCmdDescribe` (`ExposedPorts`).
+4. **socktainer gaps, remove when fixed** (the `State.ExitCode` skips, #493, went 2026-11-11):
+   healthcheck output
+   (`containers_test.go`, 2); `Os: macOS`, now
+   [socktainer#517](https://github.com/socktainer/socktainer/issues/517), no longer skipped: DDEV pulls `linux/<arch>`;
    network names, #498 (`TestNetworkDuplicates`, `TestComposerCmdCreateRequireRemoveConfigVersion`);
    exec working directory, #499 (part of `TestCmdExec`).
 5. **Single-writer volumes** — `TestCmdAddonGetWithDotEnv` (its busybox add-on mounts a volume a
@@ -259,10 +315,10 @@ Next to file, in this order:
 1. **The image list ignores the `label` filter** — filed 2026-10-31 as
    [socktainer#491](https://github.com/socktainer/socktainer/issues/491), fix in PR
    [#492](https://github.com/socktainer/socktainer/pull/492) (branch
-   `fix/image-list-label-filter`), merged 2026-11-03, not yet released. `before`, `since` and `until` look
+   `fix/image-list-label-filter`), merged 2026-11-03, released in v1.6.1. `before`, `since` and `until` look
    ignored the same way, untested and left out of #492. `GET /images/json`
    applies only `dangling` and `reference` (`ImageListRoute.applyFilters`), so
-   `docker images --filter label=x=y` lists every image. Repro
+   `docker images --filter label=x=y` lists every image. Released in v1.6.1. Repro
    `handoff/imgfilterrepro/repro.sh`: socktainer lists all 14 images, OrbStack none.
    Through DDEV's `FindImagesByLabels`, `ddev delete` deleted every image on the machine,
    including `ddev-utilities`, `socktainer-dns:embedded` and apple container's own
@@ -273,7 +329,7 @@ Next to file, in this order:
    reported upstream by someone else as
    [socktainer#467](https://github.com/socktainer/socktainer/issues/467); fixed on `main` by
    someone else's [#511](https://github.com/socktainer/socktainer/pull/511) (merged
-   2026-11-09, not released), and `handoff/cpvolrepro/repro.sh` passes there. DDEV still
+   2026-11-09, in v1.6.1), and `handoff/cpvolrepro/repro.sh` passes there. DDEV still
    can't drop its workaround: `CopyIntoContainer` sends a **gzipped** tar, which socktainer
    silently ignores ([socktainer#484](https://github.com/socktainer/socktainer/issues/484),
    someone else's, open). Tested 2026-11-09 with the workaround disabled: the router's
@@ -290,18 +346,19 @@ Next to file, in this order:
    `tar` inside the container instead on this provider.
 3. **Hostname uniqueness** — filed 2026-11-06 as
    [socktainer#508](https://github.com/socktainer/socktainer/issues/508), fixed by PR
-   [#509](https://github.com/socktainer/socktainer/pull/509), merged 2026-11-09, not yet
-   released. Repro: `~/tmp/hostname-recreate-repro/repro.sh`.
+   [#509](https://github.com/socktainer/socktainer/pull/509), merged 2026-11-09,
+   released in v1.6.1. Repro: `~/tmp/hostname-recreate-repro/repro.sh`.
 4. **`docker inspect` reports `State.ExitCode` 0 for every stopped container** — filed
    2026-11-01 as [socktainer#493](https://github.com/socktainer/socktainer/issues/493), fix in PR
    [#494](https://github.com/socktainer/socktainer/pull/494) (branch `fix/inspect-exit-code`,
-   worktree `~/tmp/socktainer-exitcode`), merged 2026-11-03, not yet released.
+   worktree `~/tmp/socktainer-exitcode`), merged 2026-11-03, released in v1.6.1.
    `docker wait` is right. DDEV's `RunSimpleContainer` polls inspect, so failing helpers
    looked successful. Repro `handoff/exitcoderepro/repro.sh`.
 5. **Gaps found by the first CI run (2026-11-01), not filed yet**, each with a DDEV test skip
    that names it: healthcheck `Output` is empty in inspect's `State.Health.Log` (still so on
    `main` 2026-11-09); the container list ignores the `volume=` filter (DDEV no longer uses
-   it); `/version` reports `Os: macOS` while `/info` reports `OSType: linux` (still so). The
+   it); `/version` reports `Os: macOS` while `/info` reports `OSType: linux`, filed 2026-11-11 as
+   [socktainer#517](https://github.com/socktainer/socktainer/issues/517). The
    uppercase network names are part of #498. A never-started container now inspects as
    `created` on `main`, through someone else's
    [#507](https://github.com/socktainer/socktainer/pull/507).
@@ -324,7 +381,7 @@ Next to file, in this order:
    [#496](https://github.com/socktainer/socktainer/pull/496) (branch `fix/socket-bind-mounts`,
    worktree `~/tmp/socktainer-sockbind`); three rounds of CodeRabbit comments addressed, the
    last (relative socket sources in `Mounts`) answered rather than changed, since Docker
-   Engine rejects relative bind sources there. Merged 2026-11-03, not yet released. Closed
+   Engine rejects relative bind sources there. Merged 2026-11-03, released in v1.6.1. Closed
    [#265](https://github.com/socktainer/socktainer/pull/265) tried a narrower SSH-only
    approach.
 10. **Volume `nocopy` is ignored** — filed 2026-11-03 as
@@ -347,6 +404,10 @@ Next to file, in this order:
 13. **A container's `Hostname` doesn't resolve from peers** on a user-defined network —
     filed 2026-11-06 as [socktainer#510](https://github.com/socktainer/socktainer/issues/510),
     no PR yet. DDEV doesn't depend on it.
+14. **Concurrent image loads lose a tag** — filed 2026-11-11 as
+    [socktainer#518](https://github.com/socktainer/socktainer/issues/518); see "socktainer v1.6.1" above.
+    Repros in `handoff/inlinerecreaterepro/`. Open the PR (shared `ImageStore`) once #513 or
+    #515 lands. Issue text in `~/tmp/sk-upstream/concurrent-load-issue.md`.
 
 Done since 2026-10-12: [socktainer#456](https://github.com/socktainer/socktainer/pull/456)
 (probe timeout, issue #455) and [#458](https://github.com/socktainer/socktainer/pull/458)
@@ -380,11 +441,11 @@ router, both answering 200 over HTTP (8080) and HTTPS (8443); `ddev exec`, `ddev
 images removed); `handoff/exec-suite.sh` passes; three `ddev poweroff`/`ddev start` cycles
 of both projects came back clean.
 
-**What still fails on socktainer v1.6.0:** anything that makes Compose recreate a container
+**What fails on socktainer v1.6.0 (fixed in v1.6.1):** anything that makes Compose recreate a container
 while the old one exists — `ddev snapshot restore` ("hostname(s) already exist:
 ["appletest-web", "appletest-web"]"), and `ddev start` over a running project whose config
 changed. See "Hostname uniqueness" below. `ddev restart` recovers from both. Both work on
-socktainer `main` as of 2026-11-09.
+socktainer v1.6.1.
 
 Merged DDEV-side hardenings from this work: [#8657](https://github.com/ddev/ddev/pull/8657),
 [#8658](https://github.com/ddev/ddev/pull/8658), [#8659](https://github.com/ddev/ddev/pull/8659),
@@ -408,14 +469,13 @@ Also merged: [#9046](https://github.com/ddev/ddev/pull/9046) (single-writer volu
 
 ### What still has to be done by hand
 
-- For SSH keys in web, `ddev config global --ssh-agent-upstream=host` (or a socket path) with
-  an agent socket not named `*.sock` until socktainer#495 is fixed — see "ssh-agent" below.
+- For SSH keys in web, `ddev config global --ssh-agent-upstream=host` (or a socket path) —
+  see "ssh-agent" below.
 - `ddev config global --router-http-port=8080 --router-https-port=8443`. The **global**
   setting matters: with 80/443 there, the router fails with "listen tcp :80: bind:
   permission denied" even when the project sets 8080/8443.
 - A `traefik_monitor_port` other than OrbStack's 10999 (11999 here), when another provider's
   DDEV router might also be running.
-- `ddev restart` rather than `ddev start` over a running project with changed config.
 
 Mutagen works and is the default, as on any macOS provider (verified 2026-11-02: sync both ways,
 `upload_dirs` as a virtiofs mount inside the `project_mutagen` block volume, restart, stop/start,
@@ -432,10 +492,12 @@ the router's one-time seed) and add-ons still mount `ddev-global-cache`, one at 
 - `pkg/dockerutil/providers.go` — `IsSocktainer()`, `IsAppleContainer()`,
   `GetSocktainerVersion()`.
 - `pkg/dockerutil/requirements.go`, `versionconstants.go` — warn on `ddev start` and
-  `ddev utility dockercheck` when socktainer is older than `SocktainerMinVersion` (1.6.0, the
-  current release). Raise it once a release has socktainer#492, #494 and #496 (all merged). The version comes from
+  `ddev utility dockercheck` when socktainer is older than `SocktainerMinVersion` (1.6.1, the
+  release with socktainer#492, #494, #496 and #509). The version comes from
   the `socktainer` server component; source builds report `unspecified` or `0.0.0-dev` and
   aren't compared.
+- `pkg/ddevapp/compose_build.go` — `composeBuild` builds one service at a time on this
+  provider, since concurrent image loads lose a tag (upstream item 14).
 - `pkg/dockerutil/containers.go` — `CopyIntoContainer` extracts with `tar` through
   `ExecWithStdin` on this provider, working around the volume copy bug above.
 - `ddevapp.go` (`GetOmittedContainers`, a `chmod` in `Start`), `ssh_auth.go`
@@ -459,12 +521,12 @@ upstream as #9040: `FindImagesByLabels`'s client-side label re-check.
 
 ## Open blockers
 
-### Hostname uniqueness collides with Compose's recreate — fixed on socktainer `main`
+### Hostname uniqueness collides with Compose's recreate — fixed in socktainer v1.6.1
 
 Fixed by [socktainer#509](https://github.com/socktainer/socktainer/pull/509), merged
-2026-11-09 and not yet released. On `main` as of 2026-11-09, `ddev snapshot restore` and `ddev
-start` over a running project with changed config both work. The history below stays until
-a release has it.
+2026-11-09 and released in v1.6.1. On `main` as of 2026-11-09, `ddev snapshot restore` and `ddev
+start` over a running project with changed config both work. The history below can go once
+`SocktainerMinVersion` is 1.6.1.
 
 ```text
 Container ddev-appletest-web Error response from daemon: Failed to create container:
@@ -545,11 +607,9 @@ vsock (what `container run --ssh` uses). So on Apple Container the branch:
 - makes `ddev auth ssh` explain this instead of adding keys to an agent web can't reach.
 
 Verified 2026-11-03 on `d11` and by `TestAppleContainerSSHAgent`: web lists the host agent's
-keys. Limits: a socket named `*.sock` is dropped until a socktainer release has #496 (merged 2026-11-03) (DDEV warns
-and skips the mount; drop that check once a release has the fix), so 1Password's socket
-needs a relay such as `socat UNIX-LISTEN:~/tmp/sshrelay/agent,fork,perm=0666
-UNIX-CONNECT:"$SSH_AUTH_SOCK"` and `--ssh-agent-upstream=~/tmp/sshrelay/agent`. A symlink to
-the socket hangs container start, and macOS won't hard-link into 1Password's group container.
+keys. socktainer 1.6.0 dropped a socket named `*.sock`, such as 1Password's (#495,
+fixed by #496 in v1.6.1); DDEV's check and the socat relay advice went 2026-11-11. A symlink to the
+socket hangs container start.
 DDEV's own agent (`ddev auth ssh` with key files) has no equivalent; it would need a TCP
 transport. ssh in web also can't save `known_hosts`, since `/home/.ssh-agent` is now a
 root-owned mount point rather than the volume.
@@ -651,6 +711,9 @@ take `DOCKER_CONTEXT=orbstack` to compare with Docker Engine.
   volume mount and on the rootfs.
 - `handoff/cpmetarepro/repro.sh` — owner and mtime of files after `docker cp` into a running
   container (socktainer#514).
+- `handoff/inlinerecreaterepro/concurrent-load.sh` — two `docker load`s at once leave a tag
+  on its old image (`SERIAL=1` for the control); `repro.sh` there shows the effect through
+  `docker compose build` and `up`; `imageid.sh` checks image-ID stability.
 - `handoff/testdata/execrepro/` — non-interactive exec through the moby Go client, as DDEV does
   it: `go run ./handoff/testdata/execrepro <container> '<cmd>'` with
   `DOCKER_HOST=unix://$HOME/.socktainer/container.sock`; `CLOSEWRITE=1` half-closes like the
@@ -667,13 +730,13 @@ To capture raw API traffic, put a logging proxy in front of the socket:
 `socat -v UNIX-LISTEN:$HOME/tmp/proxy.sock,fork UNIX-CONNECT:$HOME/.socktainer/container.sock 2> ~/tmp/socat.log`,
 then point `DOCKER_HOST` at the proxy.
 
-## Current machine state (2026-11-09)
+## Current machine state (2026-11-11)
 
 - Apple `container` **1.6.1** from the signed installer at `/usr/local`
-  (`container-apiserver` running). Homebrew's `container` is also 1.6.1.
-- socktainer running by hand from
-  `~/workspace/socktainer-worktrees/archive-owner-mtime/.build/release/socktainer`: branch
-  `fix/archive-owner-mtime` (PR #515), upstream `main` of 2026-11-09 plus the #514 fix.
+  (`container-apiserver` running). Homebrew's `container` is 1.7.1, and Homebrew's socktainer 1.6.1 is installed and first on `PATH` (2026-11-11).
+- socktainer running is Homebrew's 1.6.1 (`/opt/homebrew/bin/socktainer --no-auto-start`,
+  started 2026-11-11). The #515 build is in
+  `~/workspace/socktainer-worktrees/archive-owner-mtime/.build/release/socktainer`.
   The #513 build is in `~/workspace/socktainer-worktrees/network-connect-aliases`.
   `~/workspace/socktainer/.build/release/socktainer` is stock `main` of the same day.
   Log: `~/tmp/socktainer.log`. Start `container system start --disable-kernel-install`;

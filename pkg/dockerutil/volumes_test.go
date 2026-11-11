@@ -87,9 +87,6 @@ func TestRemoveVolumeInUseNamesContainer(t *testing.T) {
 
 // TestCopyIntoVolume makes sure CopyToVolume copies a local directory into a volume
 func TestCopyIntoVolume(t *testing.T) {
-	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping until socktainer reports the exit code in docker inspect (socktainer#493); remove then")
-	}
 	assert := asrt.New(t)
 	err := dockerutil.RemoveVolume(t.Name())
 	assert.NoError(err)

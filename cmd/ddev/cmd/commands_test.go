@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -478,9 +477,6 @@ services:
 
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave
 func TestLaunchCommand(t *testing.T) {
-	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
-	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -689,9 +685,6 @@ func TestPsqlCommand(t *testing.T) {
 // TestNpmNpxYarnCommands tests that the `ddev npm`, npx, and yarn commands behaves and install
 // run in expected relative directory.
 func TestNpmNpxYarnCommands(t *testing.T) {
-	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
-	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()

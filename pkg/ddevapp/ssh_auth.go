@@ -186,11 +186,6 @@ func AppleContainerSSHAgentSocket() string {
 		return ""
 	}
 	sock, err := SSHAgentUpstreamSocket()
-	if err == nil {
-		if ext := strings.ToLower(filepath.Ext(sock)); ext == ".sock" || ext == ".socket" {
-			err = fmt.Errorf("socktainer drops bind mounts of sockets named *%s (https://github.com/socktainer/socktainer/issues/495), so web can't use the SSH agent at %s", ext, sock)
-		}
-	}
 	if err != nil {
 		appleContainerSSHAgentWarning.Do(func() { util.Warning("%v; web has no SSH agent", err) })
 		return ""

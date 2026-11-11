@@ -158,7 +158,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
         ### Install Apple Container and socktainer
 
-        socktainer 1.6.0 or later is required. Install both with Homebrew, along with the Docker CLI and the [buildx plugin](#docker-buildx):
+        socktainer 1.6.1 or later is required. Install both with Homebrew, along with the Docker CLI and the [buildx plugin](#docker-buildx):
 
         ```bash
         brew install socktainer docker docker-buildx
@@ -206,18 +206,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         ddev restart
         ```
 
-        That mounts the socket in `SSH_AUTH_SOCK` into the web container, so `ssh-add -l` on your Mac shows the keys `ddev ssh` and `ddev composer` can use. With socktainer 1.6.0, a socket whose name ends in `.sock`, such as 1Password's, is silently dropped ([socktainer#495](https://github.com/socktainer/socktainer/issues/495)); DDEV warns and starts the web container without an agent. Until a socktainer release has the fix, relay it under another name and point `ssh_agent_upstream` at the relay:
-
-        ```bash
-        mkdir -p ~/tmp/sshrelay
-        socat UNIX-LISTEN:$HOME/tmp/sshrelay/agent,fork,perm=0666 UNIX-CONNECT:"$SSH_AUTH_SOCK" &
-        ddev config global --ssh-agent-upstream=~/tmp/sshrelay/agent
-        ddev restart
-        ```
+        That mounts the socket in `SSH_AUTH_SOCK` into the web container, so `ssh-add -l` on your Mac shows the keys `ddev ssh` and `ddev composer` can use.
 
         ### Known limitations
 
-        * With socktainer 1.6.0, `ddev start` on a running project whose configuration changed fails with `hostname(s) already exist`, and `ddev snapshot restore` fails the same way; use `ddev restart` instead. The fix is on the socktainer `main` branch ([socktainer#508](https://github.com/socktainer/socktainer/issues/508)) and will be in its next release.
         * A named volume can be mounted read-write by only one running container at a time, so add-ons whose services share a volume may fail to start.
         * `host.docker.internal` resolves to the network gateway, where your Mac answers, so Xdebug and other connections back to the host work only for programs listening on all interfaces, not on `127.0.0.1` alone.
 

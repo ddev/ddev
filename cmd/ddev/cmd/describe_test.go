@@ -54,7 +54,7 @@ func TestDescribeBadArgs(t *testing.T) {
 // TestCmdDescribe tests that the describe command works properly when using the binary.
 func TestCmdDescribe(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508; socktainer also drops exposed-but-unpublished ports from Config.ExposedPorts")
+		t.Skip("Skipping: socktainer drops exposed-but-unpublished ports from Config.ExposedPorts")
 	}
 	testcommon.UsesAllTestSites(t)
 	origDir, _ := os.Getwd()
