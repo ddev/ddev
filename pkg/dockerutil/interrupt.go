@@ -155,6 +155,10 @@ func removeByTemporaryLabel(ctx context.Context, apiClient client.APIClient, lab
 		return
 	}
 	for _, c := range list.Items {
+		// Some APIs ignore the label filter, as socktainer's image list did.
+		if c.Labels[temporaryLabel] != label {
+			continue
+		}
 		_, err := apiClient.ContainerRemove(ctx, c.ID, client.ContainerRemoveOptions{Force: true})
 		if err != nil && !cerrdefs.IsNotFound(err) {
 			util.Debug("Unable to remove container %s after interrupt: %v", TruncateID(c.ID), err)

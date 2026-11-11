@@ -70,6 +70,36 @@ func TestCleanUpInFlightSkipsNameConflict(t *testing.T) {
 	requireContainerExists(t, name, true)
 }
 
+// TestRemoveByTemporaryLabelChecksLabel stands in for an API that ignores
+// the label filter, which must not make cleanup remove other containers.
+func TestRemoveByTemporaryLabelChecksLabel(t *testing.T) {
+	label := util.RandString(16)
+	fake := &ignoreFilterClient{items: []container.Summary{
+		{ID: "mine", Labels: map[string]string{temporaryLabel: label}},
+		{ID: "other-temporary", Labels: map[string]string{temporaryLabel: "other"}},
+		{ID: "unlabeled"},
+	}}
+	removeByTemporaryLabel(context.Background(), fake, label)
+	require.Equal(t, []string{"mine"}, fake.removed)
+}
+
+// ignoreFilterClient's ContainerList returns every container, whatever the
+// filters, and ContainerRemove records what it was asked to remove.
+type ignoreFilterClient struct {
+	client.APIClient
+	items   []container.Summary
+	removed []string
+}
+
+func (c *ignoreFilterClient) ContainerList(context.Context, client.ContainerListOptions) (client.ContainerListResult, error) {
+	return client.ContainerListResult{Items: c.items}, nil
+}
+
+func (c *ignoreFilterClient) ContainerRemove(_ context.Context, id string, _ client.ContainerRemoveOptions) (client.ContainerRemoveResult, error) {
+	c.removed = append(c.removed, id)
+	return client.ContainerRemoveResult{}, nil
+}
+
 func startCleanUpInFlight(t *testing.T, timeout time.Duration) <-chan struct{} {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	t.Cleanup(cancel)
