@@ -58,6 +58,9 @@ if [ "${os:-}" = "darwin" ]; then
     provider_shutdown
   }
   trap cleanup EXIT
+  # A canceled job has only the agent's grace period left, so skip the slow
+  # maintenance and go straight to provider_shutdown.
+  trap 'RAN_TESTS=false; exit 143' TERM INT
 
   # Start with a predictable docker provider running
   cleanup
