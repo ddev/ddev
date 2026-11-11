@@ -211,6 +211,39 @@ func isArchiveAbsolutePath(p string) bool {
 	return strings.HasPrefix(p, "/") || strings.HasPrefix(p, `\`) || filepath.IsAbs(p)
 }
 
+// hasInnerParentRef reports whether a symlink target has ".." after another
+// element, as in "a/../..". The kernel resolves "a" first, so when "a" is a
+// symlink the target lands somewhere a lexical check of the joined path
+// doesn't predict. Leading ".." elements resolve from a real directory.
+func hasInnerParentRef(p string) bool {
+	seenOther := false
+	for _, elem := range strings.FieldsFunc(p, func(r rune) bool { return r == '/' || r == '\\' }) {
+		switch elem {
+		case "..":
+			if seenOther {
+				return true
+			}
+		case ".":
+		default:
+			seenOther = true
+		}
+	}
+	return false
+}
+
+// rootChmod is util.Chmod for a path inside root: it skips the chmod when
+// the mode already matches, so Mutagen doesn't see a change.
+func rootChmod(root *os.Root, name string, mode os.FileMode) error {
+	fileInfo, err := root.Stat(name)
+	if err != nil {
+		return err
+	}
+	if fileInfo.Mode().Perm() == mode {
+		return nil
+	}
+	return root.Chmod(name, mode)
+}
+
 // Untar accepts a tar, tar.gz, tar.bz2, tar.xz, tar.zst file and extracts the contents to the provided destination path.
 // extractionDir is the path at which extraction should start; nothing will be extracted except the contents of
 // extractionDir. If extranctionDir is empty, the entire tarball is extracted.
@@ -224,6 +257,17 @@ func Untar(source string, dest string, extractionDir string) error {
 	defer util.CheckClose(f)
 
 	if err = os.MkdirAll(dest, 0755); err != nil {
+		return err
+	}
+	// Every write goes through root, so a symlink planted by an earlier
+	// entry can't redirect a later one outside dest.
+	root, err := os.OpenRoot(dest)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(root)
+	realDest, err := filepath.EvalSymlinks(dest)
+	if err != nil {
 		return err
 	}
 
@@ -303,76 +347,85 @@ func Untar(source string, dest string, extractionDir string) error {
 		if !strings.HasPrefix(filepath.Clean(fullPath)+string(os.PathSeparator), filepath.Clean(dest)+string(os.PathSeparator)) {
 			return fmt.Errorf("archive entry %q escapes destination directory", file.Name)
 		}
+		relPath, err := filepath.Rel(dest, fullPath)
+		if err != nil {
+			return fmt.Errorf("archive entry %q: %v", file.Name, err)
+		}
+		relDir := filepath.Dir(relPath)
 
 		// Handle directories, regular files, and symlinks
 		switch file.Typeflag {
 		case tar.TypeDir:
 			// For a directory, if it doesn't exist, we create it.
-			finfo, err := os.Stat(fullPath)
+			finfo, err := root.Stat(relPath)
 			if err == nil && finfo.IsDir() {
 				continue
 			}
 
-			err = os.MkdirAll(fullPath, 0755)
+			err = root.MkdirAll(relPath, 0755)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create directory for archive entry %q, err: %v", file.Name, err)
 			}
 
-			err = util.Chmod(fullPath, fs.FileMode(file.Mode))
+			err = rootChmod(root, relPath, fs.FileMode(file.Mode).Perm())
 			if err != nil {
 				return fmt.Errorf("failed to chmod %v dir %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
 			}
 
 		case tar.TypeReg:
 			// Always ensure the directory is created before trying to move the file.
-			fullPathDir := filepath.Dir(fullPath)
-			err = os.MkdirAll(fullPathDir, 0755)
+			err = root.MkdirAll(relDir, 0755)
 			if err != nil {
-				return fmt.Errorf("failed to create the directory %s, err: %v", fullPathDir, err)
+				return fmt.Errorf("failed to create the directory for archive entry %q, err: %v", file.Name, err)
 			}
 
 			// For a regular file, create and copy the file.
-			exFile, err := os.Create(fullPath)
+			exFile, err := root.Create(relPath)
 			if err != nil {
-				return fmt.Errorf("failed to create file %v, err: %v", fullPath, err)
+				return fmt.Errorf("failed to create file for archive entry %q, err: %v", file.Name, err)
 			}
 			_, err = io.Copy(exFile, tf)
 			_ = exFile.Close()
 			if err != nil {
 				return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
 			}
-			err = util.Chmod(fullPath, fs.FileMode(file.Mode))
+			err = rootChmod(root, relPath, fs.FileMode(file.Mode).Perm())
 			if err != nil {
 				return fmt.Errorf("failed to chmod %v file %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
 			}
 
 		case tar.TypeSymlink:
 			// Ensure the parent directory exists before creating the symlink.
-			fullPathDir := filepath.Dir(fullPath)
-			err = os.MkdirAll(fullPathDir, 0755)
+			err = root.MkdirAll(relDir, 0755)
 			if err != nil {
-				return fmt.Errorf("failed to create the directory %s, err: %v", fullPathDir, err)
+				return fmt.Errorf("failed to create the directory for archive entry %q, err: %v", file.Name, err)
 			}
 
 			// A dev-environment archive has no legitimate need to plant an
 			// absolute symlink target, and there's no safe general way to
 			// let one through: rebasing it under dest is what caused this
 			// function's history of escape bugs (see GHSA-9hq4-hm3j-jmph).
-			// Reject absolute targets outright; only relative targets,
-			// resolved against and confined to the symlink's parent
-			// directory, are allowed.
 			if isArchiveAbsolutePath(file.Linkname) {
 				return fmt.Errorf("symlink target %q in archive entry %q is absolute, which is not allowed", file.Linkname, file.Name)
 			}
-			resolvedTarget := filepath.Join(fullPathDir, file.Linkname)
-			if !strings.HasPrefix(filepath.Clean(resolvedTarget)+string(os.PathSeparator), filepath.Clean(dest)+string(os.PathSeparator)) {
+			if hasInnerParentRef(file.Linkname) {
+				return fmt.Errorf("symlink target %q in archive entry %q has '..' after another path element, which is not allowed", file.Linkname, file.Name)
+			}
+			// Resolve the parent on disk, since an earlier entry may have made
+			// one of its components a symlink (GHSA-vxj4-5gfg-97c2).
+			realParent, err := filepath.EvalSymlinks(filepath.Join(dest, relDir))
+			if err != nil {
+				return fmt.Errorf("failed to resolve the directory for archive entry %q, err: %v", file.Name, err)
+			}
+			resolvedTarget := filepath.Join(realParent, file.Linkname)
+			if !strings.HasPrefix(resolvedTarget+string(os.PathSeparator), realDest+string(os.PathSeparator)) {
 				return fmt.Errorf("symlink target %q in archive entry %q escapes destination directory", file.Linkname, file.Name)
 			}
 
 			// Remove any existing file/symlink at this path
-			_ = os.Remove(fullPath)
+			_ = root.Remove(relPath)
 
-			err = os.Symlink(file.Linkname, fullPath)
+			err = root.Symlink(file.Linkname, relPath)
 			if err != nil {
 				return fmt.Errorf("failed to create symlink %v -> %v, err: %v", fullPath, file.Linkname, err)
 			}
