@@ -5272,12 +5272,6 @@ func TestEnvironmentVariables(t *testing.T) {
 		})
 		assert.NoError(err)
 		envVal = strings.Trim(envVal, "\r\n")
-		// socktainer rewrites ://hostname:port in env to the IP of whatever
-		// holds that alias, here the router, once the router already has it.
-		if k == "DDEV_PRIMARY_URL" && dockerutil.IsAppleContainer() && envVal != v {
-			t.Logf("Ignoring %s=%s: socktainer rewrote the hostname to an IP, https://github.com/socktainer/socktainer/issues/479", k, envVal)
-			continue
-		}
 		assert.Equal(v, envVal)
 	}
 

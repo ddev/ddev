@@ -523,9 +523,6 @@ func TestGetContainerEnv(t *testing.T) {
 
 // TestRunSimpleContainer does a simple test of RunSimpleContainer()
 func TestRunSimpleContainer(t *testing.T) {
-	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping until socktainer reports the exit code in docker inspect (socktainer#493); remove then")
-	}
 	basename := fileutil.RandomFilenameBase()
 	pwd, _ := os.Getwd()
 	pwd, _ = filepath.Abs(pwd)

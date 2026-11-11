@@ -1315,8 +1315,8 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	defer t.Close()
 
 	if IsAppleContainer() {
-		// apple container's copy-in writes files to the container's rootfs, under
-		// any volume mounted at dstPath, so extract inside the container instead.
+		// socktainer ignores a gzipped archive (socktainer#484) and drops owner and
+		// mtime on copy-in (socktainer#514); tar inside the container keeps both.
 		_, stderr, err = ExecWithStdin(cid.ID, `tar -xzf - -C "`+dstPath+`"`, "0", t)
 		if err != nil {
 			return fmt.Errorf("unable to extract into %s inside %s: %v (stderr=%s)", dstPath, containerName, err, stderr)

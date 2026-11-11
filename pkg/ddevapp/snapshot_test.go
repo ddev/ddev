@@ -356,9 +356,6 @@ func TestSnapshotUncompressed(t *testing.T) {
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
-	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
-	}
 	testcommon.SkipIfGotestShort(t)
 
 	assert := assert2.New(t)

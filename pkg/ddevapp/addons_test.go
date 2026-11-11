@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -162,9 +161,6 @@ echo "done"
 }
 
 func TestValidatePHPIncludesAndRequires(t *testing.T) {
-	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping until socktainer reports the exit code in docker inspect (socktainer#493); remove then")
-	}
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 
 	// Create the project directory

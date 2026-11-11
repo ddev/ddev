@@ -426,9 +426,8 @@ func TestAppleContainerSSHAgent(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	require.NoError(t, app.Init(site.Dir))
 
-	// Not named *.sock, which socktainer drops (socktainer#495)
 	agentDir := testcommon.CreateTmpDir(t.Name())
-	sock := filepath.Join(agentDir, "agent")
+	sock := filepath.Join(agentDir, "agent.sock")
 	agent := osexec.Command("ssh-agent", "-D", "-a", sock)
 	require.NoError(t, agent.Start())
 	t.Cleanup(func() {

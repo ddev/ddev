@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
@@ -82,9 +81,6 @@ func TestCmdRestartJSON(t *testing.T) {
 // `ddev restart --service` with several services, one in a profile.
 // See https://github.com/ddev/ddev/issues/7904
 func TestCmdRestartProfilesAndServices(t *testing.T) {
-	if dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: Apple Container rejects the recreated container's hostname while the old one exists, https://github.com/socktainer/socktainer/issues/508")
-	}
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
 	err := os.Chdir(site.Dir)
