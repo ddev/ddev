@@ -27,8 +27,7 @@ func (app *DdevApp) TrackProject() {
 
 	amplitude.InitAmplitude()
 
-	// Early exit if instrumentation is disabled.
-	if ampli.Instance.Disabled {
+	if !amplitude.IsEnabled() {
 		return
 	}
 
@@ -86,7 +85,14 @@ func (app *DdevApp) TrackProject() {
 		builder.Router(globalconfig.DdevGlobalConfig.Router)
 	}
 
-	ampli.Instance.Project("", builder.Build(), amplitude.GetEventOptions())
+	// Most commands run inside a project would otherwise resend the same
+	// configuration, so each distinct one is sent at most once a day.
+	event := builder.Build()
+	if amplitude.AlreadyReportedToday("project:"+app.ProtectedID(), event) {
+		return
+	}
+
+	ampli.Instance.Project("", event, amplitude.GetEventOptions())
 }
 
 // webExtraExposedPortsNames extracts and returns a list of names from the WebExtraExposedPorts field of the provided DdevApp instance.

@@ -63,25 +63,25 @@ func GetEventOptions() (options ampli.EventOptions) {
 	return
 }
 
-// TrackCommand collects and tracks information about the command for
-// instrumentation.
-func TrackCommand(cmd *cobra.Command, args []string) {
+// TrackCommand counts the command for instrumentation. The counts are sent
+// as one Command Summary event per command and week, on the first command
+// of a later week.
+func TrackCommand(cmd *cobra.Command) {
 	// defer util.TimeTrack()()
 
 	InitAmplitude()
 
-	// Early exit if instrumentation is disabled.
-	if ampli.Instance.Disabled {
+	if !IsEnabled() {
 		return
 	}
 
-	builder := ampli.Command.Builder().
-		Arguments(args).
-		CalledAs(cmd.CalledAs()).
-		CommandName(cmd.Name()).
-		CommandPath(cmd.CommandPath())
-
-	ampli.Instance.Command("", builder.Build(), GetEventOptions())
+	// Events reach the queue in a goroutine that main() doesn't wait for
+	// offline or after os.Exit. So roll over only online, and wait here.
+	previous := countCommand(getCommandsFileName(), weekStart(time.Now()), cmd.CommandPath(), globalconfig.IsInternetActive)
+	if previous != nil {
+		sendCommandSummaries(*previous)
+		Flush()
+	}
 }
 
 // Flush transmits the queued events if limits are reached.
@@ -134,9 +134,17 @@ func FlushForce() {
 	ampli.Instance.Flush()
 }
 
-// Clean removes the cache file.
+// Clean removes the cache file, the record of reported events, the command
+// counts, and their lock and temporary files.
 func Clean() {
-	_ = os.Remove(getCacheFileName())
+	for _, file := range []string{getCacheFileName(), getReportedFileName(), getCommandsFileName()} {
+		_ = os.Remove(file)
+		_ = os.Remove(file + ".lock")
+		tmpFiles, _ := filepath.Glob(file + ".*.tmp")
+		for _, tmpFile := range tmpFiles {
+			_ = os.Remove(tmpFile)
+		}
+	}
 }
 
 // CheckSetUp shows a warning to the user if the API key is not available.
@@ -144,6 +152,13 @@ func CheckSetUp() {
 	if !output.JSONOutput && globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation && versionconstants.AmplitudeAPIKey == "" {
 		util.WarningOnce("Instrumentation is opted in, but AmplitudeAPIKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
+}
+
+// IsEnabled returns true once instrumentation is initialized and not
+// disabled. Unlike ampli's InitializedAndEnabled(), it prints no warning when
+// instrumentation was never initialized, as in builds without an API key.
+func IsEnabled() bool {
+	return ampli.Instance.Client != nil && !ampli.Instance.Disabled
 }
 
 // IsDisabled returns true if instrumentation is disabled or no internet is available.
@@ -256,5 +271,11 @@ func identify() {
 		builder.WslDistro(wslDistro)
 	}
 
-	ampli.Instance.Identify("", builder.Build(), GetEventOptions())
+	event := builder.Build()
+	// User properties persist in Amplitude, so only a change needs sending.
+	if AlreadyReportedUnchanged("identify", event) {
+		return
+	}
+
+	ampli.Instance.Identify("", event, GetEventOptions())
 }
