@@ -57,7 +57,14 @@ Here’s how to try it for yourself:
         project_tld: example.org
         ```
 
-10. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
+10. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section. With `nginx-fpm`, you can instead add a `.ddev/nginx/redirect.conf` that you can check in with the project, leaving the generated Traefik configuration alone:
+
+    ```nginx
+    if ($http_x_forwarded_proto = "http") {
+      return 301 https://$host$request_uri;
+    }
+    ```
+
 11. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
 12. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `$HOME/.ddev/traefik/static_config.staging.yaml` (see [global configuration directory](../usage/architecture.md#global-files)) with the contents:
 
@@ -74,6 +81,10 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 
 * Depending on how you’re using this, you may want to set up automated database and file backups—ideally off-site—like you would on any production system. Many CMSes have modules/plugins to allow this, and you can use `ddev export-db` or `ddev snapshot` as you see fit and do the backup on the host.
 * You may want to allow your host system to send email. On Debian/Ubuntu `sudo apt-get install postfix`. Typically you’ll need to set up reverse DNS for your system, and perhaps SPF and/or DKIM records to for more reliable delivery to other mail systems.
+* To send your application's mail through the host's mail server, use SMTP from the application to `host.docker.internal` port 25. The web image's `sendmail_path` still points at Mailpit, which doesn't deliver mail anywhere, so PHP's `mail()` doesn't reach the host. Before it works:
+    * The host's firewall must let the Docker networks reach port 25. The web container connects from its project network (`ddev-<projectname>_default`), not from `ddev_default`, and each project has its own subnet, so allow Docker's whole private range, for example `sudo ufw allow from 172.16.0.0/12 to any port 25 proto tcp`. If the firewall drops the connection, `ddev exec telnet host.docker.internal 25` hangs at `Trying 172.17.0.1...`.
+    * The mail server must accept mail for relay from those networks. With Postfix, add `172.16.0.0/12` to `mynetworks` and make sure `inet_interfaces` isn't `loopback-only`.
+    * Turn off STARTTLS on this connection, which stays on the host: the host's certificate doesn't match `host.docker.internal`. For Drupal's Symfony mailer, for example, the DSN is `smtp://host.docker.internal:25?auto_tls=false`.
 * You may want to generally tailor your PHP settings for hosting rather than local development. Error-reporting defaults in `php.ini`, for example, may be too verbose and expose too much information publicly. You may want something less:
 
     ```ini
@@ -117,6 +128,8 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     display_startup_errors = Off
     ```
 
+* With Drupal, the `settings.ddev.php` that DDEV generates is meant for development, and it's loaded on the server too. It sets `$config['system.logging']['error_level'] = 'verbose'`, which shows errors and backtraces to visitors, and `$settings['skip_permissions_hardening'] = TRUE`, which makes the status report warn that `settings.php` is writable. Override the error level in `settings.php` after the `settings.ddev.php` include, for example `$config['system.logging']['error_level'] = 'hide';`, and run `chmod a-w web/sites/default/settings.php` after each deployment that changes it.
+
 * While a project is stopped or restarting, visitors see DDEV's page for unmatched hostnames, which reveals that the site runs on DDEV. To show your own maintenance page instead, see [Custom Maintenance Page](../extend/traefik-router.md#custom-maintenance-page).
 
 ## Troubleshooting
@@ -149,7 +162,7 @@ A message like this means you've been rate-limited. Let's Encrypt tries to creat
 ## Caveats
 
 * It’s unknown how much traffic a given server and Docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
-* DDEV does not provide outgoing SMTP mail handling service, and the development-focused Mailpit feature is disabled if you’re using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to use SMTP in your application via a third-party transactional email service such as [SendGrid](https://sendgrid.com), [Postmark](https://postmarkapp.com), or [Mailgun](https://www.mailgun.com). This is the best way to ensure mail is actually delivered.
+* DDEV does not provide outgoing SMTP mail handling service, and the development-focused Mailpit feature is disabled if you’re using `use_hardened_images`. PHP's `sendmail_path` still points at Mailpit, so mail sent with `mail()` is silently lost. You can provide SMTP service a number of ways, but the recommended way is to use SMTP in your application via a third-party transactional email service such as [SendGrid](https://sendgrid.com), [Postmark](https://postmarkapp.com), or [Mailgun](https://www.mailgun.com). This is the best way to ensure mail is actually delivered.
 * You may need an external cron trigger for some CMSes.
 * Debugging Let’s Encrypt failures requires viewing the `ddev-router` logs with `docker logs ddev-router`.
 * A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.
