@@ -205,10 +205,13 @@ func UnZstd(source string, destDirectory string) error {
 // of "absolute" is host-OS-dependent: on Windows it returns false for a
 // leading "/" or "\" with no drive letter, even though the resulting symlink
 // still resolves rooted (to the current drive) rather than confined under
-// dest. Checking all three forms explicitly catches an absolute target
-// regardless of which spelling the archive uses or which OS is running.
+// dest. A drive-relative target such as "C:foo" is also not IsAbs, but
+// os.Root's Symlink on Windows expands it to an absolute path against the
+// current directory, so any target with a volume name is treated as
+// absolute too. Checking all of these forms explicitly catches an absolute
+// target regardless of which spelling the archive uses or which OS is running.
 func isArchiveAbsolutePath(p string) bool {
-	return strings.HasPrefix(p, "/") || strings.HasPrefix(p, `\`) || filepath.IsAbs(p)
+	return strings.HasPrefix(p, "/") || strings.HasPrefix(p, `\`) || filepath.IsAbs(p) || filepath.VolumeName(p) != ""
 }
 
 // hasInnerParentRef reports whether a symlink target has ".." after another
@@ -453,6 +456,13 @@ func Unzip(source string, dest string, extractionDir string) error {
 	if err = os.MkdirAll(dest, 0755); err != nil {
 		return err
 	}
+	// Every write goes through root, so an existing symlink in dest that
+	// points outside it can't redirect an entry there.
+	root, err := os.OpenRoot(dest)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(root)
 
 	// Define a boolean that indicates whether or not at least one
 	// file matches the extraction directory.
@@ -483,17 +493,28 @@ func Unzip(source string, dest string, extractionDir string) error {
 			return fmt.Errorf("archive entry %q escapes destination directory", file.Name)
 		}
 
+		// If file.Name is now empty this is the root directory we want to extract, and need not do anything.
+		if file.Name == "" {
+			continue
+		}
+
+		relPath, err := filepath.Rel(dest, fullPath)
+		if err != nil {
+			return fmt.Errorf("archive entry %q: %v", file.Name, err)
+		}
+
 		if strings.HasSuffix(file.Name, "/") {
-			err = os.MkdirAll(fullPath, 0777)
+			err = root.MkdirAll(relPath, 0777)
 			if err != nil {
 				return fmt.Errorf("failed to mkdir %s, err:%v", fullPath, err)
 			}
 			continue
 		}
 
-		// If file.Name is now empty this is the root directory we want to extract, and need not do anything.
-		if file.Name == "" {
-			continue
+		// Zip archives don't always have an entry for each directory.
+		err = root.MkdirAll(filepath.Dir(relPath), 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create the directory for archive entry %q, err: %v", file.Name, err)
 		}
 
 		rc, err := file.Open()
@@ -502,12 +523,14 @@ func Unzip(source string, dest string, extractionDir string) error {
 		}
 
 		// create and copy the file.
-		exFile, err := os.Create(fullPath)
+		exFile, err := root.Create(relPath)
 		if err != nil {
+			_ = rc.Close()
 			return fmt.Errorf("failed to create file %v, err: %v", fullPath, err)
 		}
 		_, err = io.Copy(exFile, rc)
 		_ = exFile.Close()
+		_ = rc.Close()
 		if err != nil {
 			return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
 		}

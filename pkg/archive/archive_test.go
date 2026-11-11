@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/archive"
@@ -240,6 +241,18 @@ func TestUntarPathTraversal(t *testing.T) {
 		require.Contains(t, err.Error(), "is absolute, which is not allowed")
 	})
 
+	t.Run("drive_relative_symlink_target_rejected", func(t *testing.T) {
+		// On Windows, os.Root's Symlink expands a drive-relative target like
+		// "C:foo" to an absolute path against the current directory.
+		if runtime.GOOS != "windows" {
+			t.Skip("drive-relative paths only exist on Windows")
+		}
+		tarball := buildTar("link.txt", "C:foo", tar.TypeSymlink)
+		err := archive.Untar(tarball, destDir, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "is absolute, which is not allowed")
+	})
+
 	t.Run("absolute_symlink_write_through_escape", func(t *testing.T) {
 		// Regression test for GHSA-9hq4-hm3j-jmph: an absolute symlink target
 		// must be rejected outright, since a follow-up regular-file entry
@@ -385,6 +398,50 @@ func TestUnzipPathTraversal(t *testing.T) {
 	err = archive.Unzip(zipFile.Name(), destDir, "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "escapes destination directory")
+
+	buildZip := func(names ...string) string {
+		f, err := os.CreateTemp("", "unzip_*.zip")
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = os.Remove(f.Name()) })
+		zw := zip.NewWriter(f)
+		for _, name := range names {
+			w, err := zw.Create(name)
+			require.NoError(t, err)
+			_, err = w.Write([]byte("from-zip"))
+			require.NoError(t, err)
+		}
+		require.NoError(t, zw.Close())
+		require.NoError(t, f.Close())
+		return f.Name()
+	}
+
+	t.Run("existing_symlink_out_of_dest", func(t *testing.T) {
+		victimDir := t.TempDir()
+		victimFile := filepath.Join(victimDir, "pwned.txt")
+		require.NoError(t, os.WriteFile(victimFile, []byte("original"), 0644))
+
+		linkDest := filepath.Join(t.TempDir(), "dest")
+		require.NoError(t, os.MkdirAll(linkDest, 0755))
+		if err := os.Symlink(victimDir, filepath.Join(linkDest, "link")); err != nil {
+			t.Skipf("can't create symlink: %v", err)
+		}
+
+		err := archive.Unzip(buildZip("link/pwned.txt"), linkDest, "")
+		require.Error(t, err)
+
+		data, err := os.ReadFile(victimFile)
+		require.NoError(t, err)
+		require.Equal(t, "original", string(data),
+			"a file outside dest must not be overwritten through an existing symlink")
+	})
+
+	t.Run("missing_directory_entries", func(t *testing.T) {
+		nestedDest := filepath.Join(t.TempDir(), "dest")
+		require.NoError(t, archive.Unzip(buildZip("a/b/c.txt"), nestedDest, ""))
+		data, err := os.ReadFile(filepath.Join(nestedDest, "a", "b", "c.txt"))
+		require.NoError(t, err)
+		require.Equal(t, "from-zip", string(data))
+	})
 }
 
 // TestUntarSymlinks tests that symlinks are properly extracted from tarballs
