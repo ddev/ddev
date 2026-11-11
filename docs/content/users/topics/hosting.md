@@ -128,7 +128,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     display_startup_errors = Off
     ```
 
-* With Drupal, the `settings.ddev.php` that DDEV generates is meant for development, and it's loaded on the server too. It sets `$config['system.logging']['error_level'] = 'verbose'`, which shows errors and backtraces to visitors, and `$settings['skip_permissions_hardening'] = TRUE`, which makes the status report warn that `settings.php` is writable. Override the error level in `settings.php` after the `settings.ddev.php` include, for example `$config['system.logging']['error_level'] = 'hide';`, and run `chmod a-w web/sites/default/settings.php` after each deployment that changes it.
+* With Drupal, the `settings.ddev.php` that DDEV generates is meant for development, and it's loaded on the server too. It sets `$config['system.logging']['error_level'] = 'verbose'`, which shows errors and stack traces to visitors, and `$settings['skip_permissions_hardening'] = TRUE`, which makes the status report warn that `settings.php` is writable. Override the error level in `settings.php` after the `settings.ddev.php` include, for example `$config['system.logging']['error_level'] = 'hide';`, and run `chmod a-w web/sites/default/settings.php` after each deployment that changes it.
 
 * While a project is stopped or restarting, visitors see DDEV's page for unmatched hostnames, which reveals that the site runs on DDEV. To show your own maintenance page instead, see [Custom Maintenance Page](../extend/traefik-router.md#custom-maintenance-page).
 
