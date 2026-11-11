@@ -143,9 +143,9 @@ func cleanUpInFlight(ctx context.Context) {
 	wg.Wait()
 }
 
-// removeByTemporaryLabel removes the container a create that hasn't returned
-// may already have made. Unlike its name, the label can't belong to another
-// container.
+// removeByTemporaryLabel removes the container that a create that failed or
+// hasn't returned may already have made. Unlike its name, the label can't
+// belong to another container.
 func removeByTemporaryLabel(ctx context.Context, apiClient client.APIClient, label string) {
 	if label == "" || ctx.Err() != nil {
 		return
@@ -155,7 +155,7 @@ func removeByTemporaryLabel(ctx context.Context, apiClient client.APIClient, lab
 		Filters: client.Filters{}.Add("label", temporaryLabel+"="+label),
 	})
 	if err != nil {
-		util.Debug("Unable to list container labeled %s=%s after interrupt: %v", temporaryLabel, label, err)
+		util.Debug("Unable to list container labeled %s=%s: %v", temporaryLabel, label, err)
 		return
 	}
 	for _, c := range list.Items {
@@ -165,7 +165,7 @@ func removeByTemporaryLabel(ctx context.Context, apiClient client.APIClient, lab
 		}
 		_, err := apiClient.ContainerRemove(ctx, c.ID, client.ContainerRemoveOptions{Force: true})
 		if err != nil && !cerrdefs.IsNotFound(err) {
-			util.Debug("Unable to remove container %s after interrupt: %v", TruncateID(c.ID), err)
+			util.Debug("Unable to remove container %s: %v", TruncateID(c.ID), err)
 		}
 	}
 }
