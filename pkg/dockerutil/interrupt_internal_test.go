@@ -17,12 +17,12 @@ import (
 // container but before ContainerCreate has returned to DDEV.
 func TestCleanUpInFlightWaitsForCreate(t *testing.T) {
 	name := "TestCleanUpInFlight-" + util.RandString(6)
-	created, untrack := trackContainer()
+	created, untrack := trackContainer(util.RandString(16))
 	t.Cleanup(untrack)
 	t.Cleanup(func() { _ = RemoveContainer(name) })
 
-	done := startCleanUpInFlight(t)
-	id, err := createTestContainer(name)
+	done := startCleanUpInFlight(t, time.Minute)
+	id, err := createTestContainer(name, nil)
 	require.NoError(t, err)
 	select {
 	case <-done:
@@ -35,18 +35,34 @@ func TestCleanUpInFlightWaitsForCreate(t *testing.T) {
 	requireContainerExists(t, name, false)
 }
 
+// TestCleanUpInFlightCreateNeverReturns stands in for a create whose response
+// is slower than the interrupt timeout, so created is never called.
+func TestCleanUpInFlightCreateNeverReturns(t *testing.T) {
+	name := "TestCleanUpInFlightSlow-" + util.RandString(6)
+	label := util.RandString(16)
+	_, untrack := trackContainer(label)
+	t.Cleanup(untrack)
+	t.Cleanup(func() { _ = RemoveContainer(name) })
+
+	_, err := createTestContainer(name, map[string]string{temporaryLabel: label})
+	require.NoError(t, err)
+	done := startCleanUpInFlight(t, 3*time.Second)
+	waitForCleanUp(t, done)
+	requireContainerExists(t, name, false)
+}
+
 // TestCleanUpInFlightSkipsNameConflict checks that a create refused because
 // another container holds the name doesn't make cleanup remove that one.
 func TestCleanUpInFlightSkipsNameConflict(t *testing.T) {
 	name := "TestCleanUpInFlightConflict-" + util.RandString(6)
-	_, err := createTestContainer(name)
+	_, err := createTestContainer(name, nil)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = RemoveContainer(name) })
 
-	created, untrack := trackContainer()
+	created, untrack := trackContainer(util.RandString(16))
 	t.Cleanup(untrack)
-	done := startCleanUpInFlight(t)
-	id, err := createTestContainer(name)
+	done := startCleanUpInFlight(t, time.Minute)
+	id, err := createTestContainer(name, nil)
 	require.Error(t, err, "the name is taken, so the create should fail")
 
 	created(id, err)
@@ -54,8 +70,38 @@ func TestCleanUpInFlightSkipsNameConflict(t *testing.T) {
 	requireContainerExists(t, name, true)
 }
 
-func startCleanUpInFlight(t *testing.T) <-chan struct{} {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+// TestRemoveByTemporaryLabelChecksLabel stands in for an API that ignores
+// the label filter, which must not make cleanup remove other containers.
+func TestRemoveByTemporaryLabelChecksLabel(t *testing.T) {
+	label := util.RandString(16)
+	fake := &ignoreFilterClient{items: []container.Summary{
+		{ID: "mine", Labels: map[string]string{temporaryLabel: label}},
+		{ID: "other-temporary", Labels: map[string]string{temporaryLabel: "other"}},
+		{ID: "unlabeled"},
+	}}
+	removeByTemporaryLabel(context.Background(), fake, label)
+	require.Equal(t, []string{"mine"}, fake.removed)
+}
+
+// ignoreFilterClient's ContainerList returns every container, whatever the
+// filters, and ContainerRemove records what it was asked to remove.
+type ignoreFilterClient struct {
+	client.APIClient
+	items   []container.Summary
+	removed []string
+}
+
+func (c *ignoreFilterClient) ContainerList(context.Context, client.ContainerListOptions) (client.ContainerListResult, error) {
+	return client.ContainerListResult{Items: c.items}, nil
+}
+
+func (c *ignoreFilterClient) ContainerRemove(_ context.Context, id string, _ client.ContainerRemoveOptions) (client.ContainerRemoveResult, error) {
+	c.removed = append(c.removed, id)
+	return client.ContainerRemoveResult{}, nil
+}
+
+func startCleanUpInFlight(t *testing.T, timeout time.Duration) <-chan struct{} {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	t.Cleanup(cancel)
 	done := make(chan struct{})
 	go func() {
@@ -73,13 +119,13 @@ func waitForCleanUp(t *testing.T, done <-chan struct{}) {
 	}
 }
 
-func createTestContainer(name string) (string, error) {
+func createTestContainer(name string, labels map[string]string) (string, error) {
 	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return "", err
 	}
 	c, err := apiClient.ContainerCreate(ctx, client.ContainerCreateOptions{
-		Config: &container.Config{Image: ddevImages.GetWebImage(), Cmd: []string{"true"}},
+		Config: &container.Config{Image: ddevImages.GetWebImage(), Cmd: []string{"true"}, Labels: labels},
 		Name:   name,
 	})
 	return c.ID, err

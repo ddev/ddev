@@ -3,6 +3,7 @@ package dockerutil
 import (
 	"context"
 	"sync"
+	"time"
 
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/ddev/ddev/pkg/interrupt"
@@ -10,6 +11,11 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 )
+
+// temporaryLabel marks a temporary container with a value unique to one
+// RunSimpleContainerExtended() call, so an interrupt can find the container
+// before ContainerCreate has returned its ID.
+const temporaryLabel = "com.ddev.temporary-id"
 
 // inFlight holds the temporary containers RunSimpleContainerExtended() is
 // creating or has created and not yet removed, and the restore function of a
@@ -23,9 +29,11 @@ var inFlight = struct {
 
 // trackedContainer's done is closed once ContainerCreate has returned, and
 // target is then what an interrupt should remove, or empty for nothing.
+// label is the temporaryLabel value the container is created with.
 type trackedContainer struct {
 	done   chan struct{}
 	target string
+	label  string
 }
 
 func init() {
@@ -33,10 +41,11 @@ func init() {
 }
 
 // trackContainer registers a container before it is created, because the
-// daemon can list it before ContainerCreate returns. Call created with
-// ContainerCreate's result once it has returned.
-func trackContainer() (created func(id string, err error), untrack func()) {
-	tc := &trackedContainer{done: make(chan struct{})}
+// daemon can list it before ContainerCreate returns. Create the container
+// with temporaryLabel set to label, and call created with ContainerCreate's
+// result once it has returned.
+func trackContainer(label string) (created func(id string, err error), untrack func()) {
+	tc := &trackedContainer{done: make(chan struct{}), label: label}
 	inFlight.Lock()
 	defer inFlight.Unlock()
 	inFlight.containers[tc] = struct{}{}
@@ -91,13 +100,21 @@ func cleanUpInFlight(ctx context.Context) {
 	if err != nil {
 		return
 	}
+	// Leave time to remove by label a container whose create hasn't returned.
+	waitCtx := ctx
+	if deadline, ok := ctx.Deadline(); ok {
+		var cancel context.CancelFunc
+		waitCtx, cancel = context.WithDeadline(ctx, deadline.Add(-time.Second))
+		defer cancel()
+	}
 	var wg sync.WaitGroup
 	for tc := range containers {
 		wg.Go(func() {
 			// Removing before the create returns would find nothing and leak it.
 			select {
 			case <-tc.done:
-			case <-ctx.Done():
+			case <-waitCtx.Done():
+				removeByTemporaryLabel(ctx, apiClient, tc.label)
 				return
 			}
 			id := tc.target
@@ -120,4 +137,31 @@ func cleanUpInFlight(ctx context.Context) {
 		})
 	}
 	wg.Wait()
+}
+
+// removeByTemporaryLabel removes the container a create that hasn't returned
+// may already have made. Unlike its name, the label can't belong to another
+// container.
+func removeByTemporaryLabel(ctx context.Context, apiClient client.APIClient, label string) {
+	if label == "" || ctx.Err() != nil {
+		return
+	}
+	list, err := apiClient.ContainerList(ctx, client.ContainerListOptions{
+		All:     true,
+		Filters: client.Filters{}.Add("label", temporaryLabel+"="+label),
+	})
+	if err != nil {
+		util.Debug("Unable to list container labeled %s=%s after interrupt: %v", temporaryLabel, label, err)
+		return
+	}
+	for _, c := range list.Items {
+		// Some APIs ignore the label filter, as socktainer's image list did.
+		if c.Labels[temporaryLabel] != label {
+			continue
+		}
+		_, err := apiClient.ContainerRemove(ctx, c.ID, client.ContainerRemoveOptions{Force: true})
+		if err != nil && !cerrdefs.IsNotFound(err) {
+			util.Debug("Unable to remove container %s after interrupt: %v", TruncateID(c.ID), err)
+		}
+	}
 }
