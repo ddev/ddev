@@ -10,7 +10,7 @@ below), `socktainer` built from upstream `main` as of 2026-11-09 with no fork fi
 commit as the v1.6.1 release, `71f2415`), docker CLI 29.9.2, docker context `socktainer`,
 macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment),
-rebased on `upstream/main` as of 2026-11-09, after #9072.
+rebased on `upstream/main` as of 2026-11-12, after [#9115](https://github.com/ddev/ddev/pull/9115).
 
 ## Resume here
 
@@ -26,18 +26,27 @@ or `handoff/`.
 | Change | Files | Commit on this branch | Why it's general |
 | --- | --- | --- | --- |
 | Captures read the pipe from the start | `pkg/util/capture.go`, `pkg/util/utils_test.go` (`TestCaptureUserOutLarge`) | `fix(test): read captured output as it is written` | A captured write past the pipe buffer deadlocked on any platform; it hung build 24 for 5h |
-| Router-port test uses 28443 | `pkg/ddevapp/router_ports_internal_test.go` | `fix(test): avoid the global router port in a config test` | Fails wherever the global HTTPS router port is 8443, which upstream's `test.sh` also sets for `podman-rootless` |
 | `TestTimezoneConfig` reads the zone before `TZ=""` | `pkg/ddevapp/config_test.go` | `test: read host zone before clearing TZ` | Fails on any provider when nothing in the process loaded `time.Local` first |
 | Pull platform is `linux/<arch>` | `pkg/dockerutil/images.go` (`BuildPlatformToPull`), `images_test.go`, `containers_test.go` (`TestMain`) | `fix(apple-container): pull linux images on socktainer` (part) | Replaces `serverVersion.Os` everywhere. Correct on every provider, since DDEV images are Linux-only, but a behavior change reviewers should see on its own. The alternative is gating it on `IsSocktainer()` here |
-| `slices.Concat` in `GetOmittedContainers` | `pkg/ddevapp/ddevapp.go` | `feat: experimental Apple Container/socktainer support` (part) | Refactor only; restore upstream's two lines to shrink the diff |
+| `slices.Concat` in `GetOmittedContainers` | `pkg/ddevapp/ddevapp.go` | `feat: experimental Apple Container/socktainer support` (part) | Upstream's `append` onto `OmitContainersGlobal` can write into the global list's spare capacity |
+| Local Network prompt step for socktainer testbots | `docs/content/developers/buildkite-testmachine-setup.md` | `feat: experimental Apple Container/socktainer support` (part) | Upstream already documents socktainer testbot setup |
 
-Suggested split: one PR, `fix(test): fix three tests and output capture found on the
-macOS socktainer pipeline`, with the first three rows, each still its own commit. The pull
-platform goes in that PR or its own, as a `fix:`. Its socktainer-skip removals stay here.
-Cherry-pick by commit title, since hashes change on rebase. Before pushing, run
-`TestTimezoneConfig` and the `pkg/dockerutil` image tests on OrbStack or Docker Desktop;
-they have run only on socktainer. The capture and router-port tests don't use Docker and
-passed on macOS.
+All five are on branch `20261112_rfay_capture_tz_platform_fixes` (worktree
+`../20261112_rfay_capture_tz_platform_fixes`), one commit each, from `upstream/main`, in
+[#9108](https://github.com/ddev/ddev/pull/9108). `TestTimezoneConfig` and the `pkg/dockerutil` image tests passed there on
+OrbStack. The router-port test fix is gone from this branch: upstream fixed the same test in
+[#9105](https://github.com/ddev/ddev/pull/9105), with 9443, and the 2026-11-12 rebase took
+theirs.
+
+Stacking: rebase this branch onto the split branch (`git rebase
+20261112_rfay_capture_tz_platform_fixes`). The capture commit drops as already applied, the
+tree is unchanged, and the one conflict is `GetOmittedContainers`, where this branch's
+version wins; `rerere` has recorded it. After the split PR is squash-merged, drop its
+commits with `git rebase --onto upstream/main 20261112_rfay_capture_tz_platform_fixes`,
+which needs no patch matching. If the split branch changes in review, restack with
+`git rebase --onto <new split tip> <old split tip>`. On the restacked branch, the
+`test: read host zone before clearing TZ` commit keeps only #508 skip removals, so squash it
+into `fix(apple-container): socktainer 1.6.1, serial builds`.
 
 ### socktainer v1.6.1 (released 2026-11-09)
 
@@ -111,7 +120,7 @@ tb-macos-arm64-5) ran 7+ hours and failed three ways:
   `TEST_TIMEOUT=3h`, so a hang costs 3h, not 6h.
 - `TestWriteConfigKeepsProjectRouterPorts` (upstream #9075) set the project's HTTPS port to
   8443, which the pipeline sets globally, so `WriteConfig` left it out. Fails on any machine
-  with global 8443, here too. The test now uses 28443.
+  with global 8443, here too. Upstream fixed it in [#9105](https://github.com/ddev/ddev/pull/9105).
 - `TestUtilityDiagnoseCmd/BasicProject`: "No internet access from containers", 13s after the
   same check passed in another subtest. Intermittent; not investigated.
 
@@ -190,8 +199,9 @@ tb-macos-arm64-5) ran 7+ hours and failed three ways:
   description or #7372.
 - **Decide the release stance:** ship marked experimental with the hand steps documented;
   v1.6.1 removed the wait on #509.
-- **Buildkite:** widen `macos-socktainer`'s branch filter after merge, and decide whether
-  it's a required check.
+- **Buildkite:** the CI pieces merged in [#9115](https://github.com/ddev/ddev/pull/9115), so
+  `main` now has `macos-socktainer.yml`. Widen `macos-socktainer`'s branch filter, and
+  decide whether it's a required check.
 
 ### Buildkite CI (2026-11-01)
 
@@ -202,9 +212,10 @@ The test suite now has a socktainer pipeline, following the plan in
   `.buildkite/macos-socktainer.yml` with `DOCKER_TYPE=socktainer` on agents tagged
   `socktainer=true` (tb-macos-arm64-5/6/7; each `buildkite-agent.cfg` has a
   `.bak-20261101` backup). It builds fork PRs only from branches matching
-  `*20260802_rfay_apple_container_experiment`, and doesn't build branches, since `main` has
-  no `macos-socktainer.yml` yet. Widen both when this merges. Its GitHub webhook is on
-  ddev/ddev.
+  `*20260802_rfay_apple_container_experiment`, and doesn't build branches. Its GitHub
+  webhook is on ddev/ddev. The pipeline, `lib-provider.sh`, `test.sh`, `sanetestbot.sh`,
+  perf and testbot-setup changes merged in [#9115](https://github.com/ddev/ddev/pull/9115)
+  and are no longer in this branch's diff.
 - The testbots have Homebrew's apple container 1.6.1 and socktainer 1.6.1, neither run as a
   service; [#9037](https://github.com/ddev/ddev/pull/9037) (testbot disk cleanup) prepares
   them. 1.6.1 honors the image `label` filter (#492); upstream DDEV also re-checks labels
