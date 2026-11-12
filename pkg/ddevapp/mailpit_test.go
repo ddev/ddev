@@ -88,9 +88,11 @@ func TestMailpit(t *testing.T) {
 			testcommon.WithMaxAttempts(5),
 		)
 	}
-	// Change the global ports to make sure that works
-	globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort = "28023"
-	globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort = "28024"
+	// Change the global ports to make sure that works. Docker Desktop assigns
+	// unpinned published ports (such as the web container's 443) from about
+	// 20000 up, so ports in that range can collide with the project's own.
+	globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort = "17023"
+	globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort = "17024"
 	require.NoError(t, err)
 
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)

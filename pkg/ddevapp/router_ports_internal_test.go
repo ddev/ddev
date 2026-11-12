@@ -88,14 +88,16 @@ func TestWriteConfigKeepsProjectRouterPorts(t *testing.T) {
 
 	resolvePortsLikeStart(app, map[string]string{"28025": "33001"})
 	require.Equal(t, "33001", app.MailpitHTTPPort)
-	// A port set after Start() is the project's own setting.
-	app.RouterHTTPSPort = "8443"
+	// A port set after Start() is the project's own setting. It must differ from
+	// the resolved port, which is 8443 where CI's global config sets that.
+	app.RouterHTTPSPort = "9443"
+	require.NotEqual(t, app.resolvedRouterPorts.resolved["router_https_port"], app.RouterHTTPSPort)
 	require.NoError(t, app.WriteConfig())
 
 	config := readWrittenConfig(t, app)
 	require.Equal(t, "28025", config["mailpit_http_port"])
 	require.Equal(t, "28142", config["xhgui_https_port"])
-	require.Equal(t, "8443", config["router_https_port"])
+	require.Equal(t, "9443", config["router_https_port"])
 	require.NotContains(t, config, "router_http_port")
 	require.NotContains(t, config, "xhgui_http_port")
 }
