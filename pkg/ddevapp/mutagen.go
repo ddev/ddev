@@ -324,6 +324,13 @@ func CreateOrResumeMutagenSync(app *DdevApp) (lineEnded bool, err error) {
 		}
 		util.Debug("Creating Mutagen sync: mutagen %v", args)
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
+		// The daemon can return a prompter ID before registering it, so the create
+		// fails before any session exists. Running it again is safe.
+		// Upstream fix: https://github.com/mutagen-io/mutagen/pull/579
+		if err != nil && strings.Contains(out, "prompter not found") {
+			util.Debug("Retrying Mutagen sync create after 'prompter not found': %s", out)
+			out, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
+		}
 		if err != nil {
 			return false, fmt.Errorf("failed to mutagen %v (%v), output='%s'", args, err, out)
 		}
