@@ -184,8 +184,8 @@ func splitProfiles(flag string) []string {
 }
 
 func emitReachProjectMessage(project *ddevapp.DdevApp) {
-	if project.GetPrimaryURL() != "" {
-		util.Success("Your project can be reached at %s\nSee 'ddev describe' for alternate URLs.", project.GetPrimaryURL())
+	if project.GetPrimaryDisplayURL() != "" {
+		util.Success("Your project can be reached at %s\nSee 'ddev describe' for alternate URLs.", project.GetPrimaryDisplayURL())
 	}
 }
 

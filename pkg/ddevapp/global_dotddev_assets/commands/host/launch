@@ -22,6 +22,12 @@ HTTPS=""
 if [ "${DDEV_PRIMARY_URL%://*}" = "https" ]; then HTTPS=true; fi
 IN_CLOUD=""
 if [[ "${CODESPACES}" == "true" ]]; then IN_CLOUD=true; fi
+# external_url_template/external_urls give the URLs a browser outside the workspace uses
+EXTERNAL=""
+if [ -n "${DDEV_PRIMARY_EXTERNAL_URL:-}" ]; then
+  EXTERNAL=true
+  FULLURL="${DDEV_PRIMARY_EXTERNAL_URL}"
+fi
 
 get_docker_binary() {
   if command -v docker >/dev/null 2>&1; then
@@ -55,7 +61,9 @@ while :; do
     echo "phpMyAdmin is no longer built into DDEV, please 'ddev add-on get ddev/ddev-phpmyadmin' and use 'ddev phpmyadmin' to launch phpMyAdmin" && exit 2
     ;;
   -m | --mailpit | --mailhog)
-    if [ "${IN_CLOUD}" != "" ]; then
+    if [ -n "${DDEV_MAILPIT_EXTERNAL_URL:-}" ]; then
+      FULLURL="${DDEV_MAILPIT_EXTERNAL_URL}"
+    elif [ "${IN_CLOUD}" != "" ]; then
       FULLURL=$(replace_port_in_cloud "${DDEV_HOST_MAILPIT_PORT}")
     else
       if [ "${HTTPS}" = "" ]; then
@@ -92,6 +100,15 @@ if [ -n "${1:-}" ]; then
   if [[ $1 =~ ^https?:// ]]; then
     # full url
     FULLURL="${1}"
+  elif [[ $1 =~ ^: ]] && [ "${EXTERNAL}" != "" ]; then
+    # specific router port, looked up in the external URLs
+    port="${1#:}"
+    external_url=$(ddev describe -j | "$(get_docker_binary)" run -i --rm ddev/ddev-utilities sh -c "jq -r '.raw.external_urls[\"${port}\"] // empty'" 2>/dev/null)
+    if [ -z "${external_url}" ]; then
+      echo "No external URL is configured for port ${port}" >&2
+      exit 1
+    fi
+    FULLURL="${external_url}"
   elif [[ $1 =~ ^: ]]; then
     # specific port
     FULLURL="${FULLURL%:[0-9]*}${1}"

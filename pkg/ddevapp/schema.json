@@ -321,6 +321,22 @@
       "description": "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory.",
       "type": "string"
     },
+    "external_url_template": {
+      "description": "URL a browser outside the workspace uses for each router port, with {{port}} replaced by the router HTTP port, for cloud environments like Coder.",
+      "type": "string",
+      "pattern": "^https?://.*\\{\\{port\\}\\}"
+    },
+    "external_urls": {
+      "description": "External URLs for individual router HTTP ports, keyed by port; they take precedence over external_url_template.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[0-9]+$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^https?://"
+      }
+    },
     "fail_on_hook_fail": {
       "description": "Decide whether 'ddev start' should be interrupted by a failing hook.",
       "type": "boolean"

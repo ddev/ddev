@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"os"
@@ -120,7 +121,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		router = "disabled"
 	}
 
-	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s\nDDEV version: %s", app.Name, output.Hyperlink(output.FileURL(app.GetAppRoot()), desc["shortroot"].(string)), output.Hyperlink(app.GetPrimaryURL(), app.GetPrimaryURL()), dockerPlatform, router, versionconstants.DdevVersion))
+	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s\nDDEV version: %s", app.Name, output.Hyperlink(output.FileURL(app.GetAppRoot()), desc["shortroot"].(string)), output.Hyperlink(app.GetPrimaryDisplayURL(), app.GetPrimaryDisplayURL()), dockerPlatform, router, versionconstants.DdevVersion))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
 	// Only show extended status for running sites.
@@ -146,6 +147,11 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		extraInfo := []string{}
 
 		switch {
+		// An external URL replaces the router URL, which is unreachable from outside the workspace
+		case v["external_url"] != nil && v["external_url"] != "":
+			u := v["external_url"].(string)
+			urlPortParts = append(urlPortParts, output.Hyperlink(u, u))
+
 		// Normal case, using ddev-router based URLs
 		case !ddevapp.IsRouterDisabled(app):
 			if httpsURL, ok := v["https_url"].(string); ok && !app.CanUseHTTPOnly() {
@@ -238,6 +244,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		if _, ok := desc["mailpit_https_url"]; ok && !app.CanUseHTTPOnly() {
 			mailpitURL = desc["mailpit_https_url"].(string)
 		}
+		if u := app.GetExternalURL(app.GetMailpitHTTPPort()); u != "" {
+			mailpitURL = u
+		}
 		t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\nLaunch: ddev mailpit", output.Hyperlink(mailpitURL, mailpitURL))})
 
 		ddevapp.SyncGenericWebserverPortsWithRouterPorts(app)
@@ -249,11 +258,17 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 				scheme, port = "http", extraPort.HTTPPort
 			}
 			url := netutil.NormalizeURL(fmt.Sprintf("%s://%s:%d", scheme, app.GetHostname(), port))
+			if u := app.GetExternalURL(strconv.Itoa(extraPort.HTTPPort)); u != "" {
+				url = u
+			}
 			t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("%s\nInDocker: web:%d", output.Hyperlink(url, url), extraPort.WebContainerPort)})
 		}
 
 		// All URLs stanza, one per line so each stays an intact clickable link
 		_, _, urls := app.GetAllURLs()
+		if u := app.GetPrimaryExternalURL(); u != "" {
+			urls = append([]string{u}, urls...)
+		}
 		if len(urls) > 0 {
 			linkedURLs := make([]string, len(urls))
 			for i, u := range urls {

@@ -529,6 +529,10 @@ func (app *DdevApp) ValidateConfig() error {
 		return err
 	}
 
+	if err := app.validateExternalURLs(); err != nil {
+		return err
+	}
+
 	// Skip any validation below this check if there is nothing to validate
 	if err := CheckForMissingProjectFiles(app); err != nil {
 		// Do not return an error here because not all DDEV commands should be stopped by this check
