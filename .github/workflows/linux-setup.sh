@@ -69,6 +69,15 @@ fi
 if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
 
   echo "Setting up podman-rootless"
+  # Temporary: crun 1.31 fails every exec started under the systemd user manager
+  # (podman.service, healthcheck timers), https://github.com/containers/crun/issues/2466
+  # Pin the static 1.30.1 before the setup script validates the install.
+  crun_pin_sha256=86d1e6a0e76945975d3aebfab39cbc6a26eea15f1c3fc66b6776d19e5dc346a0
+  mkdir -p "${HOME}/.local/lib/ddev-crun" "${HOME}/.config/containers/containers.conf.d"
+  curl -fsSL -o "${HOME}/.local/lib/ddev-crun/crun" https://github.com/containers/crun/releases/download/1.30.1/crun-1.30.1-linux-amd64
+  echo "${crun_pin_sha256}  ${HOME}/.local/lib/ddev-crun/crun" | sha256sum -c -
+  chmod +x "${HOME}/.local/lib/ddev-crun/crun"
+  printf '[engine.runtimes]\ncrun = ["%s"]\n' "${HOME}/.local/lib/ddev-crun/crun" >"${HOME}/.config/containers/containers.conf.d/zz-crun-pin.conf"
   "${DDEV_REPO_ROOT}/scripts/linux-podman-rootless.sh" --install-brew
   # brew put podman at a new path; refresh this shell's command hash table.
   hash -r
