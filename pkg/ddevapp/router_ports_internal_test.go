@@ -46,23 +46,23 @@ func newRouterPortsTestApp(t *testing.T) *DdevApp {
 	return app
 }
 
-func setGlobalRouterPorts(t *testing.T, mailpitHTTP, mailpitHTTPS, xhguiHTTP, xhguiHTTPS string) {
+func setGlobalRouterPorts(t *testing.T, http, https, mailpitHTTP, mailpitHTTPS, xhguiHTTP, xhguiHTTPS string) {
 	t.Helper()
 	g := &globalconfig.DdevGlobalConfig
-	orig := []string{g.RouterMailpitHTTPPort, g.RouterMailpitHTTPSPort, g.RouterXHGuiHTTPPort, g.RouterXHGuiHTTPSPort}
-	t.Cleanup(func() {
-		g.RouterMailpitHTTPPort, g.RouterMailpitHTTPSPort, g.RouterXHGuiHTTPPort, g.RouterXHGuiHTTPSPort = orig[0], orig[1], orig[2], orig[3]
-	})
-	g.RouterMailpitHTTPPort, g.RouterMailpitHTTPSPort, g.RouterXHGuiHTTPPort, g.RouterXHGuiHTTPSPort = mailpitHTTP, mailpitHTTPS, xhguiHTTP, xhguiHTTPS
+	fields := []*string{&g.RouterHTTPPort, &g.RouterHTTPSPort, &g.RouterMailpitHTTPPort, &g.RouterMailpitHTTPSPort, &g.RouterXHGuiHTTPPort, &g.RouterXHGuiHTTPSPort}
+	values := []string{http, https, mailpitHTTP, mailpitHTTPS, xhguiHTTP, xhguiHTTPS}
+	for i, field := range fields {
+		orig := *field
+		t.Cleanup(func() { *field = orig })
+		*field = values[i]
+	}
 }
 
 func TestWriteConfigOmitsResolvedRouterPorts(t *testing.T) {
-	setGlobalRouterPorts(t, "18025", "18026", "", "")
+	setGlobalRouterPorts(t, "8080", "8443", "18025", "18026", "", "")
 	app := newRouterPortsTestApp(t)
 
-	// The test environment's global config may set its own router ports.
-	routerHTTPPort := app.GetPrimaryRouterHTTPPort()
-	resolvePortsLikeStart(app, map[string]string{routerHTTPPort: "33000"})
+	resolvePortsLikeStart(app, map[string]string{"8080": "33000"})
 	require.Equal(t, "33000", app.RouterHTTPPort)
 	require.Equal(t, "18025", app.MailpitHTTPPort)
 	require.Equal(t, nodeps.DdevDefaultXHGuiHTTPPort, app.XHGuiHTTPPort)
@@ -77,11 +77,11 @@ func TestWriteConfigOmitsResolvedRouterPorts(t *testing.T) {
 
 	// A second start resolves from the configured ports again, so a freed port is used.
 	resolvePortsLikeStart(app, nil)
-	require.Equal(t, routerHTTPPort, app.RouterHTTPPort)
+	require.Equal(t, "8080", app.RouterHTTPPort)
 }
 
 func TestWriteConfigKeepsProjectRouterPorts(t *testing.T) {
-	setGlobalRouterPorts(t, "18025", "", "", "")
+	setGlobalRouterPorts(t, "8080", "8443", "18025", "", "", "")
 	app := newRouterPortsTestApp(t)
 	app.MailpitHTTPPort = "28025"
 	app.XHGuiHTTPSPort = "28142"
@@ -89,7 +89,7 @@ func TestWriteConfigKeepsProjectRouterPorts(t *testing.T) {
 	resolvePortsLikeStart(app, map[string]string{"28025": "33001"})
 	require.Equal(t, "33001", app.MailpitHTTPPort)
 	// A port set after Start() is the project's own setting. It must differ from
-	// the resolved port, which is 8443 where CI's global config sets that.
+	// the resolved port, 8443.
 	app.RouterHTTPSPort = "9443"
 	require.NotEqual(t, app.resolvedRouterPorts.resolved["router_https_port"], app.RouterHTTPSPort)
 	require.NoError(t, app.WriteConfig())
@@ -118,4 +118,50 @@ func TestWriteConfigOmitsSubstituteGenericWebserverPorts(t *testing.T) {
 	require.Equal(t, 80, written.WebExtraExposedPorts[0].HTTPPort)
 	require.Equal(t, 443, written.WebExtraExposedPorts[0].HTTPSPort)
 	require.Equal(t, 33000, app.WebExtraExposedPorts[0].HTTPPort)
+}
+
+func TestWriteConfigOmitsGlobalRouterPorts(t *testing.T) {
+	setGlobalRouterPorts(t, "8080", "8443", "18025", "18026", "18143", "18142")
+	app := newRouterPortsTestApp(t)
+
+	resolvePortsLikeStart(app, nil)
+	require.Equal(t, "8080", app.RouterHTTPPort)
+	require.Equal(t, "18025", app.MailpitHTTPPort)
+	require.Equal(t, "18143", app.XHGuiHTTPPort)
+	require.NoError(t, app.WriteConfig())
+
+	config := readWrittenConfig(t, app)
+	for name := range app.routerPortFields() {
+		require.NotContains(t, config, name)
+	}
+}
+
+// TestWriteConfigKeepsProjectPortsMatchingDefaultOrGlobal checks that a port
+// the project set is written even when it equals the DDEV default or the
+// global value, so the project keeps it when the global config changes.
+func TestWriteConfigKeepsProjectPortsMatchingDefaultOrGlobal(t *testing.T) {
+	setGlobalRouterPorts(t, "8080", "8443", "18025", "18026", "", "")
+	app := newRouterPortsTestApp(t)
+	// The default, where the global config differs.
+	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
+	app.MailpitHTTPPort = nodeps.DdevDefaultMailpitHTTPPort
+	// The same value as the global config.
+	app.RouterHTTPSPort = "8443"
+	app.MailpitHTTPSPort = "18026"
+
+	resolvePortsLikeStart(app, nil)
+	require.Equal(t, nodeps.DdevDefaultRouterHTTPPort, app.RouterHTTPPort)
+	require.NoError(t, app.WriteConfig())
+
+	config := readWrittenConfig(t, app)
+	require.Equal(t, nodeps.DdevDefaultRouterHTTPPort, config["router_http_port"])
+	require.Equal(t, "8443", config["router_https_port"])
+	require.Equal(t, nodeps.DdevDefaultMailpitHTTPPort, config["mailpit_http_port"])
+	require.Equal(t, "18026", config["mailpit_https_port"])
+	require.NotContains(t, config, "xhgui_http_port")
+	require.NotContains(t, config, "xhgui_https_port")
+
+	written, err := NewApp(app.AppRoot, false)
+	require.NoError(t, err)
+	require.Equal(t, nodeps.DdevDefaultRouterHTTPPort, written.GetPrimaryRouterHTTPPort())
 }
