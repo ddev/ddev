@@ -45,6 +45,8 @@ ignorePatterns:
   - pattern: "https://modx.com"
   # viget.com (Vercel) answers 429 with a bot challenge, not a rate limit
   - pattern: "https://www.viget.com"
+  # docs.backdropcms.org answers every request with an empty 406
+  - pattern: "https://docs.backdropcms.org"
   
 aliveStatusCodes:
   - 200
