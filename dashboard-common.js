@@ -18,10 +18,9 @@ function initDashboard(config) {
   // pipeline × runner cross-product (20+ workflows times several machines
   // each, on the CI test-runtime page) is unreadable as a single list.
   // workflows/runners are the distinct values available to check;
-  // enabledWorkflows/enabledRunners are which ones currently are. Unused by
-  // the perf-benchmarks page (its config.runnerOf always returns null), but
-  // harmless to keep wired for both -- state.runners just stays empty there
-  // and the runner box stays hidden.
+  // enabledWorkflows/enabledRunners are which ones currently are. A page
+  // whose config.runnerOf returns null for every row (or a dataset with no
+  // runner recorded) leaves state.runners empty and the runner box hidden.
   const state = {
     rows: [], metric: null, view: 'trend',
     workflows: [], enabledWorkflows: new Set(),
@@ -172,9 +171,9 @@ function initDashboard(config) {
 
     buildCheckboxBox('workflow-container', 'workflow-all', 'workflow-none', () => state.workflows, state.enabledWorkflows, render);
     buildCheckboxBox('runner-container', 'runner-all', 'runner-none', () => state.runners, state.enabledRunners, render);
-    // Nothing to filter by runner on the perf-benchmarks page (no
-    // runnerOf), or on the CI page if a load happens to have no Buildkite
-    // rows in view -- hide the box rather than show it empty.
+    // Nothing to filter by runner when no row records one (perf rows from
+    // before runner was added, or a CI load with no Buildkite rows in view)
+    // -- hide the box rather than show it empty.
     document.getElementById('runner-box-wrap').hidden = state.runners.length === 0;
   }
 
@@ -195,8 +194,8 @@ function initDashboard(config) {
         .join('\n');
       link.download = `${config.csvPrefix}-compare-${state.metric}.csv`;
     } else {
-      csv = ['timestamp,leg,metric,value_s']
-        .concat(result.flatMap((s) => s.points.map((p) => `${new Date(p.t).toISOString()},${s.leg},${state.metric},${p.v}`)))
+      csv = ['timestamp,leg,runner,metric,value_s']
+        .concat(result.flatMap((s) => s.points.map((p) => `${new Date(p.t).toISOString()},${s.leg},${p.runner},${state.metric},${p.v}`)))
         .join('\n');
       link.download = `${config.csvPrefix}-trend-${state.metric}.csv`;
     }
@@ -225,7 +224,7 @@ function initDashboard(config) {
       .map((leg, i) => ({
         leg,
         color: COLORS[i % COLORS.length],
-        points: filteredRows.filter((r) => legKey(r) === leg).map((r) => ({ t: new Date(r.timestamp).getTime(), v: config.metricValue(r, state.metric) })),
+        points: filteredRows.filter((r) => legKey(r) === leg).map((r) => ({ t: new Date(r.timestamp).getTime(), v: config.metricValue(r, state.metric), runner: config.runnerOf(r) || '' })),
       }))
       .filter((s) => s.points.length > 0);
 
