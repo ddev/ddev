@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -240,6 +241,18 @@ func TestUntarPathTraversal(t *testing.T) {
 		require.Contains(t, err.Error(), "is absolute, which is not allowed")
 	})
 
+	t.Run("drive_relative_symlink_target_rejected", func(t *testing.T) {
+		// On Windows, os.Root's Symlink expands a drive-relative target like
+		// "C:foo" to an absolute path against the current directory.
+		if !nodeps.IsWindows() {
+			t.Skip("drive-relative paths only exist on Windows")
+		}
+		tarball := buildTar("link.txt", "C:foo", tar.TypeSymlink)
+		err := archive.Untar(tarball, destDir, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "is absolute, which is not allowed")
+	})
+
 	t.Run("absolute_symlink_write_through_escape", func(t *testing.T) {
 		// Regression test for GHSA-9hq4-hm3j-jmph: an absolute symlink target
 		// must be rejected outright, since a follow-up regular-file entry
@@ -282,6 +295,86 @@ func TestUntarPathTraversal(t *testing.T) {
 		require.Equal(t, "original", string(data),
 			"host file outside dest must not be overwritten via a planted symlink")
 	})
+
+	// GHSA-vxj4-5gfg-97c2: each relative link passes a lexical check, but
+	// d/s/x is created through d/s (-> dest), so it lands at dest/x -> "..".
+	type entry struct {
+		name, linkname string
+		typeflag       byte
+		content        string
+	}
+	buildChainTar := func(entries []entry) string {
+		f, err := os.CreateTemp("", "symlink_chain_*.tar")
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = os.Remove(f.Name()) })
+		tw := tar.NewWriter(f)
+		for _, e := range entries {
+			require.NoError(t, tw.WriteHeader(&tar.Header{
+				Name:     e.name,
+				Typeflag: e.typeflag,
+				Linkname: e.linkname,
+				Mode:     0755,
+				Size:     int64(len(e.content)),
+			}))
+			_, err = tw.Write([]byte(e.content))
+			require.NoError(t, err)
+		}
+		require.NoError(t, tw.Close())
+		require.NoError(t, f.Close())
+		return f.Name()
+	}
+
+	t.Run("symlink_chain_write_through_escape", func(t *testing.T) {
+		base := t.TempDir()
+		chainDest := filepath.Join(base, "home", "project", "dest")
+		sshDir := filepath.Join(base, "home", ".ssh")
+		require.NoError(t, os.MkdirAll(sshDir, 0755))
+		victimFile := filepath.Join(sshDir, "authorized_keys")
+		require.NoError(t, os.WriteFile(victimFile, []byte("original"), 0644))
+
+		tarball := buildChainTar([]entry{
+			{name: "d/", typeflag: tar.TypeDir},
+			{name: "d/s", linkname: "..", typeflag: tar.TypeSymlink},
+			{name: "d/s/x", linkname: "..", typeflag: tar.TypeSymlink},
+			{name: "d/s/x/s", linkname: "..", typeflag: tar.TypeSymlink},
+			{name: "d/s/x/s/x/.ssh/authorized_keys", typeflag: tar.TypeReg, content: "attacker-key"},
+		})
+		err := archive.Untar(tarball, chainDest, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "escapes destination directory")
+
+		data, err := os.ReadFile(victimFile)
+		require.NoError(t, err)
+		require.Equal(t, "original", string(data))
+		_, err = os.Lstat(filepath.Join(chainDest, "x"))
+		require.True(t, os.IsNotExist(err), "no symlink pointing above dest may be left behind")
+	})
+
+	t.Run("symlink_target_through_inner_symlink", func(t *testing.T) {
+		chainDest := filepath.Join(t.TempDir(), "dest")
+		tarball := buildChainTar([]entry{
+			{name: "a/b/", typeflag: tar.TypeDir},
+			{name: "a/b/up", linkname: "../..", typeflag: tar.TypeSymlink},
+			{name: "a/b/out", linkname: "up/q/../..", typeflag: tar.TypeSymlink},
+		})
+		err := archive.Untar(tarball, chainDest, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "has '..' after another path element")
+	})
+
+	t.Run("symlink_within_dest_still_works", func(t *testing.T) {
+		chainDest := filepath.Join(t.TempDir(), "dest")
+		tarball := buildChainTar([]entry{
+			{name: "real/", typeflag: tar.TypeDir},
+			{name: "real/file.txt", typeflag: tar.TypeReg, content: "ok"},
+			{name: "sub/link", linkname: "../real", typeflag: tar.TypeSymlink},
+			{name: "sub/link/new.txt", typeflag: tar.TypeReg, content: "via link"},
+		})
+		require.NoError(t, archive.Untar(tarball, chainDest, ""))
+		data, err := os.ReadFile(filepath.Join(chainDest, "real", "new.txt"))
+		require.NoError(t, err)
+		require.Equal(t, "via link", string(data))
+	})
 }
 
 // TestUnzipPathTraversal verifies that path traversal attempts in zip archives are rejected
@@ -305,6 +398,50 @@ func TestUnzipPathTraversal(t *testing.T) {
 	err = archive.Unzip(zipFile.Name(), destDir, "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "escapes destination directory")
+
+	buildZip := func(names ...string) string {
+		f, err := os.CreateTemp("", "unzip_*.zip")
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = os.Remove(f.Name()) })
+		zw := zip.NewWriter(f)
+		for _, name := range names {
+			w, err := zw.Create(name)
+			require.NoError(t, err)
+			_, err = w.Write([]byte("from-zip"))
+			require.NoError(t, err)
+		}
+		require.NoError(t, zw.Close())
+		require.NoError(t, f.Close())
+		return f.Name()
+	}
+
+	t.Run("existing_symlink_out_of_dest", func(t *testing.T) {
+		victimDir := t.TempDir()
+		victimFile := filepath.Join(victimDir, "pwned.txt")
+		require.NoError(t, os.WriteFile(victimFile, []byte("original"), 0644))
+
+		linkDest := filepath.Join(t.TempDir(), "dest")
+		require.NoError(t, os.MkdirAll(linkDest, 0755))
+		if err := os.Symlink(victimDir, filepath.Join(linkDest, "link")); err != nil {
+			t.Skipf("can't create symlink: %v", err)
+		}
+
+		err := archive.Unzip(buildZip("link/pwned.txt"), linkDest, "")
+		require.Error(t, err)
+
+		data, err := os.ReadFile(victimFile)
+		require.NoError(t, err)
+		require.Equal(t, "original", string(data),
+			"a file outside dest must not be overwritten through an existing symlink")
+	})
+
+	t.Run("missing_directory_entries", func(t *testing.T) {
+		nestedDest := filepath.Join(t.TempDir(), "dest")
+		require.NoError(t, archive.Unzip(buildZip("a/b/c.txt"), nestedDest, ""))
+		data, err := os.ReadFile(filepath.Join(nestedDest, "a", "b", "c.txt"))
+		require.NoError(t, err)
+		require.Equal(t, "from-zip", string(data))
+	})
 }
 
 // TestUntarSymlinks tests that symlinks are properly extracted from tarballs
