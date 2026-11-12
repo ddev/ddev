@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -111,6 +112,29 @@ func TestCaptureUserOut(t *testing.T) {
 	out := restoreOutput()
 
 	assert.Contains(out, text)
+}
+
+// TestCaptureUserOutLarge writes more than a pipe buffer holds (64 KB on
+// macOS) before restoring, which blocks forever unless the capture reads as
+// output arrives.
+func TestCaptureUserOutLarge(t *testing.T) {
+	restoreOutput := util.CaptureUserOut()
+	line := util.RandString(1023)
+	done := make(chan struct{})
+	go func() {
+		for range 512 {
+			output.UserOut.Println(line)
+		}
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(30 * time.Second):
+		_ = restoreOutput()
+		require.FailNow(t, "writing 512 KB to a captured UserOut blocked")
+	}
+	out := restoreOutput()
+	require.Equal(t, 512, strings.Count(out, line))
 }
 
 // TestCaptureStdOut ensures capturing of stdout works as expected.
