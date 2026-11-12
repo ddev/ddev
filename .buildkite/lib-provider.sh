@@ -237,6 +237,14 @@ function provider_bringup {
 # Orbstack or Docker Desktop running afterward (matches test.sh's long-standing
 # cleanup trap behavior, extracted here so perf.sh can reuse it verbatim).
 function provider_shutdown {
+  # Apple container runs each container as its own launchd service, so a
+  # socktainer job killed before its cleanup leaves a ddev-router holding host
+  # ports. Stop it first, because a canceled job may not get further.
+  if command -v container >/dev/null 2>&1; then
+    echo "Stopping socktainer and apple container"
+    pkill -x socktainer || true
+    ${TIMEOUT} 60s container system stop || true
+  fi
   stop_orbstack
   if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
   command -v colima 2>/dev/null && echo "Stopping colima_vz" && (colima stop -f vz || true)
