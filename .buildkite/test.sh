@@ -45,25 +45,29 @@ export DOCKER_SCOUT_SUGGEST=false
 # shellcheck source=lib-provider.sh
 source "$(dirname "$0")/lib-provider.sh"
 
-# On macOS, we can have several different docker providers, allow testing all
-# In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
+# On macOS, we can have several different docker providers, allow testing all.
+# They stay running between jobs; provider_bringup picks this job's provider
+# with DOCKER_CONTEXT (see lib-provider.sh).
 if [ "${os:-}" = "darwin" ]; then
   function cleanup {
-    # Post-test maintenance, while the provider is still up and before we stop it.
-    # Guarded so it doesn't run on the initial cleanup call at startup.
+    # Post-test maintenance, while the provider is still up.
     if [ "${RAN_TESTS:-false}" = "true" ]; then
       echo "--- running testbot_maintenance.sh (post-test)"
       ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh" || true
     fi
-    provider_shutdown
+    if [ "${PROVIDER_EXCLUSIVE}" = "true" ]; then
+      provider_shutdown
+    fi
   }
   trap cleanup EXIT
   # A canceled job has only the agent's grace period left, so skip the slow
   # maintenance and go straight to provider_shutdown.
   trap 'RAN_TESTS=false; exit 143' TERM INT
 
-  # Start with a predictable docker provider running
-  cleanup
+  if [ "${PROVIDER_EXCLUSIVE}" = "true" ]; then
+    # Start with a predictable docker provider running
+    cleanup
+  fi
 
   echo "initial docker context situation:"
   docker context ls

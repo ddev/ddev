@@ -5,6 +5,19 @@
 #
 # Source, don't execute. Requires DOCKER_TYPE to be set before calling
 # provider_bringup. Sets the global TIMEOUT variable as a side effect.
+#
+# On macOS, provider_bringup selects the provider by exporting DOCKER_CONTEXT
+# rather than running `docker context use`, so several providers can stay
+# running side by side and each job talks only to its own. A provider that
+# switches the global context when it starts (colima, orbstack) can't redirect
+# a job, because DOCKER_CONTEXT overrides the global setting.
+#
+# PROVIDER_EXCLUSIVE=true restores the old behavior of stopping every other
+# provider first; perf.sh uses it so idle VMs don't skew benchmark results.
+PROVIDER_EXCLUSIVE=${PROVIDER_EXCLUSIVE:-false}
+
+# Docker contexts of the macOS providers that can share a testbot.
+MACOS_PROVIDER_CONTEXTS="colima-vz lima-lima-vz desktop-linux orbstack rancher-desktop podman-rootless socktainer"
 
 # Find a suitable timeout command for reliability and readability
 if command -v gtimeout >/dev/null 2>&1; then
@@ -23,15 +36,41 @@ function stop_orbstack {
   ${TIMEOUT} 60s orb stop || true
 }
 
-# Helper: start orbstack synchronously, bounded by TIMEOUT, then switch to its docker
-# context. orb start is run in the foreground (not backgrounded) so the caller knows
-# it has actually run to completion or timed out before moving on; a backgrounded
-# orb start can be killed by CI job-cleanup before the VM finishes coming up, leaving
-# the docker context set to orbstack but the daemon not running.
+# Helper: start orbstack synchronously, bounded by TIMEOUT. orb start is run in the
+# foreground (not backgrounded) so the caller knows it has actually run to completion
+# or timed out before moving on; a backgrounded orb start can be killed by CI
+# job-cleanup before the VM finishes coming up.
 function start_orbstack {
   echo "Starting orbstack"
   ${TIMEOUT} 60s orb start || true
-  docker context use orbstack || true
+}
+
+# Helper: succeed if the daemon behind docker context $1 answers.
+function context_is_up {
+  ${TIMEOUT} 20s docker --context "$1" ps >/dev/null 2>&1
+}
+
+# Helper: remove all containers in every other provider that is running, so a
+# container left behind by an earlier job (a ddev-router holding ports 80/443,
+# for instance) can't block this one. Assumes one job at a time per testbot.
+function cleanup_other_provider_containers {
+  local ctx ids
+  for ctx in ${MACOS_PROVIDER_CONTEXTS}; do
+    [ "${ctx}" = "${DOCKER_CONTEXT}" ] && continue
+    docker context inspect "${ctx}" >/dev/null 2>&1 || continue
+    ids=$(${TIMEOUT} 20s docker --context "${ctx}" ps -aq 2>/dev/null || true)
+    if [ -n "${ids}" ]; then
+      echo "Removing $(echo "${ids}" | wc -l | tr -d ' ') leftover container(s) in ${ctx}"
+      echo "${ids}" | xargs ${TIMEOUT} 60s docker --context "${ctx}" rm -f >/dev/null 2>&1 || true
+    fi
+  done
+  # Apple container runs each container as its own launchd service, so its
+  # containers can outlive socktainer, where the docker API can't reach them.
+  if [ "${DOCKER_TYPE}" != "socktainer" ] && command -v container >/dev/null 2>&1; then
+    echo "Stopping socktainer and apple container"
+    pkill -x socktainer || true
+    ${TIMEOUT} 60s container system stop || true
+  fi
 }
 
 # Helper: try to remove all containers via an SSH-style shell command.
@@ -88,14 +127,17 @@ function provider_bringup {
 
   # On macOS, we can have several different docker providers, allow testing all
   if [ "${os:-}" = "darwin" ]; then
-    # For Lima and Colima, as of Lima 1.0.4, having orbstack running
-    # makes lima fail, see https://github.com/lima-vm/lima/issues/3145#issuecomment-2613728408
-    stop_orbstack
+    if [ "${PROVIDER_EXCLUSIVE}" = "true" ]; then
+      # For Lima and Colima, as of Lima 1.0.4, having orbstack running
+      # makes lima fail, see https://github.com/lima-vm/lima/issues/3145#issuecomment-2613728408
+      stop_orbstack
+    fi
 
     case ${DOCKER_TYPE:=none} in
       "colima_vz")
         export COLIMA_INSTANCE=vz
-        colima start ${COLIMA_INSTANCE}
+        export DOCKER_CONTEXT=colima-${COLIMA_INSTANCE}
+        context_is_up "${DOCKER_CONTEXT}" || colima start ${COLIMA_INSTANCE}
 
         if ! try_cleanup_containers_via_ssh colima ssh -p "${COLIMA_INSTANCE}" --; then
           echo "Performing deep cleanup: removing container state and restarting colima"
@@ -111,13 +153,13 @@ function provider_bringup {
           fi
           echo "Deep cleanup succeeded: all containers removed"
         fi
-        docker context use colima-${COLIMA_INSTANCE}
         ;;
 
       "lima")
         export LIMA_INSTANCE=lima-vz
         export HOMEDIR=/home/testbot.linux
-        limactl start ${LIMA_INSTANCE}
+        export DOCKER_CONTEXT=lima-${LIMA_INSTANCE}
+        context_is_up "${DOCKER_CONTEXT}" || limactl start ${LIMA_INSTANCE}
 
         if ! try_cleanup_containers_via_ssh limactl shell "${LIMA_INSTANCE}"; then
           echo "Performing deep cleanup: removing container state and restarting docker"
@@ -141,36 +183,40 @@ function provider_bringup {
           fi
           echo "Deep cleanup succeeded: all containers removed"
         fi
-        docker context use lima-${LIMA_INSTANCE}
         ;;
 
       "docker-desktop")
+        export DOCKER_CONTEXT=desktop-linux
         open -a Docker
-        docker context use desktop-linux
         ;;
 
       "orbstack")
-        start_orbstack
+        export DOCKER_CONTEXT=orbstack
+        context_is_up "${DOCKER_CONTEXT}" || start_orbstack
         ;;
 
       "rancher-desktop")
-        ~/.rd/bin/rdctl start
+        export DOCKER_CONTEXT=rancher-desktop
+        if ! context_is_up "${DOCKER_CONTEXT}"; then
+          ~/.rd/bin/rdctl start
+        fi
         for i in {1..120}; do
-          if docker context use rancher-desktop >/dev/null 2>&1 ; then
+          if docker context inspect rancher-desktop >/dev/null 2>&1 ; then
             break
           fi
           echo "$(date): Waiting for rancher-desktop context to be available"
           sleep 1
         done
-        docker context use rancher-desktop
         ;;
 
       "podman-rootless")
-        podman machine start
+        export DOCKER_CONTEXT=podman-rootless
+        if [ "$(podman machine inspect --format '{{.State}}')" != "running" ]; then
+          podman machine start
+        fi
         # The API socket lives under $TMPDIR, which differs between the agent
         # and an ssh session, so follow wherever this start put it.
         docker context update podman-rootless --docker "host=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')" >/dev/null
-        docker context use podman-rootless
 
         # podman machine ssh joins its arguments into one string, which breaks
         # the bash -lc script in try_cleanup_containers_via_ssh.
@@ -205,6 +251,11 @@ function provider_bringup {
         echo "no DOCKER_TYPE specified, exiting" && exit 10
         ;;
     esac
+    echo "Using DOCKER_CONTEXT=${DOCKER_CONTEXT}"
+
+    if [ "${PROVIDER_EXCLUSIVE}" != "true" ]; then
+      cleanup_other_provider_containers
+    fi
   fi
 
   # Handle docker-ce cleanup for WSL and other native Docker CE instances
@@ -253,8 +304,8 @@ function provider_bringup {
 }
 
 # provider_shutdown stops whatever Docker provider is running, leaving either
-# Orbstack or Docker Desktop running afterward (matches test.sh's long-standing
-# cleanup trap behavior, extracted here so perf.sh can reuse it verbatim).
+# Orbstack or Docker Desktop running afterward. Used by PROVIDER_EXCLUSIVE
+# callers (perf.sh) and testbot_disk_cleanup.sh; test.sh leaves providers up.
 function provider_shutdown {
   # Apple container runs each container as its own launchd service, so a
   # socktainer job killed before its cleanup leaves a ddev-router holding host
@@ -270,12 +321,13 @@ function provider_shutdown {
   command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop -f lima-vz || true)
   if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (~/.rd/bin/rdctl shutdown || true); fi
   command -v podman 2>/dev/null && echo "Stopping podman machine" && (podman machine stop || true)
-  docker context use default || true
   # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop.
+  # The global context is set for people who ssh in; jobs use DOCKER_CONTEXT.
   if command -v orb 2>/dev/null ; then
     start_orbstack
+    docker context use orbstack >/dev/null || true
   else
-    docker context use desktop-linux || true
+    docker context use desktop-linux >/dev/null || true
     open -a Docker || true
     sleep 5
   fi
