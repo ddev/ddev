@@ -510,6 +510,17 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 
 29. In macOS Settings visit "full disk access" and grant access to `buildkite-agent`, `docker`, `iterm`, `orbstack`. This may prevent startup modal dialogs that prevent `buildkite-agent` or `docker` from continuing properly.
 
+## Turn Off Spotlight (all macOS runners)
+
+Every macOS runner, whatever Docker provider it uses, should have Spotlight indexing turned off:
+
+```bash
+sudo mdutil -a -i off
+mdutil -as   # each volume should show "Indexing disabled."
+```
+
+Otherwise Spotlight indexes the files every test run creates. Together with `fseventsd`, it can take several CPU cores and gigabytes of memory, which slows the tests. If `fseventsd` stays high afterward, `sudo killall fseventsd` restarts it.
+
 ## Additional Colima macOS setup
 
 1. `brew install colima`
