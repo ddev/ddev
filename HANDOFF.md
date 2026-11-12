@@ -14,6 +14,31 @@ rebased on `upstream/main` as of 2026-11-09, after #9072.
 
 ## Resume here
 
+### General changes to move to their own PR (2026-11-12)
+
+These change behavior on every provider, not just Apple Container. Moving them to a
+separate PR from `upstream/main` makes this PR smaller and Apple-Container-only to review,
+and gets the fixes to other providers sooner. The branch drops them on its next rebase
+after they merge. Everything else in the diff is gated on `IsAppleContainer()`/`IsSocktainer()`,
+adds Apple Container next to an existing rootless-Podman check, or is socktainer CI, docs
+or `handoff/`.
+
+| Change | Files | Commit on this branch | Why it's general |
+| --- | --- | --- | --- |
+| Captures read the pipe from the start | `pkg/util/capture.go`, `pkg/util/utils_test.go` (`TestCaptureUserOutLarge`) | `fix(test): read captured output as it is written` | A captured write past the pipe buffer deadlocked on any platform; it hung build 24 for 5h |
+| Router-port test uses 28443 | `pkg/ddevapp/router_ports_internal_test.go` | `fix(test): avoid the global router port in a config test` | Fails wherever the global HTTPS router port is 8443, which upstream's `test.sh` also sets for `podman-rootless` |
+| `TestTimezoneConfig` reads the zone before `TZ=""` | `pkg/ddevapp/config_test.go` | `test: read host zone before clearing TZ` | Fails on any provider when nothing in the process loaded `time.Local` first |
+| Pull platform is `linux/<arch>` | `pkg/dockerutil/images.go` (`BuildPlatformToPull`), `images_test.go`, `containers_test.go` (`TestMain`) | `fix(apple-container): pull linux images on socktainer` (part) | Replaces `serverVersion.Os` everywhere. Correct on every provider, since DDEV images are Linux-only, but a behavior change reviewers should see on its own. The alternative is gating it on `IsSocktainer()` here |
+| `slices.Concat` in `GetOmittedContainers` | `pkg/ddevapp/ddevapp.go` | `feat: experimental Apple Container/socktainer support` (part) | Refactor only; restore upstream's two lines to shrink the diff |
+
+Suggested split: one PR, `fix(test): fix three tests and output capture found on the
+macOS socktainer pipeline`, with the first three rows, each still its own commit. The pull
+platform goes in that PR or its own, as a `fix:`. Its socktainer-skip removals stay here.
+Cherry-pick by commit title, since hashes change on rebase. Before pushing, run
+`TestTimezoneConfig` and the `pkg/dockerutil` image tests on OrbStack or Docker Desktop;
+they have run only on socktainer. The capture and router-port tests don't use Docker and
+passed on macOS.
+
 ### socktainer v1.6.1 (released 2026-11-09)
 
 [v1.6.1](https://github.com/socktainer/socktainer/releases/tag/v1.6.1) is upstream `main` as
@@ -72,6 +97,23 @@ Tests on Homebrew socktainer 1.6.1 (2026-11-11, with OrbStack stopped; logs in
 - Also seen, unfiled and harmless to DDEV so far: inspect's `.Image` is the reference rather
   than the image ID, and `docker images -q` reports an ID that differs from inspect's and
   changes on every load of the same image.
+
+Buildkite [build 24](https://buildkite.com/ddev/macos-socktainer/builds/24) (2026-11-11,
+tb-macos-arm64-5) ran 7+ hours and failed three ways:
+
+- `cmd/ddev/cmd` hit the 6h test timeout: `TestTLSDiagnoseSmoke` blocked 308 minutes in a
+  `write` to its `CaptureUserOut` pipe after about 570 bytes. `util.CaptureUserOut`,
+  `CaptureUserErr` and `CaptureStdOut` started reading only at `restore()`, so any write
+  past the pipe buffer deadlocks. macOS shrinks new pipes to about 512 bytes when pipe
+  memory runs short, which fits: the test passes alone and passed in build 21. Unconfirmed
+  on the testbot. Fixed in `pkg/util/capture.go` (reads from the start), with
+  `TestCaptureUserOutLarge`, which hangs on the old code. The pipeline now passes
+  `TEST_TIMEOUT=3h`, so a hang costs 3h, not 6h.
+- `TestWriteConfigKeepsProjectRouterPorts` (upstream #9075) set the project's HTTPS port to
+  8443, which the pipeline sets globally, so `WriteConfig` left it out. Fails on any machine
+  with global 8443, here too. The test now uses 28443.
+- `TestUtilityDiagnoseCmd/BasicProject`: "No internet access from containers", 13s after the
+  same check passed in another subtest. Intermittent; not investigated.
 
 ### State (2026-11-09)
 
