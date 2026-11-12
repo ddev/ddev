@@ -8,10 +8,10 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -244,7 +244,7 @@ func TestUntarPathTraversal(t *testing.T) {
 	t.Run("drive_relative_symlink_target_rejected", func(t *testing.T) {
 		// On Windows, os.Root's Symlink expands a drive-relative target like
 		// "C:foo" to an absolute path against the current directory.
-		if runtime.GOOS != "windows" {
+		if !nodeps.IsWindows() {
 			t.Skip("drive-relative paths only exist on Windows")
 		}
 		tarball := buildTar("link.txt", "C:foo", tar.TypeSymlink)

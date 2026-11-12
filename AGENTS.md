@@ -132,6 +132,12 @@ are not:
 - **Never leave trailing whitespace.** Blank lines must be completely empty.
 - Match the file's existing indentation and line-ending style.
 - **Prefer `require` over `assert`** in tests.
+- **Reuse DDEV's helpers instead of writing your own** or calling the
+  standard library directly. Before adding a small utility, search `pkg/nodeps`
+  (OS and environment checks), `pkg/fileutil` (file and directory operations),
+  `pkg/util` (output, prompts, slices, paths), `pkg/dockerutil` (Docker), and
+  `pkg/testcommon` (test setup and output capture). Reviewers ask for these
+  helpers when a change bypasses them.
 - Test the host OS with `nodeps.IsLinux()`, `nodeps.IsMacOS()`,
   `nodeps.IsWindows()`, and `nodeps.IsWSL2()` rather than comparing
   `runtime.GOOS` directly. `IsLinux()` is also true inside WSL2.
