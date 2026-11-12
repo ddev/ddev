@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 // ResolveDdevBinary returns the DDEV binary that tests should execute.
@@ -28,7 +29,7 @@ func ResolveDdevBinary() (string, error) {
 	}
 
 	binaryName := "ddev"
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		binaryName += ".exe"
 	}
 	binaryPath := filepath.Join(repoRoot, ".gotmp", "bin", runtime.GOOS+"_"+runtime.GOARCH, binaryName)

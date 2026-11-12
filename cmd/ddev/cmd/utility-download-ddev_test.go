@@ -81,7 +81,7 @@ func TestDownloadDdevPathHint(t *testing.T) {
 	}, pathHint(winDir, "windows", ""))
 
 	// Real Windows paths use backslashes, which only a Windows host converts.
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		require.Equal(t, `  export PATH="/c/Users/u/tmp/dl:$PATH"`,
 			pathHint(`C:\Users\u\tmp\dl`, "windows", "MINGW64")[1])
 	}
@@ -95,7 +95,7 @@ func TestDownloadDdevClearMacQuarantine(t *testing.T) {
 	require.NoError(t, os.WriteFile(f, []byte("x"), 0644))
 
 	attempted := clearMacQuarantine([]string{f})
-	if runtime.GOOS == "darwin" {
+	if nodeps.IsMacOS() {
 		require.True(t, attempted, "xattr should be available on macOS")
 	}
 }
@@ -108,7 +108,7 @@ func TestDownloadDdevClearWindowsBlock(t *testing.T) {
 	require.NoError(t, os.WriteFile(f, []byte("x"), 0644))
 
 	attempted := clearWindowsBlock([]string{f})
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		require.True(t, attempted, "PowerShell should be available on Windows")
 	}
 }
@@ -225,7 +225,7 @@ func TestDownloadDdevExtractAndCopy(t *testing.T) {
 	require.NoError(t, copyExecutable(filepath.Join(extractDir, "ddev"), dest))
 	require.FileExists(t, dest)
 
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		info, statErr := os.Stat(dest)
 		require.NoError(t, statErr)
 		require.NotZero(t, info.Mode()&0111, "copied binary must be executable")
@@ -285,7 +285,7 @@ func TestDownloadDdevHeadDownload(t *testing.T) {
 	require.NotContains(t, out, "falling back", "the API lookup or GitHub download failed, out='%s'", out)
 
 	exe := ""
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		exe = ".exe"
 	}
 	ddevPath := filepath.Join(outDir, "ddev"+exe)

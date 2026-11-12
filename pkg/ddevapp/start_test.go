@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -226,7 +226,7 @@ func TestStartProfileImages(t *testing.T) {
 // It only runs on macOS arm64 + OrbStack, where cross-platform emulation is
 // available and exercised in CI (Buildkite).
 func TestPlatformOverride(t *testing.T) {
-	if runtime.GOOS != "darwin" || runtime.GOARCH != "arm64" || !dockerutil.IsOrbStack() {
+	if !nodeps.IsAppleSilicon() || !dockerutil.IsOrbStack() {
 		t.Skip("Skipping TestPlatformOverride; only runs on macOS arm64 with OrbStack")
 	}
 

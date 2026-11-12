@@ -11,7 +11,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -530,7 +529,7 @@ func ExpandHomedir(path string) (string, error) {
 // Adapted from https://github.com/moby/moby/blob/master/pkg/homedir/homedir.go
 func GetHomeDir() string {
 	home, _ := os.UserHomeDir()
-	if home == "" && runtime.GOOS != "windows" {
+	if home == "" && !nodeps.IsWindows() {
 		if u, err := user.Current(); err == nil {
 			return u.HomeDir
 		}
