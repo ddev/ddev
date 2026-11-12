@@ -85,10 +85,13 @@ if [ "$USES_HOST_DOCKER" = "true" ]; then
 
     # Test that docker can pull images and mount volumes, get ddev/ddev-utilities
     docker pull ddev/ddev-utilities >/dev/null
-    # Rootless podman cannot bind privileged ports (<1024), so skip the port binding
-    # test for that provider; a plain volume+exec check is sufficient.
+    # Rootless podman and Apple Container cannot bind privileged ports (<1024), so
+    # skip the port binding test for them; a plain volume+exec check is sufficient.
     if [ "${DOCKER_TYPE:-}" = "podman-rootless" ]; then
         docker run --rm -t -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null
+    elif [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
+        # Starting a container that mounts all of $HOME hangs on the testbots.
+        docker run --rm -v $HOME/tmp:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null
     else
         # Try the docker run command twice because of the really annoying mkdir /c: file exists bug
         # Apparently https://github.com/docker/for-win/issues/1560

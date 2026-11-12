@@ -182,6 +182,25 @@ function provider_bringup {
         podman machine ssh 'sudo fstrim -av'
         ;;
 
+      "socktainer")
+        # Neither runs as a brew service on the testbots, so this job owns both.
+        container system start --disable-kernel-install
+        nohup socktainer --no-auto-start >~/tmp/socktainer.log 2>&1 &
+        for i in {1..60}; do
+          if docker --context socktainer ps >/dev/null 2>&1; then
+            break
+          fi
+          echo "Waiting for socktainer: $i"
+          sleep 1
+        done
+        docker context use socktainer
+
+        if ! try_cleanup_containers_native; then
+          echo "ERROR: Containers remain after socktainer start; aborting" >&2
+          exit 1
+        fi
+        ;;
+
       *)
         echo "no DOCKER_TYPE specified, exiting" && exit 10
         ;;

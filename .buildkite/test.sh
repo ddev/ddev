@@ -100,6 +100,9 @@ case ${DOCKER_TYPE:-none} in
   "podman-rootless")
     echo "podman version=$(podman --version)"
     ;;
+  "socktainer")
+    echo "socktainer version=$(socktainer --version) $(container --version)"
+    ;;
   "wsl2dockerinside")
     echo "Running wsl2dockerinside"
     ;;
@@ -152,11 +155,11 @@ ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh"
 echo "--- running sanetestbot.sh"
 ${TIMEOUT} 5m bash "$(dirname "$0")/sanetestbot.sh"
 
-# Rootless podman cannot bind privileged ports (<1024), so the DDEV router must
-# use non-privileged ports. This must run AFTER testbot_maintenance.sh, which
+# Rootless podman and Apple Container cannot bind privileged ports (<1024), so
+# the DDEV router must use non-privileged ports. This must run AFTER testbot_maintenance.sh, which
 # deletes ~/.ddev/global_config.yaml; otherwise the override is wiped and the
 # config regenerates with the default 80/443 (which rootless podman can't bind).
-if [ "${DOCKER_TYPE:-}" = "podman-rootless" ]; then
+if [ "${DOCKER_TYPE:-}" = "podman-rootless" ] || [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
   ddev config global --router-http-port=8080 --router-https-port=8443
 fi
 

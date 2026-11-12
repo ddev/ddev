@@ -574,6 +574,17 @@ The `test.sh` script uses `podman machine start` and `docker context use podman-
 
     socktainer creates the `socktainer` Docker context the first time it runs.
 
+5. Over Screen Sharing, publish a port and request it, so macOS asks whether `container-runtime-linux` may access the local network, and click Allow:
+
+    ```bash
+    container system start
+    container run -d --name ptest -p 18089:80 nginx:alpine
+    curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:18089
+    container rm -f ptest && container system stop
+    ```
+
+    `curl` must print `200`. Until someone clicks Allow, every published port resets ("Connection reset by peer") and containers can't reach the host, so nearly every networking test fails. On a testbot nobody sees the prompt: a test job raises it and leaves it waiting on the screen. If it was dismissed, turn `container-runtime-linux` on in System Settings → Privacy & Security → Local Network.
+
 Then the Buildkite agent must be configured with tag `socktainer=true`.
 
 ## macOS Disk Space Cleanup
