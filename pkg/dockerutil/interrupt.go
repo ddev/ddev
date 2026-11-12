@@ -28,7 +28,7 @@ var inFlight = struct {
 }{containers: map[*trackedContainer]struct{}{}}
 
 // trackedContainer's done is closed once ContainerCreate has returned, and
-// target is then what an interrupt should remove, or empty for nothing.
+// target is then the ID an interrupt should remove, or empty after an error.
 // label is the temporaryLabel value the container is created with.
 type trackedContainer struct {
 	done   chan struct{}
@@ -53,7 +53,8 @@ func trackContainer(label string) (created func(id string, err error), untrack f
 	created = func(id string, err error) {
 		once.Do(func() {
 			// After an error the name may belong to some other container, and
-			// socktainer reports a name conflict as a 500, not a 409.
+			// socktainer reports a name conflict as a 500, not a 409. Cleanup
+			// then removes by label, which only this call's container has.
 			if err == nil {
 				tc.target = id
 			}
@@ -119,6 +120,9 @@ func cleanUpInFlight(ctx context.Context) {
 			}
 			id := tc.target
 			if id == "" {
+				// The create failed, but the daemon may have made the
+				// container anyway, for example before a dropped connection.
+				removeByTemporaryLabel(ctx, apiClient, tc.label)
 				return
 			}
 			_, err := apiClient.ContainerRemove(ctx, id, client.ContainerRemoveOptions{Force: true})
@@ -139,9 +143,9 @@ func cleanUpInFlight(ctx context.Context) {
 	wg.Wait()
 }
 
-// removeByTemporaryLabel removes the container a create that hasn't returned
-// may already have made. Unlike its name, the label can't belong to another
-// container.
+// removeByTemporaryLabel removes the container that a create that failed or
+// hasn't returned may already have made. Unlike its name, the label can't
+// belong to another container.
 func removeByTemporaryLabel(ctx context.Context, apiClient client.APIClient, label string) {
 	if label == "" || ctx.Err() != nil {
 		return
@@ -151,7 +155,7 @@ func removeByTemporaryLabel(ctx context.Context, apiClient client.APIClient, lab
 		Filters: client.Filters{}.Add("label", temporaryLabel+"="+label),
 	})
 	if err != nil {
-		util.Debug("Unable to list container labeled %s=%s after interrupt: %v", temporaryLabel, label, err)
+		util.Debug("Unable to list container labeled %s=%s: %v", temporaryLabel, label, err)
 		return
 	}
 	for _, c := range list.Items {
@@ -161,7 +165,7 @@ func removeByTemporaryLabel(ctx context.Context, apiClient client.APIClient, lab
 		}
 		_, err := apiClient.ContainerRemove(ctx, c.ID, client.ContainerRemoveOptions{Force: true})
 		if err != nil && !cerrdefs.IsNotFound(err) {
-			util.Debug("Unable to remove container %s after interrupt: %v", TruncateID(c.ID), err)
+			util.Debug("Unable to remove container %s: %v", TruncateID(c.ID), err)
 		}
 	}
 }

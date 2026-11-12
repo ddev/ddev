@@ -2,6 +2,7 @@ package dockerutil
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -49,6 +50,54 @@ func TestCleanUpInFlightCreateNeverReturns(t *testing.T) {
 	done := startCleanUpInFlight(t, 3*time.Second)
 	waitForCleanUp(t, done)
 	requireContainerExists(t, name, false)
+}
+
+// TestCleanUpInFlightCreateFails stands in for a create whose connection
+// dropped after the daemon had made the container, so it returned an error.
+func TestCleanUpInFlightCreateFails(t *testing.T) {
+	name := "TestCleanUpInFlightFailed-" + util.RandString(6)
+	label := util.RandString(16)
+	created, untrack := trackContainer(label)
+	t.Cleanup(untrack)
+	t.Cleanup(func() { _ = RemoveContainer(name) })
+
+	id, err := createTestContainer(name, map[string]string{temporaryLabel: label})
+	require.NoError(t, err)
+	require.NotEmpty(t, id)
+	created("", errors.New("connection reset by peer"))
+	done := startCleanUpInFlight(t, time.Minute)
+	waitForCleanUp(t, done)
+	requireContainerExists(t, name, false)
+}
+
+// TestRunSimpleContainerCreateFails stands in for a connection that drops
+// after the daemon has made the container, so ContainerCreate returns an
+// error. RunSimpleContainerExtended() should remove that container.
+func TestRunSimpleContainerCreateFails(t *testing.T) {
+	dm, err := getDockerManagerInstance()
+	require.NoError(t, err)
+	realClient := dm.apiClient
+	dm.apiClient = dropCreateReplyClient{realClient}
+	t.Cleanup(func() { dm.apiClient = realClient })
+
+	name := "TestRunSimpleContainerCreateFails-" + util.RandString(6)
+	t.Cleanup(func() { _ = RemoveContainer(name) })
+	_, _, err = RunSimpleContainerExtended(name, &container.Config{Image: ddevImages.GetWebImage(), Cmd: []string{"true"}}, &container.HostConfig{}, true, time.Minute)
+	require.ErrorContains(t, err, "failed to create container")
+	requireContainerExists(t, name, false)
+}
+
+// dropCreateReplyClient's ContainerCreate creates the container, then
+// reports an error as if the connection dropped before the reply.
+type dropCreateReplyClient struct {
+	client.APIClient
+}
+
+func (c dropCreateReplyClient) ContainerCreate(ctx context.Context, options client.ContainerCreateOptions) (client.ContainerCreateResult, error) {
+	if _, err := c.APIClient.ContainerCreate(ctx, options); err != nil {
+		return client.ContainerCreateResult{}, err
+	}
+	return client.ContainerCreateResult{}, errors.New("unexpected EOF")
 }
 
 // TestCleanUpInFlightSkipsNameConflict checks that a create refused because
