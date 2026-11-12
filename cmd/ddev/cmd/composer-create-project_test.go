@@ -262,6 +262,9 @@ func TestComposerCreateProjectPipedInput(t *testing.T) {
 		err = os.WriteFile(filepath.Join(tmpDir, ".pkg", name, "composer.json"), []byte(manifest), 0644)
 		require.NoError(t, err)
 	}
+	// Composer reads the path repositories inside the container.
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err)
 	createProject := func(composerRoot string, name string, stdin io.Reader) string {
 		_, err := exec.RunHostCommand(DdevBin, "config", "--composer-root", composerRoot)
 		require.NoError(t, err)
