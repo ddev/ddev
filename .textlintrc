@@ -36,6 +36,7 @@
         "back[- ]end(\\w*)",
         "command ?line",
         "front[- ]end(\\w*)",
+        "indexes\\b",
         "web[- ]?site(s)?"
       ]
     },
