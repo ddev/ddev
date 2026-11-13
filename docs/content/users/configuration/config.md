@@ -124,7 +124,7 @@ When `true`, `corepack enable` will be executed, making latest `pnpm` and `yarn`
 
 Node.js 25 and later no longer include `corepack`. When it is missing, DDEV installs it from npm while building the web image, so that build needs access to the npm registry.
 
-New Drupal 10 and 11 projects enable Corepack by default. With DDEV's default Node.js 26, their web image builds need access to the npm registry to install Corepack.
+New Drupal 10 and 11 projects enable `corepack` by default. With DDEV's default Node.js 26, their web image builds need access to the npm registry to install `corepack`.
 
 To set a specific version of `pnpm` for a project:
 
