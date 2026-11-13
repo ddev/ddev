@@ -188,8 +188,10 @@ func TestCorepackEnable(t *testing.T) {
 			}
 			app.NodeJSVersion = tc.nodeJSVersion
 
+			// Restart, not Start: starting a running project that recreates web
+			// races Mutagen's reconnect and the flush can fail
 			app.CorepackEnable = false
-			err := app.Start()
+			err := app.Restart()
 			require.NoError(t, err)
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Cmd: `node --version`,
@@ -209,7 +211,7 @@ func TestCorepackEnable(t *testing.T) {
 			require.True(t, strings.HasPrefix(out, "1."))
 
 			app.CorepackEnable = true
-			err = app.Start()
+			err = app.Restart()
 			require.NoError(t, err)
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Cmd: `command -v yarn && ls -l "$(command -v yarn)"`,
