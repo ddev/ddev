@@ -55,6 +55,16 @@ make build
 export PATH="$PWD/.gotmp/bin/$(go env GOOS)_$(go env GOARCH):$PATH"
 ddev version
 
+# A ddev without Apple Container support fails to start a project on
+# socktainer, so skip the leg until the built ddev recognizes the provider.
+if [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
+  docker_platform=$(ddev version -j | jq -r '.raw["docker-platform"]')
+  if [ "${docker_platform}" != "apple-container" ]; then
+    echo "+++ SKIP: this ddev does not support socktainer (docker-platform=${docker_platform}), see https://github.com/ddev/ddev/issues/7372"
+    exit 0
+  fi
+fi
+
 echo "--- Provisioning benchmark project"
 # Reused across nightly runs rather than recreated every time: re-running
 # `composer create-project` nightly would add Composer/network variance
