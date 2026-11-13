@@ -10,7 +10,8 @@
 # rather than running `docker context use`, so several providers can stay
 # running side by side and each job talks only to its own. A provider that
 # switches the global context when it starts (colima, orbstack) can't redirect
-# a job, because DOCKER_CONTEXT overrides the global setting.
+# a job, because DOCKER_CONTEXT overrides the global setting. Lima and colima
+# jobs stop orbstack first.
 #
 # PROVIDER_EXCLUSIVE=true restores the old behavior of stopping every other
 # provider first; perf.sh uses it so idle VMs don't skew benchmark results.
@@ -127,9 +128,9 @@ function provider_bringup {
 
   # On macOS, we can have several different docker providers, allow testing all
   if [ "${os:-}" = "darwin" ]; then
-    if [ "${PROVIDER_EXCLUSIVE}" = "true" ]; then
-      # For Lima and Colima, as of Lima 1.0.4, having orbstack running
-      # makes lima fail, see https://github.com/lima-vm/lima/issues/3145#issuecomment-2613728408
+    # With orbstack running, a lima or colima container that publishes ports
+    # 80/443 hangs, which times out sanetestbot.sh.
+    if [ "${PROVIDER_EXCLUSIVE}" = "true" ] || [ "${DOCKER_TYPE:-}" = "lima" ] || [ "${DOCKER_TYPE:-}" = "colima_vz" ]; then
       stop_orbstack
     fi
 
