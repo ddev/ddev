@@ -324,10 +324,16 @@ function provider_shutdown {
   command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop -f lima-vz || true)
   if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (~/.rd/bin/rdctl shutdown || true); fi
   command -v podman 2>/dev/null && echo "Stopping podman machine" && (podman machine stop || true)
-  # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop.
-  # The global context is set for people who ssh in; jobs use DOCKER_CONTEXT.
-  if command -v orb 2>/dev/null ; then
-    start_orbstack
+  restore_resting_provider
+}
+
+# restore_resting_provider leaves orbstack running, as the most reliable
+# provider, otherwise Docker Desktop, and points the global context at it.
+# Jobs use DOCKER_CONTEXT; the global context is for Icinga's docker check
+# and for people who ssh in.
+function restore_resting_provider {
+  if command -v orb >/dev/null 2>&1 ; then
+    context_is_up orbstack || start_orbstack
     docker context use orbstack >/dev/null || true
   else
     docker context use desktop-linux >/dev/null || true

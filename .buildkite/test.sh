@@ -57,11 +57,13 @@ if [ "${os:-}" = "darwin" ]; then
     fi
     if [ "${PROVIDER_EXCLUSIVE}" = "true" ]; then
       provider_shutdown
+    else
+      restore_resting_provider
     fi
   }
   trap cleanup EXIT
   # A canceled job has only the agent's grace period left, so skip the slow
-  # maintenance and go straight to provider_shutdown.
+  # maintenance.
   trap 'RAN_TESTS=false; exit 143' TERM INT
 
   if [ "${PROVIDER_EXCLUSIVE}" = "true" ]; then
