@@ -113,8 +113,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
-	if _, err := os.Stat(app.ConfigPath); !os.IsNotExist(err) {
-		_, err = app.ReadConfig(includeOverrides)
+	if fileutil.FileExists(app.ConfigPath) {
+		_, err := app.ReadConfig(includeOverrides)
 		if err != nil {
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error: %v", app.ConfigPath, err)
 		}
@@ -1628,7 +1628,7 @@ func HasAllowedLocation(app *DdevApp) error {
 	if !RunValidateConfig {
 		return nil
 	}
-	homeDir, _ := os.UserHomeDir()
+	homeDir := util.GetHomeDir()
 	if app.AppRoot == homeDir || app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) {
 		return fmt.Errorf("a project is not allowed in your home directory (%v)", app.AppRoot)
 	}
@@ -1784,10 +1784,7 @@ func (app *DdevApp) docrootPrompt() error {
 
 // ConfigExists determines if a DDEV config file exists for this application.
 func (app *DdevApp) ConfigExists() bool {
-	if _, err := os.Stat(app.ConfigPath); os.IsNotExist(err) {
-		return false
-	}
-	return true
+	return fileutil.FileExists(app.ConfigPath)
 }
 
 // AppTypePrompt handles the Type workflow.
@@ -1826,7 +1823,7 @@ func (app *DdevApp) AppTypePrompt() error {
 func PrepDdevDirectory(app *DdevApp) error {
 	var err error
 	dir := app.GetConfigPath("")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
+	if !fileutil.FileExists(dir) {
 		output.UserOut.WithFields(output.Fields{
 			"directory": dir,
 		}).Debug("Config Directory does not exist, attempting to create.")

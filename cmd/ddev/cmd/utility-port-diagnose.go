@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -182,7 +181,7 @@ func runPortDiagnose() int {
 				if hasLsof() {
 					output.UserOut.Printf("Running: %s %s -iTCP:%s -sTCP:LISTEN -n -P\n", sudoFullPath(), lsofPath(), np.port)
 					elevatedProcs, _ = findPortProcessesSudoLsof(np.port)
-				} else if runtime.GOOS == "linux" && ssFullPath() != "" {
+				} else if nodeps.IsLinux() && ssFullPath() != "" {
 					output.UserOut.Printf("Running: %s %s -tlnp sport = :%s\n", sudoFullPath(), ssFullPath(), np.port)
 					elevatedProcs = findPortProcessesSudoSS(np.port)
 				}
@@ -246,7 +245,7 @@ func askSudoPermission() bool {
 		return false
 	}
 	lsofAvail := hasLsof()
-	hasSS := runtime.GOOS == "linux" && ssFullPath() != ""
+	hasSS := nodeps.IsLinux() && ssFullPath() != ""
 	if !lsofAvail && !hasSS {
 		return false
 	}
@@ -306,7 +305,7 @@ func findPortProcesses(port string) []portProcess {
 	}
 
 	// Fallback: ss (Linux only).
-	if runtime.GOOS == "linux" {
+	if nodeps.IsLinux() {
 		if procs := findPortProcessesSS(port); len(procs) > 0 {
 			return procs
 		}
@@ -726,7 +725,7 @@ Get-NetTCPConnection -LocalPort %s -State Listen -ErrorAction SilentlyContinue |
 // getCommandLine returns the full command line for a PID.
 // On Linux reads /proc/<pid>/cmdline; on macOS uses ps.
 func getCommandLine(pid int) string {
-	if runtime.GOOS == "linux" {
+	if nodeps.IsLinux() {
 		raw, err := os.ReadFile(fmt.Sprintf("/proc/%d/cmdline", pid))
 		if err != nil {
 			return ""
@@ -811,9 +810,9 @@ func portHints(name string, cmdLine string, side string, pid int, port string) [
 		if isWindows {
 			return []string{"Stop-Service Apache2; Set-Service Apache2 -StartupType Disabled"}
 		}
-		if hasCommand("systemctl") {
+		if util.IsCommandAvailable("systemctl") {
 			hints := []string{"sudo systemctl stop apache2 && sudo systemctl disable apache2"}
-			if hasCommand("apt-get") {
+			if util.IsCommandAvailable("apt-get") {
 				hints = append(hints, "Remove: sudo apt-get remove apache2")
 			}
 			return hints
@@ -824,14 +823,14 @@ func portHints(name string, cmdLine string, side string, pid int, port string) [
 		if isWindows {
 			return []string{"Stop-Service nginx; Set-Service nginx -StartupType Disabled"}
 		}
-		if hasCommand("systemctl") {
+		if util.IsCommandAvailable("systemctl") {
 			hints := []string{"sudo systemctl stop nginx && sudo systemctl disable nginx"}
-			if hasCommand("apt-get") {
+			if util.IsCommandAvailable("apt-get") {
 				hints = append(hints, "Remove: sudo apt-get remove nginx")
 			}
 			return hints
 		}
-		if hasCommand("brew") {
+		if util.IsCommandAvailable("brew") {
 			return []string{"brew services stop nginx"}
 		}
 		return []string{fmt.Sprintf("Stop nginx, e.g. 'kill %d'", pid)}
@@ -840,7 +839,7 @@ func portHints(name string, cmdLine string, side string, pid int, port string) [
 		if isWindows {
 			return []string{"Stop caddy or Stop-Service caddy (PowerShell as Admin)"}
 		}
-		if hasCommand("systemctl") {
+		if util.IsCommandAvailable("systemctl") {
 			return []string{"sudo systemctl stop caddy && sudo systemctl disable caddy"}
 		}
 		return []string{"sudo caddy stop"}
@@ -1039,10 +1038,4 @@ func dockerProviderHints(provider string, port string) []string {
 			"Stop it if you are not using it, or stop any containers it is running.",
 		}
 	}
-}
-
-// hasCommand returns true if the named executable is in PATH.
-func hasCommand(name string) bool {
-	_, err := exec.LookPath(name)
-	return err == nil
 }

@@ -3,11 +3,9 @@ package tui
 import (
 	"cmp"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/url"
-	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -17,6 +15,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/sirupsen/logrus"
@@ -286,7 +285,7 @@ func loadDetailCmd(appRoot string) tea.Cmd {
 // loadDetail reads a project's description and installed add-ons. The
 // caller holds ddevMu.
 func loadDetail(appRoot string) (ProjectDetail, error) {
-	if _, err := os.Stat(appRoot); errors.Is(err, os.ErrNotExist) {
+	if !fileutil.FileExists(appRoot) {
 		return ProjectDetail{}, fmt.Errorf("project directory no longer exists: %s", appRoot)
 	}
 	// Without Docker, Describe would report the project as stopped.

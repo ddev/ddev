@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 	"time"
 
@@ -788,10 +787,10 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 				output.UserOut.Println("Platform: WSL2 (NAT)")
 			}
 		}
-	} else if runtime.GOOS == "darwin" {
+	} else if nodeps.IsMacOS() {
 		envType = "macos"
 		output.UserOut.Println("Platform: macOS")
-	} else if runtime.GOOS == "windows" {
+	} else if nodeps.IsWindows() {
 		envType = "windows"
 		output.UserOut.Println("Platform: Windows")
 	} else {

@@ -18,6 +18,7 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 )
 
 const (
@@ -243,7 +244,7 @@ func openTarget(what, target string) tea.Cmd {
 		case nodeps.IsWSL2():
 			return openedMsg{what: what, err: openOnWSL(target)}
 		default:
-			if _, err := exec.LookPath("xdg-open"); err != nil {
+			if !util.IsCommandAvailable("xdg-open") {
 				return openedMsg{what: what, err: fmt.Errorf("no opener found (install xdg-utils)")}
 			}
 			cmd = exec.Command("xdg-open", target)

@@ -194,7 +194,7 @@ func isTypo3LegacyV11OrLower(app *DdevApp) bool {
 	typo3Folder := filepath.Join(app.GetAbsDocroot(false), "typo3")
 
 	// Check if the folder exists, fails if a symlink target does not exist.
-	if _, err := os.Stat(typo3Folder); !os.IsNotExist(err) {
+	if fileutil.FileExists(typo3Folder) {
 		return true
 	}
 

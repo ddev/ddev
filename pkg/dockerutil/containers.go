@@ -557,7 +557,7 @@ func getSuggestedCommandForContainerLog(c *container.Summary, timeout int) (stri
 		suggestedCommand = suggestedCommand + timeoutNote + timeoutCommand
 	}
 	// In CI the containers are usually removed before anyone can run the commands above
-	if (globalconfig.DdevDebug || os.Getenv("CI") == "true") && !output.JSONOutput {
+	if (globalconfig.DdevDebug || nodeps.IsEnvTrue("CI")) && !output.JSONOutput {
 		// output.StartWait() leaves its line open unless DDEV_DEBUG is set
 		if !globalconfig.DdevDebug {
 			_, _ = fmt.Fprintln(os.Stdout)

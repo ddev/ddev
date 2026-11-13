@@ -146,8 +146,7 @@ func CheckDockerAuth() error {
 	// If credsStore is set, verify the credential helper exists
 	if config.CredsStore != "" {
 		helperName := "docker-credential-" + config.CredsStore
-		_, err := osexec.LookPath(helperName)
-		if err != nil {
+		if !util.IsCommandAvailable(helperName) {
 			return fmt.Errorf("credsStore is set to '%s' in ~/.docker/config.json but '%s' is not found in PATH. This will cause 'ddev start' to fail when pulling images. Either install the credential helper or remove the 'credsStore' line from ~/.docker/config.json. See https://docs.docker.com/reference/cli/docker/login/#credential-helpers", config.CredsStore, helperName)
 		}
 	}

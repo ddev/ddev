@@ -234,7 +234,7 @@ func runDownloadDdev(cmd *cobra.Command) error {
 // or absent attribute is not treated as a failure, since the file may not
 // have been quarantined in the first place.
 func clearMacQuarantine(paths []string) bool {
-	if _, err := exec.LookPath("xattr"); err != nil {
+	if !util.IsCommandAvailable("xattr") {
 		return false
 	}
 	for _, p := range paths {
@@ -249,7 +249,7 @@ func clearMacQuarantine(paths []string) bool {
 // Returns whether it attempted the clear (PowerShell was found); an absent
 // mark is not treated as a failure.
 func clearWindowsBlock(paths []string) bool {
-	if _, err := exec.LookPath("powershell"); err != nil {
+	if !util.IsCommandAvailable("powershell") {
 		return false
 	}
 	for _, p := range paths {

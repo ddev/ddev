@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/moby/moby/api/types/container"
 	"github.com/stretchr/testify/require"
 )
@@ -56,7 +57,7 @@ func startNCListener(t *testing.T, port string) func() {
 	}
 	// macOS nc does not allow -p with -l (port is positional); Linux nc requires -p.
 	var cmd *exec.Cmd
-	if runtime.GOOS == "darwin" {
+	if nodeps.IsMacOS() {
 		cmd = exec.Command(ncPath, "-l", "-k", port)
 	} else {
 		cmd = exec.Command(ncPath, "-l", "-k", "-p", port)
@@ -196,7 +197,7 @@ func TestFindPortProcessesOwnProcess_Windows(t *testing.T) {
 // TestFindPortProcessesNC_Linux verifies detection of nc on Linux (non-WSL2)
 // using the lsof -> ss -> /proc/net/tcp chain.
 func TestFindPortProcessesNC_Linux(t *testing.T) {
-	if runtime.GOOS != "linux" || nodeps.IsWSL2() {
+	if !nodeps.IsLinux() || nodeps.IsWSL2() {
 		t.Skip("Linux-only test (non-WSL2)")
 	}
 
@@ -233,10 +234,10 @@ func TestFindPortProcessesNC_WSL2(t *testing.T) {
 // in CI environments where sudo requires a password but a pseudo-terminal is attached.
 // The test skips gracefully if non-sudo lsof cannot see nc (macOS CI restriction).
 func TestFindPortProcessesNC_macOS(t *testing.T) {
-	if runtime.GOOS != "darwin" {
+	if !nodeps.IsMacOS() {
 		t.Skip("macOS-only test")
 	}
-	if !hasCommand("lsof") && !hasCommand("/usr/sbin/lsof") {
+	if !util.IsCommandAvailable("lsof") && !util.IsCommandAvailable("/usr/sbin/lsof") {
 		t.Skip("lsof not available")
 	}
 
@@ -263,7 +264,7 @@ func TestFindPortProcessesFreePort(t *testing.T) {
 
 // TestFindPortProcessesLsof directly tests the lsof detection method.
 func TestFindPortProcessesLsof(t *testing.T) {
-	if !hasCommand("lsof") && !hasCommand("/usr/sbin/lsof") {
+	if !util.IsCommandAvailable("lsof") && !util.IsCommandAvailable("/usr/sbin/lsof") {
 		t.Skip("lsof not available")
 	}
 
@@ -287,10 +288,10 @@ func TestFindPortProcessesLsof(t *testing.T) {
 
 // TestFindPortProcessesSS directly tests the ss detection method (Linux only).
 func TestFindPortProcessesSS(t *testing.T) {
-	if runtime.GOOS != "linux" {
+	if !nodeps.IsLinux() {
 		t.Skip("ss is Linux-only")
 	}
-	if !hasCommand("ss") {
+	if !util.IsCommandAvailable("ss") {
 		t.Skip("ss not available")
 	}
 
@@ -310,7 +311,7 @@ func TestFindPortProcessesSS(t *testing.T) {
 
 // TestFindPortProcessesProcNet directly tests the /proc/net/tcp detection method (Linux only).
 func TestFindPortProcessesProcNet(t *testing.T) {
-	if runtime.GOOS != "linux" {
+	if !nodeps.IsLinux() {
 		t.Skip("/proc/net/tcp is Linux-only")
 	}
 
@@ -338,7 +339,7 @@ func TestFindWindowsPortProcesses(t *testing.T) {
 	if !nodeps.IsWindows() && !nodeps.IsWSL2() {
 		t.Skip("Windows/WSL2-only test")
 	}
-	if !hasCommand("powershell.exe") {
+	if !util.IsCommandAvailable("powershell.exe") {
 		t.Skip("powershell.exe not available")
 	}
 	// In WSL2 mirrored networking mode, listeners created via WSL2 interop
@@ -561,7 +562,7 @@ func TestPortHints(t *testing.T) {
 		// but always mention "apache" somewhere in the output.
 		{"apache2", "", "Linux", 1, "apache"},
 		{"httpd", "", "macOS", 1, "apache"},
-		// nginx/caddy non-Windows hints depend on hasCommand (systemctl/brew)
+		// nginx/caddy non-Windows hints depend on util.IsCommandAvailable (systemctl/brew)
 		// at runtime, so test the Windows path here (deterministic) and test
 		// platform-native paths in TestPortHintsPlatformSpecific.
 		{"nginx", "", "Windows", 1, "nginx"},
@@ -607,13 +608,13 @@ func TestPortHints(t *testing.T) {
 }
 
 // TestPortHintsPlatformSpecific verifies that hints use the right commands
-// for the current platform (relies on runtime hasCommand checks).
+// for the current platform (relies on runtime util.IsCommandAvailable checks).
 func TestPortHintsPlatformSpecific(t *testing.T) {
 	switch runtime.GOOS {
 	case "linux":
 		hints := portHints("apache2", "", "Linux", 1, "")
 		combined := strings.Join(hints, " ")
-		if hasCommand("systemctl") {
+		if util.IsCommandAvailable("systemctl") {
 			require.Contains(t, combined, "systemctl")
 		} else {
 			require.Contains(t, combined, "apachectl")

@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -740,11 +741,11 @@ func firefoxEnterpriseRootsEnabled() bool {
 		if !entry.IsDir() {
 			continue
 		}
-		data, err := os.ReadFile(filepath.Join(profilesDir, entry.Name(), "prefs.js"))
+		disabled, err := fileutil.FgrepStringInFile(filepath.Join(profilesDir, entry.Name(), "prefs.js"), `"security.enterprise_roots.enabled", false`)
 		if err != nil {
 			continue
 		}
-		if strings.Contains(string(data), `"security.enterprise_roots.enabled", false`) {
+		if disabled {
 			return false
 		}
 	}

@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"testing"
 
@@ -208,7 +207,7 @@ func OsTempDir() (string, error) {
 func SetTestHome(t *testing.T, home string) {
 	t.Helper()
 	t.Setenv("HOME", home)
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Setenv("USERPROFILE", home)
 	}
 }
