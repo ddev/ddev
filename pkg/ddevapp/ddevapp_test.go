@@ -2742,14 +2742,18 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	// virtiofs (Apple Container) caches file attributes for about a second, so
 	// the host's write can show up in the container after a delay.
 	var out string
-	require.EventuallyWithT(t, func(c *asrt.CollectT) {
+	hostWriteVisible := func(c *asrt.CollectT) {
 		o, _, execErr := app.Exec(&ddevapp.ExecOpts{
 			Cmd: "cat " + fileCreatedOnHost,
 		})
 		require.NoError(c, execErr)
 		require.Contains(c, o, baseCreatedOnHostText)
 		out = o
-	}, 5*time.Second, 250*time.Millisecond)
+	}
+	if !asrt.EventuallyWithT(t, hostWriteVisible, 5*time.Second, 250*time.Millisecond) {
+		logWriteableFilesDiagnostics(t, app, fileCreatedOnHost, dirPathFromRoot, hostWriteVisible)
+		require.FailNow(t, "host write to file not visible in container", "file=%s", fileCreatedOnHost)
+	}
 	t.Logf("Initial fileCreatedOnHost after mutagen sync='%s'", out)
 
 	// Append text inside the container
@@ -2782,6 +2786,43 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	require.NoError(t, err, "grep failed, actual content of file in container was '%s'", out)
 
 	runTime()
+}
+
+// discardT lets a diagnostic poll fail without failing the test.
+type discardT struct{}
+
+func (discardT) Errorf(string, ...any) {}
+
+// logWriteableFilesDiagnostics logs how the host and the container each see a
+// file whose host-side write never showed up in the container. It then checks
+// whether listing the directory or waiting longer makes the write appear, to
+// tell a slow file-sharing cache from a stuck one.
+func logWriteableFilesDiagnostics(t *testing.T, app *ddevapp.DdevApp, file string, dir string, visible func(c *asrt.CollectT)) {
+	if fi, err := os.Stat(filepath.FromSlash(file)); err != nil {
+		t.Logf("host stat %s: %v", file, err)
+	} else {
+		t.Logf("host stat %s: size=%d mode=%s mtime=%s", file, fi.Size(), fi.Mode(), fi.ModTime().Format(time.RFC3339Nano))
+	}
+	content, err := fileutil.ReadFileIntoString(filepath.FromSlash(file))
+	t.Logf("host content of %s: %q err=%v", file, content, err)
+
+	containerCmd := func(label string, cmd string) {
+		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{Cmd: cmd})
+		t.Logf("container %s (%s):\nstdout=%s\nstderr=%s\nerr=%v", label, cmd, stdout, stderr, err)
+	}
+	containerCmd("stat", fmt.Sprintf("stat -c 'size=%%s mode=%%A mtime=%%y inode=%%i' %s", file))
+	containerCmd("mount", fmt.Sprintf("grep -F \"$(df -P %s | awk 'NR==2{print $6}')\" /proc/self/mountinfo", dir))
+
+	containerCmd("ls after failure", "ls -la --time-style=full-iso "+dir)
+	containerCmd("content after ls", "cat "+file)
+
+	start := time.Now()
+	if asrt.EventuallyWithT(discardT{}, visible, 30*time.Second, time.Second) {
+		t.Logf("host write appeared in container %s after the extra wait", time.Since(start).Round(time.Millisecond))
+	} else {
+		t.Logf("host write still not visible in container after a further %s", time.Since(start).Round(time.Millisecond))
+		containerCmd("stat after extra wait", fmt.Sprintf("stat -c 'size=%%s mtime=%%y' %s", file))
+	}
 }
 
 // TestDdevImportFilesDir tests that "ddev import-files" can successfully import non-archive directories
