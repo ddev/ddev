@@ -90,6 +90,10 @@ var (
 	Bad     = func() lipgloss.Style { return lipgloss.NewStyle().Foreground(color(lipgloss.Red)) }
 	Strong  = func() lipgloss.Style { return attr(lipgloss.NewStyle().Bold(true)) }
 	Note    = func() lipgloss.Style { return attr(lipgloss.NewStyle().Italic(true)) }
+	// Hint is secondary text. Faint dims the theme's own text color, which
+	// stays readable where gray is not, and terminals without it show
+	// normal text.
+	Hint = func() lipgloss.Style { return attr(lipgloss.NewStyle().Faint(true)) }
 )
 
 // attr drops text attributes such as bold when styling is off.
@@ -128,8 +132,8 @@ func (t *Table) SetMaxWidths(widths ...int) {
 	copy(t.maxWidths, widths)
 }
 
-// SetSnip makes a one-line cell in column col that is wider than the
-// column's limit end in "…" instead of wrapping, so the row stays one line.
+// SetSnip makes a one-line cell, or a line without spaces, in column col
+// that is wider than the column's limit end in "…" instead of wrapping.
 // Its hyperlink keeps the full target.
 func (t *Table) SetSnip(col int) {
 	t.snip[col] = true
@@ -227,21 +231,24 @@ type tableLook struct {
 }
 
 // look returns the look of the configured table_style for rows in columns
-// of widths. "default" has rounded borders, "bold" heavy borders, and
-// "bright" none, with underlined headers. Simple formatting has no borders
-// or styling.
+// of widths. "default" has a rounded outer border and space between
+// columns, "bold" heavy borders everywhere, and "bright" no borders and a
+// reverse-video header, which reads well in any theme. Rows are separated
+// by a line, or by a blank line without borders, when some row takes more
+// than one line. Simple formatting has no borders or styling.
 func (t *Table) look(rows [][]string, widths []int) tableLook {
 	if SimpleFormattingRequired() {
 		return tableLook{border: lipgloss.HiddenBorder()}
 	}
 	header := Strong()
+	multiline := hasMultilineRow(rows, widths)
 	switch globalconfig.GetTableStyle() {
 	case "bold":
 		return tableLook{border: lipgloss.ThickBorder(), borderSides: true, borderColumn: true, borderHeader: true, header: header}
 	case "bright":
-		return tableLook{border: lipgloss.HiddenBorder(), header: header.Underline(StylingEnabled())}
+		return tableLook{border: lipgloss.HiddenBorder(), borderRow: multiline, header: header.Reverse(StylingEnabled())}
 	}
-	return tableLook{border: lipgloss.RoundedBorder(), borderSides: true, borderColumn: true, borderHeader: true, borderRow: hasMultilineRow(rows, widths), header: header}
+	return tableLook{border: lipgloss.RoundedBorder(), borderSides: true, borderHeader: true, borderRow: multiline, header: header}
 }
 
 // hasMultilineRow reports whether any of rows takes more than one line in
@@ -275,15 +282,16 @@ func (t *Table) columnWidths() []int {
 // hyperlink matches the start of an OSC 8 hyperlink with a target.
 var hyperlink = regexp.MustCompile("\x1b]8;[^;\x07\x1b]*;[^\x07\x1b]")
 
-// fit snips lines wider than their column that are a whole cell in a snip
-// column, or that hold a hyperlink, which would read badly broken. lipgloss
-// wraps the rest, keeping colors and hyperlinks intact across the lines.
+// fit snips lines wider than their column that read badly broken: a whole
+// cell, or a line without spaces such as a path, in a snip column, and any
+// line holding a hyperlink. lipgloss wraps the rest, such as an error
+// message, keeping colors and hyperlinks intact across the lines.
 func (t *Table) fit(row []string, widths []int) []string {
 	fitted := slices.Clone(row)
 	for i, cell := range fitted {
 		lines := strings.Split(cell, "\n")
 		for j, line := range lines {
-			if ansi.StringWidth(line) > widths[i] && ((t.snip[i] && len(lines) == 1) || hyperlink.MatchString(line)) {
+			if ansi.StringWidth(line) > widths[i] && ((t.snip[i] && (len(lines) == 1 || !strings.Contains(ansi.Strip(line), " "))) || hyperlink.MatchString(line)) {
 				lines[j] = ansi.Truncate(line, widths[i], "…")
 			}
 		}
