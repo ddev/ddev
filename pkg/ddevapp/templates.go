@@ -99,6 +99,11 @@ const ConfigInstructions = `
 # corepack_enable: false
 # Change to 'true' to 'corepack enable' and gain access to latest versions of yarn/pnpm
 
+# safe_chain_enable: false
+# Change to 'true' to install Aikido Safe Chain (https://github.com/AikidoSec/safe-chain)
+# in the web container. It wraps npm, npx, yarn, pnpm, pip, and other package managers
+# to block packages with known malware.
+
 # additional_hostnames:
 #  - somename
 #  - someothername

@@ -614,6 +614,10 @@
         }
       ]
     },
+    "safe_chain_enable": {
+      "description": "Whether to install Aikido Safe Chain in the web container, so package managers like npm, yarn, and pnpm check packages for malware before installing them.",
+      "type": "boolean"
+    },
     "share_default_provider": {
       "description": "Default share provider for the project. Overrides global configuration.",
       "type": "string",

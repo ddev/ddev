@@ -185,6 +185,12 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("safe-chain-enable").Changed {
+		val, _ := cmd.Flags().GetBool("safe-chain-enable")
+		globalconfig.DdevGlobalConfig.SafeChainEnable = val
+		dirty = true
+	}
+
 	if cmd.Flag("fail-on-hook-fail").Changed {
 		val, _ := cmd.Flags().GetBool("fail-on-hook-fail")
 		globalconfig.DdevGlobalConfig.FailOnHookFailGlobal = val
@@ -365,6 +371,8 @@ func registerConfigGlobalCmd() {
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("simple-formatting", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().Bool("use-hardened-images", false, "If true, use more secure 'hardened' images for an actual internet deployment")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("use-hardened-images", configCompletionFunc([]string{"true", "false"}))
+	configGlobalCommand.Flags().Bool("safe-chain-enable", false, "If true, install Aikido Safe Chain in every project to check packages for malware before installing them")
+	_ = configGlobalCommand.RegisterFlagCompletionFunc("safe-chain-enable", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().Bool("fail-on-hook-fail", false, "If true, 'ddev start' will fail when a hook fails")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("fail-on-hook-fail", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().String(configTypes.FlagPerformanceModeName, configTypes.FlagPerformanceModeDefault, configTypes.FlagPerformanceModeDescription(configTypes.ConfigTypeGlobal))

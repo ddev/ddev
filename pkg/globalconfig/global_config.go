@@ -71,6 +71,7 @@ type GlobalConfig struct {
 	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port,omitempty"`
 	RouterXHGuiHTTPPort              string                      `yaml:"xhgui_http_port,omitempty"`
 	RouterXHGuiHTTPSPort             string                      `yaml:"xhgui_https_port,omitempty"`
+	SafeChainEnable                  bool                        `yaml:"safe_chain_enable,omitempty"`
 	ShareDefaultProvider             string                      `yaml:"share_default_provider,omitempty"`
 	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
 	SSHAgentUpstream                 string                      `yaml:"ssh_agent_upstream,omitempty"`
@@ -596,6 +597,11 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # is run only as the owning user, only project files might be changed
 # if a CMS or PHP bug allowed creating or altering files, and
 # permissions should not allow escalation.
+
+# safe_chain_enable: false
+# If true, every project installs Aikido Safe Chain (https://github.com/AikidoSec/safe-chain)
+# in its web container, as with 'safe_chain_enable: true' in the project config.
+# A project config can't turn it off again.
 
 # xdebug_ide_location: ""
 # It's unusual to change this option, and we don't recommend it.

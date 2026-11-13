@@ -1129,6 +1129,9 @@ EOF
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN (command -v corepack >/dev/null 2>&1 || log-stderr.sh npm install -g corepack -f || true) && log-stderr.sh corepack enable || true"
 	}
+	if app.IsSafeChainEnabled() {
+		extraWebContent = extraWebContent + safeChainInstallDockerfile
+	}
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string
 	for _, appStart := range app.WebExtraDaemons {

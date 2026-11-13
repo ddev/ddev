@@ -618,6 +618,27 @@ Port for DDEV router’s HTTPS traffic.
 
 See the [Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-occupied) page for more on addressing port conflicts.
 
+## `safe_chain_enable`
+
+Whether to install [Aikido Safe Chain](https://github.com/AikidoSec/safe-chain) in the `web` container.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `false` | Can be `true` or `false`.
+
+When `true`, DDEV installs the latest Safe Chain release while building the `web` image and puts its shims first on `$PATH`. They wrap `npm`, `npx`, `yarn`, `pnpm`, `pnpx`, `bun`, `bunx`, `pip`, `pip3`, `python`, `python3`, `uv`, `poetry`, and the other package managers Safe Chain supports, so `ddev npm`, `ddev exec`, `ddev ssh`, and commands in `web-build/Dockerfile*` check packages against the Aikido malware database before installing them. A package with known malware stops the command with an error.
+
+The build of the `web` image needs access to GitHub, and package installs need access to the Aikido malware list. If the Safe Chain install fails, the build fails instead of continuing without protection.
+
+```bash
+ddev config --safe-chain-enable && ddev restart
+ddev npm safe-chain-verify
+```
+
+To enable it for every project, run `ddev config global --safe-chain-enable` and restart the projects. Safe Chain is installed when either the project or the global config enables it, so a project can't turn off a global setting.
+
+Safe Chain reads its settings, such as `SAFE_CHAIN_MINIMUM_PACKAGE_AGE_HOURS`, from environment variables, which can be set with [`web_environment`](#web_environment). The [Safe Chain documentation](https://github.com/AikidoSec/safe-chain) lists the available settings.
+
 ## `share_default_provider`
 
 The default share provider to use with the [`ddev share`](../usage/commands.md#share) command.

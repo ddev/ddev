@@ -2,6 +2,7 @@
 ARG
 AdditionalConfig
 Adminer
+Aikido
 Andrasch
 Apache
 Acquia

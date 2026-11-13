@@ -145,6 +145,7 @@ type DdevApp struct {
 	NodeJSRoot                string                `yaml:"nodejs_root,omitempty"`
 	NodeJSVersion             string                `yaml:"nodejs_version"`
 	CorepackEnable            bool                  `yaml:"corepack_enable"`
+	SafeChainEnable           bool                  `yaml:"safe_chain_enable,omitempty"`
 	DefaultContainerTimeout   string                `yaml:"default_container_timeout,omitempty"`
 	WebExtraExposedPorts      []WebExposedPort      `yaml:"web_extra_exposed_ports,omitempty"`
 	WebExtraDaemons           []WebExtraDaemon      `yaml:"web_extra_daemons,omitempty"`

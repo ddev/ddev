@@ -328,6 +328,8 @@ func registerConfigCmd() {
 	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev_version_constraint to validate ddev against`)
 	ConfigCommand.Flags().Bool("corepack-enable", false, `Whether to run 'corepack enable' on Node.js configuration`)
 	_ = ConfigCommand.RegisterFlagCompletionFunc("corepack-enable", configCompletionFunc([]string{"true", "false"}))
+	ConfigCommand.Flags().Bool("safe-chain-enable", false, `Whether to install Aikido Safe Chain to check packages for malware before installing them`)
+	_ = ConfigCommand.RegisterFlagCompletionFunc("safe-chain-enable", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides (except for 'generic' type)`)
 
 	// Keep removed flags for backwards compatibility
@@ -707,6 +709,10 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp, 
 
 	if cmd.Flag("corepack-enable").Changed {
 		app.CorepackEnable, _ = cmd.Flags().GetBool("corepack-enable")
+	}
+
+	if cmd.Flag("safe-chain-enable").Changed {
+		app.SafeChainEnable, _ = cmd.Flags().GetBool("safe-chain-enable")
 	}
 
 	if cmd.Flag("webserver-type").Changed {

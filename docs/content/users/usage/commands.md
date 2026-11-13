@@ -466,6 +466,7 @@ Flags:
 * `--project-type`: Provide [the project type](../configuration/config.md#type) of project to configure. This is autodetected and this flag is necessary only to override the detection.
 * `--router-http-port`: The router HTTP port for this project (see [default](../configuration/config.md#router_http_port)).
 * `--router-https-port`: The router HTTPS port for this project (see [default](../configuration/config.md#router_https_port)).
+* `--safe-chain-enable`: Whether to install [Aikido Safe Chain](../configuration/config.md#safe_chain_enable) to check packages for malware before installing them.
 * `--share-default-provider`: Set the default share provider for the project (`ngrok`, `cloudflared`, or custom). Can be overridden globally with `ddev config global --share-default-provider=<provider>`.
 * `--share-provider-args`: Provide extra args to the share provider in `ddev share`.
 * `--show-config-location`: Output the location of the `.ddev/config.yaml` file if it exists, or error that it doesn’t exist.
@@ -515,6 +516,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--router-bind-all-interfaces`: Bind host router ports on all interfaces, not only on the localhost network interface.
 * `--router-http-port`: The default router HTTP port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#router_http_port)).
 * `--router-https-port`: The default router HTTPS port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#router_https_port)).
+* `--safe-chain-enable`: If `true`, install [Aikido Safe Chain](../configuration/config.md#safe_chain_enable) in every project to check packages for malware before installing them.
 * `--simple-formatting`: If `true`, use simple formatting for tables and implicitly set `NO_COLOR=1`.
 * `--ssh-agent-upstream`: Make `ddev-ssh-agent` relay to an existing SSH agent: `host` for the host's agent, or the path to an agent socket; empty uses DDEV's own agent (see [default](../configuration/config.md#ssh_agent_upstream)).
 * `--table-style`: Table style for `ddev list` and `ddev describe`, possible values are `default`, `bold`, `bright` (see [default](../configuration/config.md#table_style)).

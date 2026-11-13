@@ -255,6 +255,7 @@ func TestAutocompletionForConfigCmd(t *testing.T) {
 		"--default-container-timeout":   {nodeps.DefaultDefaultContainerTimeout},
 		"--disable-upload-dirs-warning": {"true", "false"},
 		"--corepack-enable":             {"true", "false"},
+		"--safe-chain-enable":           {"true", "false"},
 	}
 
 	for flag, expected := range testCases {
@@ -317,6 +318,7 @@ func TestAutocompletionConfigGlobalCmd(t *testing.T) {
 		"--use-letsencrypt":               {"true", "false"},
 		"--simple-formatting":             {"true", "false"},
 		"--use-hardened-images":           {"true", "false"},
+		"--safe-chain-enable":             {"true", "false"},
 		"--fail-on-hook-fail":             {"true", "false"},
 		"--performance-mode":              types.ValidPerformanceModeOptions(types.ConfigTypeGlobal),
 		"--xhprof-mode":                   types.ValidXHProfModeOptions(types.ConfigTypeGlobal),
