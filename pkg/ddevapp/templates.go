@@ -91,7 +91,7 @@ const ConfigInstructions = `
 # Relative path to the directory containing the Node.js version file from the
 # project root. Only used with "nodejs_version: auto" or "nodejs_version: engine".
 
-# nodejs_version: "24"
+# nodejs_version: "26"
 # change from the default system Node.js version to any other version.
 # See https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version for more information
 # and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation.
