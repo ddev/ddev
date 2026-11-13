@@ -345,7 +345,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) (lineEnded bool, err error) {
 	defer close(firstOutputReceived)
 
 	go func() {
-		err = app.MutagenSyncFlush()
+		err := app.flushMutagenSyncAfterStart(isResumingExistingSession)
 		util.Verbose("gofunc flushed Mutagen sync session '%s' err=%v", syncName, err)
 		flushErr <- err
 		return
@@ -590,6 +590,29 @@ func (app *DdevApp) GetMutagenSyncID() (id string, err error) {
 	}
 
 	return identifier, nil
+}
+
+// mutagenNotSynchronizing is the error Mutagen's flush gives while a session is
+// between losing its connection and reconnecting.
+const mutagenNotSynchronizing = "session is not currently able to synchronize"
+
+// flushMutagenSyncAfterStart flushes the session that start just created or
+// resumed. When start replaces the web container, the session can still look
+// connected to resume, which then does nothing, and the flush finds it
+// reconnecting. A paused session is reconnected in the foreground by resume.
+func (app *DdevApp) flushMutagenSyncAfterStart(resumed bool) error {
+	err := app.MutagenSyncFlush()
+	if err == nil || !resumed || !strings.Contains(err.Error(), mutagenNotSynchronizing) {
+		return err
+	}
+	util.Debug("Mutagen sync %s was reconnecting, pausing and resuming it: %v", MutagenSyncName(app.Name), err)
+	if err = PauseMutagenSync(app); err != nil {
+		return err
+	}
+	if err = ResumeMutagenSync(app); err != nil {
+		return err
+	}
+	return app.MutagenSyncFlush()
 }
 
 // MutagenSyncFlush performs a Mutagen sync flush, waits for result, and checks for errors
