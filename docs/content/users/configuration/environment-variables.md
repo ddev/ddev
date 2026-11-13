@@ -163,6 +163,12 @@ ddev config --web-environment-add="MY_ENV_VAR=someval"
 ddev config global --web-environment-add="MY_ENV_VAR=someval"
 ```
 
+## `CI` From the Host
+
+When `CI` is set on the host, `ddev start` passes it into the `web` container with the same value, so tools in the container know they are running in CI. GitHub Actions, GitLab CI, and most other CI systems set `CI=true`, which PHP and Node.js libraries check to skip prompts, progress bars, and telemetry. On a machine where `CI` isn't set, the `web` container doesn't get it either.
+
+Like other container variables, it is read when the project starts, and a `CI` value in an [env file](#project-env-files) or [`web_environment`](#web_environment) replaces it.
+
 ## Host Variables Forwarded on Exec
 
 Some variables describe the session that runs a command rather than the project, so DDEV copies them from the host into every [`ddev exec`](../usage/commands.md#exec), [`ddev ssh`](../usage/commands.md#ssh), and custom command, in any service. They reach only that command, so none of them needs a restart. A variable is forwarded when it is set on the host, even to an empty value, because some tools only check that it exists:

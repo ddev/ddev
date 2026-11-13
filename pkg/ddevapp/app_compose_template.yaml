@@ -186,6 +186,9 @@ services:
     {{- end }}
 
     environment:
+    # CI is passed through from the host when it is set, so tools in the
+    # container know they are running in CI, for example in GitHub Actions.
+    - CI
     - COLUMNS
     - COREPACK_ENABLE_DOWNLOAD_PROMPT=0
     - COREPACK_HOME=/mnt/ddev-project-cache/corepack

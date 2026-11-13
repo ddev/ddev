@@ -364,6 +364,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	err = app.WriteConfig()
 	assert.NoError(err)
 
+	t.Setenv("CI", "ci-from-host")
 	// After the config has been written and directories exist, the write should work.
 	_ = app.DockerEnv()
 	err = app.WriteDockerComposeYAML()
@@ -392,6 +393,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	contentString = string(composeBytes)
 	assert.Contains(contentString, app.GetComposeProjectName())
 	assert.Contains(contentString, app.Type)
+	assert.Contains(contentString, "CI: ci-from-host")
 }
 
 // TestPHPIDEConfigLowercase verifies that PHP_IDE_CONFIG uses a lowercase project name,
