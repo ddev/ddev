@@ -18,10 +18,10 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/docker/compose/v5/pkg/api"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/moby/moby/client"
 	"github.com/spf13/cobra"
 )
@@ -65,7 +65,7 @@ func GetActiveProjects() []*DdevApp {
 }
 
 // RenderAppRow will add an application row to an existing table for describe and list output.
-func RenderAppRow(t table.Writer, row map[string]any) {
+func RenderAppRow(t *styles.Table, row map[string]any) {
 	status := fmt.Sprint(row["status_desc"])
 	urls := ""
 	mutagenStatus := ""
@@ -78,7 +78,7 @@ func RenderAppRow(t table.Writer, row map[string]any) {
 				mutagenStatus = "not enabled"
 			}
 			if mutagenStatus != "ok" {
-				mutagenStatus = util.ColorizeText(mutagenStatus, "red")
+				mutagenStatus = styles.Bad().Render(mutagenStatus)
 			}
 			status = fmt.Sprintf("%s (%s)", status, mutagenStatus)
 		}
@@ -91,9 +91,7 @@ func RenderAppRow(t table.Writer, row map[string]any) {
 	urls = output.Hyperlink(urls, urls)
 	location := output.Hyperlink(output.FileURL(fmt.Sprint(row["approot"])), fmt.Sprint(row["shortroot"]))
 
-	t.AppendRow(table.Row{
-		row["name"], status, location, urls, row["type"],
-	})
+	t.AppendRow(fmt.Sprint(row["name"]), status, location, urls, fmt.Sprint(row["type"]))
 }
 
 // Cleanup will remove DDEV containers and volumes even if docker-compose.yml
