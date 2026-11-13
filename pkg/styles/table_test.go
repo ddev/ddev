@@ -35,7 +35,7 @@ func TestTableRender(t *testing.T) {
 	tbl.SetSnip(1)
 	tbl.AppendRow("a-long-project-name", "~/workspace/some/deep/path", link)
 	tbl.AppendRow("b", "~/b")
-	tbl.SetFooter("Router", "~/.ddev", "line one\nline two")
+	tbl.SetFooter("Router", "~/.ddev/some/long/path\nport 80 is already in use", "line one\nline two")
 	tbl.SetMaxWidths(10, 12, 12)
 	out := tbl.Render()
 
@@ -48,6 +48,8 @@ func TestTableRender(t *testing.T) {
 	require.NotContains(t, out, "deep/path")
 	require.Contains(t, out, "https://exa…", "a link is snipped, not wrapped")
 	require.Equal(t, 1, strings.Count(out, "\x1b]8;;https://example.ddev.site"), "the link is not split across lines")
+	require.Contains(t, out, "~/.ddev/som…", "a path in a multi-line cell is snipped")
+	require.Contains(t, out, "port 80 is", "text with spaces wraps")
 	require.Contains(t, out, "line one")
 	require.Contains(t, out, "line two")
 	require.Contains(t, out, "a-long-")
