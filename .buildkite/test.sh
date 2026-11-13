@@ -202,6 +202,11 @@ echo "test.sh completed with status=$RV"
 if [ -n "${GOTESTSUM_JSONFILE_DIR:-}" ] && [ -d "${GOTESTSUM_JSONFILE_DIR}" ]; then
   buildkite-agent artifact upload "${GOTESTSUM_JSONFILE_DIR}/*.ndjson"
 fi
+# socktainer logs its DNS registrations and forwarder restarts, which explain
+# container name and internet lookup failures. The next job overwrites it.
+if [ "${DOCKER_TYPE:-}" = "socktainer" ] && [ -f ~/tmp/socktainer.log ]; then
+  (cd ~/tmp && buildkite-agent artifact upload socktainer.log) || true
+fi
 
 ddev poweroff || true
 
