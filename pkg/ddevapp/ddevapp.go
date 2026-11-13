@@ -33,6 +33,7 @@ import (
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/distribution/reference"
@@ -4323,22 +4324,26 @@ func GetContainer(app *DdevApp, service string) (*container.Summary, error) {
 	return c, nil
 }
 
-// FormatSiteStatus formats "paused" or "running" with color
+// FormatSiteStatus formats a project or service status for a table, with a
+// symbol and color as in ddev tui, so states differ by shape as well as
+// color. Stopped is normal, so only its symbol is gray, and its text stays
+// readable in themes where gray is not.
 func FormatSiteStatus(status string) string {
-	if status == SiteRunning {
+	if status == SiteRunning || status == string(container.Healthy) {
 		status = "OK"
 	}
-	formattedStatus := status
-
-	switch {
-	case strings.Contains(status, SitePaused):
-		formattedStatus = util.ColorizeText(formattedStatus, "yellow")
-	case slices.Contains([]string{SiteStopped, SiteDirMissing, SiteConfigMissing, SiteUnhealthy, "exited"}, status):
-		formattedStatus = util.ColorizeText(formattedStatus, "red")
-	default:
-		formattedStatus = util.ColorizeText(formattedStatus, "green")
+	if !styles.StylingEnabled() {
+		return status
 	}
-	return formattedStatus
+	switch {
+	case strings.Contains(status, SitePaused), strings.HasPrefix(status, SiteStarting):
+		return styles.Warning().Render("◐ " + status)
+	case status == SiteStopped:
+		return styles.Muted().Render("○") + " " + status
+	case slices.Contains([]string{SiteDirMissing, SiteConfigMissing, SiteUnhealthy, "exited"}, status):
+		return styles.Bad().Render("✗ " + status)
+	}
+	return styles.Good().Render("● " + status)
 }
 
 // HasConfigNameOverride checks if the app name should be different,
