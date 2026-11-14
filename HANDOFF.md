@@ -1,7 +1,7 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-11-09, release status updated 2026-11-11; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-13; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
@@ -10,43 +10,58 @@ below), `socktainer` built from upstream `main` as of 2026-11-09 with no fork fi
 commit as the v1.6.1 release, `71f2415`), docker CLI 29.9.2, docker context `socktainer`,
 macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment),
-rebased on `upstream/main` as of 2026-11-12, after [#9115](https://github.com/ddev/ddev/pull/9115).
+rebased on `upstream/main` as of 2026-11-13, after [#9108](https://github.com/ddev/ddev/pull/9108)
+(the split-off general fixes) and [#9123](https://github.com/ddev/ddev/pull/9123).
 
 ## Resume here
 
-### General changes to move to their own PR (2026-11-12)
+### CI status (2026-11-13)
 
-These change behavior on every provider, not just Apple Container. Moving them to a
-separate PR from `upstream/main` makes this PR smaller and Apple-Container-only to review,
-and gets the fixes to other providers sooner. The branch drops them on its next rebase
-after they merge. Everything else in the diff is gated on `IsAppleContainer()`/`IsSocktainer()`,
-adds Apple Container next to an existing rootless-Podman check, or is socktainer CI, docs
-or `handoff/`.
+Builds [27](https://buildkite.com/ddev/macos-socktainer/builds/27) (tb-macos-arm64-7) and
+[28](https://buildkite.com/ddev/macos-socktainer/builds/28) (tb-macos-arm64-5) failed only on
+these. Both ran apple container 1.7.1 with socktainer 1.6.1, which warns that it was built for 1.6.1.
 
-| Change | Files | Commit on this branch | Why it's general |
-| --- | --- | --- | --- |
-| Captures read the pipe from the start | `pkg/util/capture.go`, `pkg/util/utils_test.go` (`TestCaptureUserOutLarge`) | `fix(test): read captured output as it is written` | A captured write past the pipe buffer deadlocked on any platform; it hung build 24 for 5h |
-| `TestTimezoneConfig` reads the zone before `TZ=""` | `pkg/ddevapp/config_test.go` | `test: read host zone before clearing TZ` | Fails on any provider when nothing in the process loaded `time.Local` first |
-| Pull platform is `linux/<arch>` | `pkg/dockerutil/images.go` (`BuildPlatformToPull`), `images_test.go`, `containers_test.go` (`TestMain`) | `fix(apple-container): pull linux images on socktainer` (part) | Replaces `serverVersion.Os` everywhere. Correct on every provider, since DDEV images are Linux-only, but a behavior change reviewers should see on its own. The alternative is gating it on `IsSocktainer()` here |
-| `slices.Concat` in `GetOmittedContainers` | `pkg/ddevapp/ddevapp.go` | `feat: experimental Apple Container/socktainer support` (part) | Upstream's `append` onto `OmitContainersGlobal` can write into the global list's spare capacity |
-| Local Network prompt step for socktainer testbots | `docs/content/developers/buildkite-testmachine-setup.md` | `feat: experimental Apple Container/socktainer support` (part) | Upstream already documents socktainer testbot setup |
+- **`TestDdevXhprofXhguiEnabled`, `TestCmdXHGui` (build 27; passed in 28):** the xhgui
+  container exits with `host not found in upstream "xhgui"`. Its nginx reaches php-fpm in the
+  same container by service name, and socktainer registers a container's names only after
+  its process has started. Build 27's socktainer log shows `[dns] xhgui not in table (local
+  NXDOMAIN)` just before the registration. Filed as
+  [socktainer#519](https://github.com/socktainer/socktainer/issues/519), with a plain
+  `docker run` repro that fails every time. DDEV fix: nginx uses `127.0.0.1:9000`,
+  [#9121](https://github.com/ddev/ddev/pull/9121) (new `ddev-xhgui` image, needs pushing).
+- **`TestUtilityDiagnoseCmd/ProjectWithCustomizations` (builds 24, 27, 28):** `✗ No internet
+  access from containers`, although `ddev utility dockercheck` exited 0. The lines diagnose
+  greps for are the first two of dockercheck's output, and they were missing; the last two
+  were found. Not reproduced locally in 5 runs, including with `DDEV_DEBUG=true`. Diagnose
+  used to drop dockercheck's output; `fix(diagnose): print dockercheck output when the
+  internet check fails` prints it, and replaces `echo | grep -q` (which can SIGPIPE under
+  `pipefail`) with here-strings. Read the next failure's output before guessing further.
+- **Also filed:** [socktainer#520](https://github.com/socktainer/socktainer/issues/520).
+  socktainer serves each network's DNS from a hidden forwarder container. When it is
+  recreated it gets a new IP, and containers already running keep the old one in
+  `resolv.conf` and lose all DNS. Reproduced locally by stopping the forwarder; not shown in
+  any CI run.
 
-All five are on branch `20261112_rfay_capture_tz_platform_fixes` (worktree
-`../20261112_rfay_capture_tz_platform_fixes`), one commit each, from `upstream/main`, in
-[#9108](https://github.com/ddev/ddev/pull/9108). `TestTimezoneConfig` and the `pkg/dockerutil` image tests passed there on
-OrbStack. The router-port test fix is gone from this branch: upstream fixed the same test in
-[#9105](https://github.com/ddev/ddev/pull/9105), with 9443, and the 2026-11-12 rebase took
-theirs.
+`test.sh` uploads `~/tmp/socktainer.log` as a build artifact on socktainer runs, from build 28
+on. The log has no timestamps or container names, so match it to a test by request ID or by
+the `ddev-utilities` container sequence. The last job's log also stays on the testbot until
+the next socktainer job: `ssh testbot@tb-macos-arm64-5 grep … tmp/socktainer.log` (Tailscale
+short names; the `.ddevtestnet` names don't resolve from rfay's Mac).
 
-Stacking: rebase this branch onto the split branch (`git rebase
-20261112_rfay_capture_tz_platform_fixes`). The capture commit drops as already applied, the
-tree is unchanged, and the one conflict is `GetOmittedContainers`, where this branch's
-version wins; `rerere` has recorded it. After the split PR is squash-merged, drop its
-commits with `git rebase --onto upstream/main 20261112_rfay_capture_tz_platform_fixes`,
-which needs no patch matching. If the split branch changes in review, restack with
-`git rebase --onto <new split tip> <old split tip>`. On the restacked branch, the
-`test: read host zone before clearing TZ` commit keeps only #508 skip removals, so squash it
+### General changes on the branch
+
+The split-off ([#9108](https://github.com/ddev/ddev/pull/9108)) merged 2026-11-13, and the
+rebase onto it dropped `fix(test): read captured output as it is written`. Still to do:
+`test: read host zone before clearing TZ` now holds only #508 skip removals, so squash it
 into `fix(apple-container): socktainer 1.6.1, serial builds`.
+
+New candidates for a second split-off, both general:
+
+- `fix(diagnose): print dockercheck output when the internet check fails`. Keep it here until
+  a CI failure shows the cause, since the here-string half is unproven.
+- `test(diagnose): run diagnose on a temporary copy of each test project`. The test used to
+  write generated `.ddev` files into `cmd/ddev/cmd/testdata/`; it also fixes
+  `OutsideHomeDirectory`, whose `CopyDir` target already existed.
 
 ### socktainer v1.6.1 (released 2026-11-09)
 
@@ -58,9 +73,10 @@ uniqueness) and #511 (#467, `docker cp` under mounts). It also builds against ap
 containerization 0.53.0 (#485), not 1.7.1. Homebrew has socktainer 1.6.1, installed here and
 first on `PATH`.
 
-Still open upstream as of 2026-11-11: issues #484, #497, #498, #499, #502, #504, #505,
-the newer issues #510, #514, #517 and #518, and the pull requests #487, #513
-(ours, for #505), #515 (ours, for #514) and #516 (apple container 1.7.1 and containerization 0.54.0).
+Still open upstream as of 2026-11-13: issues #484, #497, #498, #499, #502, #504, #505,
+the newer issues #510, #514, #517, #518, #519 and #520, and the pull requests #487, #513
+(ours, for #505) and #515 (ours, for #514). #516 (apple container 1.7.1 and containerization
+0.54.0) merged 2026-11-12 but isn't released; v1.6.1 is still the latest release.
 
 Done on the branch 2026-11-11 (uncommitted), run against Homebrew's socktainer 1.6.1:
 
@@ -122,7 +138,7 @@ tb-macos-arm64-5) ran 7+ hours and failed three ways:
   8443, which the pipeline sets globally, so `WriteConfig` left it out. Fails on any machine
   with global 8443, here too. Upstream fixed it in [#9105](https://github.com/ddev/ddev/pull/9105).
 - `TestUtilityDiagnoseCmd/BasicProject`: "No internet access from containers", 13s after the
-  same check passed in another subtest. Intermittent; not investigated.
+  same check passed in another subtest. See "CI status (2026-11-13)".
 
 ### State (2026-11-09)
 
@@ -783,18 +799,22 @@ To capture raw API traffic, put a logging proxy in front of the socket:
 `socat -v UNIX-LISTEN:$HOME/tmp/proxy.sock,fork UNIX-CONNECT:$HOME/.socktainer/container.sock 2> ~/tmp/socat.log`,
 then point `DOCKER_HOST` at the proxy.
 
-## Current machine state (2026-11-11)
+## Current machine state (2026-11-13)
 
-- Apple `container` **1.6.1** from the signed installer at `/usr/local`
-  (`container-apiserver` running). Homebrew's `container` is 1.7.1, and Homebrew's socktainer 1.6.1 is installed and first on `PATH` (2026-11-11).
+- The running `container-apiserver` is Homebrew's apple container **1.7.1**, first on `PATH`,
+  matching the testbots. The signed 1.6.1 install is still in `/usr/local`. Homebrew's
+  socktainer 1.6.1 is installed and first on `PATH`.
+- For local runs next to another provider, `~/tmp/sockenv.sh` sets `DOCKER_CONTEXT=socktainer`,
+  `DDEV_XDG_CONFIG_HOME=~/tmp/xdg-socktainer` (router ports 28080/28443) and this branch's
+  `ddev` first on `PATH`, so the default Docker context can stay `orbstack`.
 - socktainer running is Homebrew's 1.6.1 (`/opt/homebrew/bin/socktainer --no-auto-start`,
-  started 2026-11-11). The #515 build is in
+  started 2026-11-13). The #515 build is in
   `~/workspace/socktainer-worktrees/archive-owner-mtime/.build/release/socktainer`.
   The #513 build is in `~/workspace/socktainer-worktrees/network-connect-aliases`.
   `~/workspace/socktainer/.build/release/socktainer` is stock `main` of the same day.
   Log: `~/tmp/socktainer.log`. Start `container system start --disable-kernel-install`;
   without the flag it waits on a prompt.
-- Docker context **`socktainer`**.
+- Default Docker context is `orbstack`; use `DOCKER_CONTEXT=socktainer` (above).
 - Global router ports 8080/8443, `traefik_monitor_port` 11999.
 - `appletest` and `appletest2` (`~/tmp/`) powered off, both served 200 when last up; both have
   `omit_containers: [ddev-ssh-agent]`. `appletest3` untested; `appledel` was a throwaway,
