@@ -242,6 +242,31 @@ func injectDdevLabels(project *composeTypes.Project, app *DdevApp) {
 	}
 }
 
+// composeBindMounts lists each service's bind mounts as "service: source:target",
+// including secrets and configs read from a file, which Docker also bind-mounts.
+func composeBindMounts(project *composeTypes.Project) []string {
+	var binds []string
+	for name, service := range project.Services {
+		for _, v := range service.Volumes {
+			if v.Type == composeTypes.VolumeTypeBind {
+				binds = append(binds, fmt.Sprintf("%s: %s:%s", name, v.Source, v.Target))
+			}
+		}
+		for _, s := range service.Secrets {
+			if file := project.Secrets[s.Source].File; file != "" {
+				binds = append(binds, fmt.Sprintf("%s: secret %s from %s", name, s.Source, file))
+			}
+		}
+		for _, c := range service.Configs {
+			if file := project.Configs[c.Source].File; file != "" {
+				binds = append(binds, fmt.Sprintf("%s: config %s from %s", name, c.Source, file))
+			}
+		}
+	}
+	slices.Sort(binds)
+	return binds
+}
+
 // fixupComposeYaml makes minor changes to the `docker-compose config` output
 // to make sure extra services are always compatible with ddev.
 func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeTypes.Project, error) {
