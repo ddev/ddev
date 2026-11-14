@@ -182,6 +182,7 @@ Solr
 SomeExternalDrive
 Sonoma
 SQLite
+STARTTLS
 StarterKits
 Starts
 Statamic
