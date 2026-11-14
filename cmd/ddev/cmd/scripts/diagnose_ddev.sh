@@ -205,21 +205,24 @@ else
   dockercheck_exit=$?
 
   if [ $dockercheck_exit -eq 0 ]; then
-    # Parse dockercheck output for key info
-    if echo "$dockercheck_output" | grep -q "Able to run simple container"; then
+    # Here-strings, not echo | grep -q: under pipefail, grep -q exiting early
+    # can SIGPIPE the echo and fail a check whose line is present.
+    if grep -q "Able to run simple container" <<<"$dockercheck_output"; then
       success "Can run containers with volume mounts"
     fi
-    if echo "$dockercheck_output" | grep -q "Able to use internet inside container"; then
+    if grep -q "Able to use internet inside container" <<<"$dockercheck_output"; then
       success "Internet access from containers"
     else
       fail "No internet access from containers"
       suggestion "Check firewall and VPN settings"
       suggestion "See: https://docs.ddev.com/en/stable/users/usage/troubleshooting/#network-issues"
+      info "'ddev utility dockercheck' output:"
+      sed 's/^/    /' <<<"$dockercheck_output"
     fi
-    if echo "$dockercheck_output" | grep -q "docker buildx is working correctly"; then
+    if grep -q "docker buildx is working correctly" <<<"$dockercheck_output"; then
       success "Docker buildx working"
     fi
-    if echo "$dockercheck_output" | grep -q "Docker authentication is configured correctly"; then
+    if grep -q "Docker authentication is configured correctly" <<<"$dockercheck_output"; then
       success "Docker authentication configured"
     fi
   else
