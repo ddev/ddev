@@ -37,7 +37,7 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 	// Test with basic project
 	t.Run("BasicProject", func(t *testing.T) {
 		origDir, _ := os.Getwd()
-		testDir := filepath.Join(origDir, "testdata", t.Name())
+		testDir := copyDiagnoseTestProject(t, origDir, t.Name())
 		err := os.Chdir(testDir)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -56,7 +56,7 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 	// Test with customizations
 	t.Run("ProjectWithCustomizations", func(t *testing.T) {
 		origDir, _ := os.Getwd()
-		testDir := filepath.Join(origDir, "testdata", t.Name())
+		testDir := copyDiagnoseTestProject(t, origDir, t.Name())
 		err := os.Chdir(testDir)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -78,18 +78,12 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 		}
 
 		origDir, _ := os.Getwd()
-		tmpDir := testcommon.CreateTmpDir("TestUtilityDiagnose-OutsideHome")
+		tmpDir := copyDiagnoseTestProject(t, origDir, "TestUtilityDiagnoseCmd/BasicProject")
 		t.Cleanup(func() {
-			_ = os.RemoveAll(tmpDir)
 			_ = os.Chdir(origDir)
 		})
 
-		// Copy test project to /tmp or similar
-		testDir := filepath.Join(origDir, "testdata", "TestUtilityDiagnoseCmd/BasicProject")
-		err := fileutil.CopyDir(testDir, tmpDir)
-		require.NoError(t, err)
-
-		err = os.Chdir(tmpDir)
+		err := os.Chdir(tmpDir)
 		require.NoError(t, err)
 
 		out, _ := exec.RunHostCommand(DdevBin, "utility", "diagnose")
@@ -98,4 +92,17 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 			require.Contains(t, out, "should usually be in a subdirectory of your home directory")
 		}
 	})
+}
+
+// copyDiagnoseTestProject copies testdata/<name> to a temporary directory,
+// because diagnose writes generated files into the project's .ddev directory.
+func copyDiagnoseTestProject(t *testing.T, origDir string, name string) string {
+	tmpDir := testcommon.CreateTmpDir("TestUtilityDiagnose")
+	t.Cleanup(func() {
+		_ = os.RemoveAll(tmpDir)
+	})
+	projectDir := filepath.Join(tmpDir, "project")
+	err := fileutil.CopyDir(filepath.Join(origDir, "testdata", name), projectDir)
+	require.NoError(t, err)
+	return projectDir
 }
