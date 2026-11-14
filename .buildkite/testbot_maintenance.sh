@@ -58,6 +58,11 @@ case $os in
 darwin)
     brew pin buildkite-agent@4
     brew upgrade -y
+    # An upgraded cask app is quarantined again, so its next launch waits on a
+    # Gatekeeper "Open" dialog that nobody on a testbot can click.
+    for app in "/Applications/OrbStack.app" "/Applications/Rancher Desktop.app" "/Applications/Docker.app"; do
+        if [ -d "$app" ]; then xattr -dr com.apple.quarantine "$app" || true; fi
+    done
     brew uninstall -f mysql-client || true
     for item in coreutils curl golang golangci-lint libpq mkcert mysql-client@8.0; do
         brew install $item || true
