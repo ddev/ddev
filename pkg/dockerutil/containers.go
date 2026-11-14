@@ -1314,9 +1314,18 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	// nolint: errcheck
 	defer t.Close()
 
-	_, err = apiClient.CopyToContainer(ctx, cid.ID, client.CopyToContainerOptions{DestinationPath: dstPath, Content: t, AllowOverwriteDirWithFile: true})
-	if err != nil {
-		return err
+	if IsAppleContainer() {
+		// socktainer ignores a gzipped archive (socktainer#484) and drops owner and
+		// mtime on copy-in (socktainer#514); tar inside the container keeps both.
+		_, stderr, err = ExecWithStdin(cid.ID, `tar -xzf - -C "`+dstPath+`"`, "0", t)
+		if err != nil {
+			return fmt.Errorf("unable to extract into %s inside %s: %v (stderr=%s)", dstPath, containerName, err, stderr)
+		}
+	} else {
+		_, err = apiClient.CopyToContainer(ctx, cid.ID, client.CopyToContainerOptions{DestinationPath: dstPath, Content: t, AllowOverwriteDirWithFile: true})
+		if err != nil {
+			return err
+		}
 	}
 
 	util.Verbose("Copied %s:%s into %s in %v", srcPath, containerName, dstPath, time.Since(startTime))

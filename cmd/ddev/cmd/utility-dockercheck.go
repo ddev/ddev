@@ -143,6 +143,11 @@ ddev ut dockercheck`,
 func checkDockerDaemon(dockerVersion string, buildxErr error) bool {
 	hasWarnings := false
 	util.Success("Docker version: %s", dockerVersion)
+	if dockerutil.IsSocktainer() {
+		if socktainerVersion, err := dockerutil.GetSocktainerVersion(); err == nil {
+			util.Success("socktainer version: %s", socktainerVersion)
+		}
+	}
 	err := dockerutil.CheckDockerVersion(dockerutil.DockerRequirements)
 	if err != nil {
 		util.WarningOnce("Problem with your Docker provider: %v.", err)

@@ -10,6 +10,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     * **Docker** (recommended) - The best-tested option. Install OrbStack, Lima, Docker Desktop, Rancher Desktop, or Colima.
     * **Podman rootless** - Rootless by default; a good fit where Docker is forbidden. Can't use the default ports 80/443, so DDEV must be configured to use unprivileged ports.
+    * **Apple Container** (experimental) - Apple's own runtime, through socktainer. Incomplete; for trying it out only.
 
     === "Docker"
 
@@ -147,6 +148,70 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
             podman machine start
             podman machine ssh 'sudo fstrim -av'
             ```
+
+    === "Apple Container (experimental)"
+
+        !!!warning "Experimental"
+            Support for Apple Container is experimental and incomplete. Use it to try DDEV on Apple's runtime, not for day-to-day work. Progress is tracked in [ddev/ddev#7372](https://github.com/ddev/ddev/issues/7372).
+
+        [Apple Container](https://github.com/apple/container) is Apple's open-source container runtime, which runs each container in its own lightweight VM. DDEV talks to it through [socktainer](https://github.com/socktainer/socktainer), which provides a Docker-compatible API in front of it. Apple Container requires macOS 26 or later on Apple silicon.
+
+        ### Install Apple Container and socktainer
+
+        socktainer 1.6.1 or later is required. Install both with Homebrew, along with the Docker CLI and the [buildx plugin](#docker-buildx):
+
+        ```bash
+        brew install socktainer docker docker-buildx
+        ```
+
+        Homebrew's `docker-buildx` prints how to link the plugin where the Docker CLI finds it; `docker buildx version` must work before `ddev start` can build images. The Homebrew `socktainer` formula depends on Homebrew's `container`. Don't mix it with Apple Container from Apple's signed installer: socktainer starts whichever `container` binary is first on your `PATH`.
+
+        ### Start Apple Container and socktainer
+
+        ```bash
+        container system start
+        socktainer
+        ```
+
+        The first `container system start` offers to install a Linux kernel; accept it. Leave `socktainer` running in its own terminal tab, or run it in the background with `nohup socktainer >~/socktainer.log 2>&1 &`. socktainer creates the `socktainer` Docker context the first time it runs. Then point the Docker CLI at it:
+
+        ```bash
+        docker context use socktainer
+        docker ps
+        ```
+
+        When your computer restarts, you'll need to run `container system start` and `socktainer` again.
+
+        The first time you start a project, macOS asks whether `container-runtime-linux` may find and connect to devices on your local network. Click **Allow**: it forwards your project's ports from your Mac into the containers. If you clicked **Don't Allow**, every connection to a project is reset ("Connection reset by peer") and DDEV warns that nothing answers on the router's ports; turn `container-runtime-linux` on in System Settings → Privacy & Security → Local Network.
+
+        !!!warning "Run `ddev poweroff` before switching providers"
+            Run `ddev poweroff` before you stop or restart socktainer, and before switching to another Docker context. A router left running keeps its ports bound.
+
+        ### Configure DDEV for Apple Container
+
+        Apple Container can't bind the privileged ports 80/443, so configure DDEV to use unprivileged ports:
+
+        ```bash
+        ddev config global --router-http-port=8080 --router-https-port=8443
+        ```
+
+        Your projects will then be reachable at `https://yourproject.ddev.site:8443`.
+
+        ### SSH keys in the web container
+
+        Each container is its own VM, so the `ddev-ssh-agent` container can't share its socket with the web container, and DDEV doesn't start it on Apple Container. `ddev auth ssh` can't add keys. Instead, let the web container use the SSH agent already running on your Mac:
+
+        ```bash
+        ddev config global --ssh-agent-upstream=host
+        ddev restart
+        ```
+
+        That mounts the socket in `SSH_AUTH_SOCK` into the web container, so `ssh-add -l` on your Mac shows the keys `ddev ssh` and `ddev composer` can use.
+
+        ### Known limitations
+
+        * A named volume can be mounted read-write by only one running container at a time, so add-ons whose services share a volume may fail to start.
+        * `host.docker.internal` resolves to the network gateway, where your Mac answers, so Xdebug and other connections back to the host work only for programs listening on all interfaces, not on `127.0.0.1` alone.
 
 === "Linux"
 
