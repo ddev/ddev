@@ -157,6 +157,14 @@ const ConfigInstructions = `
 #
 # See https://docs.ddev.com/en/stable/users/install/performance/#mutagen
 
+# external_url_template: "https://{{port}}--main--myworkspace--me.coder.example.com"
+# external_urls:
+#   "8080": "https://myproject--myworkspace--me.coder.example.com"
+# For cloud environments whose proxy forwards each port under its own hostname:
+# the URLs describe, start, list and launch show for each router HTTP port.
+# external_urls entries take precedence over the template for their port.
+# Put these in an uncommitted config.*.yaml, since they name one workspace.
+
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook
 

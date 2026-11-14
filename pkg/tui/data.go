@@ -134,6 +134,7 @@ type describeJSON struct {
 		HTTPSURL     string `json:"https_url"`
 		HostHTTPURL  string `json:"host_http_url"`
 		HostHTTPSURL string `json:"host_https_url"`
+		ExternalURL  string `json:"external_url"`
 		ExposedPorts string `json:"exposed_ports"`
 		HostPorts    []struct {
 			Exposed string `json:"exposed_port"`
@@ -237,7 +238,7 @@ func projectInfo(app *ddevapp.DdevApp) ProjectInfo {
 	info := listedInfo(app)
 	info.Status, _ = app.SiteStatus()
 	if info.Status == ddevapp.SiteRunning {
-		info.URL = app.GetPrimaryURL()
+		info.URL = app.GetPrimaryDisplayURL()
 	}
 	return info
 }
@@ -479,6 +480,9 @@ func detailFromDescribe(d describeJSON) ProjectDetail {
 		}
 		if d.RouterDisabled {
 			svc.URL = cmp.Or(s.HostHTTPSURL, s.HostHTTPURL)
+		}
+		if s.ExternalURL != "" {
+			svc.URL = s.ExternalURL
 		}
 		detail.Services = append(detail.Services, svc)
 	}

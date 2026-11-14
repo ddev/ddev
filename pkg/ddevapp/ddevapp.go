@@ -147,6 +147,8 @@ type DdevApp struct {
 	CorepackEnable            bool                  `yaml:"corepack_enable"`
 	DefaultContainerTimeout   string                `yaml:"default_container_timeout,omitempty"`
 	WebExtraExposedPorts      []WebExposedPort      `yaml:"web_extra_exposed_ports,omitempty"`
+	ExternalURLTemplate       string                `yaml:"external_url_template,omitempty"`
+	ExternalURLs              map[string]string     `yaml:"external_urls,omitempty"`
 	WebExtraDaemons           []WebExtraDaemon      `yaml:"web_extra_daemons,omitempty"`
 	OverrideConfig            bool                  `yaml:"override_config,omitempty"`
 	DisableUploadDirsWarning  bool                  `yaml:"disable_upload_dirs_warning,omitempty"`
@@ -266,6 +268,9 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 	appDesc["xhgui_url"] = "http://" + app.GetHostname() + ":" + app.GetXHGuiHTTPPort()
 	appDesc["router_disabled"] = IsRouterDisabled(app)
 	appDesc["primary_url"] = app.GetPrimaryURL()
+	if u := app.GetPrimaryExternalURL(); u != "" {
+		appDesc["primary_external_url"] = u
+	}
 	appDesc["type"] = app.GetType()
 	appDesc["mutagen_enabled"] = app.IsMutagenEnabled()
 	appDesc["nodejs_version"] = app.NodeJSVersion
@@ -289,6 +294,9 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 	appDesc["httpURLs"] = httpURLs
 	appDesc["httpsURLs"] = httpsURLs
 	appDesc["urls"] = allURLs
+	if externalURLs := app.GetExternalURLMap(); len(externalURLs) > 0 {
+		appDesc["external_urls"] = externalURLs
+	}
 
 	appDesc["database_type"] = app.Database.Type
 	appDesc["database_version"] = app.Database.Version
@@ -484,6 +492,9 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 		xDdev := app.GetXDdevExtension(shortName)
 		services[shortName]["describe-url-port"] = xDdev.DescribeURLPort
 		services[shortName]["describe-info"] = xDdev.DescribeInfo
+		if u := app.serviceExternalURL(shortName); u != "" {
+			services[shortName]["external_url"] = u
+		}
 	}
 	// Add services that are defined in docker-compose but not currently running
 	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
@@ -610,6 +621,9 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 			xDdev := app.GetXDdevExtension(serviceName)
 			services[serviceName]["describe-url-port"] = xDdev.DescribeURLPort
 			services[serviceName]["describe-info"] = xDdev.DescribeInfo
+			if u := app.serviceExternalURL(serviceName); u != "" {
+				services[serviceName]["external_url"] = u
+			}
 		}
 	}
 
@@ -3345,6 +3359,8 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		"DDEV_XDEBUG_ENABLED":            strconv.FormatBool(app.XdebugEnabled),
 		"DDEV_XHPROF_MODE":               app.GetXHProfMode(),
 		"DDEV_PRIMARY_URL":               primaryURL,
+		"DDEV_PRIMARY_EXTERNAL_URL":      app.GetPrimaryExternalURL(),
+		"DDEV_MAILPIT_EXTERNAL_URL":      app.GetExternalURL(app.GetMailpitHTTPPort()),
 		"DDEV_PRIMARY_URL_PORT":          primaryURLPort,
 		"DDEV_PRIMARY_URL_WITHOUT_PORT":  primaryURLWithoutPort,
 		"DDEV_SCHEME":                    scheme,

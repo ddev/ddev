@@ -71,6 +71,9 @@ func RenderAppRow(t table.Writer, row map[string]any) {
 	mutagenStatus := ""
 	if row["status"] == SiteRunning {
 		urls = row["primary_url"].(string)
+		if u, ok := row["primary_external_url"].(string); ok && u != "" {
+			urls = u
+		}
 		if row["mutagen_enabled"] == true {
 			if _, ok := row["mutagen_status"]; ok {
 				mutagenStatus = row["mutagen_status"].(string)
