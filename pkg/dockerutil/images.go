@@ -118,7 +118,8 @@ func BuildPlatformToPull(buildPlatforms []string) string {
 		return ""
 	}
 	if serverVersion, err := GetServerVersion(); err == nil {
-		daemon := platforms.NewMatcher(ocispec.Platform{OS: serverVersion.Os, Architecture: serverVersion.Arch})
+		// Socktainer reports the host OS, darwin, but runs linux images.
+		daemon := platforms.NewMatcher(ocispec.Platform{OS: "linux", Architecture: serverVersion.Arch})
 		for _, platform := range buildPlatforms {
 			if parsed, err := platforms.Parse(platform); err == nil && daemon.Match(parsed) {
 				return ""

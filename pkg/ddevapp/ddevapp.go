@@ -657,8 +657,7 @@ func (app *DdevApp) GetPublishedPortForPrivatePort(serviceName string, privatePo
 
 // GetOmittedContainers returns full list of global and local omitted containers
 func (app *DdevApp) GetOmittedContainers() []string {
-	omitted := app.OmitContainersGlobal
-	omitted = append(omitted, app.OmitContainers...)
+	omitted := slices.Concat(app.OmitContainersGlobal, app.OmitContainers)
 	return omitted
 }
 

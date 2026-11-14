@@ -50,6 +50,7 @@ func testMain(m *testing.M) int {
 
 	// Prep Docker container for Docker util tests. The tag can be local for
 	// another platform only, as TestPlatformOverride leaves it on OrbStack.
+	// Socktainer reports the host OS, darwin, but runs linux images.
 	serverVersion, err := dockerutil.GetServerVersion()
 	if err != nil {
 		output.UserErr.Errorf("Failed to get Docker server version: %v", err)
@@ -57,7 +58,7 @@ func testMain(m *testing.M) int {
 	}
 	err = dockerutil.PullImages([]types.ServiceConfig{{
 		Image:    ddevImages.GetWebImage(),
-		Platform: serverVersion.Os + "/" + serverVersion.Arch,
+		Platform: "linux/" + serverVersion.Arch,
 	}}, false)
 	if err != nil {
 		output.UserErr.Errorf("Failed to pull test image: %v", err)

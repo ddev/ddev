@@ -1470,20 +1470,23 @@ func TestTimezoneConfig(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// Start test with empty timezone env
-	t.Setenv("TZ", "")
-
-	err = app.Start()
-	require.NoError(t, err)
-
 	// Without timezone set, we should find Etc/UTC on Windows
 	hostTimezoneAbbr := "UTC"
 	hostTimezone := "UTC"
-	// Without timezone set, we should automatically detect local timezone on Linux, WSL2 and macOS
+	// Without timezone set, we should automatically detect local timezone on Linux, WSL2 and macOS.
+	// Read it before clearing TZ: Go loads time.Local on first use, and TZ="" makes it UTC.
 	if !nodeps.IsWindows() {
 		hostTimezoneAbbr, _ = time.Now().In(time.Local).Zone()
+	}
+
+	// Start test with empty timezone env
+	t.Setenv("TZ", "")
+	if !nodeps.IsWindows() {
 		hostTimezone, _ = util.GetLocalTimezone()
 	}
+
+	err = app.Start()
+	require.NoError(t, err)
 	inWebContainerTZData, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",

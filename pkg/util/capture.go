@@ -9,31 +9,36 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 )
 
+// capturePipe returns a pipe's write end and a function that closes it and
+// returns everything written. Reading starts at once, so output larger than
+// the pipe buffer can't block the writer.
+func capturePipe() (*os.File, func() string) {
+	r, w, _ := os.Pipe()
+	outC := make(chan string)
+	go func() {
+		var buf bytes.Buffer
+		_, err := io.Copy(&buf, r)
+		CheckErr(err)
+		outC <- buf.String()
+	}()
+	return w, func() string {
+		CheckClose(w)
+		return <-outC
+	}
+}
+
 // CaptureUserOut captures output written to UserOut to a string.
 // Capturing starts when it is called. It returns an anonymous function that
 // when called, will return a string containing the output during capture, and
 // revert once again to the original value of UserOut.Out.
 func CaptureUserOut() func() string {
 	old := output.UserOut.Out // keep backup of the real stdout
-	r, w, _ := os.Pipe()
+	w, finish := capturePipe()
 	output.UserOut.Out = w
 
 	return func() string {
-		outC := make(chan string)
-		// copy the output in a separate goroutine so printing can't block indefinitely
-		go func() {
-			var buf bytes.Buffer
-			_, err := io.Copy(&buf, r)
-			CheckErr(err)
-			outC <- buf.String()
-		}()
-
-		// back to normal state
-		CheckClose(w)
 		output.UserOut.Out = old // restoring the real stdout
-
-		out := <-outC
-		return out
+		return finish()
 	}
 }
 
@@ -43,25 +48,12 @@ func CaptureUserOut() func() string {
 // revert once again to the original value of UserErr.Out.
 func CaptureUserErr() func() string {
 	old := output.UserErr.Out // keep backup of the real stderr
-	r, w, _ := os.Pipe()
+	w, finish := capturePipe()
 	output.UserErr.Out = w
 
 	return func() string {
-		outC := make(chan string)
-		// copy the output in a separate goroutine so printing can't block indefinitely
-		go func() {
-			var buf bytes.Buffer
-			_, err := io.Copy(&buf, r)
-			CheckErr(err)
-			outC <- buf.String()
-		}()
-
-		// back to normal state
-		CheckClose(w)
 		output.UserErr.Out = old // restoring the real stderr
-
-		out := <-outC
-		return out
+		return finish()
 	}
 }
 
@@ -69,24 +61,12 @@ func CaptureUserErr() func() string {
 // containing the output during capture, and revert once again to the original value of os.StdOut.
 func CaptureStdOut() func() string {
 	old := os.Stdout // keep backup of the real stdout
-	r, w, _ := os.Pipe()
+	w, finish := capturePipe()
 	os.Stdout = w
 
 	return func() string {
-		outC := make(chan string)
-		// copy the output in a separate goroutine so printing can't block indefinitely
-		go func() {
-			var buf bytes.Buffer
-			_, err := io.Copy(&buf, r)
-			CheckErr(err)
-			outC <- buf.String()
-		}()
-
-		// back to normal state
-		CheckClose(w)
 		os.Stdout = old // restoring the real stdout
-		out := <-outC
-		return out
+		return finish()
 	}
 }
 

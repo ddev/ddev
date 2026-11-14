@@ -14,7 +14,7 @@ import (
 func TestImageExistsLocallyForPlatform(t *testing.T) {
 	serverVersion, err := dockerutil.GetServerVersion()
 	require.NoError(t, err)
-	daemonPlatform := serverVersion.Os + "/" + serverVersion.Arch
+	daemonPlatform := "linux/" + serverVersion.Arch
 
 	webImage := ddevImages.GetWebImage()
 	for platform, want := range map[string]bool{
@@ -77,7 +77,7 @@ func TestPullImagesForPlatform(t *testing.T) {
 func TestBuildPlatformToPull(t *testing.T) {
 	serverVersion, err := dockerutil.GetServerVersion()
 	require.NoError(t, err)
-	daemonPlatform := serverVersion.Os + "/" + serverVersion.Arch
+	daemonPlatform := "linux/" + serverVersion.Arch
 
 	for _, tc := range []struct {
 		buildPlatforms []string
