@@ -26,6 +26,7 @@ ddev pull upsun --skip-import
 ddev pull upsun --environment="PLATFORM_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdeyourtoken"
 ddev pull pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev,TERMINUS_MACHINE_TOKEN=abcdeyourtoken"
 ddev pull lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
+ddev pull drupito --environment="DRUPITO_SITE=your_site,DRUPITO_ENVIRONMENT=live"
 `,
 
 	Args: cobra.ExactArgs(1),

@@ -5,6 +5,8 @@ Adminer
 Andrasch
 Apache
 Acquia
+Drupito
+Drupito’s
 amazee.io
 amazeeio
 Autocompletion
@@ -232,6 +234,7 @@ Zsh
 a
 about
 acquia
+drupito
 acli
 add
 add-on

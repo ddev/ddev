@@ -1279,6 +1279,9 @@ ddev pull pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev,TERMINUS_MACHINE
 
 # Pull from Lagoon overriding project and environment on the command line
 ddev pull lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
+
+# Pull from Drupito choosing the newest backup of the live environment
+ddev pull drupito --environment="DRUPITO_ENVIRONMENT=live"
 ```
 
 ## `push`
@@ -1315,6 +1318,9 @@ ddev push pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev,TERMINUS_MACHINE
 
 # Push to Lagoon overriding project and environment on the command line
 ddev push lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
+
+# Push to Drupito overriding the site on the command line
+ddev push drupito --environment="DRUPITO_SITE=your_site"
 ```
 
 ## `querious`
