@@ -8,7 +8,7 @@ if [ $# != "1" ]; then echo "docker image spec must be \$1"; exit 1; fi
 export DOCKER_IMAGE=$1
 export IS_HARDENED=false
 DOCKER_REPO=${DOCKER_IMAGE%:*}
-if [[ "${DOCKER_REPO}" == "*prod*" ]]; then
+if [[ "${DOCKER_REPO}" == *prod* ]]; then
   IS_HARDENED=true
 fi
 
@@ -83,7 +83,7 @@ trap finalcleanup EXIT
 cleanup
 
 # Run general tests with a default container
-runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}"
+runwebserver -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}"
 if ! containerwait; then
   echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
   exit 100
@@ -95,7 +95,7 @@ cleanup
 for PHP_VERSION in 8.2 8.3 8.4 8.5 8.6; do
   for WEBSERVER_TYPE in nginx-fpm apache-fpm; do
     export PHP_VERSION WEBSERVER_TYPE DOCKER_IMAGE
-    runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}"
+    runwebserver -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}"
     if ! containerwait; then
       echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
       exit 101
@@ -109,7 +109,7 @@ done
 for project_type in backdrop craftcms drupal drupal7 drupal10 drupal11 laravel magento magento2 maho modx symfony typo3 wordpress default; do
   export PHP_VERSION="8.4"
   export project_type
-  runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type"
+  runwebserver -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type"
   if ! containerwait; then
     echo "=============== Failed containerwait after docker run with  DDEV_PROJECT_TYPE=${project_type} DDEV_PHP_VERSION=$PHP_VERSION ==================="
     exit 103
@@ -119,14 +119,14 @@ for project_type in backdrop craftcms drupal drupal7 drupal10 drupal11 laravel m
   cleanup
 done
 
-runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config"
+runwebserver -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config"
 containerwait
 
 bats tests/ddev-webserver/custom_config.bats
 
 cleanup
 
-runwebserver -u "$MOUNTUID:$MOUNTGID" -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config"
+runwebserver -u "$MOUNTUID:$MOUNTGID" --group-add 0 -p "$HOST_HTTP_PORT:$CONTAINER_HTTP_PORT" -p "$HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT" -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config"
 containerwait
 bats tests/ddev-webserver/imagemagick.bats
 
