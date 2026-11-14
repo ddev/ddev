@@ -451,6 +451,8 @@ Whether to skip mounting project into web container.
 
 Whether to disable the TUI (terminal user interface) when running the `ddev` command without any arguments.
 
+When disabled, interactive [`ddev config`](../usage/commands.md#config) also asks its questions one line at a time instead of showing a form.
+
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.

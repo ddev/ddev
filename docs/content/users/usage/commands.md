@@ -401,6 +401,10 @@ ddev composer create-project drupal/recommended-project .
 
 Create or modify a DDEV project’s configuration in the current directory. By default, `ddev config` will not change configuration that already exists in your `.ddev/config.yaml`, it will only make changes you specify with flags. However, if you want to autodetect everything, `ddev config --update` will usually do everything you need.
 
+Without flags, `ddev config` is interactive. It shows a form with the configuration it detects for the project: name, docroot, project type, PHP version, database type and version, and web server type. Press <kbd>Enter</kbd> to save it as shown, or move to a setting with <kbd>↑</kbd> and <kbd>↓</kbd> to change it first. Type to edit the name or docroot, and press <kbd>Enter</kbd> on any other setting to choose from a list of its valid values. Related project types are listed once, followed by a separate choice: `drupal` by the Drupal version (`drupal6` to `drupal12`), `magento` by the Magento version (1, which includes OpenMage, or 2), and `wordpress` by the variant (standard or Bedrock, `wp-bedrock`). That choice defaults to what is detected in the codebase, or else to Drupal's current stable release, Magento 2, or standard WordPress. Choosing a project type also sets the PHP version, database, and web server recommended for it, and for Bedrock the `web` docroot, unless you have already changed them. <kbd>Esc</kbd> leaves without configuring anything.
+
+Where the form can't be used, `ddev config` asks the same questions one line at a time, after offering the detected configuration: answer `no` to choose each setting, and press <kbd>Enter</kbd> at any question to keep the default shown in parentheses. At the project type question you can also answer with a full type like `drupal10` or `wp-bedrock` to skip the follow-up question. This happens when input or output is not a terminal, and when the [interactive dashboard is disabled](../usage/cli.md#interactive-dashboard) with `DDEV_NO_TUI=true` or [`no_tui`](../configuration/config.md#no_tui).
+
 !!!tip "You can also set these via YAML!"
     These settings, plus a few more, can be set by editing stored [Config Options](../configuration/config.md).
 
@@ -410,8 +414,8 @@ Example:
 # Start interactive project configuration
 ddev config
 
-# Accept defaults on a new project. This is the same as hitting <RETURN>
-# on every question in `ddev config`
+# Accept defaults on a new project. This is the same as accepting
+# the suggested configuration in `ddev config`
 ddev config --auto
 
 # Detect docroot, project type (except for `generic` type),
@@ -1575,7 +1579,7 @@ ddev ssh -d /var/www/html
 
 Start a DDEV project.
 
-If you run `ddev start` in a directory that has no DDEV project but looks like a web project, DDEV shows the configuration `ddev config --auto` would create (name, URL, project type, docroot, PHP version, database, and web server) and asks whether to use it, customize it with the `ddev config` questions, or cancel. DDEV recognizes a directory as a web project when it detects a supported project type, or finds a `composer.json`, a `package.json`, or an `index.php` or `index.html` at the root or in a common docroot such as `web` or `public`. Without a terminal to ask in, as in CI or a script, or with `--skip-confirmation` (`-y`), `ddev start` doesn't configure anything; use `ddev config --auto && ddev start` there instead.
+If you run `ddev start` in a directory that has no DDEV project but looks like a web project, DDEV shows the configuration `ddev config --auto` would create (name, URL, project type, docroot, PHP version, database, and web server) and asks whether to use it, customize it as interactive [`ddev config`](#config) does, or cancel. DDEV recognizes a directory as a web project when it detects a supported project type, or finds a `composer.json`, a `package.json`, or an `index.php` or `index.html` at the root or in a common docroot such as `web` or `public`. Without a terminal to ask in, as in CI or a script, or with `--skip-confirmation` (`-y`), `ddev start` doesn't configure anything; use `ddev config --auto && ddev start` there instead.
 
 Flags:
 

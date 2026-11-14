@@ -457,28 +457,6 @@ func (app *DdevApp) WarnIfConfigReplace() {
 	}
 }
 
-// PromptForConfig goes through a set of prompts to receive user input and generate an Config struct.
-func (app *DdevApp) PromptForConfig() error {
-	app.WarnIfConfigReplace()
-	var err error
-	if err = app.projectNamePrompt(); err != nil {
-		return err
-	}
-	if err = app.docrootPrompt(); err != nil {
-		return err
-	}
-	if err = app.AppTypePrompt(); err != nil {
-		return err
-	}
-	if err = app.ConfigFileOverrideAction(false); err != nil {
-		return err
-	}
-	if err = app.ValidateConfig(); err != nil {
-		return err
-	}
-	return nil
-}
-
 // ValidateProjectName checks to see if the project name works for a proper hostname
 func ValidateProjectName(name string) error {
 	match := hostRegex.MatchString(name)
@@ -1673,33 +1651,6 @@ func HasAllowedLocation(app *DdevApp) error {
 	return nil
 }
 
-// projectNamePrompt Prompt for a project name.
-func (app *DdevApp) projectNamePrompt() error {
-	if app.Name == "" {
-		dir, err := os.Getwd()
-		if err == nil && hostRegex.MatchString(NormalizeProjectName(filepath.Base(dir))) {
-			app.Name = NormalizeProjectName(filepath.Base(dir))
-		}
-	}
-
-	for {
-		name := util.Prompt("Project name", app.Name)
-		if err := ValidateProjectName(name); err != nil {
-			output.UserOut.Print(util.ColorizeText(err.Error(), "yellow"))
-		} else {
-			app.Name = name
-			break
-		}
-	}
-
-	err := app.CheckExistingAppInApproot()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // AvailablePHPDocrootLocations returns an of default docroot locations to look for.
 func AvailablePHPDocrootLocations() []string {
 	return []string{
@@ -1752,71 +1703,9 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 	return defaultDocroot
 }
 
-// docrootPrompt Determine the document root.
-func (app *DdevApp) docrootPrompt() error {
-	// Determine the document root.
-	output.UserOut.Printf("\nThe docroot is the directory from which your site is served.\nThis is a relative path from your project root at %s\n", app.AppRoot)
-	output.UserOut.Printf("Leave docroot empty (hit <RETURN>) to use the location shown in parentheses.\nOr specify a custom path if your index.php is in a different directory.\nOr use '.' (a dot) to explicitly set it to the project root.\n")
-	var docrootPrompt = "Docroot Location"
-	var defaultDocroot = DiscoverDefaultDocroot(app)
-	// If there is a default docroot, display it in the prompt.
-	if defaultDocroot != "" {
-		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
-	} else {
-		docrootPrompt = fmt.Sprintf("%s (project root)", docrootPrompt)
-	}
-
-	for {
-		fmt.Print(docrootPrompt + ": ")
-		app.Docroot = util.GetQuotedInput(defaultDocroot)
-
-		// Ensure that the docroot exists
-		if err := app.CreateDocroot(); err != nil {
-			output.UserOut.Print(util.ColorizeText(err.Error(), "yellow"))
-		} else {
-			output.UserOut.Println()
-			break
-		}
-	}
-
-	return nil
-}
-
 // ConfigExists determines if a DDEV config file exists for this application.
 func (app *DdevApp) ConfigExists() bool {
 	return fileutil.FileExists(app.ConfigPath)
-}
-
-// AppTypePrompt handles the Type workflow.
-func (app *DdevApp) AppTypePrompt() error {
-	// First, see if we can auto detect what kind of site it is so we can set a sane default.
-	detectedAppType := app.DetectAppType()
-
-	// If we found an application type set it and inform the user.
-	util.Success("Found a %s codebase at %s.", detectedAppType, app.GetAbsDocroot(false))
-
-	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
-	typePrompt := "Project Type [%s] (%s): "
-
-	defaultAppType := app.Type
-	if app.Type == nodeps.AppTypeNone || !IsValidAppType(app.Type) {
-		defaultAppType = detectedAppType
-	}
-
-	appType := ""
-
-	for {
-		fmt.Printf(typePrompt, validAppTypes, defaultAppType)
-		appType = strings.ToLower(util.GetInput(defaultAppType))
-		if IsValidAppType(appType) {
-			break
-		}
-		output.UserOut.Print(util.ColorizeText(fmt.Sprintf("'%s' is not a valid project type", appType), "yellow"))
-	}
-
-	app.Type = appType
-
-	return nil
 }
 
 // PrepDdevDirectory creates a .ddev directory in the current working directory
