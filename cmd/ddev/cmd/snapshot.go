@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"path/filepath"
 
@@ -11,8 +10,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
 
@@ -67,11 +64,6 @@ ddev snapshot --uncompressed`,
 }
 
 func listSnapshots(apps []*ddevapp.DdevApp) {
-	var out bytes.Buffer
-	t := table.NewWriter()
-	t.SetOutputMirror(&out)
-	styles.SetGlobalTableStyle(t, false)
-
 	allTargets := make(map[string][]ddevapp.SnapshotRestoreTarget)
 	hasWorktreeSnapshot := false
 	for _, app := range apps {
@@ -87,7 +79,7 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 		}
 	}
 
-	var columns table.Row
+	var columns []string
 	if len(apps) > 1 {
 		columns = append(columns, "Project")
 	}
@@ -95,51 +87,42 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 	if hasWorktreeSnapshot {
 		columns = append(columns, "Worktree")
 	}
-
-	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
-		var colConfig []table.ColumnConfig
-		for _, col := range columns {
-			colConfig = append(colConfig, table.ColumnConfig{
-				Name: fmt.Sprint(col),
-			})
-		}
-		t.SetColumnConfigs(colConfig)
-	}
-	t.AppendHeader(columns)
+	t := styles.NewTable(columns...)
+	t.SetColumnStyle(0, styles.Strong())
 
 	for _, app := range apps {
+		// The project name is on its first row only, so projects stand apart
+		project := app.GetName()
 		targets := allTargets[app.GetName()]
-		if len(targets) > 0 {
-			for _, target := range targets {
-				worktree := ""
-				if target.SourceRoot != app.AppRoot {
-					worktree = filepath.Base(target.SourceRoot)
-				}
-				row := table.Row{}
-				if len(apps) > 1 {
-					row = append(row, app.GetName())
-				}
-				row = append(row, target.Name, target.Created.Format("2006-01-02"), util.FormatBytes(target.Size), target.DBVersion, target.Compression)
-				if hasWorktreeSnapshot {
-					row = append(row, worktree)
-				}
-				t.AppendRow(row)
-			}
-		} else {
-			row := table.Row{}
+		if len(targets) == 0 {
+			row := []string{}
 			if len(apps) > 1 {
-				row = append(row, app.GetName())
+				row = append(row, project)
 			}
-			row = append(row, text.Italic.Sprint("No snapshots"), "", "", "", "")
+			t.AppendRow(append(row, styles.Note().Render("No snapshots"))...)
+			continue
+		}
+		for _, target := range targets {
+			worktree := ""
+			if target.SourceRoot != app.AppRoot {
+				worktree = filepath.Base(target.SourceRoot)
+			}
+			row := []string{}
+			if len(apps) > 1 {
+				row = append(row, project)
+				project = ""
+			}
+			row = append(row, target.Name, target.Created.Format("2006-01-02"), util.FormatBytes(target.Size), target.DBVersion, target.Compression)
 			if hasWorktreeSnapshot {
-				row = append(row, "")
+				row = append(row, worktree)
 			}
-			t.AppendRow(row)
+			t.AppendRow(row...)
 		}
 	}
-
-	t.Render()
-	output.UserOut.WithField("raw", allTargets).Println(out.String())
+	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
+		t.FitTerminal()
+	}
+	output.UserOut.WithField("raw", allTargets).Print(t.Render())
 }
 
 func createAppSnapshot(app *ddevapp.DdevApp) {
