@@ -286,7 +286,7 @@ setup:
 	@if [ -n "$(GOTESTSUM_JSONFILE_DIR)" ]; then mkdir -p "$(GOTESTSUM_JSONFILE_DIR)"; fi
 
 # Required static analysis targets for pre-push.
-staticrequired: setup golangci-lint markdownlint zensical check-image-tags
+staticrequired: setup golangci-lint desktop-lint markdownlint zensical check-image-tags
 
 # A changed image whose tag never made it into versionconstants.go ships a
 # binary pulling tags nothing builds. Checked rather than fixed here, because
@@ -491,12 +491,26 @@ golangci-lint:
 	@echo "golangci-lint: "
 	$(call run_tool,golangci-lint,run $(SRC_AND_UNDER),$(GOLANGCI_LINT_HINT))
 
+# desktop/ is a separate, unvendored module, so it downloads its modules.
+# Lint it as Windows code, which needs no CGO or GTK headers; its own files
+# build for every OS.
+.PHONY: desktop-lint
+desktop-lint:
+	@echo "desktop-lint: "
+	$(call require_tool,golangci-lint,$(GOLANGCI_LINT_HINT))
+	@cd desktop && GOOS=windows PATH="$(DEV_TOOLS_PATH):$$PATH" golangci-lint run --modules-download-mode=mod $(DESKTOP_LINT_ARGS) ./...
+
 # `run --fix` applies the gofmt formatter too, so there is no gofmt target.
-# DDEV_GO_FILES overrides the default $(SRC_AND_UNDER) scope
+# DDEV_GO_FILES overrides the default $(SRC_AND_UNDER) scope; a path in
+# desktop/ is fixed in that module instead.
 .PHONY: golangci-lint-fix
 golangci-lint-fix:
 	@echo "golangci-lint --fix: "
+ifneq ($(filter desktop% $(CURDIR)/desktop%,$(DDEV_GO_FILES)),)
+	@$(MAKE) --no-print-directory desktop-lint DESKTOP_LINT_ARGS=--fix
+else
 	$(call run_tool,golangci-lint,run --fix $(if $(DDEV_GO_FILES),$(DDEV_GO_FILES),$(SRC_AND_UNDER)),$(GOLANGCI_LINT_HINT))
+endif
 
 go-mod-update:
 	@echo "bump golang dependencies: "
@@ -510,6 +524,23 @@ quickstart-test: build dummy-project
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); bats docs/tests
+WEBUI_E2E=pkg/webui/e2e
+
+.PHONY: webui-e2e webui-e2e-real
+# Browser tests of the `ddev serve` dashboard against a fake API, in Chromium
+# and WebKit; no Docker.
+webui-e2e:
+	cd $(WEBUI_E2E) && npm ci --no-audit --no-fund && npx playwright install chromium webkit && npx playwright test --project=mocked --project=mocked-webkit
+
+# Browser test of a real `ddev serve`, which starts and deletes a project.
+webui-e2e-real: build
+	cd $(WEBUI_E2E) && npm ci --no-audit --no-fund && npx playwright install chromium && DDEV_WEBUI_E2E=true DDEV_BINARY=$(DDEV_BINARY_FULLPATH) npx playwright test --project=real
+
+.PHONY: desktop
+# Experimental Wails desktop app, a separate module; see desktop/README.md.
+desktop: build
+	$(MAKE) -C desktop VERSION=$(VERSION) DDEV_BIN=$(abspath $(GOTMP)/bin/$(DEFAULT_BUILD))
+
 # bats refuses ever to exit until all processes started by it
 # have exited. So we don't want to let bats/ddev start mutagen daemon
 dummy-project: build

@@ -12,6 +12,7 @@ on:
       - "cmd/**"
       - "pkg/**"
       - "winpkg/**"
+      - "desktop/**"
       - "go.*"
 
 concurrency:
@@ -63,6 +64,18 @@ jobs:
           install-mode: none
           skip-cache: true
 
+      # A separate module without vendor/; see desktop-lint in the Makefile.
+      - name: Lint the desktop app
+        if: ${{ !cancelled() }}
+        uses: golangci/golangci-lint-action@v9
+        env:
+          GOOS: windows
+        with:
+          install-mode: none
+          skip-cache: true
+          working-directory: desktop
+          args: --modules-download-mode=mod
+
   check_modules:
     name: Check Go Modules
     runs-on: ubuntu-26.04
@@ -84,5 +97,12 @@ jobs:
       # Fails if modules aren't in a clean state
       - name: Tidy Go Modules
         run: |
+          go mod tidy
+          git diff --exit-code
+
+      - name: Verify and tidy the desktop app's modules
+        working-directory: desktop
+        run: |
+          go mod verify
           go mod tidy
           git diff --exit-code
