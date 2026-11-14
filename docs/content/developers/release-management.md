@@ -95,10 +95,54 @@ The trailing `// <branch>-<hash>` comment on each tag keeps naming the branch ra
 
 ### Actual Release Creation
 
-1. Confirm the `release-prep` pull request above is merged to `main` — the release tag has to be cut from a commit that already has the new tags in `versionconstants.go`, not from a `main` that still points at the previous release's images.
-2. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
-3. Make sure you're about to create the right release tag.
-4. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
+Releases are [immutable](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases): once one is published, its tag and assets can't change, and its tag name can't be reused even if the release is deleted. So a release starts as a draft, the release workflow attaches every asset to it, and GoReleaser publishes it last. Release notes, the title, and the prerelease flag can still be edited after publishing.
+
+1. Confirm the `release-prep` pull request above is merged to `main` — the release tag has to be cut from a commit that already has the new tags in `versionconstants.go`, not from a `main` that still points at the previous release's images. `scripts/release.sh` checks this.
+2. Prepare the release notes in the release's issue, as usual, under a `## Installation` heading. Write `@ username` there so nobody is notified early.
+3. Run `scripts/release.sh`:
+
+    ```bash
+    scripts/release.sh v1.25.6 --notes-issue 9100
+    ```
+
+    It takes the notes from the issue comment that has the `## Installation` heading through its end, turns `@ username` into `@username`, and for a stable release turns `/en/latest/` docs links into `/en/stable/`. It then creates a draft release on `main` with those notes followed by GitHub's generated notes (What's Changed, New Contributors, Full Changelog) since the previous release. A tag with `-alpha`, `-beta`, or `-rc` is marked as a prerelease. Use `--dry-run` to see the notes without creating anything, and `--help` for the other options.
+
+4. Review the draft on the [releases page](https://github.com/ddev/ddev/releases) and edit it there if needed, then answer `y` to start the release workflow. Answering no keeps the draft; running the script again reuses it.
+5. The [release workflow](https://github.com/ddev/ddev/actions/workflows/main-build.yml) checks that the draft exists, creates the tag at the draft's commit, builds and signs everything, and runs GoReleaser. GoReleaser attaches the assets and their SBOMs to the draft and publishes it, then pushes Homebrew, AUR, and the Linux packages. The workflow then attests the build provenance of every file in `checksums.txt`.
+6. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
+
+Anyone can verify a downloaded asset, and the release itself:
+
+```bash
+gh attestation verify ddev_linux-amd64.v1.25.6.tar.gz --repo ddev/ddev
+gh release verify v1.25.6 --repo ddev/ddev
+```
+
+Don't create or publish a release by hand in the GitHub UI: a release published before its assets are attached can't get them, and its version number is lost.
+
+### If Something Fails
+
+First check the [releases page](https://github.com/ddev/ddev/releases): is the release still a draft?
+
+**Still a draft.** Nothing is public yet. Use **Re-run failed jobs** on the workflow run. The tag is already at the draft's commit, so `prepare-release` accepts it again, and GoReleaser replaces any assets a failed run had already uploaded to the draft. If the draft itself is wrong, such as the wrong commit, delete the draft, ask an admin to delete the tag, and start again with `scripts/release.sh`.
+
+**Already published.** The release and its assets are locked. Rerunning the `Upload artifacts` job runs GoReleaser against the published release again, which is expected to fail. Instead, find the step that failed in the job log and finish what's left of that step and the ones after it by hand:
+
+* **GoReleaser, after publishing**: it publishes the release first, then the Homebrew formulas, the AUR packages, and the Linux packages on Gemfury and Cloudsmith. Check which of these got the new version, and push the missing ones by hand from the assets on the release.
+* **Attest build provenance**: the release is fine without it, but `gh attestation verify` fails for its assets.
+* **Chocolatey windows release**: build and push the package by hand, the way that step does.
+* **Push devcontainer feature**: this job only runs after `Upload artifacts` succeeds. If it failed on its own, re-run just this job; if `Upload artifacts` failed, publish the feature by hand.
+
+If an asset on the published release is wrong, it can't be replaced. Mark the release as not the latest one, say so in its notes, and release the next patch version.
+
+This recovery path hasn't been tried yet. Update this section with what actually works the first time it is needed.
+
+### Repository Settings for Immutable Releases
+
+These are set once per repository, on `ddev/ddev` and on `ddev-test/ddev`:
+
+* Settings → General → Releases: **Enable release immutability**.
+* A tag ruleset for `refs/tags/v*` with **Restrict creations**, **Restrict updates**, and **Restrict deletions**. The release workflow creates the tag with `DDEV_GITHUB_TOKEN`, so the identity behind that token has to be able to bypass the ruleset. Rulesets can't name a single user as a bypass actor, so today that identity bypasses it as a repository admin, and so does every other admin. The ruleset stops non-admins from publishing a release whose tag doesn't exist yet; admins have to follow the rule above themselves. Moving `DDEV_GITHUB_TOKEN` to a GitHub App, or to a bot account in a bypass team, would let the ruleset stop admins too.
 
 ## Automatic Image Build and Push
 
@@ -138,11 +182,7 @@ Since a job referencing an environment that doesn't exist yet gets auto-created 
 
 The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [ddev/ddev](https://github.com/ddev/ddev) repository. For a normal container change on a pull request, you shouldn't need this — see [Automatic Image Build and Push](#automatic-image-build-and-push) above.
 
-### Actual release creation
-
-1. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
-2. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
-3. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
+See [Actual Release Creation](#actual-release-creation) for creating the release itself.
 
 You can push all images besides `ddev-dbserver` at <https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml>
 
@@ -306,5 +346,11 @@ rpm -qlp dist/ddev_*_linux_amd64.rpm
 [ddev-test/ddev](https://github.com/ddev-test/ddev) is now set up for actual release testing. It has all or most of the environment variables set up already. It also acts against `ddev-test/homebrew-ddev` and `ddev-test/homebrew-ddev-edge` so you can test Homebrew publishing.
 
 1. Create a branch on `ddev-test/ddev`.
-2. Using the web UI, create a release using that branch as base. The release tag must start with `v1.`. Where possible, please use a release tag that includes context about the PR you are working against, like `v1.28.8-PR2022FixStuff`, and include in the release notes a link to the issue. The tag must be a valid Semantic Version tag, so don't use underscores, etc.
-3. Test out the resulting artifacts that get published or deployed.
+2. Write release notes in a file or an issue on `ddev-test/ddev`, under a `## Installation` heading, with a link to the issue you are working on.
+3. Run `scripts/release.sh` against that branch. The release tag must start with `v1.`. Where possible, use a tag that includes context about the PR you are working against, like `v1.28.8-PR2022FixStuff`. The tag must be a valid Semantic Version tag, so don't use underscores, etc.
+
+    ```bash
+    scripts/release.sh v1.28.8-PR2022FixStuff --repo ddev-test/ddev --branch <branch> --notes-file notes.md --no-image-check
+    ```
+
+4. Test out the resulting artifacts that get published or deployed.

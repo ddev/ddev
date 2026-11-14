@@ -230,11 +230,21 @@ archives:
 checksum:
   name_template: "checksums.txt"
 
+# SPDX SBOMs from syft, which reads the module list Go embeds in each binary.
+# The archives hold the same executables the Windows installers do.
+sboms:
+- artifacts: archive
+
 
 #### RELEASE ####
 release:
   prerelease: auto
-  # Releases are created manually via the GitHub UI before the tag is pushed
+  # scripts/release.sh creates the draft with the release notes. GoReleaser
+  # appends its changelog, attaches every asset, then publishes the draft,
+  # which makes the release immutable.
+  use_existing_draft: true
+  # A rerun after a partial upload replaces the assets already on the draft.
+  replace_existing_artifacts: true
   mode: append
   github:
     owner: "{{ .Env.REPOSITORY_OWNER }}"

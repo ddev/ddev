@@ -1,4 +1,5 @@
-# Signs windows and macOS binaries and installers
+# Signs windows and macOS binaries and installers. With release_tag set it
+# releases: scripts/release.sh creates the draft and starts it that way.
 name: Main branch build/release (signed)
 defaults:
   run:
@@ -6,10 +7,18 @@ defaults:
 on:
   push:
     branches: [ main ]
-  release:
-    types: [ created ]
   workflow_dispatch:
     inputs:
+      release_tag:
+        description: 'Release tag; needs a draft release for it, see scripts/release.sh'
+        type: string
+        required: false
+        default: ''
+      previous_tag:
+        description: 'Previous release, the start of the GoReleaser changelog'
+        type: string
+        required: false
+        default: ''
       debug_enabled:
         description: 'Run the build with upterm set "debug_enabled"'
         type: boolean
@@ -35,11 +44,59 @@ env:
   HOMEBREW_STABLE_REPOSITORY: ${{ vars.HOMEBREW_STABLE_REPOSITORY }}
   REPOSITORY_OWNER: ${{ github.repository_owner }}
   DOCKER_ORG: ${{ vars.DOCKER_ORG }}
+  RELEASE_TAG: ${{ inputs.release_tag }}
 
 permissions:
   packages: write
 
 jobs:
+  # A release publishes the draft scripts/release.sh created, and publishing
+  # makes it immutable, so check the draft before building anything. The tag
+  # is created here so a ruleset can limit tag creation to this token.
+  prepare-release:
+    name: Prepare release
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Load 1password secret(s)
+        if: inputs.release_tag != ''
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          GH_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
+
+      - name: Check the draft release and create the tag
+        if: inputs.release_tag != ''
+        env:
+          GH_REPO: ${{ github.repository }}
+          PREVIOUS_TAG: ${{ inputs.previous_tag }}
+        run: |
+          set -eu -o pipefail
+          if ! [[ "${RELEASE_TAG}" =~ ^v1\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "release_tag '${RELEASE_TAG}' is not a v1.x.y release tag" >&2; exit 1
+          fi
+          if [ -n "${PREVIOUS_TAG}" ] && ! [[ "${PREVIOUS_TAG}" =~ ^v1\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "previous_tag '${PREVIOUS_TAG}' is not a v1.x.y release tag" >&2; exit 1
+          fi
+          releases="$(gh api "repos/${GH_REPO}/releases?per_page=100" --jq "[.[] | select(.tag_name == \"${RELEASE_TAG}\")]")"
+          if [ "$(jq 'map(select(.draft | not)) | length' <<<"$releases")" -ne 0 ]; then
+            echo "${RELEASE_TAG} is already published" >&2; exit 1
+          fi
+          if [ "$(jq length <<<"$releases")" -ne 1 ]; then
+            echo "Expected one draft release for ${RELEASE_TAG}; create it with scripts/release.sh" >&2; exit 1
+          fi
+          target="$(jq -r '.[0].target_commitish' <<<"$releases")"
+          sha="$(gh api "repos/${GH_REPO}/commits/${target}" --jq .sha)"
+          if gh api "repos/${GH_REPO}/git/ref/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            tag_sha="$(gh api "repos/${GH_REPO}/commits/${RELEASE_TAG}" --jq .sha)"
+            [ "$tag_sha" = "$sha" ] || { echo "Tag ${RELEASE_TAG} is at ${tag_sha}, the draft targets ${sha}" >&2; exit 1; }
+            echo "Tag ${RELEASE_TAG} already exists at ${sha}"
+          else
+            gh api "repos/${GH_REPO}/git/refs" -f ref="refs/tags/${RELEASE_TAG}" -f sha="${sha}" >/dev/null
+            echo "Created tag ${RELEASE_TAG} at ${sha}"
+          fi
+
   # Every executable we ship, Windows included, cross-compiles on Linux. One
   # job per platform because each GOOS/GOARCH pays its own cold-cache compile
   # of the standard library and vendored deps, so they only get faster by
@@ -47,6 +104,7 @@ jobs:
   build:
     name: Build ${{ matrix.platform }}
     runs-on: ubuntu-26.04
+    needs: prepare-release
     strategy:
       fail-fast: false
       matrix:
@@ -60,6 +118,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || '' }}
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
 
@@ -194,6 +253,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || '' }}
           fetch-depth: 0
 
       - name: Install build tools
@@ -306,6 +366,7 @@ jobs:
           brew install coreutils gnu-getopt jq
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || '' }}
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
 
@@ -369,6 +430,12 @@ jobs:
     name: Upload artifacts
     runs-on: ubuntu-26.04
     needs: [build, sign-windows-installers, notarize-macos]
+    permissions:
+      packages: write
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5
@@ -386,6 +453,7 @@ jobs:
 
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || '' }}
           fetch-depth: 0
       - uses: actions/setup-go@v7
         with:
@@ -419,7 +487,7 @@ jobs:
         run: make windows_amd64_installer_checksum windows_arm64_installer_checksum wsl_amd64_copy wsl_arm64_copy
 
       - name: Build chocolatey on release
-        if: startsWith( github.ref, 'refs/tags/v1')
+        if: inputs.release_tag != ''
         run: make chocolatey
 
       - name: "Verify that cgo_enabled is 0 in Linux binary"
@@ -434,16 +502,39 @@ jobs:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
-      # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
+      # GoReleaser runs syft for the sboms in .goreleaser.yml.
+      - name: Install syft
+        if: inputs.release_tag != ''
+        id: syft
+        uses: anchore/sbom-action/download-syft@v0
+      - name: Put syft on PATH
+        if: inputs.release_tag != ''
+        run: dirname "${{ steps.syft.outputs.cmd }}" >> "${GITHUB_PATH}"
+
+      # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm. It
+      # attaches everything to the existing draft, then publishes it.
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v7
-        if: startsWith( github.ref, 'refs/tags/v1')
+        if: inputs.release_tag != ''
         with:
           distribution: goreleaser-pro
           version: "~> v2"
           args: release --clean
         env:
           CGO_ENABLED: 0
+          # An rc and its final release can share a commit, so don't let
+          # GoReleaser pick the tag with git describe.
+          GORELEASER_CURRENT_TAG: ${{ inputs.release_tag }}
+          # git describe can pick an rc tag; this matches GitHub's generated notes.
+          GORELEASER_PREVIOUS_TAG: ${{ inputs.previous_tag }}
+
+      # Signed build provenance for every file in checksums.txt, SBOMs
+      # included; verify with `gh attestation verify <file> --repo <owner/repo>`.
+      - name: Attest build provenance
+        if: inputs.release_tag != ''
+        uses: actions/attest@v4
+        with:
+          subject-checksums: dist/checksums.txt
 
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts
@@ -519,7 +610,7 @@ jobs:
 
       # TODO: This can be done by goreleaser these days
       - name: Chocolatey windows release
-        if: github.repository_owner == 'ddev' && startsWith(github.ref, 'refs/tags/v1')
+        if: github.repository_owner == 'ddev' && inputs.release_tag != ''
         run: |
           pushd .gotmp/bin/windows_amd64/chocolatey
           docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
@@ -540,15 +631,16 @@ jobs:
 
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.release_tag && format('refs/tags/{0}', inputs.release_tag) || '' }}
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
 
       - name: Replace version in devcontainer-feature.json
         run: |
-          sed -i 's/\${DDEV_VERSION}/'"${GITHUB_REF##*/}"'/g' ./containers/devcontainers/install-ddev/devcontainer-feature.json
+          sed -i 's/\${DDEV_VERSION}/'"${RELEASE_TAG:-${GITHUB_REF##*/}}"'/g' ./containers/devcontainers/install-ddev/devcontainer-feature.json
 
       - name: Push DDEV devcontainer feature
-        if: startsWith(github.ref, 'refs/tags/v1')
+        if: inputs.release_tag != ''
         uses: devcontainers/action@v1
         with:
           publish-features: "true"
