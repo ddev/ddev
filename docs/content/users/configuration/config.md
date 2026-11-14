@@ -124,6 +124,8 @@ When `true`, `corepack enable` will be executed, making latest `pnpm` and `yarn`
 
 Node.js 25 and later no longer include `corepack`. When it is missing, DDEV installs it from npm while building the web image, so that build needs access to the npm registry.
 
+New Drupal 10 and 11 projects enable `corepack` by default. With DDEV's default Node.js 26, their web image builds need access to the npm registry to install `corepack`.
+
 To set a specific version of `pnpm` for a project:
 
 ```bash
@@ -475,9 +477,9 @@ What DDEV does depends on the value:
 
 | Value | Result
 | -- | --
-| `24` | Default version preinstalled in DDEV.
+| `26` | Default version preinstalled in DDEV.
 | `""` (empty) | Uses the version already included in the image, with no download step (fastest for CI). Follows DDEV default behavior over time.
-| `v24` | Installs the newest `24.x` release when the image is built. Use the `v` prefix only to get the latest of the current default major.
+| `v26` | Installs the newest `26.x` release when the image is built. Use the `v` prefix only to get the latest of the current default major.
 | any other version (`22`, `20.2`, `18.19.2`, etc.) | Installs that version when the image is built. A bare major like `22` already installs the newest `22.x`.
 | `auto`, `engine` | Reads the version from a file in your project (see below).
 
