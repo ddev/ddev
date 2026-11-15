@@ -2,13 +2,15 @@
 # Example rsync provider configuration.
 
 # This will pull a database and files from a network location, for example,
-# server or other jumphost. It operates inside the web container and uses
+# a server or other jumphost. It operates inside the web container and uses
 # ssh, so you need to `ddev auth ssh` first.
 
 # To use this configuration,
 #
 # 1. You need a database dump and/or user-generated files tarball that you
-#    have access to somewhere on the internet
+#    have access to somewhere on the internet. (If the dump does not exist
+#    on the server yet, db_pull_command below shows an optional step that
+#    creates it there first.)
 # 2. Copy rsync.yaml.example to rsync.yaml (or name it as you see fit)
 # 3. `ddev auth ssh` (only needs to be done once per ddev session or reboot)
 # 4. Use `ddev pull rsync` to pull the project database and files.
@@ -16,7 +18,8 @@
 
 # Note that while this is done in the web container (because rsync will always be there)
 # it could also be done on the host, and then you wouldn't need the
-# `ddev auth ssh`
+# `ddev auth ssh`. A complete host variant is shown at the bottom of this
+# file.
 
 environment_variables:
   dburl: you@yourhost.example.com:tmp/db.sql.gz
@@ -31,6 +34,12 @@ db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    # Optional: if the dump does not already exist on the server, create it
+    # there first by uncommenting the next line and filling in the database
+    # name and credentials. Those are the server's own (see the site's
+    # configuration on the server); this example cannot know them.
+    # ("${dburl%%:*}" is the user@host part of dburl.)
+    # ssh "${dburl%%:*}" "mysqldump -u <db-user> -p<db-password> <db-name> | gzip > tmp/db.sql.gz"
     rsync -az "${dburl}" /var/www/html/.ddev/.downloads/db.sql.gz
   service: web
 
@@ -60,3 +69,69 @@ files_push_command:
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     rsync -az "${DDEV_FILES_DIR}/" "${filesurl}/"
+
+# ---------------------------------------------------------------------------
+# Host variant: run everything on your own machine instead
+#
+# The stanzas above run inside the web container. The commented stanzas
+# below are drop-in replacements that run the same steps on the host
+# (service: host); host commands run in the project root, so the paths
+# are project-relative. To use this variant, replace each stanza above
+# with its counterpart below. The environment_variables above are used
+# unchanged.
+#
+# Prefer the host variant when you want ssh to use your own
+# ~/.ssh/config, keys, and jump hosts, exactly as your everyday ssh
+# does; `ddev auth ssh` is not needed. If your server uses a non-standard
+# ssh port or a jump host, define a Host for it in ~/.ssh/config and use
+# that name in dburl and filesurl.
+#
+# Prerequisite: ssh and rsync must be installed on your machine. If they
+# are not (for example, on Windows without them), keep the web-container
+# version above; rsync is always available there.
+#
+# auth_command:
+#   command: |
+#     set -eu -o pipefail
+#     command -v rsync >/dev/null || ( echo "Please install rsync on the host to use this variant, or use the web-container version above." && exit 1 )
+#     # Fail fast if the server in dburl cannot be reached using your
+#     # existing keys and ssh configuration; BatchMode never prompts.
+#     ssh -o BatchMode=yes -o ConnectTimeout=10 "${dburl%%:*}" true
+#   service: host
+#
+# db_pull_command:
+#   command: |
+#     # set -x   # You can enable bash debugging output by uncommenting
+#     set -eu -o pipefail
+#     # Optional dump creation, as in db_pull_command above:
+#     # ssh "${dburl%%:*}" "mysqldump -u <db-user> -p<db-password> <db-name> | gzip > tmp/db.sql.gz"
+#     rsync -az "${dburl}" .ddev/.downloads/db.sql.gz
+#   service: host
+#
+# files_pull_command:
+#   command: |
+#     # set -x   # You can enable bash debugging output by uncommenting
+#     set -eu -o pipefail
+#     pushd .ddev/.downloads >/dev/null
+#     rm -f files.tar.gz
+#     rsync -avz "${filesurl}" .
+#     tar -xzf files.tar.gz -C files/
+#   service: host
+#
+# db_push_command:
+#   command: |
+#     # set -x   # You can enable bash debugging output by uncommenting
+#     set -eu -o pipefail
+#     ddev export-db >.ddev/.downloads/db_push.sql.gz
+#     rsync -avz .ddev/.downloads/db_push.sql.gz "${dburl}"
+#   service: host
+#
+# files_push_command:
+#   command: |
+#     # set -x   # You can enable bash debugging output by uncommenting
+#     set -eu -o pipefail
+#     # DDEV_FILES_DIR is only set inside the web container, so name your
+#     # project's files directory here (for example web/sites/default/files
+#     # for a Drupal site, or wp-content/uploads for WordPress).
+#     rsync -az <your-project-files-directory>/ "${filesurl}/"
+#   service: host
