@@ -893,7 +893,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
     ```bash
     ddev composer create-project drupal/recommended-project:main-dev@dev
-    ddev composer require drush/drush
+    ddev composer require "drush/drush:^14@dev"
     ```
 
     Run Drupal installation and launch:
@@ -918,7 +918,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         ddev config --project-type=drupal12 --docroot=web
         ddev start -y
         ddev composer create-project drupal/recommended-project:main-dev@dev
-        ddev composer require drush/drush
+        ddev composer require "drush/drush:^14@dev"
         ddev drush site:install --account-name=admin --account-pass=admin -y
         ddev launch
         EOF
