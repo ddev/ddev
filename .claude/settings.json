@@ -7,6 +7,17 @@
     "DDEV_TEST_SHARE_CMD": "true",
     "DDEV_TEST_OUTSIDE_HOME": "true"
   },
+  "extraKnownMarketplaces": {
+    "ddev-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "ddev/agent-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "ddev@ddev-agent-skills": true
+  },
   "permissions": {
     "allow": [
       "Bash(make *)",
