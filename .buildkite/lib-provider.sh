@@ -51,92 +51,135 @@ function context_is_up {
   ${TIMEOUT} 20s docker --context "$1" ps >/dev/null 2>&1
 }
 
-# Host ports the tests expect the router to get. When one is busy, DDEV moves
-# the router to a substitute port, and tests that assume 80/443 fail.
-ROUTER_HOST_PORTS="80 443"
-
-# Helper: succeed if something listens on 127.0.0.1:$1.
-function host_port_busy {
-  nc -z -G 2 127.0.0.1 "$1" >/dev/null 2>&1
+# Helper: stop the provider named by a DOCKER_TYPE value.
+function stop_provider {
+  case "$1" in
+    "orbstack")
+      stop_orbstack
+      ;;
+    "docker-desktop")
+      # Stopping Docker Desktop is unreliable, so leave it running.
+      echo "Not stopping Docker Desktop"
+      ;;
+    "colima_vz")
+      command -v colima >/dev/null 2>&1 && echo "Stopping colima_vz" && (${TIMEOUT} 120s colima stop -f vz || true)
+      ;;
+    "lima")
+      command -v limactl >/dev/null 2>&1 && echo "Stopping lima" && (${TIMEOUT} 120s limactl stop -f lima-vz || true)
+      ;;
+    "rancher-desktop")
+      if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (${TIMEOUT} 120s ~/.rd/bin/rdctl shutdown || true); fi
+      ;;
+    "podman-rootless")
+      command -v podman >/dev/null 2>&1 && echo "Stopping podman machine" && (${TIMEOUT} 120s podman machine stop || true)
+      ;;
+    "socktainer")
+      if command -v container >/dev/null 2>&1; then
+        echo "Stopping socktainer and apple container"
+        pkill -x socktainer || true
+        ${TIMEOUT} 60s container system stop || true
+      fi
+      ;;
+  esac
+  return 0
 }
 
-# Helper: wait up to $1 seconds for every router host port to be free.
-function wait_router_host_ports_free {
-  local i port busy
+# Helper: print the DOCKER_TYPE of the provider that runs the command line $1,
+# or nothing for a process that belongs to no provider. Rancher Desktop and
+# colima run their own copies of Lima's limactl, so check them before Lima.
+function provider_of_command {
+  case "$1" in
+    *"Rancher Desktop"* | *rancher-desktop*) echo "rancher-desktop" ;;
+    *limactl*colima* | *colima*limactl*) echo "colima_vz" ;;
+    *limactl*lima-vz* | *lima-vz*limactl*) echo "lima" ;;
+    *OrbStack*) echo "orbstack" ;;
+    *com.docker.* | *Docker.app*) echo "docker-desktop" ;;
+    *gvproxy* | *podman* | *vfkit* | *krunkit*) echo "podman-rootless" ;;
+    *socktainer* | *com.apple.container*) echo "socktainer" ;;
+  esac
+}
+
+# Helper: print "<provider> <pid> <port>" for each TCP port that a provider
+# process listens on.
+function provider_listeners {
+  local pid="" line cmd provider
+  lsof -nP -iTCP -sTCP:LISTEN -Fpn 2>/dev/null | while read -r line; do
+    case "${line}" in
+      p*) pid=${line#p} ;;
+      n*)
+        cmd=$(ps -o command= -p "${pid}" 2>/dev/null || true)
+        provider=$(provider_of_command "${cmd}")
+        [ -n "${provider}" ] && echo "${provider} ${pid} ${line##*:}"
+        ;;
+    esac
+  done | sort -u
+}
+
+# Helper: print the host ports this job's router will use.
+function own_router_ports {
+  case "${DOCKER_TYPE}" in
+    "podman-rootless" | "socktainer") echo "8080 8443 8025 8026 8142 8143 10999" ;;
+    *) echo "80 443 8025 8026 8142 8143 10999" ;;
+  esac
+}
+
+# Helper: print the problems that would make tests run on substitute ports:
+# another provider listening on any port, or a busy router port of this job.
+# Docker Desktop counts only through the router ports, because it isn't stopped.
+function provider_port_problems {
+  local port
+  provider_listeners | awk -v own="${DOCKER_TYPE}" '$1 != own && $1 != "docker-desktop" { print "other " $1 " pid " $2 " listens on " $3 }'
+  for port in $(own_router_ports); do
+    if nc -z -G 2 127.0.0.1 "${port}" >/dev/null 2>&1; then
+      echo "busy ${port} held by: $(lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null | while read -r p; do ps -o command= -p "${p}"; done | tr '\n' ' ')"
+    fi
+  done
+}
+
+# Helper: wait up to $1 seconds for provider_port_problems to report nothing.
+function wait_provider_ports_clean {
+  local i problems
   for ((i = 0; i < $1; i++)); do
-    busy=""
-    for port in ${ROUTER_HOST_PORTS}; do
-      host_port_busy "${port}" && busy="${busy} ${port}"
-    done
-    [ -z "${busy}" ] && return 0
+    problems=$(provider_port_problems)
+    [ -z "${problems}" ] && return 0
     sleep 1
   done
-  echo "Router host port(s)${busy} still busy after $1s"
+  echo "${problems}"
   return 1
 }
 
-# Helper: free a router host port held by a process this testbot runs. A Lima
-# host agent (also used by colima and Rancher Desktop) can keep forwarding a
-# port after the container that published it is gone, so stop the other
-# provider that holds it, or restart this job's own VM.
-function free_router_host_port {
-  local port=$1 pid cmd instance
-  for pid in $(lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null | sort -u); do
-    cmd=$(ps -o command= -p "${pid}" || true)
-    echo "Host port ${port} is held by pid ${pid}: ${cmd}"
-    case "${cmd}" in
-      *"Rancher Desktop"*)
-        [ "${DOCKER_TYPE}" = "rancher-desktop" ] && continue
-        echo "Stopping Rancher Desktop"
-        ${TIMEOUT} 120s ~/.rd/bin/rdctl shutdown || true
-        ;;
-      *limactl*hostagent*)
-        instance=${cmd##* }
-        if [ "${instance}" = "colima-vz" ]; then
-          if [ "${DOCKER_TYPE}" = "colima_vz" ]; then
-            echo "Restarting colima vz to drop a stale port forward"
-            ${TIMEOUT} 180s colima restart vz || true
-          else
-            echo "Stopping colima vz"
-            ${TIMEOUT} 120s colima stop -f vz || true
-          fi
-        elif [ "${instance}" = "${LIMA_INSTANCE:-}" ]; then
-          echo "Restarting lima ${instance} to drop a stale port forward"
-          ${TIMEOUT} 120s limactl stop -f "${instance}" || true
-          ${TIMEOUT} 180s limactl start "${instance}" || true
-        else
-          echo "Stopping lima ${instance}"
-          ${TIMEOUT} 120s limactl stop -f "${instance}" || true
-        fi
-        ;;
-      *OrbStack*)
-        [ "${DOCKER_TYPE}" = "orbstack" ] && continue
-        stop_orbstack
-        ;;
-      *com.docker.backend*)
-        [ "${DOCKER_TYPE}" = "docker-desktop" ] && continue
-        echo "Stopping Docker Desktop"
-        killall com.docker.backend || true
-        ;;
-    esac
-  done
-}
-
-# Helper: make sure ports 80/443 are free before the tests start, freeing them
-# from another provider if needed. Fails the job if something else holds them,
-# rather than letting tests run with substitute router ports.
-function ensure_router_host_ports_free {
-  local port
+# Helper: make sure no provider holds ports that this job's router or tests
+# may need. Every container is gone by now, so a port that another provider
+# still listens on is a stale forward, and stopping that provider loses
+# nothing. Returns 1 when this job's own provider holds one of its router
+# ports and needs a restart. Fails the job when a port stays busy.
+function ensure_provider_ports_clean {
+  local problems others restart_own=false provider port pid
   # A forward can take a few seconds to close after its container is removed.
-  wait_router_host_ports_free 15 && return 0
-  for port in ${ROUTER_HOST_PORTS}; do
-    host_port_busy "${port}" && free_router_host_port "${port}"
+  problems=$(wait_provider_ports_clean 15) && return 0
+  echo "Docker provider port problems:"
+  echo "${problems}"
+  others=$(echo "${problems}" | awk '$1 == "other" { print $2 }' | sort -u)
+  for provider in ${others}; do
+    stop_provider "${provider}"
   done
-  wait_router_host_ports_free 30 && return 0
-  echo "ERROR: router host ports must be free before the tests start. Holders:" >&2
-  for port in ${ROUTER_HOST_PORTS}; do
-    lsof -nP -iTCP:"${port}" -sTCP:LISTEN >&2 || echo "port ${port}: no holder visible to $(whoami); check with sudo lsof" >&2
+  for port in $(echo "${problems}" | awk '$1 == "busy" { print $2 }'); do
+    for pid in $(lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null); do
+      [ "$(provider_of_command "$(ps -o command= -p "${pid}")")" = "${DOCKER_TYPE}" ] && restart_own=true
+    done
   done
+  if [ "${restart_own}" = "true" ]; then
+    if [ "${PROVIDER_PORTS_RESTARTED:-false}" = "true" ] || [ "${DOCKER_TYPE}" = "docker-desktop" ]; then
+      echo "ERROR: ${DOCKER_TYPE} holds its router ports, and a restart did not or cannot free them" >&2
+      lsof -nP -iTCP -sTCP:LISTEN >&2 || true
+      exit 1
+    fi
+    return 1
+  fi
+  problems=$(wait_provider_ports_clean 30) && return 0
+  echo "ERROR: ports are still busy before the tests start:" >&2
+  echo "${problems}" >&2
+  lsof -nP -iTCP -sTCP:LISTEN >&2 || true
   exit 1
 }
 
@@ -348,9 +391,12 @@ function provider_bringup {
     if [ "${PROVIDER_EXCLUSIVE}" != "true" ]; then
       cleanup_other_provider_containers
     fi
-    # Rootless podman and Apple Container can't bind ports below 1024 anyway.
-    if [ "${DOCKER_TYPE}" != "podman-rootless" ] && [ "${DOCKER_TYPE}" != "socktainer" ]; then
-      ensure_router_host_ports_free
+    if ! ensure_provider_ports_clean; then
+      echo "Restarting ${DOCKER_TYPE} to drop a stale port forward"
+      stop_provider "${DOCKER_TYPE}"
+      PROVIDER_PORTS_RESTARTED=true
+      provider_bringup
+      return
     fi
   fi
 
@@ -403,27 +449,16 @@ function provider_bringup {
 # Orbstack or Docker Desktop running afterward. Used by PROVIDER_EXCLUSIVE
 # callers (perf.sh) and testbot_disk_cleanup.sh; test.sh leaves providers up.
 function provider_shutdown {
+  local provider
   # Apple container runs each container as its own launchd service, so a
   # socktainer job killed before its cleanup leaves a ddev-router holding host
   # ports. Stop it first, because a canceled job may not get further.
-  if command -v container >/dev/null 2>&1; then
-    echo "Stopping socktainer and apple container"
-    pkill -x socktainer || true
-    ${TIMEOUT} 60s container system stop || true
-  fi
-  stop_orbstack
-  if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
-  command -v colima 2>/dev/null && echo "Stopping colima_vz" && (colima stop -f vz || true)
-  command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop -f lima-vz || true)
-  if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (~/.rd/bin/rdctl shutdown || true); fi
-  command -v podman 2>/dev/null && echo "Stopping podman machine" && (podman machine stop || true)
+  for provider in socktainer orbstack docker-desktop colima_vz lima rancher-desktop podman-rootless; do
+    stop_provider "${provider}"
+  done
   restore_resting_provider
 }
 
-# restore_resting_provider leaves orbstack running, as the most reliable
-# provider, otherwise Docker Desktop, and points the global context at it.
-# Jobs use DOCKER_CONTEXT; the global context is for Icinga's docker check
-# and for people who ssh in.
 function restore_resting_provider {
   if command -v orb >/dev/null 2>&1 ; then
     context_is_up orbstack || start_orbstack
