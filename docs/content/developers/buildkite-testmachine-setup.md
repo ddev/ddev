@@ -601,12 +601,28 @@ Then the Buildkite agent must be configured with tag `socktainer=true`.
 
 ## Claude Code Self-Hosted Runner (macOS)
 
-One macOS runner also runs a Claude Code self-hosted runner, so maintainers can start claude.ai sessions on it. Every session runs as `testbot`, whoever started it, and gets any GitHub identity `testbot` has. So `testbot` must have none:
+One macOS runner also runs a Claude Code self-hosted runner, so maintainers can start claude.ai sessions on it. It runs as `testbot`:
 
-* No SSH key that GitHub accepts, in `~/.ssh` or in the keychain. Never connect to the runner with `ssh -A`, because sessions could then sign with your keys.
-* No `gh auth login`, and no `GH_TOKEN` or `GITHUB_TOKEN` in its environment.
+```bash
+/opt/homebrew/bin/claude self-hosted-runner \
+  --environment-secret-file ~/.config/claude-runner/environment-secret \
+  --base-dir ~/claude-runner --client-label macos-claude \
+  --use-anthropic-git-proxy --configure-git --remove-session-state \
+  --release-idle-session-min 30 --push-outcome-on-release --health-port 0 \
+  --log-file ~/Library/Logs/claude-self-hosted-runner.log
+```
 
-Sessions then reach GitHub only as the person who started them: HTTPS git through Anthropic's proxy, and the GitHub MCP tools. Each maintainer connects GitHub on claude.ai under **Settings** → **Connectors** → **GitHub**, and picks a repository when starting a session. A session started without a repository gets no clone and no GitHub tools. To push to a fork, the session attaches the fork with push access instead of using SSH.
+Every session runs as `testbot`, whoever started it, and gets anything `testbot` has. So keep `testbot` free of personal identity and setup:
+
+* No SSH key that GitHub accepts, in `~/.ssh`, in the keychain, or behind an `IdentityAgent` such as 1Password's in `~/.ssh/config`. Never connect to the runner with `ssh -A`, because sessions could then sign with your keys.
+* No `gh auth login`, and no `GH_TOKEN` or `GITHUB_TOKEN` that can write or that belongs to a person.
+* Only generic instructions and skills in `~/.claude`. Every session loads `~/.claude/CLAUDE.md` and `~/.claude/skills`, so personal ones apply to everyone. Instructions to use `gh` fail there, as described below.
+
+Sessions reach GitHub as the person who started them: HTTPS git through Anthropic's proxy, and the GitHub MCP tools. Each maintainer connects GitHub on claude.ai under **Settings** → **Connectors** → **GitHub**, and picks a repository when starting a session. A session started without a repository gets no clone and no GitHub tools. To push to a fork, the session attaches the fork with push access instead of using SSH.
+
+`gh` in a session is `/opt/homebrew/bin/gh`, which isn't logged in, so it doesn't work. Sessions have no GitHub search either, which Claude Code offers only through `gh api`. The runner log reports `gh_path_shim=true`, but up to at least Claude Code 2.1.325 the shim that would route `gh` through the session's own account isn't on the session's `PATH`. To give sessions `gh` for reading and searching, set `GH_TOKEN` for `testbot` to a fine-grained token of a GitHub machine user, with read-only access to public repositories. Writes still go only through the session's own account.
+
+The runner clones each repository to `~/claude-runner/<owner>/<repo>` and reuses that checkout for the next session, whoever starts it. Without a post-session hook, uncommitted changes, branches and extra clones from one session are still there in the next. The Coder runner template cleans them with [`claude-runner-sweep`](https://github.com/ddev/coder-ddev/blob/main/modules/claude-self-hosted-runner/files/claude-runner-sweep), which stashes leftover changes and moves unpushed clones aside. To use it here, add `--hooks-dir ~/.config/claude-runner/hooks` and an executable `post-session` hook in that directory that runs `claude-runner-sweep ~/claude-runner`. Nobody has run the sweep on macOS yet, so test it on a scratch directory first.
 
 Check `testbot` over SSH:
 
@@ -614,11 +630,13 @@ Check `testbot` over SSH:
 ssh-keygen -F github.com >/dev/null || curl -fsSL https://api.github.com/meta | jq -r '.ssh_keys[] | "github.com " + .' >> ~/.ssh/known_hosts
 ssh -T git@github.com
 # Expect "Permission denied (publickey)"
+grep -i IdentityAgent ~/.ssh/config ~/.ssh/*.conf
+# Expect nothing
 gh auth status
-# Expect "You are not logged into any GitHub hosts"
+# Expect "You are not logged into any GitHub hosts", unless you set a read-only GH_TOKEN
 ```
 
-Then start a session with a repository selected, and ask Claude to run `whoami`, `ssh -T git@github.com` and `git ls-remote origin HEAD`, and to call the GitHub MCP tool `get_me`. Expect `testbot`, the same SSH refusal, a commit hash, and the GitHub login of the person who started the session.
+Then start a session with a repository selected, and ask Claude to run `whoami`, `ssh -T git@github.com`, `git ls-remote origin HEAD` and `git status`, and to call the GitHub MCP tool `get_me`. Expect `testbot`, the same SSH refusal, a commit hash, a clean checkout, and the GitHub login of the person who started the session.
 
 ## macOS Disk Space Cleanup
 
