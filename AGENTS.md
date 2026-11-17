@@ -203,7 +203,8 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 type is one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`,
 `refactor`, `style`, or `test`. Write a commit message, PR, or issue with the
 `/ddev:commit` skill from [ddev/agent-skills](https://github.com/ddev/agent-skills).
-Install it in Claude Code with
+`.claude/settings.json` declares that marketplace and its `ddev` plugin, so
+Claude Code sets them up after you trust this folder. Otherwise run
 `claude plugin install ddev --marketplace ddev/agent-skills`. Without it,
 follow the organization patterns linked above.
 

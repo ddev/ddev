@@ -61,6 +61,17 @@ Every rule has a space before its `*`: `Bash(tr *)` matches only `tr`, while
 `WebFetch(domain:...)` rather than by `curl` argument patterns, which a
 reordered flag or a URL in a variable defeats.
 
+## Plugins
+
+`extraKnownMarketplaces` declares the
+[ddev/agent-skills](https://github.com/ddev/agent-skills) marketplace, and
+`enabledPlugins` turns on its `ddev` plugin, which holds the `/ddev:commit`,
+`/ddev:review` and `/ddev:ci-failure` skills. Both keys apply only after
+someone trusts this folder. Claude Code then registers the marketplace and
+shows its plugin trust warning before it installs the plugin. Updates come from
+`claude plugin marketplace update ddev-agent-skills`, then
+`claude plugin update ddev@ddev-agent-skills` and a new session.
+
 ## Instruction loading
 
 A project or parent `CLAUDE.local.md` can stop Claude from loading `AGENTS.md`
@@ -69,4 +80,5 @@ under the default instruction setting. Use an `@AGENTS.md` import in a
 
 References: [hooks](https://code.claude.com/docs/en/hooks),
 [file rules](https://code.claude.com/docs/en/permissions#read-and-edit),
+[plugin marketplaces](https://code.claude.com/docs/en/plugin-marketplaces),
 [instruction loading](https://code.claude.com/docs/en/memory#when-claude-code-reads-agentsmd).
