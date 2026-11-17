@@ -84,12 +84,6 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 
 	t := styles.NewTable("Service", "Stat", "URL/Port", "Info")
 	t.SetColumnStyle(0, styles.Strong())
-	tWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
-	urlPortWidth := int(float64(tWidth) / 2.5)
-	infoWidth := tWidth / 4
-	if !globalconfig.DdevGlobalConfig.SimpleFormatting && isatty.IsTerminal(os.Stdout.Fd()) {
-		t.SetMaxWidths(12, 0, urlPortWidth, infoWidth)
-	}
 	link := func(u string) string {
 		return styles.Link().Render(output.Hyperlink(u, u))
 	}
@@ -103,10 +97,15 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		router = "disabled"
 	}
 
-	t.SetTitle(
-		fmt.Sprintf("%s  %s  %s", styles.Strong().Render(app.Name), output.Hyperlink(output.FileURL(app.GetAppRoot()), desc["shortroot"].(string)), link(app.GetPrimaryURL())),
-		strings.Join([]string{"Docker platform: " + dockerPlatform, "Router: " + router, "DDEV version: " + versionconstants.DdevVersion}, styles.Hint().Render(" · ")),
-	)
+	title := []string{fmt.Sprintf("%s  %s  %s", styles.Strong().Render(app.Name), output.Hyperlink(output.FileURL(app.GetAppRoot()), desc["shortroot"].(string)), link(app.GetPrimaryURL()))}
+	details := []string{"Docker platform: " + dockerPlatform, "Router: " + router, "DDEV version: " + versionconstants.DdevVersion}
+	termWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
+	if joined := strings.Join(details, styles.Hint().Render(" · ")); ansi.StringWidth(joined) <= termWidth {
+		title = append(title, joined)
+	} else {
+		title = append(title, details...)
+	}
+	t.SetTitle(title...)
 
 	// Only show extended status for running sites.
 	serviceNames := []string{}
@@ -223,7 +222,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		if _, ok := desc["mailpit_https_url"]; ok && !app.CanUseHTTPOnly() {
 			mailpitURL = desc["mailpit_https_url"].(string)
 		}
-		t.AppendRow("Mailpit", "", fmt.Sprintf("Mailpit: %s\n%s", link(mailpitURL), styles.Hint().Render("Launch: ddev mailpit")))
+		t.AppendRow("Mailpit", "", link(mailpitURL)+"\nLaunch: ddev mailpit")
 
 		ddevapp.SyncGenericWebserverPortsWithRouterPorts(app)
 
@@ -261,9 +260,14 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		// If there is a problem with the router, add it to the table
 		routerStatus, errorInfo := ddevapp.RenderRouterStatus()
 		if errorInfo != "" {
-			t.SetFooter("Router", routerStatus, ansi.Wordwrap(errorInfo, urlPortWidth, ""))
+			if globalconfig.DdevGlobalConfig.SimpleFormatting || !isatty.IsTerminal(os.Stdout.Fd()) {
+				// Without column limits, nothing else wraps the error
+				errorInfo = ansi.Wordwrap(errorInfo, 35, "")
+			}
+			t.SetFooter("Router", routerStatus, errorInfo)
 		}
 	}
+	t.FitTerminal()
 
 	return t.Render(), nil
 }

@@ -1,6 +1,7 @@
 package styles
 
 import (
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/x/ansi"
@@ -61,4 +62,21 @@ func TestTableUnlimited(t *testing.T) {
 	tbl.SetMaxWidths(5)
 	tbl.SetUnlimited(true)
 	require.Contains(t, tbl.Render(), "a-long-project-name")
+}
+
+func TestTableFitTerminalPiped(t *testing.T) {
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
+	orig := os.Stdout
+	os.Stdout = w
+	t.Cleanup(func() {
+		os.Stdout = orig
+		_ = w.Close()
+		_ = r.Close()
+	})
+	name := strings.Repeat("long-snapshot-name-", 10)
+	tbl := NewTable("Snapshot")
+	tbl.AppendRow(name)
+	tbl.FitTerminal()
+	require.Contains(t, tbl.Render(), name, "piped output keeps whole values")
 }

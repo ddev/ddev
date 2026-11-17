@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/mattn/go-isatty"
 )
 
 // cellPadding is the space on each side of a cell's content.
@@ -164,8 +165,12 @@ func (t *Table) NaturalWidths() []int {
 }
 
 // FitTerminal limits the columns' widths so the table fits the terminal,
-// unless it is set to be unlimited.
+// unless it is set to be unlimited. Piped output and simple formatting keep
+// full widths, so scripts can match whole values.
 func (t *Table) FitTerminal() {
+	if SimpleFormattingRequired() || !isatty.IsTerminal(os.Stdout.Fd()) {
+		return
+	}
 	termWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
 	t.SetMaxWidths(FitColumnWidths(t.NaturalWidths(), termWidth-t.Overhead())...)
 }

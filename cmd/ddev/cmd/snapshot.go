@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
@@ -119,9 +118,7 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 			t.AppendRow(row...)
 		}
 	}
-	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
-		t.FitTerminal()
-	}
+	t.FitTerminal()
 	output.UserOut.WithField("raw", allTargets).Print(t.Render())
 }
 
