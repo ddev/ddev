@@ -108,7 +108,8 @@ provider_fstrim "${DOCKER_TYPE:-}" || true
 host_disk_cleanup
 
 # Update all images that could have changed
-( docker images | awk '/ddev|traefik|postgres/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
+# Untagged images show as <none>, which docker pull rejects as an invalid reference.
+( docker images --format '{{.Repository}}:{{.Tag}}' | grep -E 'ddev|traefik|postgres' | grep -v '<none>' | xargs -L1 docker pull ) || true
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 if command -v brew >/dev/null; then
