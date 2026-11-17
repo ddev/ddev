@@ -51,6 +51,95 @@ function context_is_up {
   ${TIMEOUT} 20s docker --context "$1" ps >/dev/null 2>&1
 }
 
+# Host ports the tests expect the router to get. When one is busy, DDEV moves
+# the router to a substitute port, and tests that assume 80/443 fail.
+ROUTER_HOST_PORTS="80 443"
+
+# Helper: succeed if something listens on 127.0.0.1:$1.
+function host_port_busy {
+  nc -z -G 2 127.0.0.1 "$1" >/dev/null 2>&1
+}
+
+# Helper: wait up to $1 seconds for every router host port to be free.
+function wait_router_host_ports_free {
+  local i port busy
+  for ((i = 0; i < $1; i++)); do
+    busy=""
+    for port in ${ROUTER_HOST_PORTS}; do
+      host_port_busy "${port}" && busy="${busy} ${port}"
+    done
+    [ -z "${busy}" ] && return 0
+    sleep 1
+  done
+  echo "Router host port(s)${busy} still busy after $1s"
+  return 1
+}
+
+# Helper: free a router host port held by a process this testbot runs. A Lima
+# host agent (also used by colima and Rancher Desktop) can keep forwarding a
+# port after the container that published it is gone, so stop the other
+# provider that holds it, or restart this job's own VM.
+function free_router_host_port {
+  local port=$1 pid cmd instance
+  for pid in $(lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null | sort -u); do
+    cmd=$(ps -o command= -p "${pid}" || true)
+    echo "Host port ${port} is held by pid ${pid}: ${cmd}"
+    case "${cmd}" in
+      *"Rancher Desktop"*)
+        [ "${DOCKER_TYPE}" = "rancher-desktop" ] && continue
+        echo "Stopping Rancher Desktop"
+        ${TIMEOUT} 120s ~/.rd/bin/rdctl shutdown || true
+        ;;
+      *limactl*hostagent*)
+        instance=${cmd##* }
+        if [ "${instance}" = "colima-vz" ]; then
+          if [ "${DOCKER_TYPE}" = "colima_vz" ]; then
+            echo "Restarting colima vz to drop a stale port forward"
+            ${TIMEOUT} 180s colima restart vz || true
+          else
+            echo "Stopping colima vz"
+            ${TIMEOUT} 120s colima stop -f vz || true
+          fi
+        elif [ "${instance}" = "${LIMA_INSTANCE:-}" ]; then
+          echo "Restarting lima ${instance} to drop a stale port forward"
+          ${TIMEOUT} 120s limactl stop -f "${instance}" || true
+          ${TIMEOUT} 180s limactl start "${instance}" || true
+        else
+          echo "Stopping lima ${instance}"
+          ${TIMEOUT} 120s limactl stop -f "${instance}" || true
+        fi
+        ;;
+      *OrbStack*)
+        [ "${DOCKER_TYPE}" = "orbstack" ] && continue
+        stop_orbstack
+        ;;
+      *com.docker.backend*)
+        [ "${DOCKER_TYPE}" = "docker-desktop" ] && continue
+        echo "Stopping Docker Desktop"
+        killall com.docker.backend || true
+        ;;
+    esac
+  done
+}
+
+# Helper: make sure ports 80/443 are free before the tests start, freeing them
+# from another provider if needed. Fails the job if something else holds them,
+# rather than letting tests run with substitute router ports.
+function ensure_router_host_ports_free {
+  local port
+  # A forward can take a few seconds to close after its container is removed.
+  wait_router_host_ports_free 15 && return 0
+  for port in ${ROUTER_HOST_PORTS}; do
+    host_port_busy "${port}" && free_router_host_port "${port}"
+  done
+  wait_router_host_ports_free 30 && return 0
+  echo "ERROR: router host ports must be free before the tests start. Holders:" >&2
+  for port in ${ROUTER_HOST_PORTS}; do
+    lsof -nP -iTCP:"${port}" -sTCP:LISTEN >&2 || echo "port ${port}: no holder visible to $(whoami); check with sudo lsof" >&2
+  done
+  exit 1
+}
+
 # Helper: remove all containers in every other provider that is running, so a
 # container left behind by an earlier job (a ddev-router holding ports 80/443,
 # for instance) can't block this one. Assumes one job at a time per testbot.
@@ -258,6 +347,10 @@ function provider_bringup {
 
     if [ "${PROVIDER_EXCLUSIVE}" != "true" ]; then
       cleanup_other_provider_containers
+    fi
+    # Rootless podman and Apple Container can't bind ports below 1024 anyway.
+    if [ "${DOCKER_TYPE}" != "podman-rootless" ] && [ "${DOCKER_TYPE}" != "socktainer" ]; then
+      ensure_router_host_ports_free
     fi
   fi
 
