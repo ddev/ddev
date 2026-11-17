@@ -3,6 +3,9 @@
 # testbot_disk_cleanup.sh (the scheduled sweep of every provider on a macOS
 # testbot). Source, don't execute.
 
+# shellcheck source=lib-diag.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib-diag.sh"
+
 # Below this many GB free on the host, testbot_maintenance.sh prunes all
 # unused images and the Go build cache instead of only dangling images.
 LOW_DISK_GB=${LOW_DISK_GB:-40}
@@ -16,14 +19,25 @@ function free_gb {
 # without it the VM's sparse disk file stays at its high-water mark.
 # OrbStack and Docker Desktop trim on their own. stdin is /dev/null because
 # under gtimeout, a VM shell that touches the terminal stops until the timeout.
+# A VM that stops answering, such as one waiting on a macOS privacy prompt,
+# would otherwise hang the whole maintenance run.
 function provider_fstrim {
+  local -a cmd
   case "${1:-}" in
-    colima_vz) colima ssh -p vz -- sudo fstrim -av ;;
-    lima) limactl shell lima-vz sudo fstrim -av ;;
+    colima_vz) cmd=(colima ssh -p vz -- sudo fstrim -av) ;;
+    lima) cmd=(limactl shell lima-vz sudo fstrim -av) ;;
     # Rancher Desktop's Alpine VM has BusyBox fstrim, which has no -a.
-    rancher-desktop) ~/.rd/bin/rdctl shell sudo sh -c 'for m in $(awk "\$3 ~ /^(ext4|xfs|btrfs)\$/ {print \$2}" /proc/mounts); do fstrim -v "$m"; done' ;;
-    podman-rootless) podman machine ssh 'sudo fstrim -av' ;;
-  esac </dev/null
+    rancher-desktop) cmd=("${HOME}/.rd/bin/rdctl" shell sudo sh -c 'for m in $(awk "\$3 ~ /^(ext4|xfs|btrfs)\$/ {print \$2}" /proc/mounts); do fstrim -v "$m"; done') ;;
+    podman-rootless) cmd=(podman machine ssh 'sudo fstrim -av') ;;
+    *) return 0 ;;
+  esac
+  local rc=0
+  bounded 2m "${cmd[@]}" </dev/null || rc=$?
+  if [ "${rc}" != 0 ]; then
+    echo "fstrim in the ${1} VM $(describe_rc "${rc}" 2m)"
+    macos_privacy_prompts
+  fi
+  return "${rc}"
 }
 
 # host_disk_cleanup removes host-side leftovers that no test needs.

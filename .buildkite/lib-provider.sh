@@ -30,6 +30,9 @@ else
   exit 1
 fi
 
+# shellcheck source=lib-diag.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib-diag.sh"
+
 # Helper: stop orbstack synchronously, bounded by TIMEOUT so a hang can't wedge the job.
 function stop_orbstack {
   command -v orb >/dev/null 2>&1 || return 0
@@ -331,13 +334,16 @@ function provider_bringup {
       "rancher-desktop")
         export DOCKER_CONTEXT=rancher-desktop
         if ! context_is_up "${DOCKER_CONTEXT}"; then
+          echo "$(date): rancher-desktop is not answering, running rdctl start"
           ~/.rd/bin/rdctl start
         fi
         for i in {1..120}; do
           if docker context inspect rancher-desktop >/dev/null 2>&1 ; then
             break
           fi
-          echo "$(date): Waiting for rancher-desktop context to be available"
+          if [ "$((i % 10))" = 1 ]; then
+            echo "$(date): Waiting for rancher-desktop context to be available ($i/120)"
+          fi
           sleep 1
         done
         ;;
@@ -432,17 +438,21 @@ function provider_bringup {
   # non-Windows and on docker-ce-inside cases.
   bash "$(dirname "${BASH_SOURCE[0]}")/start-docker-desktop.sh" || true
 
-  # Make sure docker is working
-  echo "Waiting for docker provider to come up: $(date)"
-  date && ${TIMEOUT} 3m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
+  # Make sure docker is working. Each docker ps is bounded too, because one
+  # that hangs would otherwise use up the whole wait without saying so. The
+  # `|| rc=$?` keeps set -e from exiting silently when the wait times out.
+  echo "Waiting for docker provider ${DOCKER_CONTEXT:-${DOCKER_TYPE:-}} to come up: $(date)"
+  local rc=0
+  ${TIMEOUT} 3m bash -c "while ! ${TIMEOUT} 30s docker ps >/dev/null 2>&1 ; do
+    echo \"Waiting for docker ps: \$(date)\"
     sleep 10
-    echo "Waiting: $(date)"
-  done'
-  echo "Testing again to make sure docker came up: $(date)"
-  if ! docker ps >/dev/null 2>&1 ; then
-    echo "Docker is not running, exiting"
+  done" || rc=$?
+  if [ "${rc}" != 0 ]; then
+    report_failure "waiting for the docker provider to answer docker ps" 3m "${rc}"
+    docker_diagnostics
     exit 1
   fi
+  echo "Docker provider is up: $(date)"
 }
 
 # provider_shutdown stops whatever Docker provider is running, leaving either
