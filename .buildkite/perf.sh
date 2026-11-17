@@ -24,6 +24,8 @@ fi
 
 os=$(go env GOOS)
 
+# Stop the other providers so idle VMs don't skew the measurements.
+export PROVIDER_EXCLUSIVE=true
 # shellcheck source=lib-provider.sh
 source "$(dirname "$0")/lib-provider.sh"
 
