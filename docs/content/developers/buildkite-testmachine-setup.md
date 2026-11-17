@@ -132,6 +132,13 @@ tailnet and tag the device:
 device" means the policy doesn't match anyone yet; it clears once the policy is
 correct.
 
+With `--ssh`, Tailscale answers every SSH connection that arrives over the
+tailnet, and the runner's own OpenSSH never sees it. A device that isn't tagged
+`tag:ddev-runner` matches no `ssh` rule, so plain `ssh` fails along with
+`tailscale ssh`, with "tailnet policy does not permit you to SSH to this node".
+Tag the device, or run `tailscale set --ssh=false` to hand port 22 back to
+OpenSSH.
+
 To join without a browser login, create a reusable, pre-approved auth key with
 `tag:ddev-runner` selected under **Settings** → **Keys** in the admin console,
 then run `tailscale up --auth-key=<key>`, adding `--ssh` on macOS. A device
@@ -143,12 +150,14 @@ as a secret.
 
 * SSH works through Tailscale SSH and through regular Remote Login (step 7 of
   [macOS setup](#macos-docker-desktop-test-agent-setup-apple-silicon)).
-* For screen sharing, run
-  [macos_screen_sharing.sh](scripts/macos_screen_sharing.sh) with `sudo`, then
-  connect to `vnc://<runner-name>` with the built-in Screen Sharing app. It
-  turns off Remote Management, which takes over port 5900 when enabled and
-  rejects users without Remote Management privileges as if the password were
-  wrong.
+* For screen sharing, turn on Remote Management in **System Settings** →
+  **General** → **Sharing**, then run
+  [macos_screen_sharing.sh](scripts/macos_screen_sharing.sh) with `sudo` to give
+  `testbot` every Remote Management privilege. Connect to `vnc://<runner-name>`
+  with the built-in Screen Sharing app. Remote Management owns port 5900 and
+  rejects a user without the Observe and Control privileges as if the password
+  were wrong. `dscl . -read /Users/testbot naprivs` shows `-1073741569` when
+  the user has every privilege.
 * On Linux with KDE, connect with KRDC using `vnc`. It needs its optional
   `libvncserver` dependency; without it KRDC rejects every address with "The
   entered address does not have the required form".
@@ -468,7 +477,7 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 2. Change the name of the machine to something in keeping with current style, perhaps `testbot-macos-arm64-8`. This is done in **Settings** → **General** → **About** → **Name** and in **Sharing** → **Computer Name** and in **Sharing** → **Local Hostname**.
 3. Set up [remote access with Tailscale](#remote-access-with-tailscale), including [Screen Sharing](#macos-runners). When this is done, most other tasks can be done remotely. As a fallback, install Chrome and log the browser into the account used for test runners, which picks up the Chrome Remote Desktop setup, and configure Chrome Remote Desktop to serve.
 4. The machine should be on the correct network and have a static IP handed out by DHCP. IP addresses are listed in /etc/hosts on `pi.ddev.site`, so this one should be added.
-5. Power should be set up as in ![macos power settings](../images/macos_power_settings.png).
+5. Power should be set up as in ![macos power settings](../images/macos_power_settings.png). On a MacBook those settings don't stop it sleeping when the lid closes; `sudo pmset -a disablesleep 1` does, takes effect without a reboot, and persists. `pmset -g | grep SleepDisabled` should show `1`. Use it only on a machine that stays on AC power, since a closed MacBook that never sleeps gets hot.
 6. Auto login should be set up as in ![macos users and groups](../images/macos_users_and_groups.png), see [automatically log in on boot](https://support.apple.com/en-us/HT201476).
 7. Remote login should be enabled as in ![macos remote login](../images/macos_remote_login.png).
 8. Automatic updates should be set to mostly security only as in ![macos automatic_updatees](../images/macos_automatic_updates.png).
@@ -476,7 +485,7 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 10. `sudo mkdir -p /usr/local/bin && sudo chown -R testbot /usr/local/bin`
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
-13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent@4 bats-core composer git golang jq mysql-client@8.0 mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
+13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent@4 bats-core composer docker docker-buildx docker-compose docker-credential-helper git golang jq mysql-client@8.0 mkcert netcat p7zip && brew install --cask docker-desktop iterm2 ngrok && brew link --force mysql-client`. Colima, Lima, and Podman need the Homebrew `docker` CLI even where Docker Desktop isn't installed. The `docker-desktop` cask needs `sudo`, so run it in a terminal on the machine rather than over a non-interactive SSH command.
 14. Run `ngrok authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
@@ -533,7 +542,8 @@ Then the Buildkite agent must be configured with tags `colima_vz=true`.
 
 1. `limactl create --name=lima-vz --vm-type=vz --mount-type=virtiofs --mount-writable --mount="~/:w" --memory=6 --cpus=4 --disk=60 template:docker`
 2. `limactl start lima-vz`
-3. `docker context use lima-lima-vz`
+3. `limactl start` prints the context command but doesn't run it, so create the context: `docker context create lima-lima-vz --docker "host=unix://$(limactl list lima-vz --format '{{.Dir}}')/sock/docker.sock"`
+4. `docker --context lima-lima-vz run --rm alpine echo ok`, then `limactl stop lima-vz`
 
 Then the Buildkite agent must be configured with tags `lima=true`.
 
@@ -584,6 +594,8 @@ The `test.sh` script uses `podman machine start` and `docker context use podman-
     ```
 
     `curl` must print `200`. Until someone clicks Allow, every published port resets ("Connection reset by peer") and containers can't reach the host, so nearly every networking test fails. On a testbot nobody sees the prompt: a test job raises it and leaves it waiting on the screen. If it was dismissed, turn `container-runtime-linux` on in System Settings → Privacy & Security → Local Network.
+
+    The prompt comes back after every upgrade of `container`, because macOS treats each new build as a new program. There is no command-line or MDM way to pre-approve it. Run `brew pin container` so `testbot_maintenance.sh`'s `brew upgrade` skips it, and upgrade on purpose while someone is on Screen Sharing: `brew unpin container && brew upgrade container && brew pin container`, then repeat this step.
 
 Then the Buildkite agent must be configured with tag `socktainer=true`.
 
