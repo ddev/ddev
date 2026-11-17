@@ -15,6 +15,8 @@ if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAG
   exit 0
 fi
 
+# The phase test.sh is in, for the failure report when it exits early.
+CURRENT_PHASE="fetching public variables"
 git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
 while IFS= read -r varname; do
   [[ "$varname" == "README.md" ]] && continue
@@ -26,6 +28,7 @@ done < <(MSYS_NO_PATHCONV=1 git ls-tree --name-only refs/public-variables-tmp:.g
 git update-ref -d refs/public-variables-tmp
 
 # A changed image may still be waiting on image-push.yml's approval
+CURRENT_PHASE="waiting for images"
 "$(dirname "$0")/../containers/wait-for-images.sh"
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
@@ -45,11 +48,25 @@ export DOCKER_SCOUT_SUGGEST=false
 # shellcheck source=lib-provider.sh
 source "$(dirname "$0")/lib-provider.sh"
 
+# report_startup_exit names the phase that failed when test.sh exits before
+# the tests start, so the end of the log doesn't show only an exit status.
+function report_startup_exit {
+  local rc=$1
+  if [ "${rc}" != 0 ] && [ -n "${CURRENT_PHASE}" ]; then
+    echo "+++ FAILED: test.sh exited with status ${rc} before the tests started, during: ${CURRENT_PHASE}"
+    if [ "${rc}" = 143 ]; then
+      echo "Status 143 means the job was canceled or killed."
+    fi
+  fi
+}
+trap 'report_startup_exit $?' EXIT
+
 # On macOS, we can have several different docker providers, allow testing all.
 # They stay running between jobs; provider_bringup picks this job's provider
 # with DOCKER_CONTEXT (see lib-provider.sh).
 if [ "${os:-}" = "darwin" ]; then
   function cleanup {
+    report_startup_exit $?
     # Post-test maintenance, while the provider is still up.
     if [ "${RAN_TESTS:-false}" = "true" ]; then
       echo "--- running testbot_maintenance.sh (post-test)"
@@ -75,6 +92,7 @@ if [ "${os:-}" = "darwin" ]; then
   docker context ls
 fi
 
+CURRENT_PHASE="bringing up docker provider ${DOCKER_TYPE:-notset}"
 provider_bringup
 
 echo
@@ -124,13 +142,14 @@ case ${DOCKER_TYPE:-none} in
 esac
 
 echo "Docker version:"
-docker version
+run_phase "docker version" 60s docker version
 echo
 
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
 
 # If this is a PR and the diff doesn't have code, skip it
+CURRENT_PHASE="checking for relevant changes"
 set -x
 if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ]; then
   # Find the merge base between the PR branch and the base branch
@@ -143,23 +162,26 @@ if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ]; then
   fi
 
 fi
+set +x
 
 # Every ddev this job runs, including testbot_maintenance.sh's cleanup and the
 # final poweroff, is HEAD. A testbot's installed ddev can be missing (the
 # installer tests uninstall it) or stale, which leaves containers running.
 echo "--- Building ddev"
+CURRENT_PHASE="building ddev"
 make build
 export PATH="$PWD/.gotmp/bin/$(go env GOOS)_$(go env GOARCH):$PATH"
 ddev version
 
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
-
-${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh"
+run_phase "testbot_maintenance.sh" 10m bash "$(dirname "$0")/testbot_maintenance.sh"
 
 # Our testbot should be sane, run the testbot checker to make sure.
+# sanetestbot.sh bounds each of its steps; this limit is only a backstop.
 echo "--- running sanetestbot.sh"
-${TIMEOUT} 5m bash "$(dirname "$0")/sanetestbot.sh"
+run_phase "sanetestbot.sh" 10m bash "$(dirname "$0")/sanetestbot.sh"
+CURRENT_PHASE="final setup"
 
 # Rootless podman and Apple Container cannot bind privileged ports (<1024), so
 # the DDEV router must use non-privileged ports. This must run AFTER testbot_maintenance.sh, which
@@ -192,6 +214,7 @@ echo "--- Running tests..."
 
 # From here on, cleanup (the EXIT trap) runs testbot_maintenance.sh post-test.
 RAN_TESTS=true
+CURRENT_PHASE=""
 # set -e would abort here on a test failure before RV is captured, skipping
 # the artifact upload below -- wrapping in `if` suppresses that so a failing
 # run still uploads its results (matches GHA's if: always() upload step).
