@@ -254,6 +254,32 @@ Relative path to the document root containing `index.php` or `index.html`.
 | -- | -- | --
 | :octicons-file-directory-16: project | automatic | DDEV will attempt to detect this and set it for you, otherwise falling back to the current directory.
 
+## `external_url_template`
+
+The URL a browser outside the workspace uses to reach each router port, for cloud development environments like Coder whose proxy forwards each port under its own hostname. `{{port}}` is replaced by the router HTTP port. When it is set, `ddev describe`, `ddev start`, `ddev list` and `ddev launch` show these URLs instead of the `*.ddev.site` URLs a browser elsewhere can't reach.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | `""` | Must start with `http://` or `https://` and contain `{{port}}`.
+
+The external proxy is expected to terminate TLS and forward to the router's HTTP port, so a router HTTPS port shows the URL of its paired HTTP port. DDEV only displays these URLs: the proxy and any `ddev-router` routing it needs are set up separately. The URLs inside the containers, like `DDEV_PRIMARY_URL`, don't change.
+
+This setting belongs in a `config.*.yaml` file that isn't committed, since it names one workspace. For example, in `.ddev/config.coder.yaml`:
+
+```yaml
+external_url_template: "https://{{port}}--main--myworkspace--me.coder.example.com"
+external_urls:
+  "8080": "https://myproject--myworkspace--me.coder.example.com"
+```
+
+## `external_urls`
+
+External URLs for individual router HTTP ports, keyed by port. An entry here takes precedence over [`external_url_template`](#external_url_template) for its port, which is useful when several projects share a router port, as they do the primary `router_http_port`, and each has its own external hostname.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | `{}` | Keys are router port numbers as strings; values start with `http://` or `https://`.
+
 ## `fail_on_hook_fail`
 
 Whether [`ddev start`](../usage/commands.md#start) should be interrupted by a failing [hook](../configuration/hooks.md), on a single project or for all projects if used globally.

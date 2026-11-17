@@ -105,8 +105,10 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_HOST_WEBSERVER_PORT`: Localhost port of the web server
 * `DDEV_MAILPIT_HTTP_PORT`: Router Mailpit port for HTTP
 * `DDEV_MAILPIT_HTTPS_PORT`: Router Mailpit port for HTTPS
+* `DDEV_MAILPIT_EXTERNAL_URL`: Mailpit URL from [`external_url_template` or `external_urls`](../configuration/config.md#external_url_template), empty when neither is set
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
 * `DDEV_PHP_VERSION`: Current PHP version
+* `DDEV_PRIMARY_EXTERNAL_URL`: Primary project URL from [`external_url_template` or `external_urls`](../configuration/config.md#external_url_template), empty when neither is set
 * `DDEV_PRIMARY_URL`: Primary project URL
 * `DDEV_PRIMARY_URL_PORT`: Port of the primary project URL, defaults to 80 for HTTP and 443 for HTTPS
 * `DDEV_PRIMARY_URL_WITHOUT_PORT`: Primary project URL without port
