@@ -25,7 +25,6 @@ var ContainerTerminfoEntries = []string{
 // hyperlinks, as output.HasTermHyperlinks does for DDEV itself.
 // See https://github.com/chalk/supports-hyperlinks/blob/main/index.js
 var TerminalEnvVars = []string{
-	"CI",
 	"COLORTERM",
 	"FORCE_HYPERLINK",
 	"KONSOLE_VERSION",
