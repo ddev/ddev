@@ -54,6 +54,154 @@ function context_is_up {
   ${TIMEOUT} 20s docker --context "$1" ps >/dev/null 2>&1
 }
 
+# Helper: stop the provider named by a DOCKER_TYPE value.
+function stop_provider {
+  case "$1" in
+    "orbstack")
+      stop_orbstack
+      ;;
+    "docker-desktop")
+      # Stopping Docker Desktop is unreliable, so leave it running.
+      echo "Not stopping Docker Desktop"
+      ;;
+    "colima_vz")
+      command -v colima >/dev/null 2>&1 && echo "Stopping colima_vz" && (${TIMEOUT} 120s colima stop -f vz || true)
+      ;;
+    "lima")
+      command -v limactl >/dev/null 2>&1 && echo "Stopping lima" && (${TIMEOUT} 120s limactl stop -f lima-vz || true)
+      ;;
+    "rancher-desktop")
+      if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (${TIMEOUT} 120s ~/.rd/bin/rdctl shutdown || true); fi
+      ;;
+    "podman-rootless")
+      command -v podman >/dev/null 2>&1 && echo "Stopping podman machine" && (${TIMEOUT} 120s podman machine stop || true)
+      ;;
+    "socktainer")
+      if command -v container >/dev/null 2>&1; then
+        echo "Stopping socktainer and apple container"
+        pkill -x socktainer || true
+        ${TIMEOUT} 60s container system stop || true
+      fi
+      ;;
+  esac
+  return 0
+}
+
+# Helper: print the DOCKER_TYPE of the provider that runs the command line $1,
+# or nothing for a process that belongs to no provider. Rancher Desktop and
+# colima run their own copies of Lima's limactl, and colima's instance name
+# contains "lima-vz", so check them before Lima. Colima publishes ports through
+# an ssh mux process whose command line names its colima-vz directory.
+function provider_of_command {
+  case "$1" in
+    *"Rancher Desktop"* | *rancher-desktop*) echo "rancher-desktop" ;;
+    *colima*) echo "colima_vz" ;;
+    *limactl*lima-vz* | */.lima/lima-vz/*) echo "lima" ;;
+    *OrbStack*) echo "orbstack" ;;
+    *com.docker.* | *Docker.app*) echo "docker-desktop" ;;
+    *gvproxy* | *podman* | *vfkit* | *krunkit*) echo "podman-rootless" ;;
+    *socktainer* | *com.apple.container*) echo "socktainer" ;;
+  esac
+}
+
+# Helper: print "<provider> <pid> <port>" for each TCP port that a provider
+# process listens on.
+function provider_listeners {
+  local pid="" line cmd provider
+  bounded 30s lsof -nP -iTCP -sTCP:LISTEN -Fpn 2>/dev/null | while read -r line; do
+    case "${line}" in
+      p*) pid=${line#p} ;;
+      n*)
+        cmd=$(ps -o command= -p "${pid}" 2>/dev/null || true)
+        provider=$(provider_of_command "${cmd}")
+        [ -n "${provider}" ] && echo "${provider} ${pid} ${line##*:}"
+        ;;
+    esac
+  done | sort -u
+}
+
+# Helper: print the host ports this job's router will use.
+function own_router_ports {
+  case "${DOCKER_TYPE}" in
+    "podman-rootless" | "socktainer") echo "8080 8443 8025 8026 8142 8143 10999" ;;
+    *) echo "80 443 8025 8026 8142 8143 10999" ;;
+  esac
+}
+
+# Ports that providers listen on with no containers: colima's DNS, Rancher
+# Desktop's 6107/6109 and OrbStack's 32222. Their other idle listeners, such as
+# SSH forwards, use the ephemeral range from 49152, which DDEV doesn't use.
+PROVIDER_IDLE_PORTS="53 6107 6109 32222"
+
+# Helper: print the problems that would make tests run on substitute ports:
+# another provider listening on a port that DDEV may use, or a busy router port
+# of this job. Docker Desktop counts only through the router ports, because it
+# isn't stopped.
+function provider_port_problems {
+  local port
+  provider_listeners | awk -v own="${DOCKER_TYPE}" -v idle=" ${PROVIDER_IDLE_PORTS} " '
+    $1 != own && $1 != "docker-desktop" && $3 < 49152 && index(idle, " " $3 " ") == 0 {
+      print "other " $1 " pid " $2 " listens on " $3
+    }'
+  for port in $(own_router_ports); do
+    if nc -z -G 2 127.0.0.1 "${port}" >/dev/null 2>&1; then
+      echo "busy ${port} held by: $(bounded 30s lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null | while read -r p; do ps -o command= -p "${p}"; done | tr '\n' ' ')"
+    fi
+  done
+}
+
+# Helper: wait up to $1 seconds for provider_port_problems to report nothing.
+function wait_provider_ports_clean {
+  local problems deadline=$((SECONDS + $1))
+  while true; do
+    problems=$(provider_port_problems)
+    [ -z "${problems}" ] && return 0
+    [ "${SECONDS}" -ge "${deadline}" ] && break
+    sleep 1
+  done
+  echo "${problems}"
+  return 1
+}
+
+# Helper: make sure no provider holds ports that this job's router or tests
+# may need. Every container is gone by now, so a port that another provider
+# still listens on is a stale forward, and stopping that provider loses
+# nothing. Returns 1 when this job's own provider holds one of its router
+# ports and needs a restart. Fails the job when a port stays busy.
+function ensure_provider_ports_clean {
+  local problems others restart_own=false provider port pid
+  # A forward closes within a fraction of a second after its container is removed.
+  problems=$(wait_provider_ports_clean 5) && return 0
+  echo "Docker provider port problems:"
+  echo "${problems}"
+  others=$(echo "${problems}" | awk '$1 == "other" { print $2 }' | sort -u)
+  for provider in ${others}; do
+    stop_provider "${provider}"
+  done
+  for port in $(echo "${problems}" | awk '$1 == "busy" { print $2 }'); do
+    for pid in $(bounded 30s lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null); do
+      [ "$(provider_of_command "$(ps -o command= -p "${pid}")")" = "${DOCKER_TYPE}" ] && restart_own=true
+    done
+  done
+  if [ "${restart_own}" = "true" ]; then
+    if [ "${PROVIDER_PORTS_RESTARTED:-false}" = "true" ] || [ "${DOCKER_TYPE}" = "docker-desktop" ]; then
+      provider_ports_failure "${DOCKER_TYPE} holds its router ports, and a restart did not or cannot free them" "${problems}"
+    fi
+    return 1
+  fi
+  problems=$(wait_provider_ports_clean 20) && return 0
+  provider_ports_failure "ports are still busy before the tests start" "${problems}"
+}
+
+# Helper: report a port problem that the script can't fix, and fail the job.
+function provider_ports_failure {
+  echo "+++ FAILED: $1"
+  echo "$2"
+  diag_cmd 20s lsof -nP -iTCP -sTCP:LISTEN
+  docker_diagnostics
+  exit 1
+}
+
 # Helper: remove all containers in every other provider that is running, so a
 # container left behind by an earlier job (a ddev-router holding ports 80/443,
 # for instance) can't block this one. Assumes one job at a time per testbot.
@@ -265,6 +413,13 @@ function provider_bringup {
     if [ "${PROVIDER_EXCLUSIVE}" != "true" ]; then
       cleanup_other_provider_containers
     fi
+    if ! ensure_provider_ports_clean; then
+      echo "Restarting ${DOCKER_TYPE} to drop a stale port forward"
+      stop_provider "${DOCKER_TYPE}"
+      PROVIDER_PORTS_RESTARTED=true
+      provider_bringup
+      return
+    fi
   fi
 
   # Handle docker-ce cleanup for WSL and other native Docker CE instances
@@ -320,27 +475,16 @@ function provider_bringup {
 # Orbstack or Docker Desktop running afterward. Used by PROVIDER_EXCLUSIVE
 # callers (perf.sh) and testbot_disk_cleanup.sh; test.sh leaves providers up.
 function provider_shutdown {
+  local provider
   # Apple container runs each container as its own launchd service, so a
   # socktainer job killed before its cleanup leaves a ddev-router holding host
   # ports. Stop it first, because a canceled job may not get further.
-  if command -v container >/dev/null 2>&1; then
-    echo "Stopping socktainer and apple container"
-    pkill -x socktainer || true
-    ${TIMEOUT} 60s container system stop || true
-  fi
-  stop_orbstack
-  if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
-  command -v colima 2>/dev/null && echo "Stopping colima_vz" && (colima stop -f vz || true)
-  command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop -f lima-vz || true)
-  if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (~/.rd/bin/rdctl shutdown || true); fi
-  command -v podman 2>/dev/null && echo "Stopping podman machine" && (podman machine stop || true)
+  for provider in socktainer orbstack docker-desktop colima_vz lima rancher-desktop podman-rootless; do
+    stop_provider "${provider}"
+  done
   restore_resting_provider
 }
 
-# restore_resting_provider leaves orbstack running, as the most reliable
-# provider, otherwise Docker Desktop, and points the global context at it.
-# Jobs use DOCKER_CONTEXT; the global context is for Icinga's docker check
-# and for people who ssh in.
 function restore_resting_provider {
   if command -v orb >/dev/null 2>&1 ; then
     context_is_up orbstack || start_orbstack
