@@ -1,7 +1,7 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-13; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-13, rebased 2026-11-17; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
@@ -10,10 +10,43 @@ below), `socktainer` built from upstream `main` as of 2026-11-09 with no fork fi
 commit as the v1.6.1 release, `71f2415`), docker CLI 29.9.2, docker context `socktainer`,
 macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment),
-rebased on `upstream/main` as of 2026-11-13, after [#9108](https://github.com/ddev/ddev/pull/9108)
-(the split-off general fixes) and [#9123](https://github.com/ddev/ddev/pull/9123).
+rebased on `upstream/main` as of 2026-11-17, after [#9108](https://github.com/ddev/ddev/pull/9108)
+(the split-off general fixes), [#9121](https://github.com/ddev/ddev/pull/9121) (xhgui) and the Buildkite provider
+changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.com/ddev/ddev/pull/9136) and [#9138](https://github.com/ddev/ddev/pull/9138).
 
 ## Resume here
+
+### Status (2026-11-17)
+
+- **Rebase onto upstream/main:** two conflicts, both in
+  `TestGetWebContainerDirectURLsWithGenericWebserver`, which upstream split into subtests
+  ([#9137](https://github.com/ddev/ddev/pull/9137)). The Apple Container privileged-port skip
+  is now on the `default router ports` subtest only, so `busy router ports` (29080/29443) runs
+  on Apple Container for the first time; unverified. `test.sh` keeps the socktainer log
+  upload, and upstream's `lib-provider.sh` still writes `~/tmp/socktainer.log`.
+- **Upstream Buildkite changes to watch on the next socktainer build:**
+  [#9114](https://github.com/ddev/ddev/pull/9114) selects the provider with `DOCKER_CONTEXT`
+  and leaves other providers running, except apple container and socktainer, which it stops
+  when another provider is under test; [#9138](https://github.com/ddev/ddev/pull/9138) first
+  stops any provider that holds a port DDEV uses; [#9136](https://github.com/ddev/ddev/pull/9136) reports
+  which startup step failed, with `container system status` for socktainer.
+- **socktainer:** no release since 1.6.1 and no maintainer response on #519 or #520 yet.
+  New from others: #524 (concurrent `POST /networks/create` for one name returns 500),
+  #525/[#526](https://github.com/socktainer/socktainer/pull/526) (`/.dockerenv` marker),
+  [#522](https://github.com/socktainer/socktainer/pull/522) (`repo@sha256:` image inspect),
+  [#523](https://github.com/socktainer/socktainer/pull/523) (compressed archive uploads).
+  None is known to affect DDEV.
+- **Local smoke test not run:** `container system start` hung on vmnet status 1001 for the
+  `ddev_default` network, and `container system status`/`stop` hang with it. Needs a reboot
+  (see "Current machine state").
+
+### Before asking for review
+
+- Squash `test: read host zone before clearing TZ` (below).
+- A green macos-socktainer build on this rebase, or each remaining failure tied to a filed
+  socktainer issue.
+- Decide whether the two diagnose commits go out as their own PR first.
+- `HANDOFF.md` and `handoff/` stay for review but come out before merge.
 
 ### CI status (2026-11-13)
 
@@ -28,7 +61,7 @@ these. Both ran apple container 1.7.1 with socktainer 1.6.1, which warns that it
   NXDOMAIN)` just before the registration. Filed as
   [socktainer#519](https://github.com/socktainer/socktainer/issues/519), with a plain
   `docker run` repro that fails every time. DDEV fix: nginx uses `127.0.0.1:9000`,
-  [#9121](https://github.com/ddev/ddev/pull/9121) (new `ddev-xhgui` image, needs pushing).
+  [#9121](https://github.com/ddev/ddev/pull/9121), merged 2026-11-17.
 - **`TestUtilityDiagnoseCmd/ProjectWithCustomizations` (builds 24, 27, 28):** `✗ No internet
   access from containers`, although `ddev utility dockercheck` exited 0. The lines diagnose
   greps for are the first two of dockercheck's output, and they were missing; the last two
@@ -799,8 +832,12 @@ To capture raw API traffic, put a logging proxy in front of the socket:
 `socat -v UNIX-LISTEN:$HOME/tmp/proxy.sock,fork UNIX-CONNECT:$HOME/.socktainer/container.sock 2> ~/tmp/socat.log`,
 then point `DOCKER_HOST` at the proxy.
 
-## Current machine state (2026-11-13)
+## Current machine state (2026-11-17)
 
+- **apple container is wedged:** vmnet returns status 1001 for `ddev_default`, launchd restarts
+  the network helper every 10 s, and `container system status`/`stop` hang. A reboot is the
+  only known fix. After it, `container system start --disable-kernel-install`, then
+  `socktainer --no-auto-start`, then `ddev poweroff` under `~/tmp/sockenv.sh`.
 - The running `container-apiserver` is Homebrew's apple container **1.7.1**, first on `PATH`,
   matching the testbots. The signed 1.6.1 install is still in `/usr/local`. Homebrew's
   socktainer 1.6.1 is installed and first on `PATH`.
