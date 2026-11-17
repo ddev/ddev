@@ -25,7 +25,7 @@ teardown() {
 
   run -0 _retry ddev composer create-project drupal/recommended-project:main-dev@dev
 
-  run -0 ddev composer require drush/drush
+  run -0 ddev composer require "drush/drush:^14@dev"
 
   run -0 ddev drush site:install --account-name=admin --account-pass=admin -y
 
