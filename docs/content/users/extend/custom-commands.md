@@ -126,6 +126,7 @@ A number of environment variables are provided to these command scripts. These a
 
 Useful variables for container scripts are:
 
+* `CI`: The host's `CI` value, like `true` in GitHub Actions, if the host sets it when the project starts
 * `DDEV_APPROOT`: Absolute path to the project files within the web container
 * `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.8`)
 * `DDEV_DATABASE_FAMILY`: Database "family" (example: `mysql`, `postgres`), useful for database connection URLs
