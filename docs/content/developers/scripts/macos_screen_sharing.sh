@@ -22,7 +22,8 @@ if [ "${privs}" != "-1073741569" ]; then
   echo "${user} doesn't have every Remote Management privilege (naprivs=${privs:-unset})" >&2 && exit 1
 fi
 
-if netstat -an -p tcp | grep -qE '\.5900 .*LISTEN'; then
+# netstat doesn't list Screen Sharing's port 5900 listener on macOS 27
+if /usr/bin/nc -z -G 3 127.0.0.1 5900 >/dev/null 2>&1; then
   echo "${user} has every Remote Management privilege, and port 5900 is listening"
 else
   echo "Nothing is listening on port 5900; turn on Remote Management in System Settings > General > Sharing" >&2 && exit 1
