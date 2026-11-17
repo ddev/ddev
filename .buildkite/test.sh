@@ -31,7 +31,13 @@ git update-ref -d refs/public-variables-tmp
 CURRENT_PHASE="waiting for images"
 "$(dirname "$0")/../containers/wait-for-images.sh"
 
-export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+# Linux testbots, including WSL2, keep Homebrew here. On macOS, /home is an
+# autofs mount that TCC treats as a network volume, so looking up a command
+# there makes macOS ask buildkite-agent for network volume access, which
+# hangs the job until someone clicks Allow.
+if [ "$(uname -s)" = "Linux" ]; then
+  export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+fi
 os=$(go env GOOS)
 
 # GOTEST_SHORT=16 means drupal11
