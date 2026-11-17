@@ -89,12 +89,14 @@ function stop_provider {
 
 # Helper: print the DOCKER_TYPE of the provider that runs the command line $1,
 # or nothing for a process that belongs to no provider. Rancher Desktop and
-# colima run their own copies of Lima's limactl, so check them before Lima.
+# colima run their own copies of Lima's limactl, and colima's instance name
+# contains "lima-vz", so check them before Lima. Colima publishes ports through
+# an ssh mux process whose command line names its colima-vz directory.
 function provider_of_command {
   case "$1" in
     *"Rancher Desktop"* | *rancher-desktop*) echo "rancher-desktop" ;;
-    *limactl*colima* | *colima*limactl*) echo "colima_vz" ;;
-    *limactl*lima-vz* | *lima-vz*limactl*) echo "lima" ;;
+    *colima*) echo "colima_vz" ;;
+    *limactl*lima-vz* | */.lima/lima-vz/*) echo "lima" ;;
     *OrbStack*) echo "orbstack" ;;
     *com.docker.* | *Docker.app*) echo "docker-desktop" ;;
     *gvproxy* | *podman* | *vfkit* | *krunkit*) echo "podman-rootless" ;;
@@ -126,12 +128,21 @@ function own_router_ports {
   esac
 }
 
+# Ports that providers listen on with no containers: colima's DNS, Rancher
+# Desktop's 6107/6109 and OrbStack's 32222. Their other idle listeners, such as
+# SSH forwards, use the ephemeral range from 49152, which DDEV doesn't use.
+PROVIDER_IDLE_PORTS="53 6107 6109 32222"
+
 # Helper: print the problems that would make tests run on substitute ports:
-# another provider listening on any port, or a busy router port of this job.
-# Docker Desktop counts only through the router ports, because it isn't stopped.
+# another provider listening on a port that DDEV may use, or a busy router port
+# of this job. Docker Desktop counts only through the router ports, because it
+# isn't stopped.
 function provider_port_problems {
   local port
-  provider_listeners | awk -v own="${DOCKER_TYPE}" '$1 != own && $1 != "docker-desktop" { print "other " $1 " pid " $2 " listens on " $3 }'
+  provider_listeners | awk -v own="${DOCKER_TYPE}" -v idle=" ${PROVIDER_IDLE_PORTS} " '
+    $1 != own && $1 != "docker-desktop" && $3 < 49152 && index(idle, " " $3 " ") == 0 {
+      print "other " $1 " pid " $2 " listens on " $3
+    }'
   for port in $(own_router_ports); do
     if nc -z -G 2 127.0.0.1 "${port}" >/dev/null 2>&1; then
       echo "busy ${port} held by: $(bounded 30s lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null | while read -r p; do ps -o command= -p "${p}"; done | tr '\n' ' ')"
@@ -141,10 +152,11 @@ function provider_port_problems {
 
 # Helper: wait up to $1 seconds for provider_port_problems to report nothing.
 function wait_provider_ports_clean {
-  local i problems
-  for ((i = 0; i < $1; i++)); do
+  local problems deadline=$((SECONDS + $1))
+  while true; do
     problems=$(provider_port_problems)
     [ -z "${problems}" ] && return 0
+    [ "${SECONDS}" -ge "${deadline}" ] && break
     sleep 1
   done
   echo "${problems}"
@@ -158,8 +170,8 @@ function wait_provider_ports_clean {
 # ports and needs a restart. Fails the job when a port stays busy.
 function ensure_provider_ports_clean {
   local problems others restart_own=false provider port pid
-  # A forward can take a few seconds to close after its container is removed.
-  problems=$(wait_provider_ports_clean 15) && return 0
+  # A forward closes within a fraction of a second after its container is removed.
+  problems=$(wait_provider_ports_clean 5) && return 0
   echo "Docker provider port problems:"
   echo "${problems}"
   others=$(echo "${problems}" | awk '$1 == "other" { print $2 }' | sort -u)
@@ -177,7 +189,7 @@ function ensure_provider_ports_clean {
     fi
     return 1
   fi
-  problems=$(wait_provider_ports_clean 30) && return 0
+  problems=$(wait_provider_ports_clean 20) && return 0
   provider_ports_failure "ports are still busy before the tests start" "${problems}"
 }
 
