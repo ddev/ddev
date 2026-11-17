@@ -56,22 +56,25 @@ func TestWebserverDenyRules(t *testing.T) {
 		allowed       []string
 	}{
 		{nodeps.AppTypeTYPO3, nodeps.WebserverNginxFPM, "", http.StatusForbidden,
-			[]string{"vendor/x.php", "vendor/x.txt", "typo3_src/x.php", "typo3temp/var/x.php", "fileadmin/_temp_/x.php", "fileadmin/templates/x.typoscript", "typo3conf/ext/x/Tests/x.php", ".hidden/x.php"},
+			[]string{"vendor/x.php", "vendor/x.txt", "typo3_src/x.php", "typo3temp/var/x.php", "fileadmin/_temp_/x.php", "fileadmin/templates/x.typoscript", "typo3conf/ext/x/Tests/x.php", ".hidden/x.php", "vendor/y.php/foo", "README.md", "repo.git/config", "x.tsconfig"},
 			[]string{"typo3temp/assets/x.txt", "vendors/x.txt"}},
 		{nodeps.AppTypeCodeIgniter, nodeps.WebserverNginxFPM, "", http.StatusNotFound,
 			[]string{"app/x.php", "vendor/x.php", "writable/x.php"}, nil},
 		{nodeps.AppTypeMagento2, nodeps.WebserverNginxFPM, "pub", http.StatusForbidden,
-			[]string{"media/x.php", "static/x.php", ".hidden/x.php", "media/customer/x.txt"},
-			[]string{"index.php", "health_check.php", "x.php"}},
+			[]string{"media/x.php", "static/x.php", ".hidden/x.php", "media/customer/x.txt", "repo.git/config"},
+			[]string{"index.php", "health_check.php", "x.php", "media/.thumbs/wysiwyg/x.png"}},
 		{nodeps.AppTypeMagento, nodeps.WebserverNginxFPM, "", http.StatusForbidden,
-			[]string{"app/etc/local.xml", "var/x.txt"}, nil},
+			[]string{"app/etc/local.xml", "var/x.txt"}, []string{"media/wysiwyg/.thumbs/x.jpg"}},
+		{nodeps.AppTypeMaho, nodeps.WebserverNginxFPM, "public", http.StatusForbidden,
+			[]string{"media/downloadable/x.zip", "media/customer/x.jpg", "composer.lock", "x.yml", ".hidden/x.php"},
+			[]string{"media/wysiwyg/.thumbs/x.jpg", "media/catalog/x.jpg", "manifest.json"}},
 		{nodeps.AppTypeDrupal11, nodeps.WebserverNginxFPM, "web", http.StatusForbidden,
 			[]string{"sites/default/files/sync/system.site.yml", "modules/custom/x/x.module", "themes/custom/x/x.html.twig", "x.tpl.php"},
 			[]string{"core/misc/x.js"}},
 		{nodeps.AppTypePHP, nodeps.WebserverNginxFPM, "", http.StatusForbidden,
 			[]string{".env", ".hidden/x.php"}, []string{".well-known/x.txt"}},
 		{nodeps.AppTypePHP, nodeps.WebserverApacheFPM, "", http.StatusForbidden,
-			[]string{".env", ".git/config", ".hidden/x.php"}, []string{".well-known/x.txt"}},
+			[]string{".env", ".git/config", ".hidden/x.php"}, []string{".well-known/x.txt", "media/.thumbs/x.jpg"}},
 	}
 
 	for _, tc := range testCases {
