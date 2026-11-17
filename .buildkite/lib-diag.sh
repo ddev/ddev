@@ -52,8 +52,28 @@ function diag_cmd {
   fi
 }
 
+# macos_privacy_prompts reports macOS privacy (TCC) prompts from the last 15
+# minutes. An unanswered prompt, such as Rancher Desktop asking to access
+# files on a network volume, blocks the VM's file sharing until someone
+# clicks Allow on the testbot, so docker commands that touch host files hang.
+function macos_privacy_prompts {
+  [ "$(uname -s)" = "Darwin" ] || return 0
+  local prompts
+  prompts=$(bounded 30s log show --last 15m --style compact \
+    --predicate 'subsystem == "com.apple.TCC" AND eventMessage CONTAINS "AUTHREQ_PROMPTING"' 2>/dev/null |
+    sed -nE 's/.*service=([^,]+), subject=Sub:\{([^}]+)\}.*/\2 asked for \1/p' | sort -u || true)
+  if [ -n "${prompts}" ]; then
+    echo "macOS privacy prompts on $(hostname) in the last 15 minutes:"
+    echo "${prompts}"
+    echo "If nobody answered a prompt, it is still waiting. Click Allow on the testbot's screen,"
+    echo "or give the app Full Disk Access in System Settings > Privacy & Security."
+  fi
+}
+
 # docker_diagnostics prints the state of the Docker provider and the host.
+# The privacy prompt check comes first, so it shows in the expanded section.
 function docker_diagnostics {
+  macos_privacy_prompts
   echo "--- Diagnostics at $(date) on $(hostname): DOCKER_TYPE=${DOCKER_TYPE:-notset} DOCKER_CONTEXT=${DOCKER_CONTEXT:-notset}"
   diag_cmd 20s docker context ls
   diag_cmd 20s docker version
