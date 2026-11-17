@@ -601,20 +601,37 @@ Then the Buildkite agent must be configured with tag `socktainer=true`.
 
 ## Claude Code Self-Hosted Runner (macOS)
 
-One macOS runner also runs a Claude Code self-hosted runner, so maintainers can start claude.ai sessions on it. It runs as `testbot`:
+One macOS runner also runs a Claude Code self-hosted runner, so maintainers can start claude.ai sessions on it. It runs as `testbot`, from the LaunchAgent `~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist` with `RunAtLoad` and `KeepAlive`. Its `ProgramArguments` are:
 
 ```bash
 /opt/homebrew/bin/claude self-hosted-runner \
-  --environment-secret-file ~/.config/claude-runner/environment-secret \
-  --base-dir ~/claude-runner --client-label macos-claude \
+  --environment-secret-file /Users/testbot/.config/claude-runner/environment-secret \
+  --base-dir /Users/testbot/claude-runner --client-label macos-claude \
   --use-anthropic-git-proxy --configure-git --remove-session-state \
   --release-idle-session-min 30 --push-outcome-on-release --health-port 0 \
-  --log-file ~/Library/Logs/claude-self-hosted-runner.log
+  --log-file /Users/testbot/Library/Logs/claude-self-hosted-runner.log \
+  --hooks-dir /Users/testbot/.config/claude-runner/hooks
+```
+
+launchd doesn't expand `~`, so the plist uses absolute paths. After changing it, reload the agent while no session is running, because reloading ends the running session:
+
+```bash
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist
 ```
 
 Every session runs as `testbot`, whoever started it, and gets anything `testbot` has. So keep `testbot` free of personal identity and setup:
 
-* No SSH key that GitHub accepts, in `~/.ssh`, in the keychain, or behind an `IdentityAgent` such as 1Password's in `~/.ssh/config`. Never connect to the runner with `ssh -A`, because sessions could then sign with your keys.
+* No SSH key that GitHub accepts, in `~/.ssh`, in the keychain, or behind an agent such as 1Password's. Never connect to the runner with `ssh -A`, because sessions could then sign with your keys. Keep `~/.ssh/config` neutral, so `ssh` ignores any agent:
+
+    ```text
+    Include /Users/testbot/.colima/ssh_config
+
+    Host *
+      IdentityAgent none
+    ```
+
+* No personal dotfiles, and no password manager signed in.
 * No `gh auth login`, and no `GH_TOKEN` or `GITHUB_TOKEN` that can write or that belongs to a person.
 * Only generic instructions and skills in `~/.claude`. Every session loads `~/.claude/CLAUDE.md` and `~/.claude/skills`, so personal ones apply to everyone. Instructions to use `gh` fail there, as described below.
 
@@ -622,7 +639,23 @@ Sessions reach GitHub as the person who started them: HTTPS git through Anthropi
 
 `gh` in a session is `/opt/homebrew/bin/gh`, which isn't logged in, so it doesn't work. Sessions have no GitHub search either, which Claude Code offers only through `gh api`. On self-hosted runners, Claude Code routes only git through the session's proxy, and `gh` is the machine's own CLI, although the runner log reports `gh_path_shim=true`. To give sessions `gh` for reading and searching, set `GH_TOKEN` for `testbot` to a fine-grained token of a GitHub machine user, with read-only access to public repositories. Writes still go only through the session's own account.
 
-The runner clones each repository to `~/claude-runner/<owner>/<repo>` and reuses that checkout for the next session, whoever starts it. Without a post-session hook, uncommitted changes, branches and extra clones from one session are still there in the next. The Coder runner template cleans them with [`claude-runner-sweep`](https://github.com/ddev/coder-ddev/blob/main/modules/claude-self-hosted-runner/files/claude-runner-sweep), which stashes leftover changes and moves unpushed clones aside. To use it here, add `--hooks-dir ~/.config/claude-runner/hooks` and an executable `post-session` hook in that directory that runs `claude-runner-sweep ~/claude-runner`. Nobody has run the sweep on macOS yet, so test it on a scratch directory first.
+The runner clones each repository to `~/claude-runner/<owner>/<repo>` and reuses that checkout for the next session, whoever starts it. A post-session hook cleans it with [`claude-runner-sweep`](https://github.com/ddev/coder-ddev/blob/main/modules/claude-self-hosted-runner/files/claude-runner-sweep) from the Coder runner template. The sweep stashes uncommitted changes in the runner's clones, removes worktrees, deletes extra clones that hold nothing unpushed, and moves the others to `~/.local/state/claude-runner-rescue/`. The runner clears the stash list between sessions, so the sweep keeps each stash under a ref. Install it with the hook:
+
+```bash
+mkdir -p ~/.local/bin ~/.config/claude-runner/hooks
+curl -fsSL https://raw.githubusercontent.com/ddev/coder-ddev/main/modules/claude-self-hosted-runner/files/claude-runner-sweep -o ~/.local/bin/claude-runner-sweep
+chmod +x ~/.local/bin/claude-runner-sweep
+printf '#!/bin/bash\nexec "$HOME/.local/bin/claude-runner-sweep" "$HOME/claude-runner"\n' > ~/.config/claude-runner/hooks/post-session
+chmod +x ~/.config/claude-runner/hooks/post-session
+```
+
+To add `--hooks-dir` to the LaunchAgent, append to its arguments, then reload it as above:
+
+```bash
+/usr/libexec/PlistBuddy -c "Add :ProgramArguments: string --hooks-dir" -c "Add :ProgramArguments: string /Users/testbot/.config/claude-runner/hooks" ~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist
+```
+
+To find work a session left uncommitted, run `git for-each-ref refs/runner-rescue` in the checkout, and `git stash apply <ref>` to restore one. `~/.local/state/claude-runner-rescue/log` lists everything the sweep did. Rescues are kept for 30 days.
 
 Check `testbot` over SSH:
 
@@ -630,8 +663,8 @@ Check `testbot` over SSH:
 ssh-keygen -F github.com >/dev/null || curl -fsSL https://api.github.com/meta | jq -r '.ssh_keys[] | "github.com " + .' >> ~/.ssh/known_hosts
 ssh -T git@github.com
 # Expect "Permission denied (publickey)"
-grep -i IdentityAgent ~/.ssh/config ~/.ssh/*.conf
-# Expect nothing
+ssh -G github.com | grep -i identityagent
+# Expect "identityagent none"
 gh auth status
 # Expect "You are not logged into any GitHub hosts", unless you set a read-only GH_TOKEN
 ```
