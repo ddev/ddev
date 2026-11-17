@@ -599,6 +599,27 @@ The `test.sh` script uses `podman machine start` and `docker context use podman-
 
 Then the Buildkite agent must be configured with tag `socktainer=true`.
 
+## Claude Code Self-Hosted Runner (macOS)
+
+One macOS runner also runs a Claude Code self-hosted runner, so maintainers can start claude.ai sessions on it. Every session runs as `testbot`, whoever started it, and gets any GitHub identity `testbot` has. So `testbot` must have none:
+
+* No SSH key that GitHub accepts, in `~/.ssh` or in the keychain. Never connect to the runner with `ssh -A`, because sessions could then sign with your keys.
+* No `gh auth login`, and no `GH_TOKEN` or `GITHUB_TOKEN` in its environment.
+
+Sessions then reach GitHub only as the person who started them: HTTPS git through Anthropic's proxy, and the GitHub MCP tools. Each maintainer connects GitHub on claude.ai under **Settings** → **Connectors** → **GitHub**, and picks a repository when starting a session. A session started without a repository gets no clone and no GitHub tools. To push to a fork, the session attaches the fork with push access instead of using SSH.
+
+Check `testbot` over SSH:
+
+```bash
+ssh-keygen -F github.com >/dev/null || curl -fsSL https://api.github.com/meta | jq -r '.ssh_keys[] | "github.com " + .' >> ~/.ssh/known_hosts
+ssh -T git@github.com
+# Expect "Permission denied (publickey)"
+gh auth status
+# Expect "You are not logged into any GitHub hosts"
+```
+
+Then start a session with a repository selected, and ask Claude to run `whoami`, `ssh -T git@github.com` and `git ls-remote origin HEAD`, and to call the GitHub MCP tool `get_me`. Expect `testbot`, the same SSH refusal, a commit hash, and the GitHub login of the person who started the session.
+
 ## macOS Disk Space Cleanup
 
 Each provider on a shared macOS testbot keeps its own VM disk, which grows to its high-water mark and keeps every image it has pulled. Two things keep this in check:
