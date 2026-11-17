@@ -213,6 +213,25 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         * A named volume can be mounted read-write by only one running container at a time, so add-ons whose services share a volume may fail to start.
         * `host.docker.internal` resolves to the network gateway, where your Mac answers, so Xdebug and other connections back to the host work only for programs listening on all interfaces, not on `127.0.0.1` alone.
 
+        ### If `container system start` or `ddev start` hangs
+
+        If `container system start`, `container system status`, or a project's "Network Creating" step hangs, check whether macOS refused to create a network:
+
+        ```bash
+        log show --last 5m --predicate 'subsystem == "com.apple.container"' | grep 'rawValue: 1001'
+        ```
+
+        If that prints a line every few seconds, macOS's Internet Sharing service has kept a stale network from an earlier Apple Container session, often after a `brew upgrade` or a crash. Restart that service instead of rebooting:
+
+        ```bash
+        pkill -f container-apiserver; pkill -f container-network-vmnet; pkill -x socktainer
+        sudo killall InternetSharing
+        container system start
+        socktainer
+        ```
+
+        macOS starts a new `InternetSharing` on demand. Run `ddev poweroff` after socktainer is back.
+
 === "Linux"
 
     ## Linux

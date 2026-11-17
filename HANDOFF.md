@@ -22,7 +22,7 @@ changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.
   `TestGetWebContainerDirectURLsWithGenericWebserver`, which upstream split into subtests
   ([#9137](https://github.com/ddev/ddev/pull/9137)). The Apple Container privileged-port skip
   is now on the `default router ports` subtest only, so `busy router ports` (29080/29443) runs
-  on Apple Container for the first time; unverified. `test.sh` keeps the socktainer log
+  on Apple Container for the first time; it passed locally 2026-11-17. `test.sh` keeps the socktainer log
   upload, and upstream's `lib-provider.sh` still writes `~/tmp/socktainer.log`.
 - **Upstream Buildkite changes to watch on the next socktainer build:**
   [#9114](https://github.com/ddev/ddev/pull/9114) selects the provider with `DOCKER_CONTEXT`
@@ -36,9 +36,8 @@ changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.
   [#522](https://github.com/socktainer/socktainer/pull/522) (`repo@sha256:` image inspect),
   [#523](https://github.com/socktainer/socktainer/pull/523) (compressed archive uploads).
   None is known to affect DDEV.
-- **Local smoke test not run:** `container system start` hung on vmnet status 1001 for the
-  `ddev_default` network, and `container system status`/`stop` hang with it. Needs a reboot
-  (see "Current machine state").
+- **Local smoke test passed** (new PHP project over HTTP and HTTPS, `ddev mysql`), after
+  clearing a vmnet 1001 wedge without a reboot; see "vmnet status 1001" under Recipes.
 
 ### Before asking for review
 
@@ -801,6 +800,22 @@ To upgrade `container`: `gh release download <ver> -R apple/container -p
 '*installer-signed.pkg'`, check it with `pkgutil --check-signature`, then
 `sudo installer -pkg … -target /` with the apiserver stopped.
 
+### vmnet status 1001: network create fails, apple container hangs
+
+Symptom: `container system start`, `status` and `stop` hang, and
+`log show --last 5m --predicate 'subsystem == "com.apple.container"'` shows
+`failed to create vmnet network with status vmnet_return_t(rawValue: 1001)` every 10 s for one
+network (here `ddev_default`), while `default` comes up. The refusal comes from macOS's
+`InternetSharing` daemon (`netrbCreateNetwork: unable to fulfill network`), which apparently
+keeps a record of a network whose helper died without releasing it. Fix without a reboot
+(verified 2026-11-17; `launchctl kickstart` is refused under SIP, `killall` is not):
+
+```bash
+pkill -f container-apiserver; pkill -f container-network-vmnet; pkill -x socktainer
+sudo killall InternetSharing   # launchd starts a fresh one on demand
+container system start --disable-kernel-install
+```
+
 ### Test tools
 
 Kept in [`handoff/`](handoff/) on this branch; run them from the repo root. All the repros
@@ -834,10 +849,6 @@ then point `DOCKER_HOST` at the proxy.
 
 ## Current machine state (2026-11-17)
 
-- **apple container is wedged:** vmnet returns status 1001 for `ddev_default`, launchd restarts
-  the network helper every 10 s, and `container system status`/`stop` hang. A reboot is the
-  only known fix. After it, `container system start --disable-kernel-install`, then
-  `socktainer --no-auto-start`, then `ddev poweroff` under `~/tmp/sockenv.sh`.
 - The running `container-apiserver` is Homebrew's apple container **1.7.1**, first on `PATH`,
   matching the testbots. The signed 1.6.1 install is still in `/usr/local`. Homebrew's
   socktainer 1.6.1 is installed and first on `PATH`.
