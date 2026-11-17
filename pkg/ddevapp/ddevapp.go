@@ -4077,17 +4077,14 @@ func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 		return port, nil
 	}
 
-	// If standard method fails and it's a generic webserver with extra exposed ports
+	// A generic webserver serves the router's HTTP port from WebExtraExposedPorts[0],
+	// see AssignRouterPortsToGenericWebserverPorts. Don't match on its http_port,
+	// because a busy router port replaces it with a substitute port on start.
 	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
-		for _, extraPort := range app.WebExtraExposedPorts {
-			// Check only ports mapped to HTTP (port 80)
-			if extraPort.HTTPPort == 80 {
-				containerPort := uint16(extraPort.WebContainerPort)
-				publishedPort, err := app.GetPublishedPortForPrivatePort("web", containerPort)
-				if err == nil && publishedPort != 0 {
-					return publishedPort, nil
-				}
-			}
+		containerPort := uint16(app.WebExtraExposedPorts[0].WebContainerPort)
+		publishedPort, err := app.GetPublishedPortForPrivatePort("web", containerPort)
+		if err == nil && publishedPort != 0 {
+			return publishedPort, nil
 		}
 	}
 
