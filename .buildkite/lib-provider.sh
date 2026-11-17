@@ -106,7 +106,7 @@ function provider_of_command {
 # process listens on.
 function provider_listeners {
   local pid="" line cmd provider
-  lsof -nP -iTCP -sTCP:LISTEN -Fpn 2>/dev/null | while read -r line; do
+  bounded 30s lsof -nP -iTCP -sTCP:LISTEN -Fpn 2>/dev/null | while read -r line; do
     case "${line}" in
       p*) pid=${line#p} ;;
       n*)
@@ -134,7 +134,7 @@ function provider_port_problems {
   provider_listeners | awk -v own="${DOCKER_TYPE}" '$1 != own && $1 != "docker-desktop" { print "other " $1 " pid " $2 " listens on " $3 }'
   for port in $(own_router_ports); do
     if nc -z -G 2 127.0.0.1 "${port}" >/dev/null 2>&1; then
-      echo "busy ${port} held by: $(lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null | while read -r p; do ps -o command= -p "${p}"; done | tr '\n' ' ')"
+      echo "busy ${port} held by: $(bounded 30s lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null | while read -r p; do ps -o command= -p "${p}"; done | tr '\n' ' ')"
     fi
   done
 }
@@ -167,22 +167,26 @@ function ensure_provider_ports_clean {
     stop_provider "${provider}"
   done
   for port in $(echo "${problems}" | awk '$1 == "busy" { print $2 }'); do
-    for pid in $(lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null); do
+    for pid in $(bounded 30s lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null); do
       [ "$(provider_of_command "$(ps -o command= -p "${pid}")")" = "${DOCKER_TYPE}" ] && restart_own=true
     done
   done
   if [ "${restart_own}" = "true" ]; then
     if [ "${PROVIDER_PORTS_RESTARTED:-false}" = "true" ] || [ "${DOCKER_TYPE}" = "docker-desktop" ]; then
-      echo "ERROR: ${DOCKER_TYPE} holds its router ports, and a restart did not or cannot free them" >&2
-      lsof -nP -iTCP -sTCP:LISTEN >&2 || true
-      exit 1
+      provider_ports_failure "${DOCKER_TYPE} holds its router ports, and a restart did not or cannot free them" "${problems}"
     fi
     return 1
   fi
   problems=$(wait_provider_ports_clean 30) && return 0
-  echo "ERROR: ports are still busy before the tests start:" >&2
-  echo "${problems}" >&2
-  lsof -nP -iTCP -sTCP:LISTEN >&2 || true
+  provider_ports_failure "ports are still busy before the tests start" "${problems}"
+}
+
+# Helper: report a port problem that the script can't fix, and fail the job.
+function provider_ports_failure {
+  echo "+++ FAILED: $1"
+  echo "$2"
+  diag_cmd 20s lsof -nP -iTCP -sTCP:LISTEN
+  docker_diagnostics
   exit 1
 }
 
