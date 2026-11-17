@@ -631,7 +631,7 @@ Every session runs as `testbot`, whoever started it, and gets anything `testbot`
       IdentityAgent none
     ```
 
-* No personal dotfiles, and no password manager signed in.
+* No personal dotfiles, commit signing setup such as `~/.ssh/allowed_signers`, or password manager signed in.
 * No `gh auth login`, and no `GH_TOKEN` or `GITHUB_TOKEN` that can write or that belongs to a person.
 * Only generic instructions and skills in `~/.claude`. Every session loads `~/.claude/CLAUDE.md` and `~/.claude/skills`, so personal ones apply to everyone. Instructions to use `gh` fail there, as described below.
 
@@ -655,7 +655,7 @@ To add `--hooks-dir` to the LaunchAgent, append to its arguments, then reload it
 /usr/libexec/PlistBuddy -c "Add :ProgramArguments: string --hooks-dir" -c "Add :ProgramArguments: string /Users/testbot/.config/claude-runner/hooks" ~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist
 ```
 
-To find work a session left uncommitted, run `git for-each-ref refs/runner-rescue` in the checkout, and `git stash apply <ref>` to restore one. `~/.local/state/claude-runner-rescue/log` lists everything the sweep did. Rescues are kept for 30 days.
+To find work a session left uncommitted, run `git for-each-ref refs/runner-rescue` in the checkout, and `git stash apply <ref>` to restore one. `~/.local/state/claude-runner-rescue/log` lists everything the sweep did. Rescues are kept for 30 days. Every later session can read them, whoever started it, which is fine for maintainers' open-source work. They are local refs, so a plain `git push` doesn't send them.
 
 Check `testbot` over SSH:
 
