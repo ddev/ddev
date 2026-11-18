@@ -1,7 +1,7 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-13, rebased 2026-11-17; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-18, rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
@@ -10,11 +10,40 @@ below), `socktainer` built from upstream `main` as of 2026-11-09 with no fork fi
 commit as the v1.6.1 release, `71f2415`), docker CLI 29.9.2, docker context `socktainer`,
 macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment),
-rebased on `upstream/main` as of 2026-11-17, after [#9108](https://github.com/ddev/ddev/pull/9108)
+rebased on `upstream/main` as of 2026-11-18 (after [#9141](https://github.com/ddev/ddev/pull/9141)), after [#9108](https://github.com/ddev/ddev/pull/9108)
 (the split-off general fixes), [#9121](https://github.com/ddev/ddev/pull/9121) (xhgui) and the Buildkite provider
 changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.com/ddev/ddev/pull/9136) and [#9138](https://github.com/ddev/ddev/pull/9138).
 
 ## Resume here
+
+### Build 31 (2026-11-18): host port forwarding broken on tb-macos-arm64-6
+
+[Build 31](https://buildkite.com/ddev/macos-socktainer/builds/31) (the 2026-11-17 rebase,
+`6b3c110`) failed 25 tests: 20 in `pkg/ddevapp`, `TestGetLocalHTTPResponse` in
+`pkg/testcommon`, and `TestCmdLogs`, `TestCheckLiveConnectivityWithProject` and `TestCmdXHGui`
+in `cmd/ddev/cmd`. They have one cause, and it isn't the new `busy router ports` subtest:
+**every port published to the host accepted a connection and then reset it**, from the first
+HTTP check of the job (`TestGetLocalHTTPResponse`, 8000) to the end. The router's ports
+(8080/8443, 30000/30001, 8025, 8142, 10999) and the db's host port (`TestHostDBPort`, psql
+`server closed the connection unexpectedly`) all failed the same way, while the same URLs
+returned 200 from a container on `ddev_default`, and Traefik had the routes. `ddev start`'s
+`warnUnreachableRouterPorts` said "nothing answers" on all 204 starts; build 29 never printed it.
+
+Same versions as the passing build 29 (apple container 1.7.1, socktainer 1.6.1); the
+difference is the machine state. The job started one second after the macos-orbstack job for
+the same commit finished on tb-macos-arm64-6, and its Mutagen daemon start timed out.
+Suspect Apple Container's forwarder (or vmnet) on that testbot, wedged like "vmnet status
+1001" below or disturbed by the OrbStack job; not confirmed, since the testbot isn't reachable
+from here and the socktainer log artifact needs a token with `read_artifacts`. Next time it
+happens, on the testbot: `curl -v http://127.0.0.1:<router port>/` from the host, `container
+ls`, `log show --last 10m --predicate 'subsystem == "com.apple.container"'`, and
+`~/tmp/socktainer.log`. A Buildkite pre-test check that a published port answers would turn
+this into one clear failure instead of 25.
+
+Rebased onto upstream/main again 2026-11-18 (clean, no conflicts; adds #9141, which removes
+leftover containers at job start). Nothing in the rebase addresses the forwarding failure, so
+the next build is mainly a re-run; if it lands on tb-macos-arm64-6 again and fails the same
+way, restart apple container there (`container system stop`/`start`, then socktainer).
 
 ### Status (2026-11-17)
 
@@ -43,7 +72,7 @@ changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.
 
 - Squash `test: read host zone before clearing TZ` (below).
 - A green macos-socktainer build on this rebase, or each remaining failure tied to a filed
-  socktainer issue.
+  socktainer issue. Build 31 doesn't count either way: see "Build 31" above.
 - Decide whether the two diagnose commits go out as their own PR first.
 - `HANDOFF.md` and `handoff/` stay for review but come out before merge.
 
