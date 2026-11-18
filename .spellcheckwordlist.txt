@@ -142,6 +142,7 @@ OSs
 OpenMage
 OpenSearch
 OpenSSH
+OpenSSL
 OrbStack
 Packagist
 PECL
