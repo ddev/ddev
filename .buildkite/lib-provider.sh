@@ -225,6 +225,26 @@ function cleanup_other_provider_containers {
   fi
 }
 
+# Helper: remove all containers in this job's own provider. A canceled job
+# exits before test.sh's final `ddev poweroff`, so its ddev-router keeps ports
+# 80/443 in a provider that stays running, such as Docker Desktop, and
+# ensure_provider_ports_clean would then fail every later job on the testbot.
+# Assumes one job at a time per testbot.
+function cleanup_own_provider_containers {
+  local i ids
+  for i in {1..60}; do
+    context_is_up "${DOCKER_CONTEXT}" && break
+    [ "$((i % 10))" = 1 ] && echo "$(date): Waiting for ${DOCKER_CONTEXT} to answer ($i/60)"
+    sleep 2
+  done
+  ids=$(${TIMEOUT} 20s docker ps -aq 2>/dev/null || true)
+  if [ -n "${ids}" ]; then
+    echo "Removing $(echo "${ids}" | wc -l | tr -d ' ') leftover container(s) in ${DOCKER_CONTEXT}:"
+    ${TIMEOUT} 20s docker ps -a --format '  {{.Names}} {{.Image}} {{.Status}}' 2>/dev/null || true
+    echo "${ids}" | xargs ${TIMEOUT} 60s docker rm -f >/dev/null 2>&1 || true
+  fi
+}
+
 # Helper: try to remove all containers via an SSH-style shell command.
 # Usage: try_cleanup_containers_via_ssh <cmd> [<args>...]
 # Returns 0 if containers are clean, 1 if containers remain (deep cleanup needed).
@@ -413,6 +433,7 @@ function provider_bringup {
     if [ "${PROVIDER_EXCLUSIVE}" != "true" ]; then
       cleanup_other_provider_containers
     fi
+    cleanup_own_provider_containers
     if ! ensure_provider_ports_clean; then
       echo "Restarting ${DOCKER_TYPE} to drop a stale port forward"
       stop_provider "${DOCKER_TYPE}"
