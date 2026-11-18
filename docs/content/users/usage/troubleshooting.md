@@ -377,6 +377,35 @@ The command checks mkcert installation, OS trust store, certificate files, and l
 
 If any of these are missing, follow the setup instructions in [WSL2 and Certificates](../install/ddev-installation.md).
 
+<a name="curl-certificate-error"></a>
+
+## `curl` Shows Certificate Error for DDEV Sites
+
+If your browser trusts a DDEV HTTPS URL but `curl` fails with an error like this, you are probably using Homebrew's `curl`:
+
+```
+curl: (60) SSL certificate problem: unable to get local issuer certificate
+```
+
+Homebrew's `curl` and other Homebrew tools that use its OpenSSL don't read the system trust store directly. They read Homebrew's own CA bundle, which Homebrew builds from the Mozilla certificates and the system trust store when it installs or upgrades its `ca-certificates` package. If you ran `mkcert -install` after that, the bundle doesn't include the mkcert CA. This happens mostly on Linux and WSL2, where Homebrew's `curl` is often first in `$PATH`. On macOS, Homebrew's `curl` is not in `$PATH` unless you add it.
+
+Check which `curl` you are using:
+
+```bash
+command -v curl
+```
+
+If the path is under Homebrew's prefix, such as `/home/linuxbrew/.linuxbrew/bin/curl`, rebuild Homebrew's CA bundle so it includes the mkcert CA:
+
+```bash
+brew postinstall ca-certificates
+```
+
+If that doesn't help, which can happen with an older Homebrew on Linux, use one of these:
+
+* Use the system `curl`, for example `/usr/bin/curl`.
+* Make `curl` also read the system certificates: `echo "capath=/etc/ssl/certs/" >> ~/.curlrc`
+
 ## Windows WSL2 Network Issues
 
 * If you’re using a browser on Windows, accessing a project in WSL2, you can end up with confusing results when your project is listening on a port inside WSL2 while a Windows process is listening on that same port. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side by visiting it with a browser or using other tools as described above.
