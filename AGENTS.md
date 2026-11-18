@@ -35,7 +35,8 @@ rules below by hand. With it:
   change other files there. Editing a `.md` file lints and fixes that file.
 - `git push` asks for approval every time, and a `pre-push` hook in
   `.claude/git-hooks/` refuses pushes to `ddev/ddev`, deletions, and
-  non-fast-forwards.
+  anything but a branch. Force-pushes to a fork pass the hook; plain
+  `--force`, `-f`, and `+<refspec>` are denied, so use `--force-with-lease`.
 - Common forms of `docker push`, `go build`, and clearing `GOTEST_SHORT` are
   denied; the rules below still apply to any other form. A denied `go build`
   returns a message that says to use `make` instead.
@@ -181,7 +182,10 @@ delete the word, and if that changes the meaning, the claim needed evidence.
 **Commit locally; push only to a fork, with approval.** Committing, branching,
 and amending local commits are expected. Push a branch only after the user
 approves that push, only to a fork such as `rfay/ddev`, **never to
-`ddev/ddev`**, and never with `--force`, `--delete`, or `--no-verify`. **Never
+`ddev/ddev`**, and never with `--delete` or `--no-verify`. Force-pushing is
+allowed only to the task's own branch on the fork, for example after a rebase
+or an amend on a PR branch; use `--force-with-lease`, not `--force`, and say
+in the approval request that the push rewrites the branch. **Never
 run `docker push`.** When there is no fork to push to, finish at the commit,
 report which commits are unpushed, and say the next step needs the maintainer
 to push.

@@ -29,10 +29,8 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   if [[ $local_sha =~ ^0+$ ]]; then
     deny "deleting $remote_ref is not allowed"
   fi
-  # A remote commit missing locally also fails here, as it would without --force.
-  if [[ ! $remote_sha =~ ^0+$ ]] && ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
-    deny "$remote_ref would not be a fast-forward; force pushes are not allowed"
-  fi
+  # Non-fast-forward pushes are allowed: every remote left is a fork, and
+  # AGENTS.md asks for --force-with-lease to the task's own branch there.
 done <<<"$input"
 
 # core.hooksPath hides the repository's own hooks, so run its pre-push too.
