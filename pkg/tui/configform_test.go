@@ -61,7 +61,7 @@ func TestConfigForm(t *testing.T) {
 		view := ansi.Strip(f.View().Content)
 		require.Contains(t, view, "❯ php (suggested)")
 		require.NotContains(t, view, "drupal7")
-		require.NotContains(t, view, "Drupal version")
+		require.NotContains(t, view, "Project version")
 		// Escape closes the list without leaving the form.
 		f, quit := send(f, "home", "esc")
 		require.False(t, quit)
@@ -70,7 +70,7 @@ func TestConfigForm(t *testing.T) {
 		f.picking, f.picked = true, slices.Index(f.values(rowType), nodeps.AppTypeDrupal)
 		f, _ = send(f, "enter")
 		require.Equal(t, nodeps.AppTypeDrupalLatestStable, f.choices.Type)
-		require.Contains(t, ansi.Strip(f.View().Content), "Drupal version    11")
+		require.Contains(t, ansi.Strip(f.View().Content), "Project version   11")
 
 		// The Drupal version brings its own PHP version.
 		f, _ = send(f, "down", "enter", "7", "enter")
@@ -87,7 +87,7 @@ func TestConfigForm(t *testing.T) {
 		// Without Drupal the version row is gone again.
 		f, _ = send(f, "up", "enter", "home", "enter")
 		require.Equal(t, ddevapp.ProjectTypeFamilies()[0], f.choices.Type)
-		require.NotContains(t, ansi.Strip(f.View().Content), "Drupal version")
+		require.NotContains(t, ansi.Strip(f.View().Content), "Project version")
 		f, _ = send(f, "down")
 		require.Equal(t, rowPHP, f.focus)
 	})
@@ -96,18 +96,15 @@ func TestConfigForm(t *testing.T) {
 		f := newForm(t)
 		f.suggested.Docroot, f.choices.Docroot = "", ""
 		f.focus, f.picking = rowType, true
-		f.picked = slices.Index(f.values(rowType), nodeps.AppTypeWordPress)
+		f.picked = slices.Index(f.values(rowType), nodeps.AppTypeWPBedrock)
 		f, _ = send(f, "enter")
-		require.Equal(t, nodeps.AppTypeWordPress, f.choices.Type)
-		require.Contains(t, ansi.Strip(f.View().Content), "WordPress variant standard")
-		require.Empty(t, f.choices.Docroot)
-
-		f, _ = send(f, "down", "enter", "b", "enter")
 		require.Equal(t, nodeps.AppTypeWPBedrock, f.choices.Type)
+		require.NotContains(t, ansi.Strip(f.View().Content), "Project version")
 		require.Equal(t, "web", f.choices.Docroot)
 
 		// Back to standard WordPress, the docroot is the detected one again.
-		f, _ = send(f, "enter", "s", "enter")
+		f.picking, f.picked = true, slices.Index(f.values(rowType), nodeps.AppTypeWordPress)
+		f, _ = send(f, "enter")
 		require.Equal(t, nodeps.AppTypeWordPress, f.choices.Type)
 		require.Empty(t, f.choices.Docroot)
 	})

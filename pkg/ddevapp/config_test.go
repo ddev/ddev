@@ -598,12 +598,12 @@ func TestConfigCommandSuggested(t *testing.T) {
 
 		app = newApp()
 		out := prompt(app, "no\n\n\ndrupal\n13\n7\n")
-		require.Contains(t, out, "'13' is not a valid Drupal version")
+		require.Contains(t, out, "'13' is not a valid project version")
 		require.Equal(t, nodeps.AppTypeDrupal7, app.Type)
 		require.Equal(t, nodeps.PHP82, app.PHPVersion)
 	})
 
-	t.Run("magento and wordpress", func(t *testing.T) {
+	t.Run("magento and bedrock", func(t *testing.T) {
 		app := newApp()
 		// An empty answer after "magento" means Magento 2.
 		_ = prompt(app, "no\n\n\nmagento\n\n")
@@ -613,11 +613,7 @@ func TestConfigCommandSuggested(t *testing.T) {
 		_ = prompt(app, "no\n\n\nmagento\n1\n")
 		require.Equal(t, nodeps.AppTypeMagento, app.Type)
 
-		app = newApp()
-		_ = prompt(app, "no\n\n\nwordpress\nbedrock\n")
-		require.Equal(t, nodeps.AppTypeWPBedrock, app.Type)
-
-		// A full type is accepted without the second question.
+		// Bedrock is its own type, with no second question.
 		app = newApp()
 		_ = prompt(app, "no\n\n\nwp-bedrock\n")
 		require.Equal(t, nodeps.AppTypeWPBedrock, app.Type)
@@ -625,10 +621,10 @@ func TestConfigCommandSuggested(t *testing.T) {
 
 	t.Run("project type families", func(t *testing.T) {
 		families := ddevapp.ProjectTypeFamilies()
-		for _, family := range []string{nodeps.AppTypeDrupal, nodeps.AppTypeMagento, nodeps.AppTypeWordPress, nodeps.AppTypeMaho, nodeps.AppTypeBackdrop} {
+		for _, family := range []string{nodeps.AppTypeDrupal, nodeps.AppTypeMagento, nodeps.AppTypeWordPress, nodeps.AppTypeWPBedrock, nodeps.AppTypeMaho, nodeps.AppTypeBackdrop} {
 			require.Contains(t, families, family)
 		}
-		for _, member := range []string{nodeps.AppTypeDrupal11, nodeps.AppTypeMagento2, nodeps.AppTypeWPBedrock} {
+		for _, member := range []string{nodeps.AppTypeDrupal11, nodeps.AppTypeMagento2} {
 			require.NotContains(t, families, member)
 		}
 
@@ -645,8 +641,8 @@ func TestConfigCommandSuggested(t *testing.T) {
 			nodeps.AppTypeDrupal10:  {nodeps.AppTypeDrupal, "10"},
 			nodeps.AppTypeMagento:   {nodeps.AppTypeMagento, "1"},
 			nodeps.AppTypeMagento2:  {nodeps.AppTypeMagento, "2"},
-			nodeps.AppTypeWordPress: {nodeps.AppTypeWordPress, "standard"},
-			nodeps.AppTypeWPBedrock: {nodeps.AppTypeWordPress, "bedrock"},
+			nodeps.AppTypeWordPress: {nodeps.AppTypeWordPress, ""},
+			nodeps.AppTypeWPBedrock: {nodeps.AppTypeWPBedrock, ""},
 			nodeps.AppTypeMaho:      {nodeps.AppTypeMaho, ""},
 		} {
 			family, option := ddevapp.SplitProjectType(appType)
@@ -654,7 +650,6 @@ func TestConfigCommandSuggested(t *testing.T) {
 			require.Equal(t, appType, ddevapp.JoinProjectType(family, option))
 		}
 		require.Equal(t, "1 / OpenMage", ddevapp.ProjectTypeOptionDisplay(nodeps.AppTypeMagento, "1"))
-		require.Equal(t, "WordPress variant", ddevapp.ProjectTypeVersionLabel(nodeps.AppTypeWordPress))
 	})
 
 	t.Run("configured type", func(t *testing.T) {

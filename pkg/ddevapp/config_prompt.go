@@ -120,13 +120,15 @@ func (app *DdevApp) ApplyConfigChoices(c ConfigChoices) error {
 	return app.ValidateConfig()
 }
 
+// ProjectVersionLabel names the choice that follows a project type family,
+// whichever family it is, as "Database version" follows "Database type".
+const ProjectVersionLabel = "Project version"
+
 // projectTypeFamily is a group of project types that interactive `ddev config`
 // lists as one, like drupal for drupal6 to drupal12, followed by a choice
-// of which of them.
+// of which version.
 type projectTypeFamily struct {
 	name string
-	// label names the choice among the types, like "Drupal version".
-	label string
 	// options name the types, which types holds in the same order, and
 	// display, if set, is how the form shows them.
 	options []string
@@ -138,7 +140,7 @@ type projectTypeFamily struct {
 
 // projectTypeFamilies returns the groups of project types.
 func projectTypeFamilies() []projectTypeFamily {
-	drupal := projectTypeFamily{name: nodeps.AppTypeDrupal, label: "Drupal version"}
+	drupal := projectTypeFamily{name: nodeps.AppTypeDrupal}
 	for _, t := range GetValidAppTypes() {
 		if v, ok := strings.CutPrefix(t, nodeps.AppTypeDrupal); ok && v != "" && strings.Trim(v, "0123456789") == "" {
 			drupal.options = append(drupal.options, v)
@@ -157,17 +159,11 @@ func projectTypeFamilies() []projectTypeFamily {
 	return []projectTypeFamily{
 		drupal,
 		{
-			name: nodeps.AppTypeMagento, label: "Magento version",
+			name:     nodeps.AppTypeMagento,
 			options:  []string{"1", "2"},
 			types:    []string{nodeps.AppTypeMagento, nodeps.AppTypeMagento2},
 			display:  []string{"1 / OpenMage", "2"},
 			fallback: "2",
-		},
-		{
-			name: nodeps.AppTypeWordPress, label: "WordPress variant",
-			options:  []string{"standard", "bedrock"},
-			types:    []string{nodeps.AppTypeWordPress, nodeps.AppTypeWPBedrock},
-			fallback: "standard",
 		},
 	}
 }
@@ -185,8 +181,8 @@ func ProjectTypeFamilies() []string {
 }
 
 // SplitProjectType returns the family and option of a project type in a
-// group, like drupal and 11 for drupal11 or wordpress and bedrock for
-// wp-bedrock, and appType and "" for any other.
+// group, like drupal and 11 for drupal11 or magento and 2 for magento2,
+// and appType and "" for any other.
 func SplitProjectType(appType string) (family, option string) {
 	for _, f := range projectTypeFamilies() {
 		if i := slices.Index(f.types, appType); i >= 0 {
@@ -227,17 +223,6 @@ func ProjectTypeOptionDisplay(family, option string) string {
 		}
 	}
 	return option
-}
-
-// ProjectTypeVersionLabel names the choice among family's options, like
-// "Drupal version".
-func ProjectTypeVersionLabel(family string) string {
-	for _, f := range projectTypeFamilies() {
-		if f.name == family {
-			return f.label
-		}
-	}
-	return family + " version"
 }
 
 // DatabaseTypes returns the database types in the order they are offered.
@@ -448,7 +433,7 @@ func (app *DdevApp) docrootPrompt() error {
 
 // AppTypePrompt asks for the project type, defaulting to the configured or
 // detected one, and then for which type of a family like Drupal or Magento.
-// A full type like drupal10 or wp-bedrock is accepted as the answer too.
+// A full type like drupal10 or magento2 is accepted as the answer too.
 func (app *DdevApp) AppTypePrompt() error {
 	util.Success("Found a %s codebase at %s.", app.DetectAppType(), app.GetAbsDocroot(false))
 
@@ -460,7 +445,7 @@ func (app *DdevApp) AppTypePrompt() error {
 		if defaultFamily != answer || defaultVersion == "" {
 			defaultVersion = latest
 		}
-		version := util.PromptChoice(ProjectTypeVersionLabel(answer), versions, defaultVersion)
+		version := util.PromptChoice(strings.ToLower(ProjectVersionLabel), versions, defaultVersion)
 		app.Type = JoinProjectType(answer, version)
 	}
 

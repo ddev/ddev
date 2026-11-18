@@ -60,7 +60,7 @@ const (
 // pickerHeight is how many of a setting's values are listed at a time.
 const pickerHeight = 8
 
-var configRowLabels = [rowCount]string{"Project name", "Docroot", "Project type", "", "PHP version", "Database type", "Database version", "Webserver type"}
+var configRowLabels = [rowCount]string{"Project name", "Docroot", "Project type", ddevapp.ProjectVersionLabel, "PHP version", "Database type", "Database version", "Webserver type"}
 
 type configFormKeys struct {
 	Up, Down, Edit, Choose, Save, Close, Cancel key.Binding
@@ -423,9 +423,6 @@ func (f configForm) View() tea.View {
 func (f configForm) rowView(row int) string {
 	focused := f.focus == row && !f.saved
 	name := configRowLabels[row]
-	if row == rowTypeVersion {
-		name = ddevapp.ProjectTypeVersionLabel(f.value(rowType))
-	}
 	label := fmt.Sprintf("%-*s", configLabelWidth, name)
 	value := f.value(row)
 	switch {
