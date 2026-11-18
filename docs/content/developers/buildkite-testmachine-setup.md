@@ -474,8 +474,8 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 ## Icinga2 Monitoring for macOS Runners
 
 Icinga publishes no macOS agent, so macOS runners push their own results.
-A launchd agent runs [`.buildkite/icinga/testbot_icinga_push.sh`](https://github.com/ddev/ddev/blob/main/.buildkite/icinga/testbot_icinga_push.sh)
-every 5 minutes, and it posts each result to the Icinga API on
+A launchd agent runs `.buildkite/icinga/testbot_icinga_push.sh` from this
+repository every 5 minutes, and it posts each result to the Icinga API on
 `monitor.ddev.com` as a passive check result. Each check is also active,
 running the `dummy` command every 10 minutes; a pushed result postpones it, so
 the check only fires, and alerts, when a runner stops pushing.
