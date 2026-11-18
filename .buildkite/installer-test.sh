@@ -64,15 +64,11 @@ if [ "${BUILDKITE_SOURCE:-}" = "webhook" ] && [ "${BUILDKITE_BRANCH:-}" != "main
 fi
 
 # Load public variables (e.g. signing-related vars used by the installer build)
-git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
-while IFS= read -r varname; do
-  [[ "$varname" == "README.md" ]] && continue
-  # MSYS_NO_PATHCONV prevents Git for Windows bash from mangling the ref:path syntax
-  value=$(MSYS_NO_PATHCONV=1 git show "refs/public-variables-tmp:.github/public-variables/$varname" | tr -d '\r' | paste -s -d '|' -)
-  echo "$varname=${value}"
-  export "$varname=$value"
-done < <(MSYS_NO_PATHCONV=1 git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
-git update-ref -d refs/public-variables-tmp
+public_variables=$("$(dirname "$0")/../.ci-scripts/load-public-variables.sh")
+echo "${public_variables}"
+while IFS= read -r line; do
+  if [[ -n "${line}" ]]; then export "${line?}"; fi
+done <<< "${public_variables}"
 
 # A changed image may still be waiting on image-push.yml's approval
 "$(dirname "$0")/../containers/wait-for-images.sh"

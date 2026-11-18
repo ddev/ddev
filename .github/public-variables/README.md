@@ -13,15 +13,12 @@ See also: <https://github.com/orgs/community/discussions/44322#discussioncomment
 
 Each file in this directory (except `README.md`) is exported as a CI environment variable named after the file.
 
-In every file, put one value per line, or separate values with `|`. You can use both in one file. Empty values, spaces around `|`, and line endings (LF or CRLF) are ignored. These two files mean the same thing:
+In every file, put one value per line. A `#` starts a comment that runs to the end of the line, so use it to say why a value is there. Comments, empty lines, spaces at either end of a line, and line endings (LF or CRLF) are ignored:
 
 ```text
-TestLagoonPull|TestAcquiaPull
-```
-
-```text
+# Waiting on an upstream release, see https://github.com/example/project/issues/1
 TestLagoonPull
-TestAcquiaPull
+TestAcquiaPull  # Flaky since the provider changed its API
 ```
 
 Current variables:
@@ -43,7 +40,7 @@ Current variables:
    (see **How to update** below)
 
 No workflow changes are needed - any file in this directory is picked up automatically.
-CI joins the lines of each file with `|`, so the code that reads a new variable must split
+CI removes comments and joins the lines of each file with `|`, so the code that reads a new variable must split
 the value on `|` and ignore empty values and spaces. See `IsPHPVersionEmbargoed` in
 `pkg/util/utils.go` for an example.
 
@@ -51,15 +48,17 @@ the value on `|` and ignore empty values and spaces. See `IsPHPVersionEmbargoed`
 
 1. Edit the file(s) directly on the `public-variables` branch - no PR required
 2. Include `[skip ci]` in the commit message to avoid triggering test workflows
-3. To clear a variable, empty the file
+3. To clear a value, remove its line. To clear a variable, empty the file
 
 ## How it works
 
-Used in `.buildkite/test.sh`, `.buildkite/installer-test.sh`, `.github/workflows/test-reusable.yml`,
-`.github/workflows/test-wsl2-reusable.yml`, and `.github/workflows/quickstart.yml`.
+`.ci-scripts/load-public-variables.sh` fetches the `public-variables` branch into a temporary ref,
+reads each file, removes comments and empty lines, joins the remaining lines with `|`, and prints `NAME=value`.
+It then deletes the temporary ref.
 
-Each CI run does `git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp`,
-reads all files via `git ls-tree` + `git show`, joins the lines of each file with `|`, then deletes the temporary ref.
+`.buildkite/test.sh` and `.buildkite/installer-test.sh` export its output.
+`.github/workflows/test-reusable.yml`, `.github/workflows/test-wsl2-reusable.yml`,
+and `.github/workflows/quickstart.yml` append it to `$GITHUB_ENV`.
 
 The load step is skipped for `workflow_dispatch` (manually triggered) runs so maintainers can verify
 a previously-embargoed test is fixed without first removing it from the embargo list.
