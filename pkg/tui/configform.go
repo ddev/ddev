@@ -183,7 +183,7 @@ func (f configForm) updateRows(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return f.moveTo(f.nextRow(1))
 		}
 		f.picking = true
-		f.picked = max(0, indexOf(f.values(f.focus), f.value(f.focus)))
+		f.picked = max(0, slices.Index(f.values(f.focus), f.value(f.focus)))
 		return f, nil
 	}
 	if f.isText(f.focus) {
@@ -509,13 +509,4 @@ func (f configForm) helpKeys() []key.Binding {
 		return []key.Binding{f.keys.Up, f.keys.Edit, f.keys.Cancel}
 	}
 	return []key.Binding{f.keys.Up, f.keys.Choose, f.keys.Cancel}
-}
-
-func indexOf(values []string, value string) int {
-	for i, v := range values {
-		if v == value {
-			return i
-		}
-	}
-	return -1
 }

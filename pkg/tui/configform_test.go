@@ -4,6 +4,7 @@ import (
 	"image/color"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
@@ -66,7 +67,7 @@ func TestConfigForm(t *testing.T) {
 		require.False(t, quit)
 		require.Equal(t, nodeps.AppTypePHP, f.choices.Type)
 
-		f.picking, f.picked = true, indexOf(f.values(rowType), nodeps.AppTypeDrupal)
+		f.picking, f.picked = true, slices.Index(f.values(rowType), nodeps.AppTypeDrupal)
 		f, _ = send(f, "enter")
 		require.Equal(t, nodeps.AppTypeDrupalLatestStable, f.choices.Type)
 		require.Contains(t, ansi.Strip(f.View().Content), "Drupal version    11")
@@ -95,7 +96,7 @@ func TestConfigForm(t *testing.T) {
 		f := newForm(t)
 		f.suggested.Docroot, f.choices.Docroot = "", ""
 		f.focus, f.picking = rowType, true
-		f.picked = indexOf(f.values(rowType), nodeps.AppTypeWordPress)
+		f.picked = slices.Index(f.values(rowType), nodeps.AppTypeWordPress)
 		f, _ = send(f, "enter")
 		require.Equal(t, nodeps.AppTypeWordPress, f.choices.Type)
 		require.Contains(t, ansi.Strip(f.View().Content), "WordPress variant standard")
@@ -114,7 +115,7 @@ func TestConfigForm(t *testing.T) {
 	t.Run("magento 1 is shown with OpenMage", func(t *testing.T) {
 		f := newForm(t)
 		f.focus, f.picking = rowType, true
-		f.picked = indexOf(f.values(rowType), nodeps.AppTypeMagento)
+		f.picked = slices.Index(f.values(rowType), nodeps.AppTypeMagento)
 		f, _ = send(f, "enter")
 		require.Equal(t, nodeps.AppTypeMagento2, f.choices.Type)
 		f, _ = send(f, "down", "enter")

@@ -297,8 +297,14 @@ func (app *DdevApp) PromptForConfig() error {
 
 	if err := app.ValidateConfigChoices(suggested); err != nil {
 		util.Warning("%v", err)
-	} else if confirmSuggestedConfig() {
-		return app.ApplyConfigChoices(suggested)
+	} else {
+		confirmed, err := confirmSuggestedConfig()
+		if err != nil {
+			return err
+		}
+		if confirmed {
+			return app.ApplyConfigChoices(suggested)
+		}
 	}
 
 	return app.promptForSettings()
@@ -334,14 +340,25 @@ func (app *DdevApp) promptForSettings() error {
 }
 
 // confirmSuggestedConfig asks whether to use the configuration just shown.
-func confirmSuggestedConfig() bool {
+// An answer other than yes or no is reported and the question asked again.
+// If the input ends after such an answer it returns an error rather than
+// taking the default, since the input was probably meant for other questions.
+func confirmSuggestedConfig() (bool, error) {
+	invalid := ""
 	for {
-		switch strings.ToLower(util.Prompt("Use this configuration? Answer 'no' to choose each setting [Y/n]", "yes")) {
+		fmt.Print("Use this configuration? Answer 'no' to choose each setting [Y/n] (yes): ")
+		answer, ok := util.GetInputOK("yes")
+		switch strings.ToLower(answer) {
 		case "y", "yes":
-			return true
+			if !ok && invalid != "" {
+				return false, fmt.Errorf("input ended without a yes or no answer to 'Use this configuration?' (got '%s')", invalid)
+			}
+			return true, nil
 		case "n", "no":
-			return false
+			return false, nil
 		}
+		invalid = answer
+		util.Warning("'%s' is not yes or no.", answer)
 	}
 }
 
