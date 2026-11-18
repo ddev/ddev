@@ -80,6 +80,14 @@ jobs:
           wsl --set-default-version 2
           Write-Host "Installing DDEV Ubuntu distro"
           wsl --install --name DDEV --no-launch
+
+      # The WSL steps below are split at each command that boots or stops the WSL VM.
+      # When the runner is lost, GitHub keeps no log, but the job's step list still
+      # shows which step was running, and so which command took the runner down.
+      - name: Create testuser and enable systemd (first WSL boot)
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
           Write-Host "Creating testuser and enabling systemd"
           wsl -d DDEV --user root bash -c "useradd -m -s /bin/bash testuser && echo 'testuser:password' | chpasswd && usermod -aG sudo testuser && printf '[boot]\nsystemd=true\n\n[user]\ndefault=testuser\n' > /etc/wsl.conf"
           # WSL owns binfmt_misc (for WSLInterop) and newer releases mount it read-only, so systemd-binfmt fails.
@@ -88,13 +96,17 @@ jobs:
           Write-Host "Verifying WSL installation"
           wsl --list --verbose
 
-      - name: Restart WSL to enable systemd
-        timeout-minutes: 5
+      - name: Shut down WSL so systemd and default user take effect
+        timeout-minutes: 2
         shell: pwsh
         run: |
-          Write-Host "Shutting down WSL so systemd and default user take effect"
           wsl --shutdown
           Start-Sleep -Seconds 5
+
+      - name: Boot WSL and check default user
+        timeout-minutes: 3
+        shell: pwsh
+        run: |
           Write-Host "Verifying WSL comes back with correct user"
           $user = (wsl whoami).Trim()
           Write-Host "Current WSL user: $user"
@@ -103,6 +115,11 @@ jobs:
             exit 1
           }
           wsl -- uname -a
+
+      - name: Wait for systemd to finish booting
+        timeout-minutes: 3
+        shell: pwsh
+        run: |
           Write-Host "Waiting for systemd to finish booting"
           $state = "$(wsl -- timeout 120 systemctl is-system-running --wait)".Trim()
           Write-Host "systemd state: $state"
