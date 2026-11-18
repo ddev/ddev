@@ -54,6 +54,13 @@
     ],
     "deny": [
       "Bash(git push *--no-verify*)",
+      "Bash(git push --force *)",
+      "Bash(git push * --force)",
+      "Bash(git push * --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push * -f)",
+      "Bash(git push * -f *)",
+      "Bash(git push * +*)",
       "Bash(git *core.hooksPath*)",
       "Bash(docker push *)",
       "Bash(go build *)",
