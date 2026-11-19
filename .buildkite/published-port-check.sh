@@ -65,13 +65,28 @@ if command -v lsof >/dev/null 2>&1; then
   lsof -nP -iTCP -sTCP:LISTEN 2>&1 | awk 'NR == 1 || $1 !~ /^(rapportd|ControlCe|sharingd)$/' || true
 fi
 if [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
+  # macOS Local Network privacy asks once for each new container-runtime-linux
+  # binary, so each install or upgrade of Apple Container needs an Allow on the
+  # testbot's desktop. Until someone answers the prompt, the forwarder can't
+  # connect to containers and logs "No route to host" (EHOSTUNREACH), and
+  # UserEventAgent logs a Local Network lookup for each attempt. Neither this job
+  # nor SSH can show or answer the prompt. The log process is excluded because
+  # it logs its own arguments, which contain the search text.
+  localnet=$(log show --last 5m --style compact \
+    --predicate 'process != "log" AND eventMessage CONTAINS "LocalNetwork: found bundle id com.apple.container.container-runtime-linux"' 2>/dev/null |
+    grep -c 'LocalNetwork: found bundle id' || true)
+  if [ "${localnet:-0}" -gt 0 ]; then
+    echo "+++ Local Network permission needed on $(hostname)"
+    echo "macOS checked container-runtime-linux's Local Network permission ${localnet} time(s) in the last 5 minutes,"
+    echo "so a Local Network prompt is probably waiting on this testbot's desktop. On the desktop (screen sharing,"
+    echo "not SSH), allow container-runtime-linux, or switch it on in System Settings > Privacy & Security >"
+    echo "Local Network, then rerun the build."
+  fi
   echo "--- container ls"
   container ls 2>&1 || true
   # Apple's port forwarder connects from the host to the container's address.
-  # Try the same connection from this job's shell. If it fails with "No route
-  # to host" (EHOSTUNREACH) while the route below exists, macOS Local Network
-  # privacy is blocking this job's processes, which can't answer its prompt,
-  # and the forwarder that container system start launched from here.
+  # Try the same connection from this job's shell: if it works while the
+  # forwarder fails, the problem is the forwarder's own permission (above).
   ip=$(container ls 2>/dev/null | awk -v n="${NAME}" '$1 == n {print $6}' | cut -d/ -f1)
   if [ -n "${ip}" ]; then
     echo "--- route to the container address ${ip}"
@@ -81,9 +96,9 @@ if [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
     echo "--- curl http://${ip}:8000/ from the job's shell, bypassing the port forwarder"
     curl -sv --max-time 5 "http://${ip}:8000/" 2>&1 || true
   fi
-  # Started from a desktop Terminal, container-apiserver and its helpers are
-  # services in the gui/<uid> domain. Build 35 didn't find it there, so show
-  # which domain this job's container system start put it in.
+  # A job's container system start registers container-apiserver and its
+  # helpers in gui/<uid>; one started over SSH lands in user/<uid> and a later
+  # job reuses it. Show which.
   for domain in "gui/$(id -u)" "user/$(id -u)"; do
     echo "--- container services in ${domain}"
     launchctl print "${domain}" 2>/dev/null | grep -E '^[[:space:]]+[0-9-]+[[:space:]]+[-0-9]+[[:space:]]+com\.apple\.container' || echo "(none)"

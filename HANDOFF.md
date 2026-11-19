@@ -1,7 +1,7 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-19 (build 35), rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-19 (build 36; port-forward cause found), rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
@@ -15,6 +15,45 @@ rebased on `upstream/main` as of 2026-11-18 (after [#9141](https://github.com/dd
 changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.com/ddev/ddev/pull/9136) and [#9138](https://github.com/ddev/ddev/pull/9138).
 
 ## Resume here
+
+### Cause found (2026-11-19): unanswered macOS Local Network prompts on arm64-6 and -7
+
+The published-port resets on tb-macos-arm64-6 and -7 (builds 31-35) were macOS Local Network
+privacy blocking Apple Container's per-container forwarder, `container-runtime-linux`. Each new
+`container-runtime-linux` binary needs its own Allow on the testbot's desktop. After Homebrew's
+`container` 1.7.1_2 rebuild on Nov 16, arm64-6 and -7 each had an unanswered prompt waiting on
+the desktop. Until someone answers it, every forwarder connect to a container fails with "No route
+to host" (EHOSTUNREACH), though the route exists and the job's own shell can reach the container.
+
+Evidence, from a read-only SSH survey of all three machines and the System Settings check:
+
+- arm64-7's log has 16,552 `backend - connect failed` lines in 3 days, each with a
+  `UserEventAgent` line `LocalNetwork: found bundle id
+  com.apple.container.container-runtime-linux` (22,068 of those). arm64-5 has none of either,
+  while its forwarders carry job traffic.
+- Same macOS, `container`, socktainer and `buildkite-agent` versions, install dates and CDHashes
+  on all three machines, so the difference was the stored Local Network state.
+- System Settings → Privacy & Security → Local Network: arm64-5 had two `container-runtime-linux`
+  entries enabled. arm64-7 had a prompt waiting and has three entries now that it's allowed.
+  arm64-6 had two enabled and a prompt waiting, now allowed.
+- [Build 36](https://buildkite.com/ddev/macos-socktainer/builds/36) (`339a9de6`) on arm64-5 passed
+  the published-port check on the first attempt, with no failures after 768 passing tests.
+
+Not yet confirmed: a build on arm64-6 or -7 after the Allow. Don't rebuild 35 for that: its
+commit predates the responder fix in `3464a5c6`.
+
+What changed because of it:
+
+- When the check fails on socktainer, `published-port-check.sh` now counts Local Network lookups
+  for `container-runtime-linux` in the last 5 minutes and, if there are any, says a prompt is
+  probably waiting on the testbot's desktop and how to allow it.
+- `buildkite-testmachine-setup.md` (separate docs PR) says to allow `container-runtime-linux`
+  on the desktop after installing or upgrading `container`.
+- Don't run `container system start` over SSH on a testbot: it registers the apiserver in
+  `user/<uid>` and a later job reuses it. The SSH session can't answer the prompt either.
+
+Earlier theories this replaces: the `.65` subnet, other providers staying up (#9114), and the
+agent's launch domain. The Build 33 and 35 sections below record how they were ruled out.
 
 ### Build 35 (2026-11-19): Local Network theory weakened; the check had its own bug
 
