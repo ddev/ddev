@@ -3,7 +3,8 @@
 
   - command: ".buildkite/test.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/
+      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
+      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?macos-socktainer[ \]]/)
     agents:
       - "os=macos"
       - "socktainer=true"

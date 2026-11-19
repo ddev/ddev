@@ -4,7 +4,8 @@
 
   - command: ".buildkite/test.cmd"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/
+      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
+      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?windows10dockerforwindows[ \]]/)
     agents:
       - "os=windows"
       - "docker-desktop=true"
