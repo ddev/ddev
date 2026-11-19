@@ -101,6 +101,9 @@ if [ "$USES_HOST_DOCKER" = "true" ]; then
         run_step "docker run with ports 80/443 and \$HOME mounted" 3m bash -c '"$@" || { echo "Retrying the docker run"; sleep 1; "$@"; }' _ \
             docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99
     fi
+    # A port can be published and still not answer from the host, which
+    # fails every HTTP test in the job (macos-socktainer builds 31 and 32).
+    run_step "published port answers from the host" 2m bash "$(dirname "$0")/published-port-check.sh"
 else
     echo "Skipping host Docker Desktop checks for INSTALLER_CASE=${INSTALLER_CASE:-} (uses Docker CE inside WSL2, not the host Docker Desktop)"
 fi

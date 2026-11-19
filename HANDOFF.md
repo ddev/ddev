@@ -1,7 +1,7 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-18, rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-18 (build 32), rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
@@ -15,6 +15,34 @@ rebased on `upstream/main` as of 2026-11-18 (after [#9141](https://github.com/dd
 changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.com/ddev/ddev/pull/9136) and [#9138](https://github.com/ddev/ddev/pull/9138).
 
 ## Resume here
+
+### Build 32 (2026-11-18): same failure on a second testbot; suspect #9114
+
+[Build 32](https://buildkite.com/ddev/macos-socktainer/builds/32) (`65c1279`, the re-run
+after the 2026-11-18 rebase) ran on **tb-macos-arm64-7** and failed exactly like build 31:
+27 tests (23 in `pkg/ddevapp`, `TestGetLocalHTTPResponse`, and `TestCmdLogs`,
+`TestCheckLiveConnectivityWithProject` and `TestCmdXHGui`), all with
+`connection reset by peer` or `EOF` on host ports (360 resets in the log), including
+`TestHostDBPort`'s psql on 19998. `warnUnreachableRouterPorts` fired from the first project
+start, in `pkg/dockerutil`, 222 times in all. The Mutagen daemon start timed out again. Same
+versions as build 29 (socktainer 1.6.1, container CLI 1.7.1).
+
+So it isn't one wedged testbot. What changed between passing build 29 (tb-macos-arm64-5,
+`8dc47de`, 2026-11-14) and builds 31/32 is the Buildkite provider handling: build 29 predates
+[#9114](https://github.com/ddev/ddev/pull/9114), which stopped stopping the other providers,
+so **OrbStack now stays running during socktainer jobs** (it's the `*` context in build 32's
+`docker context ls`, and `restore_resting_provider` starts it after every job). Before #9114
+the job's cleanup stopped it. Both OrbStack and Apple Container run their own VM networking
+on the host, and Apple Container's host-port forwarder could be the casualty. Not confirmed.
+To test it, on a testbot with a socktainer project running, `orb stop` and retry
+`curl -v http://127.0.0.1:8080/`; if that's it, have `provider_bringup` stop OrbStack for
+socktainer jobs, as it already does for lima and colima.
+
+`sanetestbot.sh` now runs `.buildkite/published-port-check.sh`, which publishes a port from a
+`ddev/ddev-utilities` container (busybox `nc`) on `127.0.0.1:18765` and fails the job unless it
+answers from the host. On failure it prints `curl -v`, the listeners on the host, and for
+socktainer `container ls`, the `com.apple.container` log and the tail of
+`~/tmp/socktainer.log`, so the next occurrence is one failure with diagnostics instead of 27.
 
 ### Build 31 (2026-11-18): host port forwarding broken on tb-macos-arm64-6
 
@@ -44,6 +72,7 @@ Rebased onto upstream/main again 2026-11-18 (clean, no conflicts; adds #9141, wh
 leftover containers at job start). Nothing in the rebase addresses the forwarding failure, so
 the next build is mainly a re-run; if it lands on tb-macos-arm64-6 again and fails the same
 way, restart apple container there (`container system stop`/`start`, then socktainer).
+(Build 32 ran on tb-macos-arm64-7 and failed the same way; see above.)
 
 ### Status (2026-11-17)
 
