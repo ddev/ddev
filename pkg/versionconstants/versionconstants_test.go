@@ -29,3 +29,15 @@ func TestIsUnreleasedDdevVersion(t *testing.T) {
 		require.False(t, IsUnreleasedDdevVersion(v), "expected %q to be detected as a release", v)
 	}
 }
+
+func TestDocsURL(t *testing.T) {
+	orig := DdevVersion
+	t.Cleanup(func() { DdevVersion = orig })
+
+	DdevVersion = "v1.25.3"
+	require.Equal(t, "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#unable-listen", DocsURL("users/usage/troubleshooting/#unable-listen"))
+	require.Equal(t, "https://docs.ddev.com/en/stable/users/", DocsURL("/users/"))
+
+	DdevVersion = "v1.25.3-111-geadf098e9"
+	require.Equal(t, "https://docs.ddev.com/en/latest/users/", DocsURL("users/"))
+}

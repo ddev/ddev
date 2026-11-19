@@ -59,7 +59,7 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !canRunWithoutDocker(cmd) {
 			if _, err := dockerutil.GetDockerVersion(); err != nil {
-				util.Failed("Docker error: %v\nFor help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker", err)
+				util.Failed("Docker error: %v\n\n%s", err, dockerutil.DockerConnectionHelp(err))
 			}
 		}
 
