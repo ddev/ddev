@@ -6,7 +6,11 @@ This is an experimental desktop app for DDEV, built with
 
 - A tray menu, also called a menu bar extra on macOS. It lists each project
   with its status, starts, stops, or restarts it, and opens its site. It also
-  has Start all, Stop all, and Power off.
+  has Start all, Stop all, and Power off; the last two ask first, as the
+  page does.
+- A question before quitting while an action runs, since quitting stops the
+  action and could leave a project half started. Ctrl+C or SIGTERM quits
+  without asking.
 - A Dock or taskbar icon. Closing the window keeps the app in the tray.
   Launching the app again shows the window, which is the way back on a
   desktop without a tray, such as GNOME without the AppIndicator extension.

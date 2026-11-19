@@ -6,6 +6,9 @@ GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 OUT := $(GOTMP)/bin/$(GOOS)_$(GOARCH)
 VERSION ?= $(shell git describe --tags --always --dirty)
+# macOS wants a bundle version of up to three numbers, such as 1.25.3 from
+# v1.25.3-12-gabcdef; DDEVVersion in Info.plist keeps the full version.
+BUNDLE_VERSION := $(or $(shell echo '$(VERSION)' | sed -nE 's/^v?([0-9]+\.[0-9]+(\.[0-9]+)?).*/\1/p'),0.0.0)
 DDEV_BIN ?= $(OUT)
 APP := $(OUT)/DDEV.app
 LDFLAGS := -X 'github.com/ddev/ddev/pkg/versionconstants.DdevVersion=$(VERSION)' -X 'main.version=$(VERSION)' -s -w
@@ -57,7 +60,7 @@ app: binary
 	done
 	iconutil -c icns "$(OUT)/DDEV.iconset" -o "$(APP)/Contents/Resources/DDEV.icns"
 	rm -rf "$(OUT)/DDEV.iconset"
-	sed 's/@VERSION@/$(VERSION)/' Info.plist > "$(APP)/Contents/Info.plist"
+	sed -e 's/@VERSION@/$(VERSION)/' -e 's/@BUNDLE_VERSION@/$(BUNDLE_VERSION)/' Info.plist > "$(APP)/Contents/Info.plist"
 	codesign --force --deep --sign - "$(APP)"
 	@echo "Built $(APP)"
 

@@ -105,4 +105,6 @@ jobs:
         run: |
           go mod verify
           go mod tidy
-          git diff --exit-code
+          # desktop/ requires this repository's module through a replace
+          # directive, so a dependency bump at the root needs this too.
+          git diff --exit-code || { echo "::error::desktop/go.mod is out of date. Run 'cd desktop && go mod tidy', or 'make go-mod-update', and commit the result."; exit 1; }

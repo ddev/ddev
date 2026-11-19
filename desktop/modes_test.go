@@ -42,6 +42,7 @@ func TestRemoteServer(t *testing.T) {
 
 	require.ErrorContains(t, r.Post("/api/projects/nonexistent/actions/start"), "nonexistent")
 	require.Error(t, r.Post("/api/actions/nothing"))
+	require.Empty(t, r.RunningJobs(), "no job has started")
 
 	r.Close()
 	select {

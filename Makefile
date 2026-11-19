@@ -517,6 +517,8 @@ go-mod-update:
 	go get -u ./...
 	go mod tidy
 	go mod vendor
+	@# desktop/ builds against this module, so its go.mod must follow it.
+	cd desktop && go mod tidy
 
 quickstart-test: build dummy-project
 	@echo "quickstart-test:"

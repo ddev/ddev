@@ -16,9 +16,12 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"os/signal"
+	"regexp"
 	"slices"
 	"strings"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -166,6 +169,8 @@ func main() {
 		singleInstance = nil
 	}
 
+	// quitter asks before a quit would kill running jobs.
+	q := &quitter{be: be}
 	app := application.New(application.Options{
 		Name:        "DDEV",
 		Description: "Experimental DDEV desktop app " + version,
@@ -179,7 +184,13 @@ func main() {
 		},
 		SingleInstance: singleInstance,
 		OnShutdown:     shutdown,
+		ShouldQuit:     q.shouldQuit,
+		// Wails' own handler reads only the first signal, so a quit that
+		// ShouldQuit refused would leave the app deaf to the next one.
+		DisableDefaultSignalHandler: true,
 	})
+	q.app = app
+	q.handleSignals()
 
 	window = app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:      "main",
@@ -281,11 +292,14 @@ func warnVersionMismatch(app *application.App, ddevBinary string) {
 	})
 }
 
+// tokenParam matches the token in a launch URL, which a log must not show.
+var tokenParam = regexp.MustCompile(`(token=[0-9a-f]{4})[0-9a-f]*`)
+
 // logRequests logs each request the webview makes, since the window has no
 // developer tools in a production build.
 func logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s host=%q origin=%q", r.Method, r.URL.RequestURI(), r.Host, r.Header.Get("Origin"))
+		log.Printf("%s %s host=%q origin=%q", r.Method, tokenParam.ReplaceAllString(r.URL.RequestURI(), "${1}…"), r.Host, r.Header.Get("Origin"))
 		next.ServeHTTP(w, r)
 	})
 }
@@ -345,8 +359,9 @@ func (t *trayMenu) build(projects []webui.ProjectState, errText string) *applica
 	}
 	m.AddSeparator()
 	m.Add("Start all").SetEnabled(len(projects) > running).OnClick(t.global("start-all"))
-	m.Add("Stop all").SetEnabled(running > 0).OnClick(t.global("stop-all"))
-	m.Add("Power off").OnClick(t.global("poweroff"))
+	// The page asks before these too.
+	m.Add("Stop all").SetEnabled(running > 0).OnClick(t.confirm("Stop all projects?", "Every running DDEV project will be stopped.", "Stop all", t.global("stop-all")))
+	m.Add("Power off").OnClick(t.confirm("Power off DDEV?", "This stops all projects and DDEV’s shared containers.", "Power off", t.global("poweroff")))
 	m.AddSeparator()
 	m.Add("Quit DDEV app").OnClick(func(*application.Context) { t.app.Quit() })
 	return m
@@ -358,6 +373,19 @@ func (t *trayMenu) action(project, action string) func(*application.Context) {
 
 func (t *trayMenu) global(action string) func(*application.Context) {
 	return t.post("/api/actions/" + action)
+}
+
+// confirm asks before it runs then.
+func (t *trayMenu) confirm(title, message, okLabel string, then func(*application.Context)) func(*application.Context) {
+	return func(ctx *application.Context) {
+		d := t.app.Dialog.Question().SetTitle(title).SetMessage(message)
+		ok := d.AddButton(okLabel)
+		cancel := d.AddButton("Cancel")
+		d.SetDefaultButton(cancel)
+		d.SetCancelButton(cancel)
+		ok.OnClick(func() { go then(ctx) })
+		d.Show()
+	}
 }
 
 func (t *trayMenu) post(path string) func(*application.Context) {
@@ -376,4 +404,63 @@ func statusMark(status string) string {
 		return "○"
 	}
 	return "◌"
+}
+
+// quitter keeps a quit from killing running jobs unasked: Shutdown kills
+// them, which can leave a project half started or a database half restored.
+type quitter struct {
+	app *application.App
+	be  backend
+	// force is set once the user has agreed, or a signal asked to quit.
+	force atomic.Bool
+	// asking is set while the question is shown.
+	asking atomic.Bool
+}
+
+// shouldQuit is Wails' ShouldQuit. It runs on the main thread, so it shows
+// its question from another goroutine and refuses this quit; the answer
+// quits again.
+func (q *quitter) shouldQuit() bool {
+	if q.force.Load() || q.be == nil {
+		return true
+	}
+	running := q.be.RunningJobs()
+	if len(running) == 0 {
+		return true
+	}
+	if !q.asking.Swap(true) {
+		go q.ask(running)
+	}
+	return false
+}
+
+func (q *quitter) ask(running []string) {
+	d := q.app.Dialog.Question().
+		SetTitle("DDEV is still working").
+		SetMessage("Quitting stops these, which can leave a project half done:\n\n" + strings.Join(running, "\n"))
+	quit := d.AddButton("Quit anyway")
+	wait := d.AddButton("Keep running")
+	d.SetDefaultButton(wait)
+	d.SetCancelButton(wait)
+	quit.OnClick(func() {
+		q.asking.Store(false)
+		q.force.Store(true)
+		go q.app.Quit()
+	})
+	wait.OnClick(func() { q.asking.Store(false) })
+	d.Show()
+}
+
+// handleSignals quits without asking on SIGINT or SIGTERM, as from a
+// terminal or the system, and exits at once on a second signal.
+func (q *quitter) handleSignals() {
+	sigs := make(chan os.Signal, 2)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		q.force.Store(true)
+		go q.app.Quit()
+		<-sigs
+		os.Exit(1)
+	}()
 }
