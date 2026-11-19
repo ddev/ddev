@@ -21,9 +21,20 @@ docker rm -f "${NAME}" >/dev/null 2>&1 || true
 trap 'docker rm -f "${NAME}" >/dev/null 2>&1 || true' EXIT
 
 # ddev-utilities is Alpine, whose busybox has nc but no httpd. nc -lk -e runs
-# the responder once for each connection.
-docker run -d --name "${NAME}" -p "127.0.0.1:${PORT}:8000" ddev/ddev-utilities sh -c \
-  "printf '#!/bin/sh\nprintf \"HTTP/1.0 200 OK\\\\r\\\\nContent-Type: text/plain\\\\r\\\\n\\\\r\\\\n${EXPECT}\\\\n\"\n' >/respond && chmod +x /respond && exec nc -lk -p 8000 -e /respond" >/dev/null
+# the responder once for each connection. The responder reads the request
+# before answering: closing a socket with unread data sends a reset, which
+# made every request fail even when the forward worked.
+read -r -d '' RESPOND <<'EOF' || true
+#!/bin/sh
+cr=$(printf '\r')
+while IFS= read -r line; do
+  line=${line%"$cr"}
+  [ -z "$line" ] && break
+done
+printf 'HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\n%s\n' "$EXPECT"
+EOF
+docker run -d --name "${NAME}" -p "127.0.0.1:${PORT}:8000" -e EXPECT="${EXPECT}" -e RESPOND="${RESPOND}" \
+  ddev/ddev-utilities sh -c 'printf "%s\n" "$RESPOND" >/respond && chmod +x /respond && exec nc -lk -p 8000 -e /respond' >/dev/null
 
 # The forward can take a few seconds to appear after the container starts.
 body=""
@@ -70,8 +81,14 @@ if [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
     echo "--- curl http://${ip}:8000/ from the job's shell, bypassing the port forwarder"
     curl -sv --max-time 5 "http://${ip}:8000/" 2>&1 || true
   fi
-  echo "--- how container-apiserver was launched"
-  launchctl print "gui/$(id -u)/com.apple.container.apiserver" 2>&1 | grep -E 'state|program|domain|session|spawn type' || true
+  # Started from a desktop Terminal, container-apiserver and its helpers are
+  # services in the gui/<uid> domain. Build 35 didn't find it there, so show
+  # which domain this job's container system start put it in.
+  for domain in "gui/$(id -u)" "user/$(id -u)"; do
+    echo "--- container services in ${domain}"
+    launchctl print "${domain}" 2>/dev/null | grep -E '^[[:space:]]+[0-9-]+[[:space:]]+[-0-9]+[[:space:]]+com\.apple\.container' || echo "(none)"
+    launchctl print "${domain}/com.apple.container.apiserver" 2>&1 | grep -E 'state =|domain =|session =|spawn type' || true
+  done
   echo "--- the job's launchd session: $(launchctl managername 2>&1)"
   echo "--- apple container log, last 10 minutes"
   log show --last 10m --style compact --predicate 'subsystem BEGINSWITH "com.apple.container"' 2>&1 | tail -60 || true
