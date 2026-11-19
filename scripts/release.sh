@@ -11,7 +11,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/release.sh <tag> (--notes-issue <number> | --notes-file <file>) [options]
 
-  <tag>                   vX.Y.Z, or vX.Y.Z-alpha1/-beta1/-rc1 for a prerelease
+  <tag>                   v1.Y.Z, or v1.Y.Z-alpha1/-beta1/-rc1 for a prerelease
   --notes-issue <number>  Issue whose body or comment holds the notes, starting
                           at the line "## Installation"
   --notes-comment <id>    Comment to use when more than one has the notes
@@ -62,14 +62,15 @@ if [ -z "$NOTES_ISSUE" ] && [ -z "$NOTES_FILE" ]; then die "--notes-issue or --n
 command -v gh >/dev/null || die "gh is required"
 command -v jq >/dev/null || die "jq is required"
 
-# Same shapes containers/release-prep.sh accepts. Test repositories may use any
-# semver prerelease, such as v1.28.8-PR2022FixStuff.
-if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)[0-9.]*)?$ ]]; then
+# Same shapes containers/release-prep.sh accepts, limited to v1 like the
+# release workflow. Test repositories may use any semver prerelease, such as
+# v1.28.8-PR2022FixStuff.
+if [[ "$TAG" =~ ^v1\.[0-9]+\.[0-9]+(-(alpha|beta|rc)[0-9.]*)?$ ]]; then
   :
 elif [ "$REPO" != "ddev/ddev" ] && [[ "$TAG" =~ ^v1\.[0-9]+\.[0-9]+-[0-9A-Za-z.-]+$ ]]; then
   :
 else
-  die "'$TAG' is not a release tag (vX.Y.Z or vX.Y.Z-alpha1/-beta1/-rc1)"
+  die "'$TAG' is not a release tag (v1.Y.Z or v1.Y.Z-alpha1/-beta1/-rc1)"
 fi
 PRERELEASE=false
 [[ "$TAG" == *-* ]] && PRERELEASE=true

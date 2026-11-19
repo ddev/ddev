@@ -536,6 +536,9 @@ jobs:
       # included; verify with `gh attestation verify <file> --repo <owner/repo>`.
       - name: Attest build provenance
         if: inputs.release_tag != ''
+        # The release is already published and usable without attestation,
+        # so don't skip Chocolatey and push-devcontainers if this fails.
+        continue-on-error: true
         uses: actions/attest@v4
         with:
           subject-checksums: dist/checksums.txt

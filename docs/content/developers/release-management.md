@@ -131,7 +131,7 @@ First check the [releases page](https://github.com/ddev/ddev/releases): is the r
 **Already published.** The release and its assets are locked. Rerunning the `Upload artifacts` job runs GoReleaser against the published release again, which is expected to fail. Instead, find the step that failed in the job log and finish what's left of that step and the ones after it by hand:
 
 * **GoReleaser, after publishing**: it publishes the release first, then the Homebrew formulas, the AUR packages, and the Linux packages on Gemfury and Cloudsmith. Check which of these got the new version, and push the missing ones by hand from the assets on the release.
-* **Attest build provenance**: the release is fine without it, but `gh attestation verify` fails for its assets.
+* **Attest build provenance**: this step may fail without failing the job, so Chocolatey and the devcontainer feature still go out; look for its warning in the run summary. The release is fine without it, but `gh attestation verify` fails for its assets.
 * **Chocolatey windows release**: build and push the package by hand, the way that step does.
 * **Push devcontainer feature**: this job only runs after `Upload artifacts` succeeds. If it failed on its own, re-run just this job; if `Upload artifacts` failed, publish the feature by hand.
 
