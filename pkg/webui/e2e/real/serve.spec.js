@@ -55,6 +55,11 @@ test.afterAll(async () => {
   if (serve) serve.kill();
   // A failed run can leave the project behind.
   spawnSync(ddev, ['delete', '-Oy', name], { env, stdio: 'inherit' });
+  // The Mutagen daemon runs from this configuration's ddev/bin but keeps its
+  // data in the user's ~/.ddev_mutagen_data_directory, so once root is gone
+  // every Mutagen project would fail to start with "unable to locate agent
+  // bundle". Stop it first, as the Go tests do; ddev starts a new one.
+  spawnSync(ddev, ['utility', 'mutagen', 'daemon', 'stop'], { env, stdio: 'inherit' });
   fs.rmSync(root, { recursive: true, force: true });
 });
 
