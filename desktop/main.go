@@ -347,10 +347,12 @@ func (t *trayMenu) build(projects []webui.ProjectState, errText string) *applica
 	running := 0
 	for _, p := range projects {
 		sub := m.AddSubmenu(statusMark(p.Status) + " " + p.Name)
-		if p.Status == ddevapp.SiteRunning {
+		// A project that is starting or unhealthy is up too, and needs Stop.
+		if isUp(p.Status) {
 			running++
-			site := p.URL
-			sub.Add("Open site").OnClick(func(*application.Context) { _ = t.app.Browser.OpenURL(site) })
+			if site := p.URL; site != "" {
+				sub.Add("Open site").OnClick(func(*application.Context) { _ = t.app.Browser.OpenURL(site) })
+			}
 			sub.Add("Restart").OnClick(t.action(p.Name, "restart"))
 			sub.Add("Stop").OnClick(t.action(p.Name, "stop"))
 		} else {
@@ -394,6 +396,11 @@ func (t *trayMenu) post(path string) func(*application.Context) {
 			t.app.Dialog.Error().SetTitle("DDEV").SetMessage(err.Error()).Show()
 		}
 	}
+}
+
+// isUp is whether a project's containers run, healthy or not.
+func isUp(status string) bool {
+	return status == ddevapp.SiteRunning || status == ddevapp.SiteUnhealthy || strings.HasPrefix(status, ddevapp.SiteStarting)
 }
 
 func statusMark(status string) string {

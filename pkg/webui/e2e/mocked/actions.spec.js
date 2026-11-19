@@ -1,6 +1,6 @@
 'use strict';
 
-const { test, expect, nthPost } = require('./fixtures');
+const { test, expect, nthPost, running, detail } = require('./fixtures');
 
 test('streams a job into the activity panel', async ({ page, backend }) => {
   await page.locator('.toolbar').getByRole('button', { name: 'Stop', exact: true }).click();
@@ -137,4 +137,14 @@ test('copies commands', async ({ page, context, browserName }) => {
   if (browserName === 'chromium') {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('/home/me/projects/d11');
   }
+});
+
+test('an unhealthy project can be stopped', async ({ page, backend }) => {
+  const sick = { ...running, status: 'unhealthy' };
+  backend.details.d11 = detail(sick);
+  backend.setProjects([sick, backend.projects[1]]);
+  const toolbar = page.locator('.toolbar');
+  await expect(page.locator('h1')).toContainText('unhealthy');
+  await toolbar.getByRole('button', { name: 'Stop', exact: true }).click();
+  expect((await nthPost(backend, 1)).path).toBe('/api/projects/d11/actions/stop');
 });
