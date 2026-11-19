@@ -1,7 +1,7 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-18 (build 32), rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-19 (build 33), rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
@@ -15,6 +15,37 @@ rebased on `upstream/main` as of 2026-11-18 (after [#9141](https://github.com/dd
 changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.com/ddev/ddev/pull/9136) and [#9138](https://github.com/ddev/ddev/pull/9138).
 
 ## Resume here
+
+### Build 33 (2026-11-19): forwarder can't reach the container; suspect Local Network privacy
+
+[Build 33](https://buildkite.com/ddev/macos-socktainer/builds/33) (`abe079c`, tb-macos-arm64-7)
+stopped at the new `published-port-check.sh`: `127.0.0.1:18765` reset every connection while
+the same request inside the container got its 200. The Apple Container log shows why: the
+port forwarder (`container-runtime-linux`, `RuntimeLinuxHelper`) logged `backend - connect
+failed: … No route to host (errno: 65)` on every attempt to reach the container.
+
+Ruled out by hand on tb-macos-arm64-7 on 2026-11-19, with `container system start` run from a
+desktop Terminal and OrbStack, Rancher Desktop, Lima and colima all running: a
+`container run -p 127.0.0.1:18766:8000` probe answered on the published port, and ping and
+curl to its address `192.168.65.3` worked over `bridge102`. So neither the `.65` subnet (build
+29 passed on `.64`; `bridge101` now holds `.64` for another VM) nor the other providers
+running (#9114) is enough to break it.
+
+The difference left is which process started the container service. CI starts it from the
+buildkite-agent (`provider_bringup` in `lib-provider.sh`), which can't answer the macOS Local
+Network prompt, and `EHOSTUNREACH` on a route that exists is what a Local Network denial
+returns. Not confirmed. Two tests:
+
+1. Start socktainer from a desktop Terminal on the testbot, so `context_is_up` is true and
+   `provider_bringup` reuses it, then re-run the build. A pass points at the agent's launch
+   context.
+2. On failure, `published-port-check.sh` now curls the container's address from the job's
+   shell, bypassing the forwarder, and prints the route, how `container-apiserver` was
+   launched and the job's launchd session. "No route to host" there while the route exists
+   confirms it.
+
+A grant to buildkite-agent's binary doesn't survive `brew upgrade`, so if this is it, the fix
+should be launching the container service in the desktop session rather than a permission.
 
 ### Build 32 (2026-11-18): same failure on a second testbot; suspect #9114
 

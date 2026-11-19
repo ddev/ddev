@@ -56,6 +56,23 @@ fi
 if [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
   echo "--- container ls"
   container ls 2>&1 || true
+  # Apple's port forwarder connects from the host to the container's address.
+  # Try the same connection from this job's shell. If it fails with "No route
+  # to host" (EHOSTUNREACH) while the route below exists, macOS Local Network
+  # privacy is blocking this job's processes, which can't answer its prompt,
+  # and the forwarder that container system start launched from here.
+  ip=$(container ls 2>/dev/null | awk -v n="${NAME}" '$1 == n {print $6}' | cut -d/ -f1)
+  if [ -n "${ip}" ]; then
+    echo "--- route to the container address ${ip}"
+    route -n get "${ip}" 2>&1 || true
+    echo "--- ping ${ip} from the job's shell"
+    ping -c2 -t2 "${ip}" 2>&1 || true
+    echo "--- curl http://${ip}:8000/ from the job's shell, bypassing the port forwarder"
+    curl -sv --max-time 5 "http://${ip}:8000/" 2>&1 || true
+  fi
+  echo "--- how container-apiserver was launched"
+  launchctl print "gui/$(id -u)/com.apple.container.apiserver" 2>&1 | grep -E 'state|program|domain|session|spawn type' || true
+  echo "--- the job's launchd session: $(launchctl managername 2>&1)"
   echo "--- apple container log, last 10 minutes"
   log show --last 10m --style compact --predicate 'subsystem BEGINSWITH "com.apple.container"' 2>&1 | tail -60 || true
   if [ -f ~/tmp/socktainer.log ]; then
