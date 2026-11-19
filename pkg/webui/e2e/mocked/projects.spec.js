@@ -135,3 +135,36 @@ test('fits a phone screen', async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test('chips show running or stopped projects, with counts', async ({ page }) => {
+  const items = page.locator('#project-list li');
+  const chips = page.locator('#status-chips');
+  await expect(chips.getByRole('button', { name: 'All 2' })).toHaveAttribute('aria-pressed', 'true');
+  await chips.getByRole('button', { name: 'Running 1' }).click();
+  await expect(items).toHaveCount(1);
+  await expect(items).toContainText('d11');
+  await chips.getByRole('button', { name: 'Stopped 1' }).click();
+  await expect(items).toHaveCount(1);
+  await expect(items).toContainText('wp');
+  await expect(chips.getByRole('button', { name: 'Stopped 1' })).toHaveAttribute('aria-pressed', 'true');
+  // The choice is kept for the next visit. The fixture clears storage on
+  // every load, so read it instead of reloading.
+  expect(await page.evaluate(() => localStorage.getItem('ddev.show'))).toBe('down');
+  await chips.getByRole('button', { name: 'All 2' }).click();
+  await expect(items).toHaveCount(2);
+});
+
+test('a #project= link selects that project', async ({ page }) => {
+  await expect(page.locator('.detail-head h1')).toContainText('d11');
+  await page.locator('#status-chips').getByRole('button', { name: 'Running 1' }).click();
+  await page.evaluate(() => { location.hash = 'project=wp'; });
+  await expect(page.locator('.detail-head h1')).toContainText('wp');
+  await expect(page.locator('#project-list li', { hasText: 'wp' })).toHaveClass(/selected/);
+  await expect(page.locator('#status-chips').getByRole('button', { name: 'All 2' })).toHaveAttribute('aria-pressed', 'true');
+  // The page clears the hash, so the same link works again later.
+  expect(await page.evaluate(() => location.hash)).toBe('');
+  await page.locator('#project-list li', { hasText: 'd11' }).click();
+  await expect(page.locator('.detail-head h1')).toContainText('d11');
+  await page.evaluate(() => { location.hash = 'project=wp'; });
+  await expect(page.locator('.detail-head h1')).toContainText('wp');
+});
