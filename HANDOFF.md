@@ -1,7 +1,7 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-19 (build 33), rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-19 (build 35), rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
@@ -15,6 +15,32 @@ rebased on `upstream/main` as of 2026-11-18 (after [#9141](https://github.com/dd
 changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.com/ddev/ddev/pull/9136) and [#9138](https://github.com/ddev/ddev/pull/9138).
 
 ## Resume here
+
+### Build 35 (2026-11-19): Local Network theory weakened; the check had its own bug
+
+[Build 35](https://buildkite.com/ddev/macos-socktainer/builds/35) (`406fa3cb`, pinned to
+tb-macos-arm64-7 by a temporary commit since reverted) failed the published-port check the
+same way. What it showed:
+
+- **Test 1 didn't run.** The socktainer started from a desktop Terminal was gone by the time
+  the job ran (it waited ~30 minutes for the agent), so the job started `container-apiserver`
+  and socktainer itself. A job for another provider on the same testbot stops Apple Container
+  (`cleanup_other_provider_containers` in `lib-provider.sh`), which likely explains it.
+- **The job's shell reaches the container.** From the job, the route to `192.168.65.6` used
+  `bridge102`, ping answered, and curl to port 8000 connected and got `200 OK`. So the agent's
+  own processes aren't blocked from the local network, while the forwarder
+  (`container-runtime-linux`) still logged "No route to host" connecting to the same address.
+- **`com.apple.container.apiserver` wasn't in `gui/501`** when the job had started it, though
+  the job's launchd session was `Aqua`. A desktop start registers it, and each container's
+  `container-runtime-linux.<name>` forwarder, in `gui/<uid>`. Where the job's start put it is
+  the next thing to see; the diagnostics now list both the `gui` and `user` domains.
+- **The check's responder reset every connection**, because it answered without reading the
+  request. Even the direct curl got `200 OK` and then a reset. Fixed in `3464a5c6`. The
+  forwarder's "No route to host" happens at connect, so it's a separate failure, and builds
+  31 and 32 failed the same way through Traefik.
+
+Run single-testbot experiments from `20261119_rfay_socktainer_ci_probe` (this branch plus
+the pin, no PR), not from this PR's branch.
 
 ### Build 33 (2026-11-19): forwarder can't reach the container; suspect Local Network privacy
 
