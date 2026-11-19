@@ -86,6 +86,10 @@ jobs:
           if [ "$(jq length <<<"$releases")" -ne 1 ]; then
             echo "Expected one draft release for ${RELEASE_TAG}; create it with scripts/release.sh" >&2; exit 1
           fi
+          # GoReleaser's use_existing_draft finds the draft by its title, not its tag.
+          if [ "$(jq -r '.[0].name' <<<"$releases")" != "${RELEASE_TAG}" ]; then
+            echo "GoReleaser only finds a draft titled ${RELEASE_TAG}; change the title after publishing" >&2; exit 1
+          fi
           target="$(jq -r '.[0].target_commitish' <<<"$releases")"
           sha="$(gh api "repos/${GH_REPO}/commits/${target}" --jq .sha)"
           if gh api "repos/${GH_REPO}/git/ref/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
