@@ -9,9 +9,11 @@ import (
 
 // ProjectState is what a tray menu shows of a project.
 type ProjectState struct {
-	Name   string
-	Status string
-	URL    string
+	Name    string
+	Status  string
+	Type    string
+	URL     string
+	Mailpit string
 }
 
 // Projects lists the projects, or returns why they cannot be listed, such as
@@ -23,7 +25,7 @@ func (s *Server) Projects() ([]ProjectState, error) {
 	}
 	out := make([]ProjectState, 0, len(st.Projects))
 	for _, p := range st.Projects {
-		out = append(out, ProjectState{Name: p.Name, Status: p.Status, URL: p.URL})
+		out = append(out, ProjectState{Name: p.Name, Status: p.Status, Type: p.Type, URL: p.URL, Mailpit: p.Mailpit})
 	}
 	return out, nil
 }

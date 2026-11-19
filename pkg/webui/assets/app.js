@@ -9,6 +9,8 @@ const state = {
   router: '',
   selected: localStorage.getItem('ddev.selected') || '',
   filter: '',
+  // show is which projects the list shows: all, up, or down.
+  show: localStorage.getItem('ddev.show') || 'all',
   detail: null,
   detailFor: '',
   detailStatus: '',
@@ -165,11 +167,24 @@ function selectProject(name) {
   loadDetail();
 }
 
+// Chips that narrow the list to running or stopped projects, with counts.
+function renderChips() {
+  const up = state.projects.filter((p) => isUp(p.status)).length;
+  const chips = [['all', 'All', state.projects.length], ['up', 'Running', up], ['down', 'Stopped', state.projects.length - up]];
+  $('status-chips').replaceChildren(...chips.map(([id, label, n]) => h('button', {
+    class: 'chip' + (state.show === id ? ' active' : ''),
+    'aria-pressed': state.show === id ? 'true' : 'false',
+    onclick: () => { state.show = id; localStorage.setItem('ddev.show', id); renderProjects(); },
+  }, label + ' ', h('span', { class: 'chip-count' }, String(n)))));
+}
+
 function renderProjects() {
+  renderChips();
   const list = $('project-list');
   const f = state.filter.toLowerCase();
   const shown = state.projects.filter((p) =>
-    !f || p.name.toLowerCase().includes(f) || p.type.toLowerCase().includes(f) || p.status.toLowerCase().includes(f));
+    (state.show === 'all' || (state.show === 'up') === isUp(p.status)) &&
+    (!f || p.name.toLowerCase().includes(f) || p.type.toLowerCase().includes(f) || p.status.toLowerCase().includes(f)));
   list.replaceChildren(...shown.map((p) => {
     const busy = runningJobFor(p.name);
     return h('li', {
@@ -648,6 +663,20 @@ function init() {
     e.preventDefault();
     post('/api/open-url', { url: a.href }).catch((err) => toast(err.message, true));
   });
+  // A link such as #project=d11 selects that project; the desktop app's
+  // tray uses it.
+  const fromHash = () => {
+    const m = /(?:^#|&)project=([^&]+)/.exec(location.hash);
+    if (!m) return;
+    const name = decodeURIComponent(m[1].replace(/\+/g, ' '));
+    // Clear the hash, so that the same link selects the project again later.
+    history.replaceState(null, '', location.pathname + location.search);
+    if (state.show !== 'all') { state.show = 'all'; localStorage.setItem('ddev.show', 'all'); }
+    selectProject(name);
+    renderProjects();
+  };
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
   connectEvents();
 }
 

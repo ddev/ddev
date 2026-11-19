@@ -166,9 +166,11 @@ func (r *remoteServer) request(method, path string) (*http.Response, error) {
 // remoteStatus is what the app reads of a status event.
 type remoteStatus struct {
 	Projects []struct {
-		Name   string `json:"name"`
-		Status string `json:"status"`
-		URL    string `json:"url"`
+		Name    string `json:"name"`
+		Status  string `json:"status"`
+		Type    string `json:"type"`
+		URL     string `json:"url"`
+		Mailpit string `json:"mailpit"`
 	} `json:"projects"`
 	Jobs []struct {
 		Title string `json:"title"`
@@ -188,7 +190,7 @@ func (r *remoteServer) Projects() ([]webui.ProjectState, error) {
 	}
 	out := make([]webui.ProjectState, 0, len(st.Projects))
 	for _, p := range st.Projects {
-		out = append(out, webui.ProjectState{Name: p.Name, Status: p.Status, URL: p.URL})
+		out = append(out, webui.ProjectState{Name: p.Name, Status: p.Status, Type: p.Type, URL: p.URL, Mailpit: p.Mailpit})
 	}
 	return out, nil
 }

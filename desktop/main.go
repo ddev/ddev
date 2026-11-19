@@ -243,7 +243,18 @@ func main() {
 	tray := app.SystemTray.New()
 	tray.SetTemplateIcon(trayIcon)
 	tray.SetTooltip("DDEV")
-	t := &trayMenu{app: app, tray: tray, srv: be, show: showWindow}
+	// pageURL is the dashboard page once loaded, without the launch token.
+	pageURL := "/"
+	if u, err := url.Parse(windowURL); err == nil && u.Host != "" {
+		pageURL = u.Scheme + "://" + u.Host + "/"
+	}
+	t := &trayMenu{app: app, tray: tray, srv: be, show: showWindow, reveal: func(name string) {
+		// The page selects the project that its location's hash names.
+		// A change to the hash alone does not reload the page. ExecJS would
+		// wait for the Wails runtime, which the page does not load.
+		window.SetURL(pageURL + "#project=" + url.QueryEscape(name))
+		showWindow()
+	}}
 	go t.follow()
 
 	if err := app.Run(); err != nil {
@@ -310,8 +321,10 @@ type trayMenu struct {
 	tray *application.SystemTray
 	srv  backend
 	show func()
-	last []webui.ProjectState
-	err  string
+	// reveal shows the window with a project selected.
+	reveal func(name string)
+	last   []webui.ProjectState
+	err    string
 }
 
 func (t *trayMenu) follow() {
@@ -347,17 +360,25 @@ func (t *trayMenu) build(projects []webui.ProjectState, errText string) *applica
 	running := 0
 	for _, p := range projects {
 		sub := m.AddSubmenu(statusMark(p.Status) + " " + p.Name)
+		sub.Add(p.Status + " · " + p.Type).SetEnabled(false)
+		sub.AddSeparator()
 		// A project that is starting or unhealthy is up too, and needs Stop.
-		if isUp(p.Status) {
+		if webui.IsUp(p.Status) {
 			running++
 			if site := p.URL; site != "" {
 				sub.Add("Open site").OnClick(func(*application.Context) { _ = t.app.Browser.OpenURL(site) })
+			}
+			if mailpit := p.Mailpit; mailpit != "" {
+				sub.Add("Open Mailpit").OnClick(func(*application.Context) { _ = t.app.Browser.OpenURL(mailpit) })
 			}
 			sub.Add("Restart").OnClick(t.action(p.Name, "restart"))
 			sub.Add("Stop").OnClick(t.action(p.Name, "stop"))
 		} else {
 			sub.Add("Start").OnClick(t.action(p.Name, "start"))
 		}
+		sub.AddSeparator()
+		name := p.Name
+		sub.Add("Show in DDEV").OnClick(func(*application.Context) { t.reveal(name) })
 	}
 	m.AddSeparator()
 	m.Add("Start all").SetEnabled(len(projects) > running).OnClick(t.global("start-all"))
@@ -396,11 +417,6 @@ func (t *trayMenu) post(path string) func(*application.Context) {
 			t.app.Dialog.Error().SetTitle("DDEV").SetMessage(err.Error()).Show()
 		}
 	}
-}
-
-// isUp is whether a project's containers run, healthy or not.
-func isUp(status string) bool {
-	return status == ddevapp.SiteRunning || status == ddevapp.SiteUnhealthy || strings.HasPrefix(status, ddevapp.SiteStarting)
 }
 
 func statusMark(status string) string {

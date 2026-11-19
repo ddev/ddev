@@ -24,7 +24,13 @@ type projectSummary struct {
 	Status  string `json:"status"`
 	Type    string `json:"type"`
 	URL     string `json:"url,omitempty"`
+	Mailpit string `json:"mailpit,omitempty"`
 	AppRoot string `json:"approot"`
+}
+
+// IsUp is whether a project's containers run, healthy or not.
+func IsUp(status string) bool {
+	return status == ddevapp.SiteRunning || status == ddevapp.SiteUnhealthy || strings.HasPrefix(status, ddevapp.SiteStarting)
 }
 
 // status is what the status stream sends.
@@ -62,8 +68,9 @@ func loadStatus() status {
 	for _, app := range apps {
 		p := projectSummary{Name: app.GetName(), Type: app.GetType(), AppRoot: app.GetAppRoot()}
 		p.Status, _ = app.SiteStatus()
-		if p.Status == ddevapp.SiteRunning {
+		if IsUp(p.Status) {
 			p.URL = app.GetPrimaryURL()
+			p.Mailpit = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
 		}
 		st.Projects = append(st.Projects, p)
 		routerUsed = routerUsed || !ddevapp.IsRouterDisabled(app)

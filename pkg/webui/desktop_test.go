@@ -100,3 +100,13 @@ func TestRunningJobs(t *testing.T) {
 	}
 	require.Empty(t, s.RunningJobs())
 }
+
+// TestIsUp checks which projects the tray and the page offer Stop for.
+func TestIsUp(t *testing.T) {
+	for status, want := range map[string]bool{
+		"running": true, "unhealthy": true, "starting": true,
+		"stopped": false, "paused": false, "project directory missing": false, "": false,
+	} {
+		require.Equal(t, want, IsUp(status), status)
+	}
+}
