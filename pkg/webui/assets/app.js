@@ -269,7 +269,8 @@ function detailHead(p) {
 function toolbar(p) {
   const d = state.detail && !state.detail.error ? state.detail.describe : null;
   const busy = !!runningJobFor(p.name);
-  const running = p.status === 'running';
+  // A project that is starting or unhealthy is up too, and needs Stop.
+  const running = isUp(p.status);
   const act = (a, params) => () => runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/' + a, params);
   const open = (t) => async () => {
     try { await post('/api/projects/' + encodeURIComponent(p.name) + '/open/' + t); } catch (e) { toast(e.message, true); }
@@ -554,6 +555,11 @@ function showJob(id, open) {
   });
   es.addEventListener('error', () => es.close());
   renderJobs();
+}
+
+// isUp is whether a project's containers run, healthy or not.
+function isUp(status) {
+  return status === 'running' || status === 'unhealthy' || status.startsWith('starting');
 }
 
 // ---------- dialogs ----------
