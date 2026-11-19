@@ -109,7 +109,7 @@ Releases are [immutable](https://docs.github.com/en/code-security/concepts/suppl
 
     It takes the notes from the issue comment that has the `## Installation` heading through its end, turns `@ username` into `@username`, and for a stable release turns `/en/latest/` docs links into `/en/stable/`. It then creates a draft release on `main` with those notes followed by GitHub's generated notes (What's Changed, New Contributors, Full Changelog) since the previous release. A tag with `-alpha`, `-beta`, or `-rc` is marked as a prerelease. Use `--dry-run` to see the notes without creating anything, and `--help` for the other options.
 
-4. Review the draft on the [releases page](https://github.com/ddev/ddev/releases) and edit it there if needed, then answer `y` to start the release workflow. Answering no keeps the draft; running the script again reuses it.
+4. Review the draft on the [releases page](https://github.com/ddev/ddev/releases) and edit it there if needed, then answer `y` to start the release workflow. Keep the title as the tag, such as `v1.25.6`: GoReleaser finds the draft by its title, so the workflow stops if it was changed. Give the release a longer title after it's published. Answering no keeps the draft; running the script again reuses it.
 5. The [release workflow](https://github.com/ddev/ddev/actions/workflows/main-build.yml) checks that the draft exists, creates the tag at the draft's commit, builds and signs everything, and runs GoReleaser. GoReleaser attaches the assets and their SBOMs to the draft and publishes it, then pushes Homebrew, AUR, and the Linux packages. The workflow then attests the build provenance of every file in `checksums.txt`.
 6. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
 
@@ -126,7 +126,7 @@ Don't create or publish a release by hand in the GitHub UI: a release published 
 
 First check the [releases page](https://github.com/ddev/ddev/releases): is the release still a draft?
 
-**Still a draft.** Nothing is public yet. Use **Re-run failed jobs** on the workflow run. The tag is already at the draft's commit, so `prepare-release` accepts it again, and GoReleaser replaces any assets a failed run had already uploaded to the draft. If the draft itself is wrong, such as the wrong commit, delete the draft, ask an admin to delete the tag, and start again with `scripts/release.sh`.
+**Still a draft.** Nothing is public yet. Use **Re-run failed jobs** on the workflow run. That skips `prepare-release` if it passed; if it was the job that failed, it runs again and accepts a tag it already created at the draft's commit. GoReleaser replaces any assets a failed run had already uploaded to the draft. If GoReleaser had already started, it also appended its `## Changelog` section and footer to the draft's notes, and a rerun appends them again: once the rerun publishes the release, remove the duplicate section from its notes, which can still be edited. If the draft itself is wrong, such as the wrong commit, delete the draft, ask an admin to delete the tag, and start again with `scripts/release.sh`.
 
 **Already published.** The release and its assets are locked. Rerunning the `Upload artifacts` job runs GoReleaser against the published release again, which is expected to fail. Instead, find the step that failed in the job log and finish what's left of that step and the ones after it by hand:
 
