@@ -36,7 +36,7 @@ import (
 func durationFormatChecker(input any) error {
 	value, ok := input.(string)
 	if !ok {
-		return fmt.Errorf("expected string")
+		return errors.New("expected string")
 	}
 	_, err := time.ParseDuration(value)
 	return err

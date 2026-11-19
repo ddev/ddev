@@ -60,6 +60,16 @@ const (
 	//  - The daemon silently ignores HostConfig.Umask, so the container would
 	//    run with the runtime's default umask instead of the requested one
 	apiVersion156 = "1.56"
+
+	// apiVersionJobs is the first Docker Engine API version of an engine
+	// shipping the jobs extension (one-shot and scheduled jobs). The extension
+	// is disabled by default (dockerd --extension-enable org.mobyproject.jobs.v0),
+	// so this version only says it is compiled in: jobsAvailability probes it.
+	//
+	// Before this version, or with the extension disabled:
+	//  - Scheduled jobs cannot be registered, they are refused
+	//  - Manual jobs run as one-off service containers
+	apiVersionJobs = "1.57"
 )
 
 // Docker Engine version strings for user-facing error messages.
@@ -73,13 +83,4 @@ const (
 
 	// dockerEngineV29_8 is the specific version string for Docker Engine 29.8
 	dockerEngineV29_8 = "v29.8"
-)
-
-// Build tool version constants
-const (
-	// buildxMinVersion is the minimum required version of buildx for compose build
-	buildxMinVersion = "0.17.0"
-
-	// buildxJobsMinVersion is the minimum version of buildx supporting `bake --jobs`
-	buildxJobsMinVersion = "0.38.0"
 )

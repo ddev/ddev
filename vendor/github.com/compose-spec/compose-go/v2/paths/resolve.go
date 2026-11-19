@@ -35,16 +35,16 @@ func ResolveRelativePaths(project map[string]any, base string, remotes []RemoteR
 	}
 	r.resolvers = map[tree.Path]resolver{
 		"services.*.build.context":               r.absContextPath,
-		"services.*.build.additional_contexts.*": r.absContextPath,
-		"services.*.build.ssh.*":                 r.maybeUnixPath,
+		"services.*.build.additional_contexts.*": r.absAdditionalContextPath,
+		"services.*.build.ssh.*":                 r.absSSHPath,
 		"services.*.env_file.*.path":             r.absPath,
 		"services.*.label_file.*":                r.absPath,
 		"services.*.extends.file":                r.absExtendsPath,
 		"services.*.develop.watch.*.path":        r.absSymbolicLink,
 		"services.*.volumes.*":                   r.absVolumeMount,
 		"jobs.*.build.context":                   r.absContextPath,
-		"jobs.*.build.additional_contexts.*":     r.absContextPath,
-		"jobs.*.build.ssh.*":                     r.maybeUnixPath,
+		"jobs.*.build.additional_contexts.*":     r.absAdditionalContextPath,
+		"jobs.*.build.ssh.*":                     r.absSSHPath,
 		"jobs.*.env_file.*.path":                 r.absPath,
 		"jobs.*.label_file.*":                    r.absPath,
 		"jobs.*.extends.file":                    r.absExtendsPath,
@@ -84,7 +84,11 @@ func (r *relativePathsResolver) isRemoteResource(path string) bool {
 func (r *relativePathsResolver) resolveRelativePaths(value any, p tree.Path) (any, error) {
 	for pattern, resolver := range r.resolvers {
 		if p.Matches(pattern) {
-			return resolver(value)
+			resolved, err := resolver(value)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", p, err)
+			}
+			return resolved, nil
 		}
 	}
 	switch v := value.(type) {
@@ -133,6 +137,18 @@ func (r *relativePathsResolver) absPath(value any) (any, error) {
 	return nil, fmt.Errorf("unexpected type %T", value)
 }
 
+// absSSHPath resolves the path of a build ssh key. The value of a mapping may
+// be a number or a boolean, which the model reads as the text it is written
+// with: it is resolved like that text, as it would be if it was written as one.
+func (r *relativePathsResolver) absSSHPath(value any) (any, error) {
+	switch value.(type) {
+	case nil, string:
+	default:
+		value = fmt.Sprint(value)
+	}
+	return r.maybeUnixPath(value)
+}
+
 func (r *relativePathsResolver) absVolumeMount(a any) (any, error) {
 	switch vol := a.(type) {
 	case map[string]any:
@@ -140,10 +156,13 @@ func (r *relativePathsResolver) absVolumeMount(a any) (any, error) {
 			return vol, nil
 		}
 		src, ok := vol["source"]
-		if !ok {
+		if !ok || src == "" {
 			return nil, errors.New(`invalid mount config for type "bind": field Source must not be empty`)
 		}
-		abs, err := r.maybeUnixPath(src.(string))
+		// a source that is not a string is left as is, like any non canonical
+		// value: the schema validation rejects it, and without validation the
+		// model decoding reads it as text
+		abs, err := r.maybeUnixPath(src)
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +178,11 @@ func (r *relativePathsResolver) volumeDriverOpts(a any) (any, error) {
 	if a == nil {
 		return nil, nil
 	}
-	vol := a.(map[string]any)
+	vol, ok := a.(map[string]any)
+	if !ok {
+		// not a volume definition: the model decoding reports it
+		return a, nil
+	}
 	if vol["driver"] != "local" {
 		return vol, nil
 	}
@@ -167,7 +190,10 @@ func (r *relativePathsResolver) volumeDriverOpts(a any) (any, error) {
 	if !ok {
 		return vol, nil
 	}
-	opts := do.(map[string]any)
+	opts, ok := do.(map[string]any)
+	if !ok {
+		return vol, nil
+	}
 	if dev, ok := opts["device"]; opts["o"] == "bind" && ok {
 		// This is actually a bind mount
 		path, err := r.maybeUnixPath(dev)

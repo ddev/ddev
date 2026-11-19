@@ -42,11 +42,9 @@ func (t *transformer) Transform(in string) (map[string]string, bool) {
 
 	iniMap := convertToMap(iniFile)
 	if len(iniMap) <= 1 {
-		if strings.Index(in, "=") >= len(in)-2 {
-			// make sure that the file with a single key is not base64 strings might end with == that might mistakenly parse
-			return nil, false
-
-		}
+		// avoid transforming file with a single key in order to avoid mistakenly parsing value containing =
+		// e.g. base64 strings might end with ==
+		return nil, false
 	}
 	return iniMap, true
 }

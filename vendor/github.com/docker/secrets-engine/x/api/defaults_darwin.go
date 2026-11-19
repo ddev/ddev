@@ -25,6 +25,8 @@ import (
 // path, $HOME/Library/Caches/docker-secrets-engine/daemon.sock.
 // If HOME is unset, it uses $TMPDIR/docker-secrets-engine/daemon.sock, or
 // /tmp/docker-secrets-engine/daemon.sock when TMPDIR is also unset.
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/config.StandaloneSocketPath] instead.
 func StandaloneSocketPath() string {
 	if dir, err := os.UserCacheDir(); err == nil {
 		return filepath.Join(dir, "docker-secrets-engine", "daemon.sock")
@@ -34,7 +36,7 @@ func StandaloneSocketPath() string {
 
 // DaemonSocketPath returns the standalone Secrets Engine's listening socket path.
 //
-// Deprecated: Use [StandaloneSocketPath] instead.
+// Deprecated: Use [github.com/docker/secrets-engine/client/config.StandaloneSocketPath] instead.
 func DaemonSocketPath() string {
 	return StandaloneSocketPath()
 }

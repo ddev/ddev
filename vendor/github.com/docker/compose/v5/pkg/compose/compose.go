@@ -30,10 +30,12 @@ import (
 	clitypes "github.com/docker/cli/cli/config/types"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/cli/streams"
+	extensionclient "github.com/moby/extensions/client"
 	"github.com/moby/moby/api/types/swarm"
 	"github.com/moby/moby/client"
 	"github.com/sirupsen/logrus"
 
+	jobsv0 "github.com/docker/compose/v5/internal/jobsapi"
 	"github.com/docker/compose/v5/internal/naming"
 	"github.com/docker/compose/v5/internal/progress"
 	"github.com/docker/compose/v5/internal/projectloader"
@@ -177,6 +179,9 @@ func WithDryRun(s *composeService) error {
 
 	options := flags.NewClientOptions()
 	options.Context = s.dockerCli.CurrentContext()
+	// Initialize applies options.LogLevel, resetting an empty one to info:
+	// keep the level already set (e.g. by --verbose).
+	options.LogLevel = logrus.GetLevel().String()
 	err = cli.Initialize(options, command.WithInitializeClient(func(cli *command.DockerCli) (client.APIClient, error) {
 		return dryrun.NewDryRunClient(s.apiClient(), s.dockerCli)
 	}))
@@ -238,6 +243,19 @@ type composeService struct {
 	// logStreamDrainTimeout bounds the shutdown drain of re-attached log
 	// streams, see drainTimeout.
 	logStreamDrainTimeout time.Duration
+
+	jobsGRPCOnce  sync.Once
+	jobsExtClient *extensionclient.Client
+	jobsAPI       jobsv0.Jobs
+	jobsAPIErr    error
+
+	// jobsProbe memoizes the first definitive answer of the jobs probe: the
+	// engine's set of extensions is fixed for the lifetime of its daemon.
+	jobsProbe struct {
+		mu     sync.Mutex
+		known  bool
+		status jobsStatus
+	}
 }
 
 // Close releases any connections/resources held by the underlying clients.
@@ -248,6 +266,9 @@ func (s *composeService) Close() error {
 	var errs []error
 	if s.dockerCli != nil {
 		errs = append(errs, s.apiClient().Close())
+	}
+	if s.jobsExtClient != nil {
+		errs = append(errs, s.jobsExtClient.Close())
 	}
 	return errors.Join(errs...)
 }

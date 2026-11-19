@@ -25,6 +25,8 @@ import (
 // path, %LOCALAPPDATA%\DockerSecretsEngine\service\daemon.sock.
 // If LOCALAPPDATA is unset, it uses
 // %USERPROFILE%\AppData\Local\DockerSecretsEngine\service\daemon.sock.
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/config.StandaloneSocketPath] instead.
 func StandaloneSocketPath() string {
 	base := os.Getenv("LOCALAPPDATA")
 	if base == "" {
@@ -35,7 +37,7 @@ func StandaloneSocketPath() string {
 
 // DaemonSocketPath returns the standalone Secrets Engine's listening socket path.
 //
-// Deprecated: Use [StandaloneSocketPath] instead.
+// Deprecated: Use [github.com/docker/secrets-engine/client/config.StandaloneSocketPath] instead.
 func DaemonSocketPath() string {
 	return StandaloneSocketPath()
 }

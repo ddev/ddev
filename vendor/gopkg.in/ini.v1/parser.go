@@ -73,36 +73,42 @@ func newParser(r io.Reader, opts parserOptions) *parser {
 // BOM handles header of UTF-8, UTF-16 LE and UTF-16 BE's BOM format.
 // http://en.wikipedia.org/wiki/Byte_order_mark#Representations_of_byte_order_marks_by_encoding
 func (p *parser) BOM() error {
-	mask, err := p.buf.Peek(2)
-	if err != nil && err != io.EOF {
-		return err
-	} else if len(mask) < 2 {
-		return nil
-	}
-
-	switch {
-	case mask[0] == 254 && mask[1] == 255:
-		fallthrough
-	case mask[0] == 255 && mask[1] == 254:
-		_, err = p.buf.Read(mask)
-		if err != nil {
-			return err
-		}
-	case mask[0] == 239 && mask[1] == 187:
-		mask, err := p.buf.Peek(3)
+	// Strip every leading BOM: a file may accidentally carry more than one
+	// (e.g. a tool prepending a BOM to already-BOM'd content). Stopping after
+	// the first one leaves the remaining BOM on the next token and makes the
+	// parser fail with a misleading "key-value delimiter not found" (#390).
+	for {
+		mask, err := p.buf.Peek(2)
 		if err != nil && err != io.EOF {
 			return err
-		} else if len(mask) < 3 {
+		} else if len(mask) < 2 {
 			return nil
 		}
-		if mask[2] == 191 {
-			_, err = p.buf.Read(mask)
-			if err != nil {
+
+		switch {
+		case mask[0] == 254 && mask[1] == 255:
+			fallthrough
+		case mask[0] == 255 && mask[1] == 254:
+			if _, err = p.buf.Read(mask); err != nil {
 				return err
 			}
+		case mask[0] == 239 && mask[1] == 187:
+			mask, err := p.buf.Peek(3)
+			if err != nil && err != io.EOF {
+				return err
+			} else if len(mask) < 3 {
+				return nil
+			}
+			if mask[2] != 191 {
+				return nil
+			}
+			if _, err = p.buf.Read(mask); err != nil {
+				return err
+			}
+		default:
+			return nil
 		}
 	}
-	return nil
 }
 
 func (p *parser) readUntil(delim byte) ([]byte, error) {
@@ -225,6 +231,42 @@ func (p *parser) readContinuationLines(val string) (string, error) {
 	return val, nil
 }
 
+func inlineCommentIndex(line string, spaceBefore bool) int {
+	var quote byte
+	escaped := false
+	for i := 0; i < len(line); i++ {
+		ch := line[i]
+		if quote != 0 {
+			if escaped {
+				escaped = false
+				continue
+			}
+			if quote == '"' && ch == '\\' {
+				escaped = true
+				continue
+			}
+			if ch == quote {
+				quote = 0
+			}
+			continue
+		}
+		if i == 0 && (ch == '\'' || ch == '"') {
+			quote = ch
+			continue
+		}
+		if ch != '#' && ch != ';' {
+			continue
+		}
+		if !spaceBefore {
+			return i
+		}
+		if i > 0 && line[i-1] == ' ' {
+			return i - 1
+		}
+	}
+	return -1
+}
+
 // hasSurroundedQuote check if and only if the first and last characters
 // are quotes \" or \'.
 // It returns false if any other parts also contain same kind of quotes.
@@ -276,24 +318,13 @@ func (p *parser) readValue(in []byte, bufferSize int) (string, error) {
 		return p.readContinuationLines(line[:len(line)-1])
 	}
 
-	// Check if ignore inline comment
+	// Check for inline comments only outside a value's surrounding quotes.
 	if !p.options.IgnoreInlineComment {
-		var i int
-		if p.options.SpaceBeforeInlineComment {
-			i = strings.Index(line, " #")
-			if i == -1 {
-				i = strings.Index(line, " ;")
-			}
-
-		} else {
-			i = strings.IndexAny(line, "#;")
-		}
-
+		i := inlineCommentIndex(line, p.options.SpaceBeforeInlineComment)
 		if i > -1 {
 			p.comment.WriteString(line[i:])
 			line = strings.TrimSpace(line[:i])
 		}
-
 	}
 
 	// Trim single and double quotes
@@ -461,6 +492,7 @@ func (f *File) parse(reader io.Reader) (err error) {
 				if f.options.UnparseableSections[i] == name ||
 					((f.options.Insensitive || f.options.InsensitiveSections) && strings.EqualFold(f.options.UnparseableSections[i], name)) {
 					inUnparseableSection = true
+					section.isRawSection = true
 					continue
 				}
 			}
@@ -468,7 +500,6 @@ func (f *File) parse(reader io.Reader) (err error) {
 		}
 
 		if inUnparseableSection {
-			section.isRawSection = true
 			section.rawBody += string(line)
 			continue
 		}
@@ -523,6 +554,12 @@ func (f *File) parse(reader io.Reader) (err error) {
 		key.Comment = strings.TrimSpace(p.comment.String())
 		p.comment.Reset()
 		lastRegularKey = key
+	}
+	// Comments after the last key/section are otherwise dropped on EOF
+	// (e.g. Ansible blockinfile # END markers). Keep them on the last section.
+	if p.comment.Len() > 0 {
+		section.TrailingComment = strings.TrimSpace(p.comment.String())
+		p.comment.Reset()
 	}
 	return nil
 }

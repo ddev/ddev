@@ -24,8 +24,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// ExpandUser replaces a leading "~" by the home directory of the current user.
+// Only "~" alone, or followed by a path separator, is the home directory: a
+// "~" followed by a name ("~user/x") is the home directory of another user,
+// which is not looked up, and the path is left untouched.
 func ExpandUser(p string) string {
-	if strings.HasPrefix(p, "~") {
+	if isHomePath(p) {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			logrus.Warn("cannot expand '~', because the environment lacks HOME")
@@ -34,4 +38,16 @@ func ExpandUser(p string) string {
 		return filepath.Join(home, p[1:])
 	}
 	return p
+}
+
+// isHomePath reports whether p is "~", or starts with "~" and a path
+// separator.
+func isHomePath(p string) bool {
+	if !strings.HasPrefix(p, "~") {
+		return false
+	}
+	if len(p) == 1 {
+		return true
+	}
+	return p[1] == '/' || p[1] == filepath.Separator
 }

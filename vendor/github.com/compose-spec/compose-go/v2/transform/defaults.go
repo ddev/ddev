@@ -24,13 +24,14 @@ import (
 var DefaultValues = map[tree.Path]Func{}
 
 func init() {
-	// container_spec-level defaults, applied wherever a container is declared
-	for _, prefix := range []tree.Path{"services", "jobs"} {
-		DefaultValues[prefix+".*.build"] = defaultBuildContext
-		DefaultValues[prefix+".*.secrets.*"] = defaultSecretMount
-		DefaultValues[prefix+".*.ports.*"] = portDefaults
-		DefaultValues[prefix+".*.gpus.*"] = deviceRequestDefaults
-		DefaultValues[prefix+".*.volumes.*.bind"] = defaultVolumeBind
+	// container_spec-level defaults, applied wherever a container is declared:
+	// services, jobs, and the hooks that run in a container of their own
+	for _, prefix := range []tree.Path{"services.*", "jobs.*", "services.*.pre_start.*"} {
+		DefaultValues[prefix+".build"] = defaultBuildContext
+		DefaultValues[prefix+".secrets.*"] = defaultSecretMount
+		DefaultValues[prefix+".ports.*"] = portDefaults
+		DefaultValues[prefix+".gpus.*"] = deviceRequestDefaults
+		DefaultValues[prefix+".volumes.*.bind"] = defaultVolumeBind
 	}
 	// deploy is service-only
 	DefaultValues["services.*.deploy.resources.reservations.devices.*"] = deviceRequestDefaults

@@ -29,7 +29,7 @@ func checkExternal(v map[string]any, p tree.Path) error {
 	if !ok {
 		return nil
 	}
-	if !b.(bool) {
+	if !isTrue(b) {
 		return nil
 	}
 
@@ -46,4 +46,22 @@ func checkExternal(v map[string]any, p tree.Path) error {
 		}
 	}
 	return nil
+}
+
+// isTrue tells whether the value of `external` stands for true. With
+// interpolation skipped it can be a string, which the decoding of the model
+// reads as a boolean: the spellings it accepts as true are recognized. Any
+// other value, such as a reference to a variable left unresolved, is left to
+// that decoding to reject.
+func isTrue(value any) bool {
+	switch v := value.(type) {
+	case bool:
+		return v
+	case string:
+		switch strings.ToLower(v) {
+		case "true", "y", "yes", "on":
+			return true
+		}
+	}
+	return false
 }

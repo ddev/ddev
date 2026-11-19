@@ -30,7 +30,11 @@ func transformKeyValue(data any, p tree.Path, ignoreParseError bool) (any, error
 	case []any:
 		mapping := map[string]any{}
 		for _, e := range v {
-			before, after, found := strings.Cut(e.(string), "=")
+			entry, ok := e.(string)
+			if !ok {
+				return nil, fmt.Errorf("%s: invalid type %T, expected a key=value string", p, e)
+			}
+			before, after, found := strings.Cut(entry, "=")
 			if !found {
 				if ignoreParseError {
 					return data, nil

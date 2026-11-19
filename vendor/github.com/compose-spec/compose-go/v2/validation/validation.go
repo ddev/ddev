@@ -18,7 +18,10 @@ package validation
 
 import (
 	"fmt"
+	"math"
 	"net"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/compose-spec/compose-go/v2/tree"
@@ -27,13 +30,29 @@ import (
 type checkerFunc func(value any, p tree.Path) error
 
 var checks = map[tree.Path]checkerFunc{
-	"volumes.*":                       checkVolume,
-	"configs.*":                       checkFileObject("file", "environment", "content"),
-	"secrets.*":                       checkFileObject("file", "environment"),
-	"services.*.ports.*":              checkIPAddress,
-	"services.*.develop.watch.*.path": checkPath,
+	"volumes.*":                                          checkVolume,
+	"configs.*":                                          checkFileObject("file", "environment", "content"),
+	"secrets.*":                                          checkFileObject("file", "environment"),
+	"services.*.ports.*":                                 checkIPAddress,
+	"services.*.mem_swappiness":                          checkMemSwappiness,
+	"services.*.pre_start.*.mem_swappiness":              checkMemSwappiness,
+	"jobs.*.mem_swappiness":                              checkMemSwappiness,
+	"services.*.mem_limit":                               checkNotNegative,
+	"jobs.*.mem_limit":                                   checkNotNegative,
+	"services.*.mem_reservation":                         checkNotNegative,
+	"jobs.*.mem_reservation":                             checkNotNegative,
+	"services.*.shm_size":                                checkNotNegative,
+	"jobs.*.shm_size":                                    checkNotNegative,
+	"services.*.build.shm_size":                          checkNotNegative,
+	"jobs.*.build.shm_size":                              checkNotNegative,
+	"services.*.pre_start.*.mem_limit":                   checkNotNegative,
+	"services.*.pre_start.*.mem_reservation":             checkNotNegative,
+	"services.*.pre_start.*.shm_size":                    checkNotNegative,
+	"services.*.deploy.resources.limits.memory":          checkNotNegative,
+	"services.*.deploy.resources.reservations.memory":    checkNotNegative,
+	"services.*.develop.watch.*.path":                    checkPath,
 	"services.*.deploy.resources.reservations.devices.*": checkDeviceRequest,
-	"services.*.gpus.*": checkDeviceRequest,
+	"services.*.gpus.*":                                  checkDeviceRequest,
 }
 
 func Validate(dict map[string]any) error {
@@ -116,4 +135,74 @@ func checkIPAddress(value any, p tree.Path) error {
 		}
 	}
 	return nil
+}
+
+// checkMemSwappiness checks mem_swappiness is a percentage, as the specification
+// requires. The attribute is modeled as a UnitBytes, which would otherwise accept
+// any amount, in any byte unit.
+//
+// -1 is accepted although the specification only documents 0 to 100: it is the
+// default of the Docker CLI (--memory-swappiness), which the engine reads as
+// "not set", and files that spell it out have always been accepted.
+func checkMemSwappiness(value any, p tree.Path) error {
+	var swappiness int64
+	// the model may come from a pre-parsed map, with numbers of any Go type
+	switch v := reflect.ValueOf(value); v.Kind() {
+	case reflect.Invalid:
+		return nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		swappiness = v.Int()
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		if v.Uint() > math.MaxInt64 {
+			return invalidMemSwappiness(p, value)
+		}
+		swappiness = int64(v.Uint())
+	case reflect.Float32, reflect.Float64:
+		// the schema types the attribute as an integer, which 1e2 is
+		f := v.Float()
+		if f != math.Trunc(f) || f < -1 || f > 100 {
+			return invalidMemSwappiness(p, value)
+		}
+		swappiness = int64(f)
+	case reflect.String:
+		n, err := strconv.ParseInt(v.String(), 10, 64)
+		if err != nil {
+			return invalidMemSwappiness(p, value)
+		}
+		swappiness = n
+	default:
+		return invalidMemSwappiness(p, value)
+	}
+	if swappiness < -1 || swappiness > 100 {
+		return invalidMemSwappiness(p, value)
+	}
+	return nil
+}
+
+// checkNotNegative checks a byte value is not negative. Such attributes are
+// modeled as a UnitBytes, which accepts -1 because memswap_limit needs it for
+// unlimited swap. For every other amount (memory limits and reservations, shared
+// memory size) the Docker CLI rejects a negative value, so does Compose.
+func checkNotNegative(value any, p tree.Path) error {
+	negative := false
+	// the model may come from a pre-parsed map, with numbers of any Go type
+	switch v := reflect.ValueOf(value); v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		negative = v.Int() < 0
+	case reflect.Float32, reflect.Float64:
+		negative = v.Float() < 0
+	case reflect.String:
+		// anything else than an integer is for the byte value parser to judge
+		if n, err := strconv.ParseInt(v.String(), 10, 64); err == nil {
+			negative = n < 0
+		}
+	}
+	if negative {
+		return fmt.Errorf("%s: invalid value %v: must not be negative", p, value)
+	}
+	return nil
+}
+
+func invalidMemSwappiness(p tree.Path, value any) error {
+	return fmt.Errorf("%s: invalid value %v: mem_swappiness must be a percentage, an integer between 0 and 100", p, value)
 }

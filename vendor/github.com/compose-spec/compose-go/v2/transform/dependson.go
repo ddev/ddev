@@ -41,7 +41,11 @@ func transformDependsOn(data any, p tree.Path, _ bool) (any, error) {
 	case []any:
 		d := map[string]any{}
 		for _, k := range v {
-			d[k.(string)] = map[string]any{
+			name, ok := k.(string)
+			if !ok {
+				return nil, fmt.Errorf("%s: invalid type %T for a depends_on entry, expected a service name", p, k)
+			}
+			d[name] = map[string]any{
 				"condition": "service_started",
 				"required":  true,
 			}

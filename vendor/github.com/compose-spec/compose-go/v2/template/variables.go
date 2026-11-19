@@ -123,6 +123,7 @@ func extractVariable(value interface{}, pattern *regexp.Regexp) ([]Variable, boo
 		var defaultValue string
 		var presenceValue string
 		var required bool
+		var requiredMessage string
 		i := strings.IndexFunc(val, func(r rune) bool {
 			if r >= 'a' && r <= 'z' {
 				return false
@@ -145,8 +146,10 @@ func extractVariable(value interface{}, pattern *regexp.Regexp) ([]Variable, boo
 			switch {
 			case strings.HasPrefix(rest, ":?"):
 				required = true
+				requiredMessage = rest[2:]
 			case strings.HasPrefix(rest, "?"):
 				required = true
+				requiredMessage = rest[1:]
 			case strings.HasPrefix(rest, ":-"):
 				defaultValue = rest[2:]
 			case strings.HasPrefix(rest, "-"):
@@ -172,6 +175,11 @@ func extractVariable(value interface{}, pattern *regexp.Regexp) ([]Variable, boo
 		}
 		if presenceValue != "" {
 			if v, b := extractVariable(presenceValue, pattern); b {
+				values = append(values, v...)
+			}
+		}
+		if requiredMessage != "" {
+			if v, b := extractVariable(requiredMessage, pattern); b {
 				values = append(values, v...)
 			}
 		}

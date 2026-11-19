@@ -17,13 +17,17 @@
 package paths
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/compose-spec/compose-go/v2/types"
 )
 
 func (r *relativePathsResolver) absContextPath(value any) (any, error) {
-	v := value.(string)
+	v, ok := value.(string)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type %T", value)
+	}
 	if strings.Contains(v, "://") { // `docker-image://` or any builder specific context type
 		return v, nil
 	}
@@ -34,6 +38,20 @@ func (r *relativePathsResolver) absContextPath(value any) (any, error) {
 		return v, nil
 	}
 	return r.absPath(v)
+}
+
+// absAdditionalContextPath resolves an additional build context. The value of a
+// mapping may be a number or a boolean, which the schema accepts and the model
+// reads as the text it is written with: it is resolved like that text, as it
+// is when written in the list form. A null one stays null.
+func (r *relativePathsResolver) absAdditionalContextPath(value any) (any, error) {
+	switch value.(type) {
+	case nil:
+		return nil, nil
+	case int, int64, uint64, float64, bool:
+		value = fmt.Sprint(value)
+	}
+	return r.absContextPath(value)
 }
 
 // isRemoteContext returns true if the value is a Git reference or HTTP(S) URL.

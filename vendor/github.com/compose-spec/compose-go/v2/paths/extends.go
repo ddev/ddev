@@ -16,8 +16,13 @@
 
 package paths
 
+import "fmt"
+
 func (r *relativePathsResolver) absExtendsPath(value any) (any, error) {
-	v := value.(string)
+	v, ok := value.(string)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type %T", value)
+	}
 	if r.isRemoteResource(v) {
 		return v, nil
 	}

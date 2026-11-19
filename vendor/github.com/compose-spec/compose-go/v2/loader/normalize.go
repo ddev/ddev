@@ -27,130 +27,261 @@ import (
 )
 
 // Normalize compose project by moving deprecated attributes to their canonical position and injecting implicit defaults
+//
+// The model is expected in canonical form, as the loader hands it over. An
+// attribute holding a value of another shape is reported as an error naming
+// it, instead of crashing.
 func Normalize(dict map[string]any, env types.Mapping) (map[string]any, error) {
-	normalizeNetworks(dict)
+	if err := normalizeNetworks(dict); err != nil {
+		return nil, err
+	}
+
+	lookup := func(s string) (string, bool) {
+		v, ok := env[s]
+		return v, ok
+	}
 
 	for _, key := range []string{"services", "jobs"} {
 		d, ok := dict[key]
 		if !ok {
 			continue
 		}
-		containers := d.(map[string]any)
+		containers, err := expectMapping(d, key)
+		if err != nil {
+			return nil, err
+		}
 		for name, s := range containers {
-			container := s.(map[string]any)
-
-			if container["pull_policy"] == types.PullPolicyIfNotPresent {
-				container["pull_policy"] = types.PullPolicyMissing
-			}
-
-			fn := func(s string) (string, bool) {
-				v, ok := env[s]
-				return v, ok
-			}
-
-			if b, ok := container["build"]; ok {
-				build := b.(map[string]any)
-				if build["context"] == nil {
-					build["context"] = "."
-				}
-				if build["dockerfile"] == nil && build["dockerfile_inline"] == nil {
-					build["dockerfile"] = "Dockerfile"
-				}
-
-				if a, ok := build["args"]; ok {
-					build["args"], _ = resolve(a, fn, false)
-				}
-
-				container["build"] = build
-			}
-
-			if e, ok := container["environment"]; ok {
-				container["environment"], _ = resolve(e, fn, true)
-			}
-
-			var dependsOn map[string]any
-			if d, ok := container["depends_on"]; ok {
-				dependsOn = d.(map[string]any)
-			} else {
-				dependsOn = map[string]any{}
-			}
-			if l, ok := container["links"]; ok {
-				links := l.([]any)
-				for _, e := range links {
-					link := e.(string)
-					parts := strings.Split(link, ":")
-					if len(parts) == 2 {
-						link = parts[0]
-					}
-					if _, ok := dependsOn[link]; !ok {
-						dependsOn[link] = map[string]any{
-							"condition": types.ServiceConditionStarted,
-							"restart":   true,
-							"required":  true,
-						}
-					}
-				}
-			}
-
-			for _, namespace := range []string{"network_mode", "ipc", "pid", "uts", "cgroup"} {
-				if n, ok := container[namespace]; ok {
-					ref := n.(string)
-					if strings.HasPrefix(ref, types.ServicePrefix) {
-						shared := ref[len(types.ServicePrefix):]
-						if _, ok := dependsOn[shared]; !ok {
-							dependsOn[shared] = map[string]any{
-								"condition": types.ServiceConditionStarted,
-								"restart":   true,
-								"required":  true,
-							}
-						}
-					}
-				}
-			}
-
-			if v, ok := container["volumes"]; ok {
-				volumes := v.([]any)
-				for i, volume := range volumes {
-					vol := volume.(map[string]any)
-					target := vol["target"].(string)
-					vol["target"] = path.Clean(target)
-					volumes[i] = vol
-				}
-				container["volumes"] = volumes
-			}
-
-			if n, ok := container["volumes_from"]; ok {
-				volumesFrom := n.([]any)
-				for _, v := range volumesFrom {
-					vol := v.(string)
-					if !strings.HasPrefix(vol, types.ContainerPrefix) {
-						spec := strings.Split(vol, ":")
-						if _, ok := dependsOn[spec[0]]; !ok {
-							dependsOn[spec[0]] = map[string]any{
-								"condition": types.ServiceConditionStarted,
-								"restart":   false,
-								"required":  true,
-							}
-						}
-					}
-				}
-			}
-			if len(dependsOn) > 0 {
-				container["depends_on"] = dependsOn
-			}
-
-			if err := resolvePreStartHooks(container); err != nil {
+			where := key + "." + name
+			container, err := expectMapping(s, where)
+			if err != nil {
 				return nil, err
 			}
-
+			if err := normalizeContainer(container, lookup, where); err != nil {
+				return nil, err
+			}
+			if key == "services" {
+				// a job runs to completion: it has no restart policy, nor `deploy`
+				carryRestartPolicy(name, container)
+			}
 			containers[name] = container
 		}
 
 		dict[key] = containers
 	}
-	setNameFromKey(dict)
+	if err := setNameFromKey(dict); err != nil {
+		return nil, err
+	}
 
 	return dict, nil
+}
+
+// expectMapping returns v, the value of the attribute found at the config path
+// where, as a mapping, or an error naming the attribute when it holds something
+// else.
+func expectMapping(v any, where string) (map[string]any, error) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("%s must be a mapping", where)
+	}
+	return m, nil
+}
+
+// expectList returns v, the value of the attribute found at the config path
+// where, as a list, or an error naming the attribute when it holds something
+// else.
+func expectList(v any, where string) ([]any, error) {
+	l, ok := v.([]any)
+	if !ok {
+		return nil, fmt.Errorf("%s must be a list", where)
+	}
+	return l, nil
+}
+
+// expectString returns v, the value of the attribute found at the config path
+// where, as a string, or an error naming the attribute when it holds something
+// else.
+func expectString(v any, where string) (string, error) {
+	str, ok := v.(string)
+	if !ok {
+		return "", fmt.Errorf("%s must be a string", where)
+	}
+	return str, nil
+}
+
+// normalizeContainer normalizes in place the service or job definition found at
+// the config path where.
+func normalizeContainer(container map[string]any, lookup func(string) (string, bool), where string) error {
+	if container["pull_policy"] == types.PullPolicyIfNotPresent {
+		container["pull_policy"] = types.PullPolicyMissing
+	}
+
+	if b, ok := container["build"]; ok {
+		build, err := expectMapping(b, where+".build")
+		if err != nil {
+			return err
+		}
+		normalizeBuild(build, lookup)
+	}
+
+	if e, ok := container["environment"]; ok {
+		container["environment"], _ = resolve(e, lookup, true)
+	}
+
+	dependsOn := map[string]any{}
+	if d, ok := container["depends_on"]; ok {
+		var err error
+		dependsOn, err = expectMapping(d, where+".depends_on")
+		if err != nil {
+			return err
+		}
+	}
+	for _, step := range []func(map[string]any, map[string]any, string) error{
+		addLinksDependencies,
+		addNamespaceDependencies,
+		cleanVolumeTargets,
+		addVolumesFromDependencies,
+	} {
+		if err := step(container, dependsOn, where); err != nil {
+			return err
+		}
+	}
+	if len(dependsOn) > 0 {
+		container["depends_on"] = dependsOn
+	}
+
+	return resolvePreStartHooks(container)
+}
+
+// normalizeBuild injects the implicit build context and dockerfile, and
+// resolves build args declared without a value from the environment
+func normalizeBuild(build map[string]any, lookup func(string) (string, bool)) {
+	if build["context"] == nil {
+		build["context"] = "."
+	}
+	if build["dockerfile"] == nil && build["dockerfile_inline"] == nil {
+		build["dockerfile"] = "Dockerfile"
+	}
+
+	if a, ok := build["args"]; ok {
+		build["args"], _ = resolve(a, lookup, false)
+	}
+}
+
+// implicitDependency builds the depends_on entry for a dependency the user
+// did not declare but which the service definition implies
+func implicitDependency(restart bool) map[string]any {
+	return map[string]any{
+		"condition": types.ServiceConditionStarted,
+		"restart":   restart,
+		"required":  true,
+	}
+}
+
+// addLinksDependencies makes each linked service a dependency, unless
+// declared as such already
+func addLinksDependencies(container map[string]any, dependsOn map[string]any, where string) error {
+	l, ok := container["links"]
+	if !ok {
+		return nil
+	}
+	links, err := expectList(l, where+".links")
+	if err != nil {
+		return err
+	}
+	for i, e := range links {
+		link, err := expectString(e, fmt.Sprintf("%s.links[%d]", where, i))
+		if err != nil {
+			return err
+		}
+		parts := strings.Split(link, ":")
+		if len(parts) == 2 {
+			link = parts[0]
+		}
+		if _, ok := dependsOn[link]; !ok {
+			dependsOn[link] = implicitDependency(true)
+		}
+	}
+	return nil
+}
+
+// addNamespaceDependencies makes a service whose network, ipc, pid, uts or
+// cgroup namespace is shared with another service depend on it, unless
+// declared as such already
+func addNamespaceDependencies(container map[string]any, dependsOn map[string]any, where string) error {
+	for _, namespace := range []string{"network_mode", "ipc", "pid", "uts", "cgroup"} {
+		n, ok := container[namespace]
+		if !ok {
+			continue
+		}
+		ref, err := expectString(n, where+"."+namespace)
+		if err != nil {
+			return err
+		}
+		if !strings.HasPrefix(ref, types.ServicePrefix) {
+			continue
+		}
+		shared := ref[len(types.ServicePrefix):]
+		if _, ok := dependsOn[shared]; !ok {
+			dependsOn[shared] = implicitDependency(true)
+		}
+	}
+	return nil
+}
+
+// cleanVolumeTargets lexically cleans the container path of volumes
+func cleanVolumeTargets(container map[string]any, _ map[string]any, containerPath string) error {
+	v, ok := container["volumes"]
+	if !ok {
+		return nil
+	}
+	volumes, err := expectList(v, containerPath+".volumes")
+	if err != nil {
+		return err
+	}
+	for i, volume := range volumes {
+		volumePath := fmt.Sprintf("%s.volumes[%d]", containerPath, i)
+		vol, err := expectMapping(volume, volumePath)
+		if err != nil {
+			return err
+		}
+		target, err := expectString(vol["target"], volumePath+".target")
+		if err != nil {
+			return err
+		}
+		vol["target"] = path.Clean(target)
+		volumes[i] = vol
+	}
+	container["volumes"] = volumes
+	return nil
+}
+
+// addVolumesFromDependencies makes a service mounting the volumes of another
+// service depend on it (without restarting it on update), unless declared as
+// such already. Volumes taken from an external container are not a service
+// dependency.
+func addVolumesFromDependencies(container map[string]any, dependsOn map[string]any, where string) error {
+	n, ok := container["volumes_from"]
+	if !ok {
+		return nil
+	}
+	volumesFrom, err := expectList(n, where+".volumes_from")
+	if err != nil {
+		return err
+	}
+	for i, v := range volumesFrom {
+		vol, err := expectString(v, fmt.Sprintf("%s.volumes_from[%d]", where, i))
+		if err != nil {
+			return err
+		}
+		if strings.HasPrefix(vol, types.ContainerPrefix) {
+			continue
+		}
+		spec := strings.Split(vol, ":")
+		if _, ok := dependsOn[spec[0]]; !ok {
+			dependsOn[spec[0]] = implicitDependency(false)
+		}
+	}
+	return nil
 }
 
 // resolvePreStartHooks materializes pre_start inheritance at load time: each
@@ -210,12 +341,37 @@ var containerSpecKeys = func() map[string]bool {
 	return keys
 }()
 
-func normalizeNetworks(dict map[string]any) {
-	var networks map[string]any
+// connectToDefaultNetwork connects a container that declares no network, or an
+// empty networks section, to the default network. It tells whether the
+// container is connected to the default network, explicitly or not.
+func connectToDefaultNetwork(container map[string]any, where string) (bool, error) {
+	n, ok := container["networks"]
+	if !ok {
+		// If none explicitly declared, container is connected to default network
+		container["networks"] = map[string]any{"default": nil}
+		return true, nil
+	}
+	networks, err := expectMapping(n, where+".networks")
+	if err != nil {
+		return false, err
+	}
+	if len(networks) == 0 {
+		// networks section declared but empty (corner case)
+		container["networks"] = map[string]any{"default": nil}
+		return true, nil
+	}
+	_, ok = networks["default"]
+	return ok, nil
+}
+
+func normalizeNetworks(dict map[string]any) error {
+	networks := map[string]any{}
 	if n, ok := dict["networks"]; ok {
-		networks = n.(map[string]any)
-	} else {
-		networks = map[string]any{}
+		var err error
+		networks, err = expectMapping(n, "networks")
+		if err != nil {
+			return err
+		}
 	}
 
 	// implicit `default` network must be introduced only if actually used by some service
@@ -226,29 +382,26 @@ func normalizeNetworks(dict map[string]any) {
 		if !ok {
 			continue
 		}
-		containers := s.(map[string]any)
+		containers, err := expectMapping(s, key)
+		if err != nil {
+			return err
+		}
 		for name, se := range containers {
-			container := se.(map[string]any)
+			container, err := expectMapping(se, key+"."+name)
+			if err != nil {
+				return err
+			}
 			if _, ok := container["provider"]; ok {
 				continue
 			}
 			if _, ok := container["network_mode"]; ok {
 				continue
 			}
-			if n, ok := container["networks"]; !ok {
-				// If none explicitly declared, container is connected to default network
-				container["networks"] = map[string]any{"default": nil}
-				usesDefaultNetwork = true
-			} else {
-				net := n.(map[string]any)
-				if len(net) == 0 {
-					// networks section declared but empty (corner case)
-					container["networks"] = map[string]any{"default": nil}
-					usesDefaultNetwork = true
-				} else if _, ok := net["default"]; ok {
-					usesDefaultNetwork = true
-				}
+			onDefault, err := connectToDefaultNetwork(container, key+"."+name)
+			if err != nil {
+				return err
 			}
+			usesDefaultNetwork = usesDefaultNetwork || onDefault
 			containers[name] = container
 		}
 		dict[key] = containers
@@ -262,6 +415,7 @@ func normalizeNetworks(dict map[string]any) {
 	if len(networks) > 0 {
 		dict["networks"] = networks
 	}
+	return nil
 }
 
 func resolve(a any, fn func(s string) (string, bool), keepEmpty bool) (any, bool) {
@@ -305,19 +459,23 @@ func resolve(a any, fn func(s string) (string, bool), keepEmpty bool) (any, bool
 }
 
 // Resources with no explicit name are actually named by their key in map
-func setNameFromKey(dict map[string]any) {
-	for _, r := range []string{"networks", "volumes", "configs", "secrets"} {
-		a, ok := dict[r]
+func setNameFromKey(dict map[string]any) error {
+	for _, kind := range []string{"networks", "volumes", "configs", "secrets"} {
+		a, ok := dict[kind]
 		if !ok {
 			continue
 		}
-		toplevel := a.(map[string]any)
+		toplevel, err := expectMapping(a, kind)
+		if err != nil {
+			return err
+		}
 		for key, r := range toplevel {
-			var resource map[string]any
+			resource := map[string]any{}
 			if r != nil {
-				resource = r.(map[string]any)
-			} else {
-				resource = map[string]any{}
+				resource, err = expectMapping(r, kind+"."+key)
+				if err != nil {
+					return err
+				}
 			}
 			if resource["name"] == nil {
 				if x, ok := resource["external"]; ok && isTrue(x) {
@@ -329,9 +487,18 @@ func setNameFromKey(dict map[string]any) {
 			toplevel[key] = resource
 		}
 	}
+	return nil
 }
 
 func isTrue(x any) bool {
+	// with interpolation skipped, `external` can still be a string: read it as
+	// the decoding of the model does
+	if s, ok := x.(string); ok {
+		switch strings.ToLower(s) {
+		case "true", "y", "yes", "on":
+			return true
+		}
+	}
 	parseBool, _ := strconv.ParseBool(fmt.Sprint(x))
 	return parseBool
 }

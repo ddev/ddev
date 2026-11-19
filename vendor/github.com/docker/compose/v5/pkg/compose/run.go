@@ -32,6 +32,7 @@ import (
 	"github.com/moby/moby/client"
 	"github.com/moby/moby/client/pkg/stringid"
 
+	"github.com/docker/compose/v5/internal/envresolver"
 	"github.com/docker/compose/v5/pkg/api"
 )
 
@@ -150,6 +151,9 @@ func (s *composeService) doPrepareRun(ctx context.Context, project *types.Projec
 		return prepareRunResult{}, err
 	}
 
+	service.Tty = options.Tty
+	service.StdinOpen = options.Interactive
+	service.ContainerName = options.Name
 	applyRunOptions(project, &service, options)
 
 	if err := s.stdin().CheckTty(options.Interactive, service.Tty); err != nil {
@@ -240,11 +244,18 @@ func prepareBuildOptions(options api.RunOptions) *api.BuildOptions {
 	return &buildOptionsCopy
 }
 
+// applyRunOptions applies the CLI overrides shared by a one-off service run
+// and a job run — Command, User, CapAdd/CapDrop, WorkingDir, Entrypoint,
+// Environment, Labels, exactly the set RunJob's own doc comment on
+// api.Compose documents as supported. Tty/StdinOpen/ContainerName are
+// deliberately not here: prepareRun (RunOneOffContainer's caller) sets them
+// itself for its own container-naming/attach needs, and a job has neither
+// (no interactive attach, and the jobs API assigns the run container's
+// identity itself) — RunJob restores the job's own declared values right
+// after calling this, since CLI-layer code upstream of both (cmd/compose's
+// runOptions.apply) already stamped the service with terminal-context
+// defaults meant for a one-off container, not a job.
 func applyRunOptions(project *types.Project, service *types.ServiceConfig, options api.RunOptions) {
-	service.Tty = options.Tty
-	service.StdinOpen = options.Interactive
-	service.ContainerName = options.Name
-
 	if len(options.Command) > 0 {
 		service.Command = options.Command
 	}
@@ -272,7 +283,7 @@ func applyRunOptions(project *types.Project, service *types.ServiceConfig, optio
 	if len(options.Environment) > 0 {
 		cmdEnv := types.NewMappingWithEquals(options.Environment)
 		serviceOverrideEnv := cmdEnv.Resolve(func(s string) (string, bool) {
-			v, ok := envResolver(project.Environment)(s)
+			v, ok := envresolver.New(project.Environment)(s)
 			return v, ok
 		}).RemoveEmpty()
 		if service.Environment == nil {

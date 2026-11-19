@@ -14,7 +14,7 @@
 
 // Package dockerhub reads Docker Hub access tokens and account profiles from
 // the secrets engine. Obtain a [ClientAuth] from the client's HubAuth method,
-// or from any [secrets.Resolver] via [New].
+// or from any [resolver.Resolver] via [New].
 package dockerhub
 
 import (
@@ -28,8 +28,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/secrets-engine/client/api/resolver"
 	"github.com/docker/secrets-engine/client/realms"
-	"github.com/docker/secrets-engine/x/secrets"
+	"github.com/docker/secrets-engine/secrets"
 )
 
 var (
@@ -292,12 +293,12 @@ func mustExpand(realm, key secrets.Pattern) secrets.Pattern {
 var _ ClientAuth = clientAuth{}
 
 type clientAuth struct {
-	engine secrets.Resolver
+	engine resolver.Resolver
 	cfg    config
 }
 
 // New returns a [ClientAuth] backed by engine. It panics on a nil engine.
-func New(engine secrets.Resolver, opts ...Option) ClientAuth {
+func New(engine resolver.Resolver, opts ...Option) ClientAuth {
 	if engine == nil {
 		panic("dockerhub: secrets engine client is required")
 	}

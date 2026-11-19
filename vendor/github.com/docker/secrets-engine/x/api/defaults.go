@@ -22,29 +22,45 @@ import (
 
 const (
 	// PluginLaunchedByEngineVar is used to inform engine-launched plugins about their name.
+	//
+	// Deprecated: Use [github.com/docker/secrets-engine/plugin/api.PluginLaunchedByEngineVar] instead.
 	PluginLaunchedByEngineVar = "DOCKER_SECRETS_ENGINE_PLUGIN_LAUNCH_CFG"
 	// DefaultPluginRegistrationTimeout is the default timeout for plugin registration.
+	//
+	// Deprecated: Use [github.com/docker/secrets-engine/plugin/api.DefaultPluginRegistrationTimeout] instead.
 	DefaultPluginRegistrationTimeout = 5 * time.Second
 	// DefaultClientRequestTimeout is the default timeout for clients to handle a request.
+	//
+	// Deprecated: Use [github.com/docker/secrets-engine/client/config.DefaultClientRequestTimeout] instead.
 	DefaultClientRequestTimeout = time.Duration(0) // 0 means no limit
 	// DefaultClientResponseHeaderTimeout is the default timeout for response
 	// headers, excluding the body. No limit by default: a request may block
 	// on user interaction daemon-side. Use [client.WithResponseTimeout] or a
 	// context deadline for a hard bound.
+	//
+	// Deprecated: Use [github.com/docker/secrets-engine/client/config.DefaultClientResponseHeaderTimeout] instead.
 	DefaultClientResponseHeaderTimeout = time.Duration(0) // 0 means no limit
 	// DefaultClientTLSHandshakeTimeout is the default timeout for clients to handle
 	// tls handshakes. It should usually be short.
+	//
+	// Deprecated: Use [github.com/docker/secrets-engine/client/config.DefaultClientTLSHandshakeTimeout] instead.
 	DefaultClientTLSHandshakeTimeout = time.Second
 	// DefaultClientIdleConnTimeout is the time a connection may stay alive for.
 	// Clients that are long-lived take advantage of re-using the same connection
 	// when making subsequent requests. This reduces latency.
+	//
+	// Deprecated: Use [github.com/docker/secrets-engine/client/config.DefaultClientIdleConnTimeout] instead.
 	DefaultClientIdleConnTimeout = 90 * time.Second
 	// DefaultClientMaxConnsPerHost is the maximum number of open connections
 	// to the same host.
+	//
+	// Deprecated: Use [github.com/docker/secrets-engine/client/config.DefaultClientMaxConnsPerHost] instead.
 	DefaultClientMaxConnsPerHost = 100
 	// DefaultClientMaxIdleConnsPerHost is the maximum number of idle connections
 	// to the same host. Long-lived clients can re-use a connection from the
 	// connection pool.
+	//
+	// Deprecated: Use [github.com/docker/secrets-engine/client/config.DefaultClientMaxIdleConnsPerHost] instead.
 	DefaultClientMaxIdleConnsPerHost = 10
 )
 
@@ -58,6 +74,8 @@ const (
 // If the user cache directory cannot be determined, it returns
 // <temp>/docker-secrets-engine/engine.sock, where <temp> is the directory returned
 // by [os.TempDir].
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/config.DesktopSocketPath] instead.
 func DesktopSocketPath() string {
 	if dir, err := os.UserCacheDir(); err == nil {
 		return filepath.Join(dir, "docker-secrets-engine", "engine.sock")
@@ -67,7 +85,7 @@ func DesktopSocketPath() string {
 
 // DefaultSocketPath returns the Secrets Engine socket path used by Docker Desktop.
 //
-// Deprecated: Use [DesktopSocketPath] instead.
+// Deprecated: Use [github.com/docker/secrets-engine/client/config.DesktopSocketPath] instead.
 func DefaultSocketPath() string {
 	return DesktopSocketPath()
 }

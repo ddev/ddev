@@ -19,8 +19,10 @@ import (
 	"fmt"
 )
 
+// Deprecated: Use [github.com/docker/secrets-engine/client/version.ErrEmptyName] instead.
 var ErrEmptyName = errors.New("empty name")
 
+// Deprecated: Use [github.com/docker/secrets-engine/client/version.Name] instead.
 type Name interface {
 	String() string
 }
@@ -35,6 +37,8 @@ func (n *name) String() string {
 
 // NewName creates a new [Name] from a string
 // If a validation error occurs, it returns nil and the error.
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/version.NewName] instead.
 func NewName(s string) (Name, error) {
 	if err := validName(s); err != nil {
 		return nil, fmt.Errorf("parsing name: %w", err)
@@ -46,6 +50,8 @@ func NewName(s string) (Name, error) {
 
 // MustNewName creates a new Name as [NewName] does, but panics when a validation
 // error occurs.
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/version.MustNewName] instead.
 func MustNewName(s string) Name {
 	v, err := NewName(s)
 	if err != nil {
