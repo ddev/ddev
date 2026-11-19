@@ -28,6 +28,18 @@ func (s *Server) Projects() ([]ProjectState, error) {
 	return out, nil
 }
 
+// RunningJobs returns the titles of the jobs that have not ended, which
+// Shutdown would kill.
+func (s *Server) RunningJobs() []string {
+	var out []string
+	for _, j := range s.jobs.summaries() {
+		if !j.Done {
+			out = append(out, j.Title)
+		}
+	}
+	return out
+}
+
 // Changed is closed when a job starts or ends.
 func (s *Server) Changed() <-chan struct{} {
 	return s.changedCh()

@@ -69,6 +69,8 @@ type backend interface {
 	// Changed is closed when a job starts or ends; nil means poll only.
 	Changed() <-chan struct{}
 	Post(path string) error
+	// RunningJobs returns the titles of the jobs that have not ended.
+	RunningJobs() []string
 }
 
 var _ backend = (*webui.Server)(nil)
@@ -161,8 +163,54 @@ func (r *remoteServer) request(method, path string) (*http.Response, error) {
 	return r.client.Do(req)
 }
 
-// Projects reads the first status event of the dashboard's stream.
+// remoteStatus is what the app reads of a status event.
+type remoteStatus struct {
+	Projects []struct {
+		Name   string `json:"name"`
+		Status string `json:"status"`
+		URL    string `json:"url"`
+	} `json:"projects"`
+	Jobs []struct {
+		Title string `json:"title"`
+		Done  bool   `json:"done"`
+	} `json:"jobs"`
+	Error string `json:"error"`
+}
+
+// Projects reads the projects from the dashboard's status stream.
 func (r *remoteServer) Projects() ([]webui.ProjectState, error) {
+	st, err := r.status()
+	if err != nil {
+		return nil, err
+	}
+	if st.Error != "" {
+		return nil, errors.New(st.Error)
+	}
+	out := make([]webui.ProjectState, 0, len(st.Projects))
+	for _, p := range st.Projects {
+		out = append(out, webui.ProjectState{Name: p.Name, Status: p.Status, URL: p.URL})
+	}
+	return out, nil
+}
+
+// RunningJobs returns the titles of the jobs that have not ended. When the
+// status cannot be read, it reports none rather than block quitting.
+func (r *remoteServer) RunningJobs() []string {
+	st, err := r.status()
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, j := range st.Jobs {
+		if !j.Done {
+			out = append(out, j.Title)
+		}
+	}
+	return out
+}
+
+// status reads the first status event of the dashboard's stream.
+func (r *remoteServer) status() (*remoteStatus, error) {
 	res, err := r.request(http.MethodGet, "/api/events")
 	if err != nil {
 		return nil, err
@@ -181,25 +229,11 @@ func (r *remoteServer) Projects() ([]webui.ProjectState, error) {
 		if !ok || !isStatus {
 			continue
 		}
-		var st struct {
-			Projects []struct {
-				Name   string `json:"name"`
-				Status string `json:"status"`
-				URL    string `json:"url"`
-			} `json:"projects"`
-			Error string `json:"error"`
-		}
+		var st remoteStatus
 		if err := json.Unmarshal([]byte(data), &st); err != nil {
 			return nil, err
 		}
-		if st.Error != "" {
-			return nil, errors.New(st.Error)
-		}
-		out := make([]webui.ProjectState, 0, len(st.Projects))
-		for _, p := range st.Projects {
-			out = append(out, webui.ProjectState{Name: p.Name, Status: p.Status, URL: p.URL})
-		}
-		return out, nil
+		return &st, nil
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err

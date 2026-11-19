@@ -80,3 +80,23 @@ func TestEmbeddedPostRunsJob(t *testing.T) {
 		require.Error(t, s.Post("/api/actions/nothing"), "an unknown action")
 	}
 }
+
+// TestRunningJobs checks the list the desktop app asks about before quitting.
+func TestRunningJobs(t *testing.T) {
+	s := NewEmbedded("")
+	fakeDdev(t, s, "sleep")
+	done := make(chan struct{}, 1)
+	s.OnJobDone = func(string, string, string) { done <- struct{}{} }
+	require.Empty(t, s.RunningJobs())
+
+	require.NoError(t, s.Post("/api/actions/stop-all"))
+	require.Equal(t, []string{"Stopping all projects"}, s.RunningJobs())
+
+	require.NoError(t, s.Shutdown(t.Context()))
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		t.Fatal("the job did not end after Shutdown")
+	}
+	require.Empty(t, s.RunningJobs())
+}
