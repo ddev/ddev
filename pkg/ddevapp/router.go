@@ -266,7 +266,7 @@ func StartDdevRouter() (err error) {
 	traefikErr := GetRouterConfigErrors()
 	if traefikErr != "" {
 		util.Warning("Warning: There are router configuration problems:\n%s", traefikErr)
-		util.Warning("For help go to: https://docs.ddev.com/en/stable/users/extend/traefik-router/#troubleshooting-traefik-routing")
+		util.Warning("For help go to: %s", versionconstants.DocsURL("users/extend/traefik-router/#troubleshooting-traefik-routing"))
 	}
 
 	return nil
@@ -295,7 +295,7 @@ func warnUnreachableRouterPorts() {
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
-	util.Warning("%s is running, but nothing answers on host port(s) %s, so projects may not be reachable there. Your Docker provider may not be forwarding them; see https://docs.ddev.com/en/stable/users/usage/troubleshooting/#router-ports-not-reachable", nodeps.RouterContainer, strings.Join(unreachable, ", "))
+	util.Warning("%s is running, but nothing answers on host port(s) %s, so projects may not be reachable there. Your Docker provider may not be forwarding them; see %s", nodeps.RouterContainer, strings.Join(unreachable, ", "), versionconstants.DocsURL("users/usage/troubleshooting/#router-ports-not-reachable"))
 }
 
 // ensureRouterTraefikVolume creates RouterTraefikVolume if missing, seeding it

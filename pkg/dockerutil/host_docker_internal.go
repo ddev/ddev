@@ -2,6 +2,7 @@ package dockerutil
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"net"
 	"os/exec"
 	"strings"
@@ -55,12 +56,12 @@ func GetHostDockerInternal() *HostDockerInternal {
 		switch {
 		case nodeps.IsIPAddress(globalconfig.DdevGlobalConfig.XdebugIDELocation):
 			ipAddress = globalconfig.DdevGlobalConfig.XdebugIDELocation
-			message = fmt.Sprintf("xdebug_ide_location=%s, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", globalconfig.DdevGlobalConfig.XdebugIDELocation)
+			message = fmt.Sprintf("xdebug_ide_location=%s, see %s", globalconfig.DdevGlobalConfig.XdebugIDELocation, versionconstants.DocsURL("users/configuration/config/#xdebug_ide_location"))
 
 		case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
 			// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
 			ipAddress = "127.0.0.1"
-			message = fmt.Sprintf("xdebug_ide_location=%s, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", globalconfig.DdevGlobalConfig.XdebugIDELocation)
+			message = fmt.Sprintf("xdebug_ide_location=%s, see %s", globalconfig.DdevGlobalConfig.XdebugIDELocation, versionconstants.DocsURL("users/configuration/config/#xdebug_ide_location"))
 
 		case IsColima():
 			// Lima specifies this as a named explicit IP address at this time
@@ -85,7 +86,7 @@ func GetHostDockerInternal() *HostDockerInternal {
 
 		case nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2:
 			// If IDE is inside WSL2 then the normal Linux processing should work
-			message = fmt.Sprintf("xdebug_ide_location=%s uses 'host-gateway' in extra_hosts, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", globalconfig.DdevGlobalConfig.XdebugIDELocation)
+			message = fmt.Sprintf("xdebug_ide_location=%s uses 'host-gateway' in extra_hosts, see %s", globalconfig.DdevGlobalConfig.XdebugIDELocation, versionconstants.DocsURL("users/configuration/config/#xdebug_ide_location"))
 
 		case nodeps.IsWSL2() && nodeps.IsWSL2VirtioProxyMode() && !IsDockerDesktop():
 			// In virtioproxy mode, the default gateway is the actual network router,

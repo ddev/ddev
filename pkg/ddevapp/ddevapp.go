@@ -1628,7 +1628,7 @@ func (app *DdevApp) start(o StartOptions) error {
 	}
 
 	if !globalconfig.IsInternetActive() && globalconfig.DdevDebug {
-		util.WarningOnce("Internet connection not detected, DNS may not work.\nWarning: %v\nSee https://docs.ddev.com/en/stable/users/usage/offline/ for info.", globalconfig.IsInternetActiveErr)
+		util.WarningOnce("Internet connection not detected, DNS may not work.\nWarning: %v\nSee %s for info.", globalconfig.IsInternetActiveErr, versionconstants.DocsURL("users/usage/offline/"))
 	}
 
 	// We don't yet know the ComposeYaml values, so make sure they're
@@ -1709,7 +1709,7 @@ func (app *DdevApp) start(o StartOptions) error {
 	}
 	collisions := buildTagCollisions(project)
 	for _, image := range slices.Sorted(maps.Keys(collisions)) {
-		util.Warning("Services %s build their images with the same tag %q, so they all run whichever is built last.\nAdd the service name to each tag, see https://docs.ddev.com/en/stable/users/extend/custom-compose-files/#conventions-for-defining-additional-services", strings.Join(collisions[image], ", "), image)
+		util.Warning("Services %s build their images with the same tag %q, so they all run whichever is built last.\nAdd the service name to each tag, see %s", strings.Join(collisions[image], ", "), image, versionconstants.DocsURL("users/extend/custom-compose-files/#conventions-for-defining-additional-services"))
 	}
 	additionalImages, err := app.FindServiceImages(project.ServiceNames())
 	if err != nil {
@@ -2352,7 +2352,7 @@ func warnWSL2WindowsFilesystem(app *DdevApp) {
 		return
 	}
 	if nodeps.IsPathOnWindowsFilesystem(app.AppRoot) {
-		util.Warning("Your project is on the Windows filesystem (%s) which can lead to very poor performance.\nFor best results, move your project to the WSL2 filesystem (e.g., /home/<your_username>/projects).\nSee https://docs.ddev.com/en/stable/users/usage/faq#migrate-windows-wsl2 for more information.", app.AppRoot)
+		util.Warning("Your project is on the Windows filesystem (%s) which can lead to very poor performance.\nFor best results, move your project to the WSL2 filesystem (e.g., /home/<your_username>/projects).\nSee %s for more information.", app.AppRoot, versionconstants.DocsURL("users/usage/faq/#migrate-windows-wsl2"))
 	}
 }
 

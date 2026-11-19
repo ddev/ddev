@@ -32,7 +32,7 @@ func (app *DdevApp) DatabaseMismatchMessage(existingDBType string) string {
 		message += fmt.Sprintf("\nTo convert the existing database to %s, put the configuration back and then run 'ddev utility migrate-database %s'.", configuredDBType, configuredDBType)
 	}
 
-	return message + fmt.Sprintf("\nTo throw the existing database away and start over with %s, use 'ddev start --reset-database', which snapshots it first unless you add --omit-snapshot.\nSee %s", configuredDBType, "https://docs.ddev.com/en/stable/users/extend/database-types/")
+	return message + fmt.Sprintf("\nTo throw the existing database away and start over with %s, use 'ddev start --reset-database', which snapshots it first unless you add --omit-snapshot.\nSee %s", configuredDBType, versionconstants.DocsURL("users/extend/database-types/"))
 }
 
 // ResetDatabaseVolume removes the project's database volumes so that the next

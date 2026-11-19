@@ -1304,7 +1304,7 @@ func CheckLargeFilesInSync(app *DdevApp) (warnings []string) {
 				if file.size >= hugeSizeThreshold {
 					severity = "Very large"
 				}
-				warnings = append(warnings, fmt.Sprintf("%s file being synced: %s (%s) - consider excluding from sync. See https://docs.ddev.com/en/stable/users/install/performance/#mutagen-troubleshooting", severity, relPath, sizeStr))
+				warnings = append(warnings, fmt.Sprintf("%s file being synced: %s (%s) - consider excluding from sync. See %s", severity, relPath, sizeStr, versionconstants.DocsURL("users/install/performance/#mutagen-troubleshooting")))
 			}
 		}
 	}
