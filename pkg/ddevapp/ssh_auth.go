@@ -248,8 +248,11 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 		downCtx, downSvc, svcErr := dockerutil.NewComposeService()
 		if svcErr != nil {
 			util.Warning("failed to create compose service: %v", svcErr)
-		} else if downErr := downSvc.Down(downCtx, downProject.Name, api.DownOptions{Project: downProject, RemoveOrphans: true}); downErr != nil {
-			util.Warning("failed to docker-compose down on %s: %v", composeFile, downErr)
+		} else {
+			if downErr := downSvc.Down(downCtx, downProject.Name, api.DownOptions{Project: downProject, RemoveOrphans: true}); downErr != nil {
+				util.Warning("failed to docker-compose down on %s: %v", composeFile, downErr)
+			}
+			dockerutil.CloseComposeService(downSvc)
 		}
 	}
 
@@ -264,6 +267,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
 	}
+	defer dockerutil.CloseComposeService(upSvc)
 	progress := display.ModeQuiet
 	if globalconfig.DdevVerbose {
 		progress = display.ModePlain

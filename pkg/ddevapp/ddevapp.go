@@ -3419,6 +3419,7 @@ func (app *DdevApp) Pause() error {
 		if stopErr != nil {
 			return stopErr
 		}
+		defer dockerutil.CloseComposeService(stopSvc)
 		return stopSvc.Stop(stopCtx, stopProject.Name, api.StopOptions{Project: stopProject})
 	}(); err != nil {
 		return err

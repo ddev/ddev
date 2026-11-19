@@ -186,6 +186,7 @@ func StartDdevRouter() (err error) {
 		if svcErr != nil {
 			return fmt.Errorf("failed to start ddev-router: %v", svcErr)
 		}
+		defer dockerutil.CloseComposeService(routerSvc)
 		progress := display.ModeQuiet
 		if globalconfig.DdevVerbose {
 			progress = display.ModePlain

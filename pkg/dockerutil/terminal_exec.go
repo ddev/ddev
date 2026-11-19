@@ -86,6 +86,7 @@ func ExecWithStreams(projectName string, opts api.RunOptions, stdout, stderr io.
 		if err != nil {
 			return err
 		}
+		defer CloseComposeService(svc)
 		return ExitCodeToError(svc.Exec(ctx, projectName, opts))
 	}
 	ddevPath, err := os.Executable()
@@ -188,5 +189,6 @@ func runTerminalExec(optionsPath string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer CloseComposeService(svc)
 	return svc.Exec(context.Background(), te.ProjectName, te.Options)
 }
