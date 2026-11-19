@@ -136,6 +136,11 @@ ddev share myproject`,
 		// This ensures reader sees EOF when child exits (fixes hang on provider failure)
 		_ = stdoutWriter.Close()
 
+		done := make(chan error, 1)
+		go func() {
+			done <- providerCmd.Wait()
+		}()
+
 		// Capture URL from first line of stdout
 		urlChan := make(chan string, 1)
 		go func() {
@@ -149,20 +154,22 @@ ddev share myproject`,
 			_, _ = io.Copy(io.Discard, stdoutReader)
 		}()
 
+		const providerStopGrace = 15 * time.Second
+
 		// Wait for URL with timeout
 		var shareURL string
 		select {
 		case shareURL = <-urlChan:
 			if shareURL == "" {
-				killProcessTree(providerCmd)
+				_ = stopShareProvider(providerCmd, done, providerStopGrace)
 				util.Failed("Provider '%s' did not output a URL", providerName)
 			}
 		case <-sigChan:
 			// Signal received before URL captured
-			killProcessTree(providerCmd)
+			_ = stopShareProvider(providerCmd, done, providerStopGrace)
 			util.Failed("Interrupted before tunnel URL was established")
 		case <-time.After(60 * time.Second):
-			killProcessTree(providerCmd)
+			_ = stopShareProvider(providerCmd, done, providerStopGrace)
 			util.Failed("Provider '%s' did not output a URL within 60 seconds", providerName)
 		}
 
@@ -170,7 +177,7 @@ ddev share myproject`,
 		shareURL = strings.TrimSpace(shareURL)
 		parsedURL, err := url.Parse(shareURL)
 		if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
-			killProcessTree(providerCmd)
+			_ = stopShareProvider(providerCmd, done, providerStopGrace)
 			util.Failed("Provider '%s' output invalid URL: %s", providerName, shareURL)
 		}
 
@@ -190,11 +197,6 @@ ddev share myproject`,
 		}
 
 		// Wait for either provider to exit or signal to be received
-		done := make(chan error, 1)
-		go func() {
-			done <- providerCmd.Wait()
-		}()
-
 		select {
 		case err = <-done:
 			// ngrok and cloudflared exit 0 when killed, so a clean exit still means the
@@ -204,8 +206,7 @@ ddev share myproject`,
 			}
 		case <-sigChan:
 			util.Success("Stopping tunnel (provider '%s')...", providerName)
-			killProcessTree(providerCmd)
-			err = <-done
+			err = stopShareProvider(providerCmd, done, providerStopGrace)
 		}
 
 		// Process post-share hooks
