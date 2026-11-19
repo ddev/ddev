@@ -8,6 +8,8 @@
       - "os=macos"
       - "socktainer=true"
       - "architecture=arm64"
+      # TEMPORARY: pin to the testbot where socktainer runs from the desktop session, for #7372. Revert after the run.
+      - "testbot=tb-macos-arm64-7"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
