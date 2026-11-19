@@ -99,7 +99,11 @@ func TestConfigOverrideAction(t *testing.T) {
 		})
 
 		// Prompt for apptype as a way to get it into the config.
+		// Magento asks for its version next, and defaults to 2.
 		input := fmt.Sprintf("%s\n", appType)
+		if appType == nodeps.AppTypeMagento {
+			input = "magento\n1\n"
+		}
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 		err = app.AppTypePrompt()
@@ -153,7 +157,11 @@ func TestConfigOverrideActionOnExistingConfig(t *testing.T) {
 		})
 
 		// Prompt for apptype as a way to get it into the config.
+		// Magento asks for its version next, and defaults to 2.
 		input := fmt.Sprintf("%s\n", appType)
+		if appType == nodeps.AppTypeMagento {
+			input = "magento\n1\n"
+		}
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 		err = app.AppTypePrompt()

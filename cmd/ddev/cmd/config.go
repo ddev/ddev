@@ -14,7 +14,9 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/tui"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -181,18 +183,30 @@ func runConfig(cmd *cobra.Command, args []string, app *ddevapp.DdevApp, prompt b
 		util.Failed("Failed to process hook 'pre-config'")
 	}
 
+	// promptForConfig offers the detected configuration before asking questions,
+	// which confirm has already done by the time it returns errCustomizeConfig.
+	promptForConfig := app.PromptForConfig
 	if !prompt {
 		err = handleMainConfigArgs(cmd, args, app, confirm)
 		if errors.Is(err, errCustomizeConfig) {
 			// Start the questions from a fresh app, not the one confirm was shown.
 			app, prompt = getConfigApp(), true
+			promptForConfig = app.PromptForCustomConfig
 		} else if err != nil {
 			util.Failed(err.Error())
 		}
 	}
 
 	if prompt {
-		err = app.PromptForConfig()
+		if canUseConfigForm() {
+			app.WarnIfConfigReplace()
+			err = tui.ConfigForm(app)
+			if errors.Is(err, tui.ErrConfigCancelled) {
+				util.Failed("Cancelled. Nothing was configured.")
+			}
+		} else {
+			err = promptForConfig()
+		}
 		if err != nil {
 			util.Failed("There was a problem configuring your project: %v", err)
 		}
@@ -369,6 +383,15 @@ func getConfigApp() *ddevapp.DdevApp {
 		app.Name = newName
 	}
 	return app
+}
+
+// canUseConfigForm reports whether `ddev config` can ask its questions in a
+// form: in a terminal, unless the TUI is turned off. Otherwise it asks them
+// line by line.
+func canUseConfigForm() bool {
+	return globalconfig.IsInteractive() && !output.JSONOutput &&
+		!globalconfig.DdevGlobalConfig.NoTUI && nodeps.IsEnvFalse("DDEV_NO_TUI") &&
+		isatty.IsTerminal(os.Stdin.Fd()) && isatty.IsTerminal(os.Stdout.Fd())
 }
 
 // errCustomizeConfig is returned by a runConfig confirm func to ask the 'ddev config' questions.

@@ -43,7 +43,8 @@ func (app *DdevApp) AutoConfigProblem() string {
 	return ""
 }
 
-// AutoConfigSummary describes the configuration `ddev config --auto` would write.
+// AutoConfigSummary describes the main settings of app's configuration, as
+// shown before `ddev config` or `ddev start` writes it.
 func (app *DdevApp) AutoConfigSummary() string {
 	docroot := app.Docroot
 	if docroot == "" {
@@ -62,7 +63,11 @@ func (app *DdevApp) AutoConfigSummary() string {
 		fmt.Sprintf("  Database:  %s:%s", app.Database.Type, app.Database.Version),
 		fmt.Sprintf("  Webserver: %s", app.WebserverType),
 		"",
-		"This creates .ddev/config.yaml.",
+	}
+	if app.ConfigExists() {
+		lines = append(lines, "This updates .ddev/config.yaml.")
+	} else {
+		lines = append(lines, "This creates .ddev/config.yaml.")
 	}
 	if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault {
 		lines = append(lines, "The name is not written to config.yaml because omit_project_name_by_default is set.")
