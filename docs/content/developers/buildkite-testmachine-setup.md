@@ -609,6 +609,24 @@ The `test.sh` script uses `podman machine start` and `docker context use podman-
 
 Then the Buildkite agent must be configured with tag `socktainer=true`.
 
+### Troubleshooting socktainer Testbots
+
+Start from what the build shows. Most socktainer failures on a testbot come from the machine's state, not from the code under test.
+
+**Dozens of tests fail with `connection reset by peer` or `EOF` on host ports**, often with "ddev-router is running, but nothing answers on host port(s)" from the first project start, while containers answer requests from inside. A Local Network prompt for `container-runtime-linux` is waiting on that testbot's desktop.
+
+1. Over SSH, run the `log show` command from step 5 above. Any output confirms it.
+2. Over Screen Sharing, click Allow on the prompt, or turn `container-runtime-linux` on in System Settings → Privacy & Security → Local Network. Several `container-runtime-linux` entries are normal: each build of `container` gets its own.
+3. Rerun the published-port check from step 5 over Screen Sharing, or rebuild the failed build from the Buildkite UI. Nothing else needs restarting.
+
+This usually follows an upgrade of `container`, and it hits every socktainer testbot at once unless someone answered the prompt on some of them. One testbot passing while the others fail with the same versions points here too: the Local Network setting is stored separately on each machine.
+
+**Apple Container started by hand is gone by the time a job runs.** Expected: a test job for any other provider stops Apple Container and socktainer before it starts its own provider, and a socktainer job starts them again. Don't rely on leaving them running between jobs.
+
+**`launchctl print user/$(id -u)` lists `com.apple.container.apiserver`.** Someone ran `container system start` over SSH, and the next socktainer job reuses that service instead of starting its own. When no job is running on the testbot, stop it with `container system stop`. The next socktainer job starts it in the desktop session's `gui/<uid>` domain.
+
+**Rerunning only socktainer.** Rebuild the failed build from the Buildkite UI. Any push to a pull request starts new builds that cancel the ones still running for it, even a push with `[skip ci]`. Wait for a build you need to finish before pushing to its branch.
+
 ## Claude Code Self-Hosted Runner (macOS)
 
 One macOS runner also runs a Claude Code self-hosted runner, so maintainers can start claude.ai sessions on it. It runs as `testbot`, from the LaunchAgent `~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist` with `RunAtLoad` and `KeepAlive`. Its `ProgramArguments` are:
