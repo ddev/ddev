@@ -272,6 +272,10 @@ You can change the major PHP version and choose between nginx+fpm (default) and 
 
 The [lightly maintained rfay/ddev-php-patch-build add-on](https://github.com/rfay/ddev-php-patch-build) may allow you to use a specific PHP patch version.
 
+### How can I get a PHP security release before the next DDEV release?
+
+See the tip in [`php_version`](../configuration/config.md#php_version).
+
 ### How do I completely destroy a project?
 
 Use [`ddev delete <project>`](../usage/commands.md#delete) to destroy a project. By default, a [`ddev snapshot`](../usage/commands.md#snapshot) of your database is taken, but you can skip this using `ddev delete --omit-snapshot` or `ddev delete --omit-snapshot -y`. See `ddev delete -h` for options. It’s up to you to then delete the code directory.
