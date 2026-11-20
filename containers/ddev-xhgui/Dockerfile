@@ -10,4 +10,4 @@ ADD healthcheck.sh /healthcheck.sh
 RUN chmod ugo+x /healthcheck.sh
 HEALTHCHECK --interval=1s --retries=5 --timeout=120s CMD ["/healthcheck.sh"]
 CMD ["sh", "-c", "rm -f /tmp/healthy; nginx -g 'pid /dev/shm/nginx.pid;' && exec php-fpm"]
-# ddev-release-marker: v1.25.5
+# ddev-release-marker: v1.25.6

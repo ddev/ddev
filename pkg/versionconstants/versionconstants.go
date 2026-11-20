@@ -49,46 +49,46 @@ func IsUnreleasedDdevVersion(version string) bool {
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "4e8dd9e74a" // 20261104_rfay_empty_webserver_docroot-4e8dd9e74a
+var WebTag = "b842b83815" // 20261120_stasadev_v1.25.6_images-b842b83815
 
 // WebTagBranch is the branch WebTag's content was built from.
-var WebTagBranch = "20261104_rfay_empty_webserver_docroot"
+var WebTagBranch = "v1.25.6"
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "1c405c8a96" // 20261119_rfay_dbserver_stale_apt_lists-1c405c8a96
+var BaseDBTag = "6741668817" // 20261120_stasadev_v1.25.6_images-6741668817
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
-var BaseDBTagBranch = "20261119_rfay_dbserver_stale_apt_lists"
+var BaseDBTagBranch = "v1.25.6"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "ef72c327c5" // 20261014_rfay_router_volume-ef72c327c5
+var TraefikRouterTag = "2926a16252" // 20261120_stasadev_v1.25.6_images-2926a16252
 
 // TraefikRouterTagBranch is the branch TraefikRouterTag's content was built from.
-var TraefikRouterTagBranch = "20261014_rfay_router_volume"
+var TraefikRouterTagBranch = "v1.25.6"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "fa039f46c3" // 20261025_v1.25.5_images-fa039f46c3
+var SSHAuthTag = "6fa4da3a4c" // 20261120_stasadev_v1.25.6_images-6fa4da3a4c
 
 // SSHAuthTagBranch is the branch SSHAuthTag's content was built from.
-var SSHAuthTagBranch = "v1.25.5"
+var SSHAuthTagBranch = "v1.25.6"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "e761d4446a" // 20261113_rfay_xhgui_fpm_loopback-e761d4446a
+var XhguiTag = "a72c2b4e53" // 20261120_stasadev_v1.25.6_images-a72c2b4e53
 
 // XhguiTagBranch is the branch XhguiTag's content was built from.
-var XhguiTagBranch = "20261113_rfay_xhgui_fpm_loopback"
+var XhguiTagBranch = "v1.25.6"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"
