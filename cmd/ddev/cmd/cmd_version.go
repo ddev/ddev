@@ -80,7 +80,7 @@ var versionCmd = &cobra.Command{
 		amplitude.CheckSetUp()
 
 		if dockerErr != nil {
-			util.Failed("Docker error: %v\nFor help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker", dockerErr)
+			util.Failed("Docker error: %v\n\n%s", dockerErr, dockerutil.DockerConnectionHelp(dockerErr))
 		} else if buildxErr != nil {
 			util.Failed("Docker buildx error: %v", buildxErr)
 		}

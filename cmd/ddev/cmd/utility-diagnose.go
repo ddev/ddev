@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"path"
 
@@ -61,7 +62,7 @@ DDEV_DIAGNOSE_FULL=true ddev utility diagnose  # Include test project creation`,
 		util.Success("* ddev poweroff && ddev start")
 		util.Success("* Restart Docker Provider")
 		util.Success("* Temporarily disable VPN and firewall")
-		util.Success("* Troubleshooting guide: https://docs.ddev.com/en/stable/users/usage/troubleshooting/")
+		util.Success("* Troubleshooting guide: %s", versionconstants.DocsURL("users/usage/troubleshooting/"))
 		output.UserOut.Println()
 		output.UserOut.Println("For comprehensive output for issue reports, use 'ddev utility test' instead.")
 		output.UserOut.Println()

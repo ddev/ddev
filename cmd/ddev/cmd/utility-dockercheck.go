@@ -131,7 +131,7 @@ ddev ut dockercheck`,
 				util.Error("Docker buildx error: %v", buildxErr)
 			}
 			if dockerErr != nil {
-				util.Error("For help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker")
+				util.Error("%s", dockerutil.DockerConnectionHelp(dockerErr))
 			}
 			output.UserErr.Exit(1)
 		}

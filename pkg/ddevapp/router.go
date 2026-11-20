@@ -172,7 +172,7 @@ func StartDdevRouter() (err error) {
 
 		err = CheckRouterPorts(activeApps)
 		if err != nil {
-			return fmt.Errorf("unable to listen on required ports, %v\nTroubleshooting suggestions at https://docs.ddev.com/en/stable/users/usage/troubleshooting/#unable-listen", err)
+			return fmt.Errorf("unable to listen on required ports, %v\n%s", err, portConflictHelp())
 		}
 
 		// Run docker-compose up -d against the ddev-router full compose file
@@ -267,7 +267,7 @@ func StartDdevRouter() (err error) {
 	traefikErr := GetRouterConfigErrors()
 	if traefikErr != "" {
 		util.Warning("Warning: There are router configuration problems:\n%s", traefikErr)
-		util.Warning("For help go to: https://docs.ddev.com/en/stable/users/extend/traefik-router/#troubleshooting-traefik-routing")
+		util.Warning("For help go to: %s", versionconstants.DocsURL("users/extend/traefik-router/#troubleshooting-traefik-routing"))
 	}
 
 	return nil
@@ -296,7 +296,7 @@ func warnUnreachableRouterPorts() {
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
-	util.Warning("%s is running, but nothing answers on host port(s) %s, so projects may not be reachable there. Your Docker provider may not be forwarding them; see https://docs.ddev.com/en/stable/users/usage/troubleshooting/#router-ports-not-reachable", nodeps.RouterContainer, strings.Join(unreachable, ", "))
+	util.Warning("%s is running, but nothing answers on host port(s) %s, so projects may not be reachable there. Your Docker provider may not be forwarding them; see %s", nodeps.RouterContainer, strings.Join(unreachable, ", "), versionconstants.DocsURL("users/usage/troubleshooting/#router-ports-not-reachable"))
 }
 
 // ensureRouterTraefikVolume creates RouterTraefikVolume if missing, seeding it
@@ -758,6 +758,20 @@ func ProcessExposePorts(exposePorts []string, routerPorts []string) []string {
 	}
 
 	return routerPorts
+}
+
+// portConflictHelp says how to find what holds a router port and how to move
+// DDEV off the default ports.
+func portConflictHelp() string {
+	return fmt.Sprintf(`To see which process holds the port and how to stop it, run this in the project directory:
+
+    ddev utility port-diagnose
+
+Or use other ports for all projects, then start again:
+
+    ddev config global --router-http-port=8080 --router-https-port=8443
+
+More troubleshooting suggestions at %s`, versionconstants.DocsURL("users/usage/troubleshooting/#unable-listen"))
 }
 
 // CheckRouterPorts tries to connect to the ports the router will use as a heuristic to find out

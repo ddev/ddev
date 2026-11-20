@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -34,7 +35,7 @@ func configureProjectHere(skipConfirmation bool) {
 	app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 	if !app.LooksLikeWebProject() {
 		if entries, err := os.ReadDir(cwd); err == nil && len(entries) == 0 {
-			util.Failed("%s, and the directory is empty.\nTo start a new project, see https://docs.ddev.com/en/stable/users/quickstart/ or run 'ddev config'.", noProject)
+			util.Failed("%s, and the directory is empty.\nTo start a new project, see %s or run 'ddev config'.", noProject, versionconstants.DocsURL("users/quickstart/"))
 		}
 		util.Failed("%s, and it doesn't look like a web project.\nIf it is one, run 'ddev config' to configure it.", noProject)
 	}

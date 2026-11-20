@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"slices"
 	"strings"
@@ -157,5 +158,5 @@ func showComposerWarningForNotPersistentChanges(args []string) {
 		return
 	}
 
-	util.Warning("Composer %s changes do not persist across DDEV restarts.\nSee https://docs.ddev.com/en/stable/users/usage/developer-tools/#composer-limitations for details.", command)
+	util.Warning("Composer %s changes do not persist across DDEV restarts.\nSee %s for details.", command, versionconstants.DocsURL("users/usage/developer-tools/#composer-limitations"))
 }

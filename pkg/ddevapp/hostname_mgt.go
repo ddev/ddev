@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"context"
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"net"
 	"strings"
 
@@ -55,7 +56,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 			continue
 		}
 		if !govalidator.IsDNSName(name) {
-			util.Warning("DDEV cannot add unresolvable hostnames like `%s` to your hosts file.\nSee docs for more info, https://docs.ddev.com/en/stable/users/configuration/config/#additional_hostnames", name)
+			util.Warning("DDEV cannot add unresolvable hostnames like `%s` to your hosts file.\nSee docs for more info, %s", name, versionconstants.DocsURL("users/configuration/config/#additional_hostnames"))
 			continue
 		}
 		if !globalconfig.IsInteractive() {
