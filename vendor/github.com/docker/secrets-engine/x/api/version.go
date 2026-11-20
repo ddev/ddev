@@ -17,15 +17,16 @@ package api
 import (
 	"errors"
 	"fmt"
-
-	"golang.org/x/mod/semver"
 )
 
 var (
+	// Deprecated: Use [github.com/docker/secrets-engine/client/version.ErrEmptyVersion] instead.
 	ErrEmptyVersion = errors.New("empty version")
-	ErrVPrefix      = errors.New("missing version prefix")
+	// Deprecated: Use [github.com/docker/secrets-engine/client/version.ErrVPrefix] instead.
+	ErrVPrefix = errors.New("missing version prefix")
 )
 
+// Deprecated: Use [github.com/docker/secrets-engine/client/version.Version] instead.
 type Version interface {
 	String() string
 }
@@ -40,6 +41,8 @@ func (v *version) String() string {
 
 // NewVersion creates a new [Version] from a string
 // If a validation error occurs, it returns nil and the error.
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/version.NewVersion] instead.
 func NewVersion(s string) (Version, error) {
 	if err := valid(s); err != nil {
 		return nil, fmt.Errorf("parsing version: %w", err)
@@ -51,6 +54,8 @@ func NewVersion(s string) (Version, error) {
 
 // MustNewVersion creates a new Version as [NewVersion] does, but panics when a validation
 // error occurs.
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/version.MustNewVersion] instead.
 func MustNewVersion(s string) Version {
 	v, err := NewVersion(s)
 	if err != nil {
@@ -62,8 +67,10 @@ func MustNewVersion(s string) Version {
 // Compare returns an integer comparing two versions according to semantic versioning.
 // The result will be 0 if a == b, -1 if a < b, or +1 if a > b.
 // An invalid semver string is considered less than a valid one.
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/version.Compare] instead.
 func Compare(a, b Version) int {
-	return semver.Compare(a.String(), b.String())
+	return compareSemver(a.String(), b.String())
 }
 
 func valid(s string) error {
@@ -73,7 +80,7 @@ func valid(s string) error {
 	if s == "" {
 		return ErrEmptyVersion
 	}
-	if !semver.IsValid(s) {
+	if _, ok := parseSemver(s); !ok {
 		return fmt.Errorf("invalid version: %s", s)
 	}
 	return nil

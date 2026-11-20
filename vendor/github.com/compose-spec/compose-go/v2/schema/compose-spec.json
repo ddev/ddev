@@ -436,7 +436,7 @@
         },
         "mem_limit": {
           "type": [
-            "number",
+            "integer",
             "string"
           ],
           "description": "Memory limit for the container. A string value can use suffix like '2g' for 2 gigabytes."
@@ -457,7 +457,7 @@
         },
         "memswap_limit": {
           "type": [
-            "number",
+            "integer",
             "string"
           ],
           "description": "Amount of memory the container is allowed to swap to disk. Set to -1 to enable unlimited swap."
@@ -659,7 +659,7 @@
         },
         "shm_size": {
           "type": [
-            "number",
+            "integer",
             "string"
           ],
           "description": "Size of /dev/shm. A string value can use suffix like '2g' for 2 gigabytes."
@@ -682,7 +682,16 @@
         },
         "storage_opt": {
           "type": "object",
-          "description": "Storage driver options for the container."
+          "description": "Storage driver options for the container.",
+          "patternProperties": {
+            "^.+$": {
+              "type": [
+                "string",
+                "number",
+                "null"
+              ]
+            }
+          }
         },
         "tmpfs": {
           "$ref": "#/$defs/string_or_list",
@@ -1066,6 +1075,31 @@
         "profiles": {
           "$ref": "#/$defs/list_of_strings",
           "description": "List of profiles for this job. When profiles are specified, the job is only active when the profile is activated."
+        },
+        "extends": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "type": "string",
+                  "description": "The name of the job to extend."
+                },
+                "file": {
+                  "type": "string",
+                  "description": "The file path where the job to extend is defined."
+                }
+              },
+              "required": [
+                "service"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Extend another job, in the current file or another file."
         },
         "triggers": {
           "type": "object",

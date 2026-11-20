@@ -26,8 +26,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var interpolateTypeCastMapping = buildInterpolateTypeCastMapping()
-
 // buildInterpolateTypeCastMapping registers numeric/boolean casts per layer of
 // the specification: container_spec attributes apply wherever a container is
 // declared (services, jobs, pre_start init containers), workload_spec

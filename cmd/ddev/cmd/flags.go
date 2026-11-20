@@ -368,7 +368,7 @@ func (f *Flags) AssignToCommand(command *cobra.Command) error {
 			// Invalid default value was defined by the user, hide the flag
 			// and save the error
 			newFlag.Hidden = true
-			errors.WriteString(extractError(formatErrorItem(1, "-", "error '%s' while set value of flag '%s'", err.Error(), flag.Name)))
+			errors.WriteString(extractError(formatErrorItem(1, "-", "error '%s' while setting value '%s' of flag '%s'", err.Error(), flag.DefValue, flag.Name)))
 		}
 
 		newFlag.DefValue = string(flag.DefValue)

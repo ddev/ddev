@@ -16,7 +16,11 @@
 
 package types
 
-import "github.com/mattn/go-shellwords"
+import (
+	"fmt"
+
+	"github.com/mattn/go-shellwords"
+)
 
 // ShellCommand is a string or list of string args.
 //
@@ -77,8 +81,12 @@ func (s *ShellCommand) DecodeMapstructure(value interface{}) error {
 		*s = cmd
 	case []interface{}:
 		cmd := make([]string, len(v))
-		for i, s := range v {
-			cmd[i] = s.(string)
+		for i, e := range v {
+			str, ok := e.(string)
+			if !ok {
+				return fmt.Errorf("invalid type %T for command entry", e)
+			}
+			cmd[i] = str
 		}
 		*s = cmd
 	}

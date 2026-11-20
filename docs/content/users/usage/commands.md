@@ -50,10 +50,10 @@ ddev status
 ddev st
 
 Flags:
-  -h, --help   help for describe
+  -h, --help[=true|false]   help for describe
 
 Global Flags:
-  -j, --json-output   If true, user-oriented output will be in JSON format.
+  -j, --json-output[=true|false]   If true, user-oriented output will be in JSON format.
 ```
 
 ## Global Flags

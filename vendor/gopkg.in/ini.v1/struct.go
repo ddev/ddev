@@ -94,7 +94,13 @@ func setSliceWithProperType(key *Key, field reflect.Value, delim string, allowSh
 	var vals interface{}
 	var err error
 
-	sliceOf := field.Type().Elem().Kind()
+	elemType := field.Type().Elem()
+	isPtrElem := elemType.Kind() == reflect.Pointer
+	valueType := elemType
+	if isPtrElem {
+		valueType = elemType.Elem()
+	}
+	sliceOf := valueType.Kind()
 	switch sliceOf {
 	case reflect.String:
 		vals = strs
@@ -113,7 +119,7 @@ func setSliceWithProperType(key *Key, field reflect.Value, delim string, allowSh
 	case reflectTime:
 		vals, err = key.parseTimesFormat(time.RFC3339, strs, true, false)
 	default:
-		return fmt.Errorf("unsupported type '[]%s'", sliceOf)
+		return fmt.Errorf("unsupported type '[]%s'", field.Type().Elem().Kind())
 	}
 	if err != nil && isStrict {
 		return err
@@ -121,23 +127,32 @@ func setSliceWithProperType(key *Key, field reflect.Value, delim string, allowSh
 
 	slice := reflect.MakeSlice(field.Type(), numVals, numVals)
 	for i := 0; i < numVals; i++ {
+		var v interface{}
 		switch sliceOf {
 		case reflect.String:
-			slice.Index(i).Set(reflect.ValueOf(vals.([]string)[i]))
+			v = vals.([]string)[i]
 		case reflect.Int:
-			slice.Index(i).Set(reflect.ValueOf(vals.([]int)[i]))
+			v = vals.([]int)[i]
 		case reflect.Int64:
-			slice.Index(i).Set(reflect.ValueOf(vals.([]int64)[i]))
+			v = vals.([]int64)[i]
 		case reflect.Uint:
-			slice.Index(i).Set(reflect.ValueOf(vals.([]uint)[i]))
+			v = vals.([]uint)[i]
 		case reflect.Uint64:
-			slice.Index(i).Set(reflect.ValueOf(vals.([]uint64)[i]))
+			v = vals.([]uint64)[i]
 		case reflect.Float64:
-			slice.Index(i).Set(reflect.ValueOf(vals.([]float64)[i]))
+			v = vals.([]float64)[i]
 		case reflect.Bool:
-			slice.Index(i).Set(reflect.ValueOf(vals.([]bool)[i]))
+			v = vals.([]bool)[i]
 		case reflectTime:
-			slice.Index(i).Set(reflect.ValueOf(vals.([]time.Time)[i]))
+			v = vals.([]time.Time)[i]
+		}
+		rv := reflect.ValueOf(v)
+		if isPtrElem {
+			pv := reflect.New(rv.Type())
+			pv.Elem().Set(rv)
+			slice.Index(i).Set(pv)
+		} else {
+			slice.Index(i).Set(rv)
 		}
 	}
 	field.Set(slice)
@@ -358,21 +373,33 @@ func (s *Section) mapToField(val reflect.Value, isStrict bool, sectionIndex int,
 }
 
 // mapToSlice maps all sections with the same name and returns the new value.
-// The type of the Value must be a slice.
+// The type of the Value must be a slice of structs or pointers to structs.
 func (s *Section) mapToSlice(secName string, val reflect.Value, isStrict bool) (reflect.Value, error) {
 	secs, err := s.f.SectionsByName(secName)
 	if err != nil {
 		return reflect.Value{}, err
 	}
 
-	typ := val.Type().Elem()
+	elemType := val.Type().Elem()
+	isPtr := elemType.Kind() == reflect.Pointer
+	structType := elemType
+	if isPtr {
+		if elemType.Elem().Kind() != reflect.Struct {
+			return reflect.Value{}, fmt.Errorf("slice of pointers to non-struct type %s", elemType)
+		}
+		structType = elemType.Elem()
+	}
+
 	for i, sec := range secs {
-		elem := reflect.New(typ)
+		elem := reflect.New(structType)
 		if err = sec.mapToField(elem, isStrict, i, sec.name); err != nil {
 			return reflect.Value{}, fmt.Errorf("map to field from section %q: %v", secName, err)
 		}
-
-		val = reflect.Append(val, elem.Elem())
+		if isPtr {
+			val = reflect.Append(val, elem)
+		} else {
+			val = reflect.Append(val, elem.Elem())
+		}
 	}
 	return val, nil
 }
@@ -381,11 +408,19 @@ func (s *Section) mapToSlice(secName string, val reflect.Value, isStrict bool) (
 func (s *Section) mapTo(v interface{}, isStrict bool) error {
 	typ := reflect.TypeOf(v)
 	val := reflect.ValueOf(v)
+	if typ == nil || !val.IsValid() {
+		return errors.New("nil pointer to a struct")
+	}
 	if typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
 		val = val.Elem()
 	} else {
 		return errors.New("not a pointer to a struct")
+	}
+
+	// MapTo(&cfg) where cfg is a nil *T used to panic in mapToField (#369).
+	if !val.IsValid() || (val.Kind() == reflect.Pointer && val.IsNil()) {
+		return errors.New("nil pointer to a struct")
 	}
 
 	if typ.Kind() == reflect.Slice {
@@ -498,7 +533,11 @@ func reflectSliceWithProperType(key *Key, field reflect.Value, delim string, all
 	for i := 0; i < field.Len(); i++ {
 		switch sliceOf {
 		case reflect.String:
-			buf.WriteString(slice.Index(i).String())
+			val := slice.Index(i).String()
+			if key.s.f.options.EscapeSliceDelimiters {
+				val = escapeDelimited(val, delim)
+			}
+			buf.WriteString(val)
 		case reflect.Int, reflect.Int64:
 			fmt.Fprint(&buf, slice.Index(i).Int())
 		case reflect.Uint, reflect.Uint64:
@@ -598,7 +637,10 @@ func (s *Section) reflectFrom(val reflect.Value) error {
 		}
 
 		if r, ok := field.Interface().(StructReflector); ok {
-			return r.ReflectINIStruct(s.f)
+			if err := r.ReflectINIStruct(s.f); err != nil {
+				return err
+			}
+			continue
 		}
 
 		fieldName := s.parseFieldName(tpField.Name, rawName)

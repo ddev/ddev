@@ -34,23 +34,13 @@ type progressFunc func(context.Context) error
 func Run(ctx context.Context, pf progressFunc, operation string, bus api.EventProcessor) error {
 	bus.Start(ctx, operation)
 	err := pf(ctx)
-	bus.Done(operation, err != nil)
+	bus.Done(operation, err == nil)
 	return err
 }
 
 // errorEventf creates a new Error Resource with format message
 func errorEventf(id string, msg string, args ...any) api.Resource {
 	return progress.Error(id, fmt.Sprintf(msg, args...))
-}
-
-// buildingEvent creates a new Building in progress Resource
-func buildingEvent(id string) api.Resource {
-	return progress.New("Image "+id, api.Working, api.StatusBuilding)
-}
-
-// builtEvent creates a new built (done) Resource
-func builtEvent(id string) api.Resource {
-	return progress.New("Image "+id, api.Done, api.StatusBuilt)
 }
 
 // decodeProgressStream reads the JSON messages the daemon streams while pulling or

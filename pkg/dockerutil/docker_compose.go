@@ -47,6 +47,17 @@ func LoadComposeProject(files []string, opts api.ProjectLoadOptions) (*types.Pro
 	return dm.composeForLoad.LoadProject(dm.goContext, opts)
 }
 
+// CloseComposeService releases the connections a compose service opened.
+// Call it, usually deferred, once done with a service from NewComposeService.
+// On Docker API 1.57 and later, compose probes the engine's jobs extension
+// over a private gRPC connection that only Close releases. Closing does not
+// break the shared Docker API client: that Close only drops idle connections.
+func CloseComposeService(svc api.Compose) {
+	if c, ok := svc.(io.Closer); ok {
+		_ = c.Close()
+	}
+}
+
 // NewComposeService creates a compose service backed by the singleton Docker CLI.
 func NewComposeService() (context.Context, api.Compose, error) {
 	return NewComposeServiceWithStreams(output.UserErr.Out, output.UserErr.Out)
@@ -193,6 +204,7 @@ func CaptureOutput(fn func(svc api.Compose) error) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
+	defer CloseComposeService(svc)
 	err = fn(svc)
 	return cleanOutput(stdoutBuf.String()), cleanOutput(stderrBuf.String()), err
 }
@@ -320,6 +332,7 @@ func PullImages(images []types.ServiceConfig, pullAlways bool) error {
 	if pullErr != nil {
 		return pullErr
 	}
+	defer CloseComposeService(pullSvc)
 	for _, platform := range slices.Sorted(maps.Keys(pulls)) {
 		// Build a minimal project directly without a YAML round-trip.
 		project := &types.Project{Name: "compose-yaml-pull", Services: pulls[platform]}

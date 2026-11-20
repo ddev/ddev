@@ -17,6 +17,7 @@
 package loader
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -42,7 +43,14 @@ type ResetProcessor struct {
 	paths         []tree.Path
 	visitedNodes  map[*yaml.Node][]tree.Path
 	resolvedNodes map[*yaml.Node]nodeCache
-	visitCount    int
+	// resolving holds the containers being resolved, with the path they were
+	// reached at: an alias to one of them is a cycle, whichever the keys
+	// leading to it (checkForCycle lets those going through a merge key pass)
+	resolving map[*yaml.Node]tree.Path
+	// enclosingAliases holds the aliases found while their target was being
+	// resolved
+	enclosingAliases map[*yaml.Node]bool
+	visitCount       int
 	// maxNodeVisits is the per-document cap; when zero, defaultMaxNodeVisits is used.
 	maxNodeVisits int
 }
@@ -51,14 +59,22 @@ type ResetProcessor struct {
 func (p *ResetProcessor) UnmarshalYAML(value *yaml.Node) error {
 	p.visitedNodes = make(map[*yaml.Node][]tree.Path)
 	p.resolvedNodes = make(map[*yaml.Node]nodeCache)
+	p.resolving = make(map[*yaml.Node]tree.Path)
+	p.enclosingAliases = make(map[*yaml.Node]bool)
 	p.visitCount = 0
 	defer func() {
 		p.visitedNodes = nil
 		p.resolvedNodes = nil
+		p.resolving = nil
+		p.enclosingAliases = nil
 	}()
 	resolved, err := p.resolveReset(value, tree.NewPath())
 	if err != nil {
 		return err
+	}
+	if resolved == nil {
+		// the document itself is tagged `!reset`: there is nothing left to decode
+		return errors.New("!reset cannot be set on the whole document")
 	}
 	p.addAliasPaths()
 	return resolved.Decode(p.target)
@@ -107,6 +123,18 @@ func (p *ResetProcessor) resolveReset(node *yaml.Node, path tree.Path) (*yaml.No
 		if err := p.checkForCycle(node.Alias, path); err != nil {
 			return nil, err
 		}
+		// An anchor holding itself through a merge key, or a key whose name
+		// contains "<<", is not caught by checkForCycle, and would be followed
+		// until the visit limit with ever longer paths, for about a minute:
+		// the same alias reached again while its target is still being
+		// resolved is a cycle.
+		if enclosing, ok := p.resolving[node.Alias]; ok {
+			if p.enclosingAliases[node] {
+				return nil, fmt.Errorf("cycle detected: node at path %s references node at path %s",
+					path.String(), enclosing.String())
+			}
+			p.enclosingAliases[node] = true
+		}
 		// Handle !reset/!override on the alias target before delegating to the cache,
 		// keeping all tag-handling logic in resolveReset rather than split across functions.
 		target := node.Alias
@@ -142,7 +170,9 @@ func (p *ResetProcessor) cachedResolve(node *yaml.Node, path tree.Path) (*yaml.N
 	}
 
 	startIdx := len(p.paths)
+	p.resolving[node] = path
 	resolved, err := p.resolveContainer(node, path)
+	delete(p.resolving, node)
 	if err != nil {
 		return nil, err
 	}

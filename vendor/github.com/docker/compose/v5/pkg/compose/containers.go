@@ -18,7 +18,6 @@ package compose
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"sort"
 	"strconv"
@@ -118,10 +117,7 @@ func (s *composeService) getSpecifiedContainer(ctx context.Context, projectName 
 	}
 	containers := res.Items
 	if len(containers) < 1 {
-		if containerIndex > 0 {
-			return container.Summary{}, fmt.Errorf("service %q is not running container #%d", serviceName, containerIndex)
-		}
-		return container.Summary{}, fmt.Errorf("service %q is not running", serviceName)
+		return container.Summary{}, &api.ServiceNotRunningError{Service: serviceName, Index: containerIndex}
 	}
 
 	// Sort by container number first, then put one-off containers at the end
@@ -180,6 +176,20 @@ func isOrphaned(project *types.Project) containerPredicate {
 		}
 		return !slices.Contains(services, c.Labels[api.ServiceLabel])
 	}
+}
+
+// isLiveJobRun selects a run of a job that has not finished. A job is not a
+// service of the model, so its run reads as an orphan whatever its state, which
+// `down --remove-orphans` relies on to stop it; `up --remove-orphans` must leave
+// it alone, as it does a running one-off.
+func isLiveJobRun(c container.Summary) bool {
+	return isJobRun(c) && c.State != container.StateExited && c.State != container.StateDead
+}
+
+// isJobRun selects the container of a run of a job: the engine labels it.
+func isJobRun(c container.Summary) bool {
+	_, ok := c.Labels[jobContainerIDLabel]
+	return ok
 }
 
 func isNotOneOff(c container.Summary) bool {

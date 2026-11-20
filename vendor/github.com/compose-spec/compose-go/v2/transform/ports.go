@@ -18,6 +18,7 @@ package transform
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/compose-spec/compose-go/v2/tree"
 	"github.com/compose-spec/compose-go/v2/types"
@@ -34,7 +35,7 @@ func transformPorts(data any, p tree.Path, ignoreParseError bool) (any, error) {
 		for _, entry := range entries {
 			switch value := entry.(type) {
 			case int:
-				parsed, err := types.ParsePortConfig(fmt.Sprint(value))
+				parsed, err := types.ParsePortConfig(strconv.Itoa(value))
 				if err != nil {
 					return data, err
 				}

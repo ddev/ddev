@@ -93,7 +93,7 @@ func (f *File) NewSection(name string) (*Section, error) {
 		defer f.lock.Unlock()
 	}
 
-	if !f.options.AllowNonUniqueSections && inSlice(name, f.sectionList) {
+	if !f.options.AllowNonUniqueSections && f.sections[name] != nil {
 		return f.sections[name][0], nil
 	}
 
@@ -332,6 +332,32 @@ func (f *File) Append(source interface{}, others ...interface{}) error {
 	return f.Reload()
 }
 
+func writeCommentLines(buf *bytes.Buffer, comment, indent string) error {
+	if len(comment) == 0 {
+		return nil
+	}
+	lines := strings.Split(comment, LineBreak)
+	for i := range lines {
+		if len(lines[i]) == 0 {
+			continue
+		}
+		if len(indent) > 0 {
+			if _, err := buf.WriteString(indent); err != nil {
+				return err
+			}
+		}
+		if lines[i][0] != '#' && lines[i][0] != ';' {
+			lines[i] = "; " + strings.TrimSpace(lines[i])
+		} else {
+			lines[i] = lines[i][:1] + " " + strings.TrimSpace(lines[i][1:])
+		}
+		if _, err := buf.WriteString(lines[i] + LineBreak); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 	equalSign := DefaultFormatLeft + f.options.KeyValueDelimiterOnWrite + DefaultFormatRight
 
@@ -366,7 +392,7 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 			}
 		} else {
 			// Write nothing if default section is empty
-			if len(sec.keyList) == 0 {
+			if len(sec.keyList) == 0 && len(sec.TrailingComment) == 0 {
 				continue
 			}
 		}
@@ -374,6 +400,9 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 		isLastSection := i == lastSectionIdx
 		if sec.isRawSection {
 			if _, err := buf.WriteString(sec.rawBody); err != nil {
+				return nil, err
+			}
+			if err := writeCommentLines(buf, sec.TrailingComment, ""); err != nil {
 				return nil, err
 			}
 
@@ -430,10 +459,6 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 				}
 			}
 
-			if len(indent) > 0 && sname != DefaultSection {
-				buf.WriteString(indent)
-			}
-
 			switch {
 			case key.isAutoIncrement:
 				kname = "-"
@@ -444,6 +469,9 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 			}
 
 			writeKeyValue := func(val string) (bool, error) {
+				if len(indent) > 0 && sname != DefaultSection {
+					buf.WriteString(indent)
+				}
 				if _, err := buf.WriteString(kname); err != nil {
 					return false, err
 				}
@@ -463,8 +491,18 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 					val = `"""` + val + `"""`
 				} else if !f.options.IgnoreInlineComment && strings.ContainsAny(val, "#;") {
 					val = "`" + val + "`"
+				} else if (!f.options.PreserveSurroundedQuote &&
+					(hasSurroundedQuote(val, '"') || hasSurroundedQuote(val, '\''))) ||
+					strings.HasPrefix(val, `"""`) {
+					// Reader would unquote these or read them as a wrapper, so escape.
+					val = "`" + val + "`"
 				} else if len(strings.TrimSpace(val)) != len(val) {
-					val = `"` + val + `"`
+					if strings.Contains(val, `"`) {
+						// Reader can't strip "..." with an inner quote; wrap raw instead.
+						val = "`" + val + "`"
+					} else {
+						val = `"` + val + `"`
+					}
 				}
 				if _, err := buf.WriteString(equalSign + val + LineBreak); err != nil {
 					return false, err
@@ -493,6 +531,10 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 					return nil, err
 				}
 			}
+		}
+
+		if err := writeCommentLines(buf, sec.TrailingComment, ""); err != nil {
+			return nil, err
 		}
 
 		if PrettySection && !isLastSection {

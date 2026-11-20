@@ -11,3 +11,7 @@ blocked:
         reason: "Forbidden dependency"
     - github.com/docker/secrets-engine/store:
         reason: "Forbidden dependency"
+    - github.com/docker/secrets-engine/x:
+        reason: "Forbidden dependency"
+    - connectrpc.com/connect:
+        reason: "Forbidden dependency"

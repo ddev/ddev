@@ -97,6 +97,7 @@ func (app *DdevApp) composeUp(project *composeTypes.Project, create api.CreateOp
 	if err != nil {
 		return err
 	}
+	defer dockerutil.CloseComposeService(upSvc)
 	progress := display.ModeQuiet
 	if globalconfig.DdevVerbose {
 		progress = display.ModePlain

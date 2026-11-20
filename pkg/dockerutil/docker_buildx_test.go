@@ -91,12 +91,12 @@ func TestCheckDockerBuildx(t *testing.T) {
 // with the buildxMinVersion constant in the vendored Compose library.
 // Run this test whenever docker/compose or versionconstants is updated.
 func TestBuildxMinVersionInSync(t *testing.T) {
-	data, err := os.ReadFile("../../vendor/github.com/docker/compose/v5/pkg/compose/api_versions.go")
-	require.NoError(t, err, "could not read vendored compose api_versions.go; run 'go mod vendor'")
+	data, err := os.ReadFile("../../vendor/github.com/docker/compose/v5/internal/build/bake.go")
+	require.NoError(t, err, "could not read vendored compose bake.go; run 'go mod vendor'")
 
 	re := regexp.MustCompile(`buildxMinVersion\s*=\s*"([^"]+)"`)
 	matches := re.FindSubmatch(data)
-	require.Len(t, matches, 2, "buildxMinVersion constant not found in vendor/github.com/docker/compose/v5/pkg/compose/api_versions.go")
+	require.Len(t, matches, 2, "buildxMinVersion constant not found in vendor/github.com/docker/compose/v5/internal/build/bake.go")
 
 	composeMin := string(matches[1])
 	require.Equal(t, composeMin, versionconstants.DockerBuildxMinVersion,

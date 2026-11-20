@@ -33,34 +33,37 @@ var unique = map[tree.Path]indexer{}
 func init() {
 	unique["networks.*.labels"] = keyValueIndexer
 	unique["networks.*.ipam.options"] = keyValueIndexer
-	unique["services.*.annotations"] = keyValueIndexer
-	unique["services.*.build.args"] = keyValueIndexer
-	unique["services.*.build.additional_contexts"] = keyValueIndexer
-	unique["services.*.build.platform"] = keyValueIndexer
-	unique["services.*.build.tags"] = keyValueIndexer
-	unique["services.*.build.labels"] = keyValueIndexer
-	unique["services.*.cap_add"] = keyValueIndexer
-	unique["services.*.cap_drop"] = keyValueIndexer
-	unique["services.*.devices"] = volumeIndexer
-	unique["services.*.configs"] = mountIndexer("")
+	// services and jobs share the container specification: same rules
+	for _, prefix := range []tree.Path{"services", "jobs"} {
+		unique[prefix+".*.annotations"] = keyValueIndexer
+		unique[prefix+".*.build.args"] = keyValueIndexer
+		unique[prefix+".*.build.additional_contexts"] = keyValueIndexer
+		unique[prefix+".*.build.platform"] = keyValueIndexer
+		unique[prefix+".*.build.tags"] = keyValueIndexer
+		unique[prefix+".*.build.labels"] = keyValueIndexer
+		unique[prefix+".*.cap_add"] = keyValueIndexer
+		unique[prefix+".*.cap_drop"] = keyValueIndexer
+		unique[prefix+".*.configs"] = mountIndexer("")
+		unique[prefix+".*.dns"] = keyValueIndexer
+		unique[prefix+".*.dns_opt"] = keyValueIndexer
+		unique[prefix+".*.dns_search"] = keyValueIndexer
+		unique[prefix+".*.environment"] = keyValueIndexer
+		unique[prefix+".*.env_file"] = envFileIndexer
+		unique[prefix+".*.expose"] = exposeIndexer
+		unique[prefix+".*.labels"] = keyValueIndexer
+		unique[prefix+".*.networks.*.aliases"] = keyValueIndexer
+		unique[prefix+".*.networks.*.link_local_ips"] = keyValueIndexer
+		unique[prefix+".*.ports"] = portIndexer
+		unique[prefix+".*.profiles"] = keyValueIndexer
+		unique[prefix+".*.secrets"] = mountIndexer("/run/secrets")
+		unique[prefix+".*.sysctls"] = keyValueIndexer
+		unique[prefix+".*.tmpfs"] = keyValueIndexer
+		unique[prefix+".*.volumes"] = volumeIndexer
+		unique[prefix+".*.devices"] = deviceMappingIndexer
+	}
+	// attributes only services have
 	unique["services.*.deploy.labels"] = keyValueIndexer
-	unique["services.*.dns"] = keyValueIndexer
-	unique["services.*.dns_opt"] = keyValueIndexer
-	unique["services.*.dns_search"] = keyValueIndexer
-	unique["services.*.environment"] = keyValueIndexer
-	unique["services.*.env_file"] = envFileIndexer
-	unique["services.*.expose"] = exposeIndexer
-	unique["services.*.labels"] = keyValueIndexer
 	unique["services.*.links"] = keyValueIndexer
-	unique["services.*.networks.*.aliases"] = keyValueIndexer
-	unique["services.*.networks.*.link_local_ips"] = keyValueIndexer
-	unique["services.*.ports"] = portIndexer
-	unique["services.*.profiles"] = keyValueIndexer
-	unique["services.*.secrets"] = mountIndexer("/run/secrets")
-	unique["services.*.sysctls"] = keyValueIndexer
-	unique["services.*.tmpfs"] = keyValueIndexer
-	unique["services.*.volumes"] = volumeIndexer
-	unique["services.*.devices"] = deviceMappingIndexer
 }
 
 // EnforceUnicity removes redefinition of elements declared in a sequence
@@ -179,9 +182,12 @@ func mountIndexer(defaultPath string) indexer {
 		case string:
 			return fmt.Sprintf("%s/%s", defaultPath, v), nil
 		case map[string]any:
-			t, ok := v["target"]
-			if ok {
-				return t.(string), nil
+			if t, ok := v["target"]; ok {
+				target, ok := t.(string)
+				if !ok {
+					return "", fmt.Errorf("%s: unexpected type %T for target", path, t)
+				}
+				return target, nil
 			}
 			return fmt.Sprintf("%s/%s", defaultPath, v["source"]), nil
 		default:
@@ -227,7 +233,11 @@ func envFileIndexer(y any, p tree.Path) (string, error) {
 		return value, nil
 	case map[string]any:
 		if pathValue, ok := value["path"]; ok {
-			return pathValue.(string), nil
+			path, ok := pathValue.(string)
+			if !ok {
+				return "", fmt.Errorf("%s: unexpected type %T for path", p, pathValue)
+			}
+			return path, nil
 		}
 		return "", fmt.Errorf("environment path attribute %s is missing", p)
 	}

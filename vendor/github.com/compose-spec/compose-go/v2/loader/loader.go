@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -121,7 +122,7 @@ func (o *Options) warnObsoleteVersion(file string) {
 	versionWarningMu.Lock()
 	defer versionWarningMu.Unlock()
 	if !versionWarning.Has(file) {
-		logrus.Warning(fmt.Sprintf("%s: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion", file))
+		logrus.Warning(file + ": the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion")
 		versionWarning.Add(file)
 	}
 }
@@ -415,7 +416,7 @@ func ToOptions(configDetails *types.ConfigDetails, options []func(*Options)) *Op
 		Interpolate: &interp.Options{
 			Substitute:      template.Substitute,
 			LookupValue:     configDetails.LookupEnv,
-			TypeCastMapping: interpolateTypeCastMapping,
+			TypeCastMapping: buildInterpolateTypeCastMapping(),
 		},
 		ResolvePaths: true,
 	}
@@ -491,108 +492,185 @@ func loadYamlFile(ctx context.Context,
 		file.Content = content
 	}
 
-	processRawYaml := func(raw interface{}, processor PostProcessor) error {
-		converted, err := convertToStringKeysRecursive(raw, "")
+	l := &yamlFileLoader{
+		file:        file,
+		opts:        opts,
+		workingDir:  workingDir,
+		environment: environment,
+		ct:          ct,
+		dict:        dict,
+		included:    included,
+	}
+	if !opts.SkipInclude {
+		// the file is on the include stack once, whatever its number of documents
+		l.included = append(slices.Clip(included), file.Filename)
+	}
+
+	if file.Config != nil {
+		if err := l.loadDocument(ctx, file.Config, NoopPostProcessor{}); err != nil {
+			return nil, nil, err
+		}
+		return l.dict, nil, nil
+	}
+
+	processor, err := l.loadDocuments(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	return l.dict, processor, nil
+}
+
+// yamlFileLoader merges the YAML document(s) of a single config file into the
+// model loaded so far. A file may hold several documents, each one being
+// merged over the previous ones, so the model (dict) and the stack of files
+// being included (included) are shared by all of them.
+type yamlFileLoader struct {
+	file        types.ConfigFile
+	opts        *Options
+	workingDir  string
+	environment types.Mapping
+	ct          *cycleTracker
+	// dict is the model accumulated from the config files loaded so far
+	dict map[string]interface{}
+	// included is the stack of files being included, ending with this file
+	// (unless includes are skipped)
+	included []string
+}
+
+// loadDocuments decodes every YAML document of the file and loads them in
+// order. The returned PostProcessor is the one of the last document.
+func (l *yamlFileLoader) loadDocuments(ctx context.Context) (PostProcessor, error) {
+	var processor PostProcessor
+	decoder := yaml.NewDecoder(bytes.NewReader(l.file.Content))
+	for {
+		var raw interface{}
+		reset := &ResetProcessor{target: &raw, maxNodeVisits: l.opts.MaxNodeVisits}
+		err := decoder.Decode(reset)
+		if errors.Is(err, io.EOF) {
+			return processor, nil
+		}
 		if err != nil {
-			return err
+			return nil, fmt.Errorf("failed to parse %s: %w", l.file.Filename, err)
 		}
-		cfg, ok := converted.(map[string]interface{})
-		if !ok {
-			return errors.New("top-level object must be a mapping")
+		processor = reset
+		if err := l.loadDocument(ctx, raw, processor); err != nil {
+			return nil, err
 		}
+	}
+}
 
-		if opts.Interpolate != nil && !opts.SkipInterpolation {
-			cfg, err = interp.Interpolate(cfg, *opts.Interpolate)
-			if err != nil {
-				return err
-			}
-		}
-
-		fixEmptyNotNull(cfg)
-
-		if err := promoteAliases(cfg, tree.NewPath()); err != nil {
-			return err
-		}
-
-		// Process includes first so that extended services have all merged attributes
-		if !opts.SkipInclude {
-			included = append(included, file.Filename)
-			err = ApplyInclude(ctx, workingDir, environment, cfg, opts, included, processor)
-			if err != nil {
-				return err
-			}
-		}
-
-		if err := processor.Apply(dict); err != nil {
-			return err
-		}
-
-		// Process extends after includes so base services are fully merged
-		if !opts.SkipExtends {
-			err = ApplyExtends(ctx, cfg, opts, ct, processor)
-			if err != nil {
-				return err
-			}
-
-		}
-
-		dict, err = override.Merge(dict, cfg)
-		if err != nil {
-			return err
-		}
-
-		dict, err = override.EnforceUnicity(dict)
-		if err != nil {
-			return err
-		}
-
-		if !opts.SkipValidation {
-			if err := schema.Validate(dict); err != nil {
-				return fmt.Errorf("validating %s: %w", file.Filename, err)
-			}
-			if _, ok := dict["version"]; ok {
-				opts.warnObsoleteVersion(file.Filename)
-				delete(dict, "version")
-			}
-		}
-
-		dict, err = transform.Canonical(dict, opts.SkipInterpolation)
-		if err != nil {
-			return err
-		}
-
-		dict = OmitEmpty(dict)
-
-		// Canonical transformation can reveal duplicates, typically as ports can be a range and conflict with an override
-		dict, err = override.EnforceUnicity(dict)
+// loadDocument runs the loading pipeline on one decoded YAML document and
+// merges the result into l.dict
+func (l *yamlFileLoader) loadDocument(ctx context.Context, raw interface{}, processor PostProcessor) error {
+	cfg, err := l.prepare(raw)
+	if err != nil {
 		return err
 	}
 
-	var processor PostProcessor
-	if file.Config == nil {
-		r := bytes.NewReader(file.Content)
-		decoder := yaml.NewDecoder(r)
-		for {
-			var raw interface{}
-			reset := &ResetProcessor{target: &raw, maxNodeVisits: opts.MaxNodeVisits}
-			err := decoder.Decode(reset)
-			if err != nil && errors.Is(err, io.EOF) {
-				break
-			}
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to parse %s: %w", file.Filename, err)
-			}
-			processor = reset
-			if err := processRawYaml(raw, processor); err != nil {
-				return nil, nil, err
-			}
-		}
-	} else {
-		if err := processRawYaml(file.Config, NoopPostProcessor{}); err != nil {
-			return nil, nil, err
+	if err := l.expand(ctx, cfg, processor); err != nil {
+		return err
+	}
+
+	if err := l.merge(cfg); err != nil {
+		return err
+	}
+
+	if err := l.validate(); err != nil {
+		return err
+	}
+
+	return l.canonicalize()
+}
+
+// prepare turns the decoded document into a mapping with string keys, then
+// interpolates it and resolves YAML aliases
+func (l *yamlFileLoader) prepare(raw interface{}) (map[string]interface{}, error) {
+	converted, err := convertToStringKeysRecursive(raw, "")
+	if err != nil {
+		return nil, err
+	}
+	cfg, ok := converted.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("top-level object must be a mapping")
+	}
+
+	if l.opts.Interpolate != nil && !l.opts.SkipInterpolation {
+		cfg, err = interp.Interpolate(cfg, *l.opts.Interpolate)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return dict, processor, nil
+
+	fixEmptyNotNull(cfg)
+
+	if err := promoteAliases(cfg, tree.NewPath()); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+// expand brings into the document what it references from other files:
+// included files first, so that extended services have all merged
+// attributes, then extended services
+func (l *yamlFileLoader) expand(ctx context.Context, cfg map[string]interface{}, processor PostProcessor) error {
+	if !l.opts.SkipInclude {
+		err := ApplyInclude(ctx, l.workingDir, l.environment, cfg, l.opts, l.included, processor)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := processor.Apply(l.dict); err != nil {
+		return err
+	}
+
+	// Process extends after includes so base services are fully merged
+	if !l.opts.SkipExtends {
+		return ApplyExtends(ctx, cfg, l.opts, l.ct, processor)
+	}
+	return nil
+}
+
+// merge merges the document over the model loaded so far
+func (l *yamlFileLoader) merge(cfg map[string]interface{}) error {
+	var err error
+	l.dict, err = override.Merge(l.dict, cfg)
+	if err != nil {
+		return err
+	}
+
+	l.dict, err = override.EnforceUnicity(l.dict)
+	return err
+}
+
+// validate checks the merged model against the compose schema
+func (l *yamlFileLoader) validate() error {
+	if l.opts.SkipValidation {
+		return nil
+	}
+	if err := schema.Validate(l.dict); err != nil {
+		return fmt.Errorf("validating %s: %w", l.file.Filename, err)
+	}
+	if _, ok := l.dict["version"]; ok {
+		l.opts.warnObsoleteVersion(l.file.Filename)
+		delete(l.dict, "version")
+	}
+	return nil
+}
+
+// canonicalize rewrites the merged model in its canonical form
+func (l *yamlFileLoader) canonicalize() error {
+	var err error
+	l.dict, err = transform.Canonical(l.dict, l.opts.SkipInterpolation)
+	if err != nil {
+		return err
+	}
+
+	l.dict = OmitEmpty(l.dict)
+
+	// Canonical transformation can reveal duplicates, typically as ports can be a range and conflict with an override
+	l.dict, err = override.EnforceUnicity(l.dict)
+	return err
 }
 
 func load(ctx context.Context, configDetails types.ConfigDetails, opts *Options, loaded []string) (map[string]interface{}, error) {
@@ -887,12 +965,23 @@ func Transform(source interface{}, target interface{}) error {
 // nameServices create implicit `name` key for convenience accessing service or job
 func nameServices(from reflect.Value, to reflect.Value) (interface{}, error) {
 	if to.Type() == reflect.TypeOf(types.Services{}) || to.Type() == reflect.TypeOf(types.Jobs{}) {
+		// a value that is not a mapping (a service declared as a list or a
+		// string) has no name to set: decoding it reports the error
+		if from.Kind() != reflect.Map {
+			return from.Interface(), nil
+		}
 		nameK := reflect.ValueOf("name")
 		iter := from.MapRange()
 		for iter.Next() {
 			name := iter.Key()
-			elem := iter.Value()
-			elem.Elem().SetMapIndex(nameK, name)
+			elem := iter.Value().Elem()
+			switch {
+			case elem.Kind() == reflect.Map:
+				elem.SetMapIndex(nameK, name)
+			case !elem.IsValid():
+				// left empty: an empty definition, still named
+				from.SetMapIndex(name, reflect.ValueOf(map[string]any{"name": name.Interface()}))
+			}
 		}
 	}
 	return from.Interface(), nil
@@ -979,7 +1068,7 @@ func formatInvalidKeyError(keyPrefix string, key interface{}) error {
 	if keyPrefix == "" {
 		location = "at top level"
 	} else {
-		location = fmt.Sprintf("in %s", keyPrefix)
+		location = "in " + keyPrefix
 	}
 	return fmt.Errorf("non-string key %s: %#v", location, key)
 }

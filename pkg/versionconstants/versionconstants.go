@@ -104,7 +104,7 @@ var MutagenVersion = ""
 const RequiredMutagenVersion = "0.18.1"
 
 // DockerBuildxMinVersion defines the minimum required version of buildx.
-// Must match buildxMinVersion in vendor/github.com/docker/compose/v5/pkg/compose/api_versions.go
+// Must match buildxMinVersion in vendor/github.com/docker/compose/v5/internal/build/bake.go
 // Sync enforced by TestBuildxMinVersionInSync.
 // This value is a hard requirement
 const DockerBuildxMinVersion = "0.17.0"
@@ -115,7 +115,7 @@ const DockerBuildxMinVersion = "0.17.0"
 // of docker/compose, so this has no go.mod counterpart to sync against;
 // update it by hand when recommending a new buildx release.
 // This value is a recommendation, not a hard requirement
-const DockerBuildxRecommendedVersion = "0.38.2"
+const DockerBuildxRecommendedVersion = "0.39.0"
 
 // DockerMinVersion defines the recommended minimum version of Docker Engine
 // List of supported Docker versions: https://endoflife.date/docker-engine
