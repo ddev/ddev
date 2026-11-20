@@ -158,6 +158,20 @@ func StartDdevRouter() (err error) {
 		}
 	}
 
+	// Update network aliases in place rather than recreating the container.
+	// Starting any project with a new hostname changes the router's aliases,
+	// so without this every additional project start would recreate the router.
+	// Engines that can't disconnect a running container from its first network
+	// (Kiri, libracoder/kiri#418) get the router recreated instead.
+	if !needsRecreation && hostnamesChanged {
+		neededHostnames := determineRouterHostnames(activeApps)
+		util.Debug("Updating router network aliases in place to %v", neededHostnames)
+		if aliasErr := dockerutil.UpdateContainerNetworkAliases(router.ID, dockerutil.NetName, neededHostnames); aliasErr != nil {
+			util.Debug("Unable to update router network aliases in place, recreating the router: %v", aliasErr)
+			needsRecreation = true
+		}
+	}
+
 	if needsRecreation {
 		// Not a wait line: compose's progress display would overwrite it.
 		output.UserOut.Printf("Starting %s, pushing config...", nodeps.RouterContainer)
@@ -203,17 +217,6 @@ func StartDdevRouter() (err error) {
 		}
 	} else {
 		wait = output.StartWaitSince(fmt.Sprintf("%s already running, pushing new config", nodeps.RouterContainer), start)
-
-		// Update network aliases in place rather than recreating the container.
-		// Starting any project with a new hostname changes the router's aliases,
-		// so without this every additional project start would recreate the router.
-		if hostnamesChanged {
-			neededHostnames := determineRouterHostnames(activeApps)
-			util.Debug("Updating router network aliases in place to %v", neededHostnames)
-			if err = dockerutil.UpdateContainerNetworkAliases(router.ID, dockerutil.NetName, neededHostnames); err != nil {
-				return fmt.Errorf("failed to update router network aliases: %v", err)
-			}
-		}
 
 		// Even if we don't recreate, update the Traefik config for the new project
 		err = PushGlobalTraefikConfig(activeApps)

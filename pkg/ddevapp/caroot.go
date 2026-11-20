@@ -86,7 +86,7 @@ func (app *DdevApp) copyCAROOTIntoWeb() error {
 		return fmt.Errorf("unable to archive %s: %v", caRoot, err)
 	}
 	containerName := GetContainerName(app, "web")
-	if err = dockerutil.CopyArchiveToContainer(containerName, "/", bytes.NewReader(archive)); err != nil {
+	if err = dockerutil.CopyArchiveToContainerAsUser(containerName, "/", bytes.NewReader(archive)); err != nil {
 		return fmt.Errorf("unable to copy the mkcert root CA into %s: %v", containerName, err)
 	}
 	util.Debug("Copied mkcert root CA from %s to %s:%s", caRoot, containerName, CAROOTContainerDir)
