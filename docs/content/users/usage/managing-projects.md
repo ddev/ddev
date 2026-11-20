@@ -1,3 +1,5 @@
+DDEV creates CMS settings files for your projects, and its commands list projects, remove them, and import their databases and files.
+
 ## Configuration Files
 
 The [`ddev config`](../usage/commands.md#config) and `ddev start` commands attempt to create a CMS-specific settings file pre-populated with DDEV credentials. If you don't want DDEV to do this, set the [`disable_settings_management`](../configuration/config.md#disable_settings_management) config option to `true`.

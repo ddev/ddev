@@ -1,6 +1,6 @@
 # Starting a Project
 
-Once [DDEV is installed](./install/ddev-installation.md), setting up a new project should be quick:
+Once [DDEV is installed](./install/ddev-installation.md), setting up a new project takes four steps.
 
 1. Clone or create the code for your project.
 2. `cd` into the project directory and run [`ddev config`](./usage/commands.md#config) to initialize a DDEV project.

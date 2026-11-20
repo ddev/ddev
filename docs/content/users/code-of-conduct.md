@@ -1,5 +1,7 @@
 # Code of Conduct
 
+This Code of Conduct applies within all DDEV community spaces.
+
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our

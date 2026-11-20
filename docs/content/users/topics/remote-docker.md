@@ -1,5 +1,7 @@
 # Remote Docker Environments
 
+You can use DDEV with a remote Docker host or in CI, and you can use DDEV’s Docker images in other projects.
+
 ## Remote Docker Instances
 
 You can use remote Docker instances, whether on the internet, inside your network, or running in a virtual machine. This lets you offload Docker resource usage from your local machine, which can improve battery life and performance on less powerful devices.

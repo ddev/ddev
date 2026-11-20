@@ -5,12 +5,12 @@ search:
 
 # Config Options
 
-DDEV configuration is stored in YAML files that come in two flavors:
+DDEV configuration is stored in YAML files, per project and globally. Most settings take effect when you run [`ddev start`](../usage/commands.md#start).
+
+The files come in two flavors:
 
 1. :octicons-file-directory-16: **Project** `.ddev/config.yaml` settings, with optional [environmental override](#environmental-overrides) variants.
 2. :octicons-globe-16: **Global** `$HOME/.ddev/global_config.yaml` settings that can apply to all projects.
-
-Most of these settings take effect when you run [`ddev start`](../usage/commands.md#start).
 
 ## Managing Configuration
 

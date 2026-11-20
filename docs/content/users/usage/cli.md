@@ -1,6 +1,8 @@
 # Using the `ddev` Command
 
-Type `ddev help` or `ddev --help` or `ddev -h` in a terminal window to see the available DDEV [commands](../usage/commands.md). There are commands to configure a project, start, stop, describe, etc. Each command also has help using `ddev help <command>` or `ddev command -h`. For example, `ddev help snapshot` will show help and examples for the snapshot command.
+Type `ddev help` or `ddev --help` or `ddev -h` in a terminal window to see the available DDEV [commands](../usage/commands.md). There are commands to configure a project, start, stop, describe, etc.
+
+Each command also has help using `ddev help <command>` or `ddev command -h`. For example, `ddev help snapshot` will show help and examples for the snapshot command.
 
 ## Interactive Dashboard
 
@@ -265,7 +267,7 @@ If a connection instead fails with "Too many authentication failures", the serve
     `host` uses the agent in `$SSH_AUTH_SOCK` when a project starts. A forwarded agent (`ssh -A`) gets a new socket for each login, so run `ddev auth ssh` again after logging in again. When the socket is a symlink, as with VS Code Remote's `/tmp/vscode-ssh-auth-sock-*`, DDEV uses the socket it points to. After VS Code or SSH reconnects, a terminal opened earlier still points to the old, dead socket, so run `ddev auth ssh` from a new terminal. A desktop agent's socket doesn't change, so you can set it directly, for example on Ubuntu with `ddev config global --ssh-agent-upstream=/run/user/$(id -u)/gcr/ssh`. An agent you start yourself with `eval $(ssh-agent -s)` works when you run `ddev` from that shell; to use it from any shell, start it on a fixed socket with `mkdir -p -m 700 ~/.ssh-agent && eval $(ssh-agent -a ~/.ssh-agent/agent.sock -s)` and set `ddev config global --ssh-agent-upstream=$HOME/.ssh-agent/agent.sock`. Keep the socket in its own directory rather than `~/.ssh`, because DDEV mounts the socket's whole directory into the `ddev-ssh-agent` container.
 
 ??? tip "Docker Desktop: using an agent forwarded with `ssh -A`"
-    Docker Desktop relays the agent in the `SSH_AUTH_SOCK` it started with, not your shell's, and a forwarded agent gets a new socket for each login. To follow each new login without restarting Docker Desktop, start it once on a fixed path and point that path at each login's socket from `~/.ssh/rc`, which `sshd` runs at login:
+    Docker Desktop relays the agent in the `SSH_AUTH_SOCK` it started with, not your shell's, and a forwarded agent gets a new socket for each login. To follow each new login without restarting Docker Desktop, start it once on a fixed path and point that path at the socket of each new login from `~/.ssh/rc`, which `sshd` runs at login:
 
     ```bash
     # Once. On macOS, use 'launchctl setenv SSH_AUTH_SOCK ...' and 'docker desktop restart' instead.

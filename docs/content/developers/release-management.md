@@ -4,6 +4,8 @@ search:
 ---
 # Release Management & Docker Images
 
+DDEV releases are built with GoReleaser Pro in GitHub Actions.
+
 ## Release process and tools
 
 * [GoReleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml). GoReleaser Pro is a licensed product that requires separate installation and a license key, which is in the GitHub Workflow configuration and is available in 1Password to DDEV maintainers who need it.

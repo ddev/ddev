@@ -3,8 +3,6 @@ search:
   boost: 2
 ---
 
-<a name="opt-in-usage-information"></a>
-
 # Opt-In Usage Information
 
 When you start DDEV for the first time or install a new release, you’ll be asked whether to send usage and error information to DDEV’s developers.

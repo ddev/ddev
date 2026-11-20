@@ -70,18 +70,24 @@ theme:
 plugins:
   - search
   - privacy:
-      enabled: !ENV [ READTHEDOCS, false ]
+      enabled: !ENV [ READTHEDOCS, CI, false ]
       # Skip unused theme libraries and the ad SDKs they pull in
       assets_include:
         - fonts.googleapis.com/*
         - fonts.gstatic.com/*
   - redirects:
       redirect_maps:
+  - meta-descriptions:
+      # Every page needs an opening paragraph that summarizes it
+      enable_checks: true
+      quiet: true
+      max_length: 300
   - minify:
       minify_html: true
-  # Not supported by zensical 0.0.72
   - git-revision-date-localized:
       fallback_to_build_date: true
+      # Uncommitted pages and shallow clones would otherwise fail `--strict`
+      strict: false
   - social:
       # Square logo, cards crop a wide one
       cards_layout_options:

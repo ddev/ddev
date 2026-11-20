@@ -4,6 +4,8 @@ search:
 ---
 # Network Test Environments: Packet-Inspection VPN Simulation
 
+You can simulate a packet-inspecting VPN like Zscaler with Squid and SSL interception, then test DDEV behind it.
+
 !!!tip "Related Testing"
     For testing HTTP proxies, see [HTTP Proxy Test Environments](http-proxy-test-environments.md).
 
