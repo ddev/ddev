@@ -16,6 +16,46 @@ changes [#9114](https://github.com/ddev/ddev/pull/9114), [#9136](https://github.
 
 ## Resume here
 
+### If macos-socktainer goes red again: runbook
+
+This took most of 2026-11-18 and -19 to diagnose, and it will recur on every `container` upgrade.
+Work through these in order before suspecting DDEV or socktainer code.
+
+1. **Read the first failure, not the count.** Dozens of `connection reset by peer` or `EOF`
+   failures on host ports, plus `nothing answers on host port(s)` from the first project start,
+   mean host port forwarding is broken on that testbot. One cause covers all of them.
+2. **Check which testbot.** Compare with the last green build: if one testbot passes and another
+   fails with the same versions, it's that machine's state. Every binary had the same CDHash on
+   arm64-5, -6 and -7, and that ruled nothing out.
+3. **Look for a waiting Local Network prompt**, over SSH:
+   `log show --last 10m --style compact --predicate 'process != "log" AND eventMessage CONTAINS "LocalNetwork: found bundle id com.apple.container.container-runtime-linux"'`.
+   Any output means it. On this branch `published-port-check.sh` runs that query on failure and
+   prints "Local Network permission needed on <host>".
+4. **Allow it over Screen Sharing**, not SSH: click Allow, or switch `container-runtime-linux` on
+   in System Settings → Privacy & Security → Local Network. Each build of `container` adds an
+   entry; several is normal. Then rebuild from the Buildkite UI.
+5. **Rerun only socktainer.** Rebuild in the Buildkite UI, or, once
+   [#9150](https://github.com/ddev/ddev/pull/9150) is in the branch, push a commit whose subject has
+   `[only macos-socktainer]`. Don't push to this branch while a build you need is running: any push,
+   even `[skip ci]`, starts a new build that cancels it (that's how builds 36 and 38 ended).
+6. **Don't start Apple Container over SSH.** It lands in `user/<uid>`, can't show the prompt, and the
+   next job reuses it. If `launchctl print user/$(id -u)` lists `com.apple.container.apiserver`,
+   stop it with `container system stop` while no job is running.
+7. **Expect hand-started services to vanish.** Another provider's job runs
+   `cleanup_other_provider_containers`, which kills socktainer and runs `container system stop`.
+   A test that depends on socktainer staying up between jobs won't work on a shared testbot.
+
+Testing locally first saves hours: this Mac's setup matches a testbot, and `published-port-check.sh`,
+the network probes and single DDEV tests all run here in minutes. The open question that needed CI
+was how the agent's launch context differs; the answer was the per-machine Local Network setting.
+
+Open, not done: an upgrade-time probe in `testbot_maintenance.sh` (compare the
+`container-runtime-linux` CDHash after `brew upgrade`, run the port check, fail the maintenance
+build with "Allow container-runtime-linux on <host>"), and testing whether Apple's signed
+`container` `.pkg` keeps one Allow across upgrades, unlike Homebrew's ad-hoc-signed builds.
+Troubleshooting for the testbots is also in `buildkite-testmachine-setup.md` via
+[#9151](https://github.com/ddev/ddev/pull/9151).
+
 ### Cause found (2026-11-19): unanswered macOS Local Network prompts on arm64-6 and -7
 
 The published-port resets on tb-macos-arm64-6 and -7 (builds 31-35) were macOS Local Network
