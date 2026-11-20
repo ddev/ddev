@@ -69,6 +69,9 @@ darwin)
     done
     brew link --force libpq
     brew link mysql-client@8.0
+    if [ -f ~/.config/ddev-icinga/env ]; then
+        "$(dirname "$0")/icinga/install_icinga_push.sh" || true
+    fi
     ;;
 esac
 
