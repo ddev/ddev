@@ -158,6 +158,20 @@ Include these keywords in your commit message or pull request title to skip CI r
 * `[skip github]` - Skip GitHub Actions tests only
 * `[skip ci]` - Skip all tests
 
+### Running Only Some Buildkite Pipelines
+
+To run only some Buildkite pipelines, put `[only <pipeline> ...]` in the subject line (first line) of the commit you push, naming each pipeline by its Buildkite name, the one in its build URL:
+
+* `[only macos-socktainer]` - Run only the socktainer pipeline
+* `[only macos-socktainer macos-lima]` - Run only those two
+
+Every other test pipeline still starts a job, but the job exits successfully within seconds, before setting up a Docker provider or running tests, so it holds a testbot only briefly. GitHub Actions still run; add `[skip github]` to skip them too. `[skip buildkite]` and `[skip ci]` still skip everything.
+
+* Only the subject line of the pushed commit counts. A later push without the tag runs every pipeline again, and a tag in a commit body is ignored, so squash-merging a pull request doesn't carry it into `main`.
+* A pull request's title doesn't count, though it works for `[skip ci]`.
+* Builds started from the Buildkite UI ignore the tag, so you can still run a skipped pipeline by hand.
+* Any push to a pull request cancels the Buildkite builds still running for it, even a push with `[skip ci]` or `[only ...]`. Wait for a build you care about to finish before pushing again.
+
 ### Skipping Specific Tests via `public-variables` Branch
 
 To skip specific tests globally (including for fork PRs), edit the files directly on the
