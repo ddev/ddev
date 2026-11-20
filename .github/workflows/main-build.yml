@@ -360,6 +360,212 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  # The experimental desktop app (desktop/README.md). Nothing waits on these
+  # jobs, and they may fail without failing the release, so the app is only
+  # available as a workflow artifact.
+  desktop-macos:
+    name: Build, sign, and notarize the desktop app on macOS
+    runs-on: macos-latest
+    needs: notarize-macos
+    continue-on-error: true
+    steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@v4
+
+      - name: Load signing-certificate password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.DDEV_SIGNING_SERVICE_ACCOUNT_TOKEN }}"
+          DDEV_MACOS_SIGNING_PASSWORD: "op://ddev-signing/2prggopnzml4kqotzzs3dgcsr4/certificate_password"
+
+      - name: "setup macOS"
+        run: |
+          brew untap aws/tap || true
+          brew install coreutils gnu-getopt jq
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: |
+            go.sum
+            desktop/go.sum
+
+      # The bundle carries the ddev that notarize-macos signed.
+      - name: Restore notarized ddev
+        uses: actions/download-artifact@v8
+        with:
+          name: notarized-darwin
+          path: .gotmp/bin
+
+      - name: Build, sign, and notarize the app (arm64 and amd64)
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.DDEV_SIGNING_SERVICE_ACCOUNT_TOKEN }}"
+          DISABLE_NOTARIZATION: ${{ vars.DISABLE_NOTARIZATION }}
+        run: |
+          set -o errexit -o pipefail
+          chmod +x .gotmp/bin/darwin_*/*
+          cert_dir=$(mktemp -d "${TMPDIR:-/tmp}/ddev-signing-cert.XXXXXXXX")
+          trap 'rm -rf "${cert_dir}"' EXIT
+          export DDEV_MACOS_CERT_FILE="${cert_dir}/ddev-developer-id-2026.p12"
+          op read --out-file "${DDEV_MACOS_CERT_FILE}" "op://ddev-signing/2prggopnzml4kqotzzs3dgcsr4/ddev-developer-id-2026.p12"
+          chmod 600 "${DDEV_MACOS_CERT_FILE}"
+          for arch in arm64 amd64; do
+            make -C desktop GOARCH=${arch} app sign
+            if [ "${DISABLE_NOTARIZATION:-}" != "true" ]; then
+              make -C desktop GOARCH=${arch} notarize
+            else
+              make -C desktop GOARCH=${arch} zip
+            fi
+          done
+
+      - name: Upload macos-arm64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-macos-arm64
+          path: .gotmp/bin/darwin_arm64/DDEV.app.zip
+          if-no-files-found: error
+
+      - name: Upload macos-amd64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-macos-amd64
+          path: .gotmp/bin/darwin_amd64/DDEV.app.zip
+          if-no-files-found: error
+
+  desktop-build:
+    name: Build the desktop app for Linux and Windows
+    runs-on: ubuntu-26.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: |
+            go.sum
+            desktop/go.sum
+
+      - name: Install GTK 4 and WebKitGTK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev
+
+      - name: Build
+        run: |
+          make -C desktop
+          make -C desktop GOOS=windows GOARCH=amd64 binary
+          make -C desktop GOOS=windows GOARCH=arm64 binary
+          mkdir -p desktop-windows/windows_amd64 desktop-windows/windows_arm64
+          cp .gotmp/bin/windows_amd64/ddev-desktop.exe desktop-windows/windows_amd64/
+          cp .gotmp/bin/windows_arm64/ddev-desktop.exe desktop-windows/windows_arm64/
+
+      - name: Upload linux-amd64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-linux-amd64
+          path: .gotmp/bin/linux_amd64/ddev-desktop
+          if-no-files-found: error
+
+      - name: Upload unsigned Windows apps
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-desktop-windows
+          path: desktop-windows
+          retention-days: 1
+          if-no-files-found: error
+
+  # Wails needs CGO on Linux, so arm64 builds on its own runner.
+  desktop-build-linux-arm64:
+    name: Build the desktop app for Linux arm64
+    runs-on: ubuntu-26.04-arm
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: |
+            go.sum
+            desktop/go.sum
+
+      - name: Install GTK 4 and WebKitGTK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev
+
+      - name: Build
+        run: make -C desktop
+
+      - name: Upload linux-arm64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-linux-arm64
+          path: .gotmp/bin/linux_arm64/ddev-desktop
+          if-no-files-found: error
+
+  # Same rules as sign-windows-binaries: no checkout, no repository code.
+  sign-desktop-windows:
+    name: Sign the desktop app for Windows
+    runs-on: [ self-hosted, windows-signer ]
+    needs: desktop-build
+    continue-on-error: true
+    env:
+      DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
+    steps:
+      - name: Clear stale workspace
+        run: rm -rf desktop-bin
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: build-desktop-windows
+          path: desktop-bin
+
+      - name: Sign
+        run: |
+          set -eu -o pipefail
+          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN=${DDEV_WINDOWS_SIGN} is not true"; exit 0; fi
+          for arch in amd64 arm64; do
+            signtool sign -fd SHA256 "desktop-bin/windows_${arch}/ddev-desktop.exe"
+            signtool verify -pa "desktop-bin/windows_${arch}/ddev-desktop.exe"
+          done
+
+      - name: Upload windows-amd64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-windows-amd64
+          path: desktop-bin/windows_amd64/ddev-desktop.exe
+          if-no-files-found: error
+
+      - name: Upload windows-arm64 app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-desktop-windows-arm64
+          path: desktop-bin/windows_arm64/ddev-desktop.exe
+          if-no-files-found: error
+
   artifacts:
     env:
       AUR_PACKAGE_NAME: ${{ vars.AUR_PACKAGE_NAME }}
