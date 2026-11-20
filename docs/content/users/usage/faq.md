@@ -119,6 +119,8 @@ Yes. The docs are also published as Markdown for AI assistants and coding agents
 * [`llms.txt`](../../llms.txt) lists every page, with a link to its Markdown version.
 * [`llms-full.txt`](../../llms-full.txt) contains all pages in one file.
 
+To teach an agent such as Claude Code or Codex to run tools through DDEV and where to find these docs, install the DDEV skill with [`ddev utility agent-skill install`](commands.md#utility-agent-skill). DDEV never installs it on its own.
+
 ## Performance & Troubleshooting
 
 ### How can I get the best performance?

@@ -1720,6 +1720,42 @@ ddev utility addon-update-checker -d /path/to/my-addon
 ddev utility addon-update-checker -d /path/to/my-addons-workspace
 ```
 
+### `utility agent-skill`
+
+Install, check, or remove a [skill](https://agentskills.io) that tells AI coding agents how to use DDEV: run `composer`, `npm`, `drush` and similar tools through `ddev`, quote `ddev exec` commands, recognize when they run inside the web container, use `-j` for JSON output, find the Markdown docs, and troubleshoot DDEV. DDEV writes the skill only when you run `ddev utility agent-skill install`.
+
+The skill is written to these files, in the current project or, with `--global`, in your home directory:
+
+* `.claude/skills/ddev/SKILL.md`, read by Claude Code.
+* `.agents/skills/ddev/SKILL.md`, read by Codex and other agents that use the `.agents/skills` directory.
+
+The skill tells the agent to ask `ddev help` and `ddev <command> --help` for flags rather than listing them, so it doesn't go stale. Each `SKILL.md` carries a `#ddev-generated` line with the DDEV version that wrote it. Running `install` again updates it. To keep your own edits, delete that line, and DDEV leaves the file alone. Commit the project files to share the skill with your team, or add them to `.gitignore`.
+
+Commands:
+
+* `install`: Write the skill, or update a copy written by another DDEV version.
+* `status`: Show whether each file is installed, current, from another DDEV version, or edited.
+* `remove`: Remove the skill. An edited copy is left alone.
+
+Flags:
+
+* `--global`: Use `~/.claude/skills` and `~/.agents/skills` instead of the current project.
+* `--agent`: Which directories to use, `claude`, `agents`, or both (default).
+* `--dry-run` (`install` and `remove`): Show which files would change without writing them.
+
+```shell
+# Install the skill in the current project for all supported agents
+ddev utility agent-skill install
+# Install it for your user, for Claude Code only
+ddev utility agent-skill install --global --agent=claude
+# See what would change
+ddev utility agent-skill install --dry-run
+# Check whether the installed skill matches this DDEV version
+ddev utility agent-skill status
+# Remove it from the current project
+ddev utility agent-skill remove
+```
+
 ### `utility cd`
 
 Uses shell built-in `cd` to change to a project directory. For example, `ddevcd some-project` will change directories to the project root of the project named `some-project`.
