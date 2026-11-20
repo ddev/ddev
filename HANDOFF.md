@@ -1,7 +1,7 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-19 (build 36; port-forward cause found), rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-11-09, release status updated 2026-11-11, CI status updated 2026-11-20 (build 38 on arm64-7 after the Local Network Allow), rebased 2026-11-18; CI bring-up started 2026-11-01. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
@@ -39,8 +39,13 @@ Evidence, from a read-only SSH survey of all three machines and the System Setti
 - [Build 36](https://buildkite.com/ddev/macos-socktainer/builds/36) (`339a9de6`) on arm64-5 passed
   the published-port check on the first attempt, with no failures after 768 passing tests.
 
-Not yet confirmed: a build on arm64-6 or -7 after the Allow. Don't rebuild 35 for that: its
-commit predates the responder fix in `3464a5c6`.
+Confirmed on arm64-7: [build 38](https://buildkite.com/ddev/macos-socktainer/builds/38), a
+rebuild of `339a9de6` after the Allow, passed the published-port check on the first attempt
+(1s) and had 707 passing tests, 0 failures and no connection resets when it was replaced by a
+full run of every pipeline on 2026-11-20. arm64-6 hasn't run a socktainer build since its Allow.
+
+Builds 36 and 38 were both canceled by a later push to this branch: any push to a PR, even one
+with `[skip ci]`, starts a new build that cancels the running one.
 
 What changed because of it:
 
