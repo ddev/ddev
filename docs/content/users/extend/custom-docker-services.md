@@ -5,7 +5,9 @@ search:
 
 # Custom Docker Compose Services
 
-When you need services that aren't available as DDEV add-ons, or require deep customization beyond what add-ons provide, you can create custom Docker Compose services using `docker-compose.*.yaml` files. For how DDEV merges these files and the conventions your service should follow (labels, container naming, the `build:`/`-built` tag pattern, port exposure), see [Defining Additional Services with Docker Compose](custom-compose-files.md).
+When you need services that aren't available as DDEV add-ons, or require deep customization beyond what add-ons provide, you can create custom Docker Compose services using `docker-compose.*.yaml` files.
+
+For how DDEV merges these files and the conventions your service should follow (labels, container naming, the `build:`/`-built` tag pattern, port exposure), see [Defining Additional Services with Docker Compose](custom-compose-files.md).
 
 !!!tip "From Custom Services to Add-ons"
     Many successful custom services eventually become DDEV add-ons so they can be shared with teams, between projects, or with the broader community. If you find your custom service useful and stable, convert it to an add-on using the [DDEV Add-on Template](https://github.com/ddev/ddev-addon-template) and see [Creating Add-ons](creating-add-ons.md).

@@ -77,7 +77,11 @@ plugins:
         - fonts.gstatic.com/*
   - redirects:
       redirect_maps:
-  - meta-descriptions
+  - meta-descriptions:
+      # Every page needs an opening paragraph that summarizes it
+      enable_checks: true
+      quiet: true
+      max_length: 300
   - minify:
       minify_html: true
   - git-revision-date-localized:

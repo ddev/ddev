@@ -1,5 +1,7 @@
 # Maintainer Tasks, Privileges, Resources
 
+Maintainers have extra responsibilities and privileges in the DDEV project.
+
 ## THANK YOU
 
 We so appreciate our amazing maintainers. There are so many things to keep track of, including support, testing, test runners, improvements, and a thousand other things. This section attempts to document some of the things that maintainers need to know and do.

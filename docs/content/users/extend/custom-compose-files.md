@@ -2,7 +2,9 @@
 
 This page covers how DDEV merges custom `docker-compose.*.yaml` files and the
 conventions your service definitions should follow (labels, container naming,
-the `build:`/`-built` tag pattern, port exposure, and more). For guidance on
+the `build:`/`-built` tag pattern, port exposure, and more).
+
+For guidance on
 *when* to write a custom service instead of using an add-on, the `x-ddev`
 extension field, and a gallery of worked examples, see
 [Custom Docker Compose Services](custom-docker-services.md).

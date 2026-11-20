@@ -4,6 +4,8 @@ search:
 ---
 # Building, Testing, and Contributing
 
+You can test DDEV’s latest changes, build it from source, and contribute your own.
+
 ## Testing Latest Commits on HEAD
 
 There are several ways to use DDEV’s latest-committed HEAD version:
