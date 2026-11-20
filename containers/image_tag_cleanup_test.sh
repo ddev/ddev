@@ -8,6 +8,8 @@
 #   containers/image_tag_cleanup_test.sh
 
 set -eu -o pipefail
+# Keep fixture reports out of the CI job's step summary.
+unset GITHUB_STEP_SUMMARY
 
 CLEANUP_SH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/image-tag-cleanup.sh"
 

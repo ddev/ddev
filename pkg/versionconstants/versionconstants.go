@@ -58,10 +58,10 @@ var WebTagBranch = "20261104_rfay_empty_webserver_docroot"
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "c36ccfc0cb" // 20261027_rfay_xtrabackup_repack_curl_dev-c36ccfc0cb
+var BaseDBTag = "1c405c8a96" // 20261119_rfay_dbserver_stale_apt_lists-1c405c8a96
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
-var BaseDBTagBranch = "20261027_rfay_xtrabackup_repack_curl_dev"
+var BaseDBTagBranch = "20261119_rfay_dbserver_stale_apt_lists"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
