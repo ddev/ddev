@@ -580,6 +580,20 @@ The PHP version the project should use.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
+!!!tip "Getting a new PHP patch release before DDEV ships it"
+    New PHP releases, such as security fixes, reach [`deb.sury.org`](https://deb.sury.org/) before the next DDEV release. To install them now, add this file and rebuild:
+
+    ```dockerfile
+    # .ddev/web-build/Dockerfile.php-upgrade
+    # Safe to keep; you can delete it after upgrading DDEV
+    RUN (apt-get update || true) && apt-get install -y --only-upgrade 'php*'
+    ```
+
+    ```bash
+    ddev restart --no-cache
+    ddev php -v
+    ```
+
 ## `project_tld`
 
 Default Top-Level-Domain (`TLD`) to be used for a project’s domains, or globally for all project domains. This defaults to `ddev.site` and it's easiest to work with DDEV using the default setting.
