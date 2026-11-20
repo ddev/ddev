@@ -6,8 +6,7 @@
 
   - command: ".buildkite/perf.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-wsl2-docker-desktop[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=wsl2"
       - "architecture=amd64"

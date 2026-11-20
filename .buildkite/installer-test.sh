@@ -10,6 +10,10 @@
 
 set -eu -o pipefail
 
+# shellcheck source=lib-only.sh
+source "$(dirname "$0")/lib-only.sh"
+skip_unless_named_by_only
+
 # Disable git pager
 export GIT_PAGER=""
 

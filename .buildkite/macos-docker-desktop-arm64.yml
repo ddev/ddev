@@ -4,8 +4,7 @@
 
   - command: ".buildkite/test.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?macos-docker-desktop-arm64[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "docker-desktop=true"

@@ -23,9 +23,7 @@
     # [skip ci] to keep the other heavy pipelines quiet, then trigger just this
     # pipeline by hand.
     if: |
-      (build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-       (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?windows-installer[ \]]/)) ||
-      build.source == "ui"
+      build.message !~ /\[(skip ci|skip buildkite)\]/ || build.source == "ui"
     agents:
       - "os=windows"
       - "architecture=amd64"

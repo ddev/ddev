@@ -11,8 +11,7 @@
 
   - command: ".buildkite/perf.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-macos-docker-desktop-arm64[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "docker-desktop=true"

@@ -15,6 +15,10 @@ if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAG
   exit 0
 fi
 
+# shellcheck source=lib-only.sh
+source "$(dirname "$0")/lib-only.sh"
+skip_unless_named_by_only
+
 # The phase test.sh is in, for the failure report when it exits early.
 CURRENT_PHASE="fetching public variables"
 public_variables=$("$(dirname "$0")/../.ci-scripts/load-public-variables.sh")

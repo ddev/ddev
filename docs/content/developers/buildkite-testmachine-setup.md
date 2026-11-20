@@ -753,4 +753,4 @@ To test a branch against only selected pipelines (e.g. WSL2 only) or to run a su
 
 5. Click **Create Build**.
 
-Use `[skip ci]` in your commit message to prevent all pipelines from triggering automatically when you push, then manually trigger only the pipelines you need. To skip that manual step, use `[only <pipeline> ...]` instead, such as `[only macos-socktainer]`, and only the named pipelines run their tests. See [Running Only Some Buildkite Pipelines](maintainers.md#running-only-some-buildkite-pipelines).
+Use `[skip ci]` in your commit message to prevent all pipelines from triggering automatically when you push, then manually trigger only the pipelines you need. To skip that manual step, put `[only <pipeline> ...]` in the commit subject instead, such as `[only macos-socktainer]`, and only the named pipelines run their tests. See [Running Only Some Buildkite Pipelines](maintainers.md#running-only-some-buildkite-pipelines).

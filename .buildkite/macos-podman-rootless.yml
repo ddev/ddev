@@ -4,8 +4,7 @@
 
   - command: ".buildkite/test.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?macos-podman-rootless[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
 #    branches: "main"
     agents:
       - "os=macos"

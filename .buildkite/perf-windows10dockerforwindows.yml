@@ -6,8 +6,7 @@
 
   - command: ".buildkite/perf.cmd"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-windows10dockerforwindows[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=windows"
       - "docker-desktop=true"

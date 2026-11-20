@@ -30,8 +30,7 @@
   - label: "perf: colima (vz)"
     command: ".buildkite/perf.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-macos-shared-providers[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "colima=true"
@@ -52,8 +51,7 @@
   - label: "perf: lima"
     command: ".buildkite/perf.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-macos-shared-providers[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "lima=true"
@@ -73,8 +71,7 @@
   - label: "perf: orbstack"
     command: ".buildkite/perf.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-macos-shared-providers[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "orbstack=true"
@@ -93,8 +90,7 @@
   - label: "perf: podman rootless"
     command: ".buildkite/perf.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-macos-shared-providers[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "podman-rootless=true"
@@ -113,8 +109,7 @@
   - label: "perf: rancher desktop"
     command: ".buildkite/perf.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-macos-shared-providers[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "rancher-desktop=true"
@@ -133,8 +128,7 @@
   - label: "perf: socktainer"
     command: ".buildkite/perf.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-macos-shared-providers[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "socktainer=true"
@@ -160,8 +154,7 @@
   - label: "perf: orbstack (no mutagen)"
     command: ".buildkite/perf.sh"
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/ &&
-      (build.message !~ /\[only / || build.message =~ /\[only ([^\]]* )?perf-macos-shared-providers[ \]]/)
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "orbstack=true"
