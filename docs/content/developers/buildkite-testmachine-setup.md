@@ -597,7 +597,35 @@ The `test.sh` script uses `podman machine start` and `docker context use podman-
 
     The prompt comes back after every upgrade of `container`, because macOS treats each new build as a new program. There is no command-line or MDM way to pre-approve it. Run `brew pin container` so `testbot_maintenance.sh`'s `brew upgrade` skips it, and upgrade on purpose while someone is on Screen Sharing: `brew unpin container && brew upgrade container && brew pin container`, then repeat this step.
 
+    Don't do this step, or start Apple Container at all, over SSH. An SSH session can't show the prompt, and `container system start` run from one registers the service in the `user/<uid>` launchd domain, where a later test job reuses it instead of starting its own.
+
+    To tell from the command line whether a prompt is waiting, look for Local Network checks of the forwarder in the system log. Each blocked connection to a container logs one:
+
+    ```bash
+    log show --last 10m --style compact --predicate 'process != "log" AND eventMessage CONTAINS "LocalNetwork: found bundle id com.apple.container.container-runtime-linux"'
+    ```
+
+    Any output means a test job's published ports are being blocked: allow `container-runtime-linux` over Screen Sharing. The same failures appear in the Apple Container log as `backend - connect failed: ... No route to host (errno: 65)`.
+
 Then the Buildkite agent must be configured with tag `socktainer=true`.
+
+### Troubleshooting socktainer Testbots
+
+Start from what the build shows. Most socktainer failures on a testbot come from the machine's state, not from the code under test.
+
+**Dozens of tests fail with `connection reset by peer` or `EOF` on host ports**, often with "ddev-router is running, but nothing answers on host port(s)" from the first project start, while containers answer requests from inside. A Local Network prompt for `container-runtime-linux` is waiting on that testbot's desktop.
+
+1. Over SSH, run the `log show` command from step 5 above. Any output confirms it.
+2. Over Screen Sharing, click Allow on the prompt, or turn `container-runtime-linux` on in System Settings → Privacy & Security → Local Network. Several `container-runtime-linux` entries are normal: each build of `container` gets its own.
+3. Rerun the published-port check from step 5 over Screen Sharing, or rebuild the failed build from the Buildkite UI. Nothing else needs restarting.
+
+This usually follows an upgrade of `container`, and it hits every socktainer testbot at once unless someone answered the prompt on some of them. One testbot passing while the others fail with the same versions points here too: the Local Network setting is stored separately on each machine.
+
+**Apple Container started by hand is gone by the time a job runs.** Expected: a test job for any other provider stops Apple Container and socktainer before it starts its own provider, and a socktainer job starts them again. Don't rely on leaving them running between jobs.
+
+**`launchctl print user/$(id -u)` lists `com.apple.container.apiserver`.** Someone ran `container system start` over SSH, and the next socktainer job reuses that service instead of starting its own. When no job is running on the testbot, stop it with `container system stop`. The next socktainer job starts it in the desktop session's `gui/<uid>` domain.
+
+**Rerunning only socktainer.** Rebuild the failed build from the Buildkite UI. Any push to a pull request starts new builds that cancel the ones still running for it, even a push with `[skip ci]`. Wait for a build you need to finish before pushing to its branch.
 
 ## Claude Code Self-Hosted Runner (macOS)
 
