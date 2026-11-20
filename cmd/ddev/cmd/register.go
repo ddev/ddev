@@ -77,6 +77,7 @@ func RegisterCommands() {
 	registerStopCmd()
 	registerTuiCmd()
 	registerUtilityAddonUpdateCheckerCmd()
+	registerUtilityAgentSkillCmd()
 	registerUtilityCheckCustomConfigCmd()
 	registerUtilityDiagnoseCmd()
 	registerUtilityDockercheckCmd()
