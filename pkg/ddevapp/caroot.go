@@ -37,8 +37,12 @@ func caRootArchive(caRoot string, uid int, gid int) ([]byte, error) {
 	tw := tar.NewWriter(&buf)
 	root := strings.TrimPrefix(CAROOTContainerDir, "/")
 	now := time.Now()
-	if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeDir, Name: root + "/", Mode: 0755, Uid: uid, Gid: gid, ModTime: now}); err != nil {
-		return nil, err
+	// socktainer refuses a directory entry in a never-started container; the
+	// directory already exists in the web image.
+	if !dockerutil.IsAppleContainer() {
+		if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeDir, Name: root + "/", Mode: 0755, Uid: uid, Gid: gid, ModTime: now}); err != nil {
+			return nil, err
+		}
 	}
 	for _, f := range []struct {
 		name string

@@ -489,6 +489,7 @@ localization
 localizations
 localpath
 localtunnel
+login's
 logs
 lookups
 loopback
@@ -496,6 +497,7 @@ lose
 lsof
 lts
 macOS
+macOS's
 macos
 magento
 maho
@@ -670,6 +672,7 @@ snapshot's
 snapshotted
 snapshotting
 socio
+socktainer
 solr
 somefile
 sql

@@ -10,6 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -58,8 +59,8 @@ func SSHAgentUpstreamSocket() (string, error) {
 			return limaForwardedAgentSocket()
 		}
 		// Other macOS providers run Docker in a VM that cannot reach a host
-		// socket.
-		if !nodeps.IsLinux() {
+		// socket. Apple Container relays one into each container's VM.
+		if !nodeps.IsLinux() && !dockerutil.IsAppleContainer() {
 			return "", fmt.Errorf("ssh_agent_upstream=host works on this OS only with Docker Desktop, OrbStack, Colima, or Lima, which forward the host's SSH agent; use one of them or run 'ddev config global --ssh-agent-upstream=\"\"'")
 		}
 		sock := os.Getenv("SSH_AUTH_SOCK")
@@ -172,6 +173,24 @@ func sshAgentUpstreamMount(upstream string) (mount string, name string) {
 		return upstream + ":/upstream/agent.sock", "agent.sock"
 	}
 	return path.Dir(upstream) + ":/upstream", path.Base(upstream) //nolint:forbidigo // socket path on the Docker host
+}
+
+var appleContainerSSHAgentWarning sync.Once
+
+// AppleContainerSSHAgentSocket returns the host agent socket that web mounts
+// directly on Apple Container, or "" when there is none. Apple Container
+// relays a bind-mounted host socket into the container's VM, but nothing can
+// reach a socket inside ddev-ssh-agent's VM.
+func AppleContainerSSHAgentSocket() string {
+	if !dockerutil.IsAppleContainer() || globalconfig.DdevGlobalConfig.SSHAgentUpstream == "" {
+		return ""
+	}
+	sock, err := SSHAgentUpstreamSocket()
+	if err != nil {
+		appleContainerSSHAgentWarning.Do(func() { util.Warning("%v; web has no SSH agent", err) })
+		return ""
+	}
+	return sock
 }
 
 // SSHAuthComposeYAMLPath returns the filepath to the base .ssh-auth-compose yaml file.

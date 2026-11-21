@@ -133,6 +133,10 @@ const DockerMinAPIVersion = "1.44"
 // This value is a recommendation, not a hard requirement
 const PodmanMinVersion = "5.0"
 
+// SocktainerMinVersion defines the recommended minimum version of socktainer.
+// This value is a recommendation, not a hard requirement
+const SocktainerMinVersion = "1.6.1"
+
 // ---
 // Fallback version derivation for developer builds not using the Makefile
 // ---
