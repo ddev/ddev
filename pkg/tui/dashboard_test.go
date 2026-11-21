@@ -11,6 +11,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -196,9 +197,14 @@ func TestSharedContainerHealth(t *testing.T) {
 	stoppedAgent := screen(load(health{"healthy", ""}, health{ddevapp.SiteStopped, ""}))
 	require.Contains(t, stoppedAgent, "SSH agent ○ stopped")
 
-	compact := headerLine(send(t, ok, tea.WindowSizeMsg{Width: 60, Height: 24}))
-	require.True(t, strings.HasSuffix(compact, "SSH ● · Router ●"), "narrow, only the symbols show: %q", compact)
-	narrow := headerLine(send(t, ok, tea.WindowSizeMsg{Width: 40, Height: 24}))
+	// The title holds the DDEV version, whose length differs between a
+	// release tag and a development build, so the widths follow from it:
+	// each is one column short of the title, a space, and the status.
+	const full, short = "SSH agent ● healthy · Router ● healthy", "SSH ● · Router ●"
+	title := ansi.StringWidth(strings.TrimRight(strings.TrimSuffix(header, full), " "))
+	compact := headerLine(send(t, ok, tea.WindowSizeMsg{Width: title + ansi.StringWidth(full), Height: 24}))
+	require.True(t, strings.HasSuffix(compact, short), "narrow, only the symbols show: %q", compact)
+	narrow := headerLine(send(t, ok, tea.WindowSizeMsg{Width: title + ansi.StringWidth(short), Height: 24}))
 	require.NotContains(t, narrow, "Router", "the status is left out when it does not fit")
 
 	broken := load(health{"unhealthy", "traefik:\n  config error in project-a"}, health{"unhealthy", "socket missing"})
