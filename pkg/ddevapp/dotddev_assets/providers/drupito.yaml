@@ -1,0 +1,240 @@
+#ddev-generated
+# Drupito provider configuration. Documentation: https://docs.ddev.com/en/stable/users/providers/drupito/
+#
+# `ddev pull drupito` downloads and imports the site's latest database and files backups.
+# `ddev push drupito` uploads the local database and files as new backups on the site;
+#
+# Setup:
+#
+# 1. Create an API token at https://app.drupito.com/manage/api-tokens and add it to your
+#    global DDEV configuration (or to .ddev/config.local.yaml, which is gitignored):
+#    `ddev config global --web-environment-add="DRUPITO_API_TOKEN=drupito_xxxxxxxx"`
+# 2. Add the site's machine name to the project:
+#    `ddev config --web-environment-add="DRUPITO_SITE=your_site"`
+# 3. `ddev restart`, then `ddev pull drupito` or `ddev push drupito`.
+#
+# Optional variables (web_environment, or one-off with --environment="VAR=value"):
+#   DRUPITO_ENVIRONMENT   `live` (default), `next` (i.e. staging) or `any`: which backups `ddev pull` chooses
+#   DRUPITO_INSTANCE_ID   pull the newest backup of one instance instead, e.g. K7Q2M
+#   DRUPITO_PRIVATE_FILES_DIR  private files directory, project-relative, e.g. private
+#
+# Debugging: uncomment `set -x` in a stanza, or `ddev ssh` and run the steps by hand.
+
+info_command:
+  command: |
+    echo "${DRUPITO_SITE}.${DRUPITO_INSTANCE_ID:-${DRUPITO_ENVIRONMENT:-live}}"
+
+auth_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    # ${VAR:+set} keeps the token itself out of `set -x` traces.
+    [ -n "${DRUPITO_API_TOKEN:+set}" ] || { echo "DRUPITO_API_TOKEN is not set. Create an API token at https://app.drupito.com/manage/api-tokens, then run: ddev config global --web-environment-add=\"DRUPITO_API_TOKEN=yourtoken\" and ddev restart" >&2; exit 1; }
+    [ -n "${DRUPITO_SITE:-}" ] || { echo "DRUPITO_SITE is not set. Run: ddev config --web-environment-add=\"DRUPITO_SITE=your_site\" and ddev restart, or use --environment=DRUPITO_SITE=your_site" >&2; exit 1; }
+    printf '%s' "$DRUPITO_SITE" | grep -Eq '^[a-z0-9][a-z0-9_-]{0,62}$' || { echo "DRUPITO_SITE is not a valid site name: $DRUPITO_SITE" >&2; exit 1; }
+    env="${DRUPITO_ENVIRONMENT:-live}"
+    case "$env" in live|next|any) ;; *) echo "DRUPITO_ENVIRONMENT must be live, next (i.e. staging) or any: $env" >&2; exit 1 ;; esac
+    instance="${DRUPITO_INSTANCE_ID:-}"
+    [ -z "$instance" ] || printf '%s' "$instance" | grep -Eq '^[0-9A-Z]{5,6}$' || { echo "DRUPITO_INSTANCE_ID is not a valid instance id (5 or 6 characters, 0-9 and A-Z): $instance" >&2; exit 1; }
+    [ -z "$instance" ] || [ -z "${DRUPITO_ENVIRONMENT:-}" ] || echo "Note: DRUPITO_INSTANCE_ID=$instance is set, so DRUPITO_ENVIRONMENT=$env is ignored."
+    api="${DRUPITO_API_URL:-https://app.drupito.com}"
+    case "$api" in https://*) ;; *) echo "DRUPITO_API_URL must start with https://" >&2; exit 1 ;; esac
+
+    # Shared helper for the other stanzas, which each run as a separate script.
+    cat > /tmp/drupito-provider.sh <<'HELPER'
+    MAX_BYTES=5368709120   # 5 GiB, the limit Drupito enforces on imports
+    API="${DRUPITO_API_URL:-https://app.drupito.com}"; API="${API%/}"
+    SITE="$DRUPITO_SITE"
+    # An instance id, when given, replaces the environment selector.
+    if [ -n "${DRUPITO_INSTANCE_ID:-}" ]; then
+      TARGET="instance $DRUPITO_INSTANCE_ID"; SELECTOR="instance_id=$DRUPITO_INSTANCE_ID"
+    else
+      TARGET="${DRUPITO_ENVIRONMENT:-live}"; SELECTOR="environment=$TARGET"
+    fi
+    PROJECT=/var/www/html
+    WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+
+    die() { echo "Drupito: $*" >&2; exit 1; }
+
+    # json <file> <jq-path> -> value ('' if absent)
+    json() { jq -r "$2 // empty" "$1" 2>/dev/null || true; }
+
+    # api <METHOD> <path> <out-file> [json-body-file] -> HTTP status. The token reaches curl
+    # on stdin, never as an argument, and tracing is paused so `set -x` can't print it.
+    api() {
+      { local traced=""; case $- in *x*) traced=1; set +x ;; esac; } 2>/dev/null
+      local args=(-sS -o "$3" -w '%{http_code}' -X "$1" -H @- -H 'Accept: application/json' --connect-timeout 15 --max-time 60)
+      [ -z "${4:-}" ] || args+=(-H 'Content-Type: application/json' --data-binary @"$4")
+      printf 'Authorization: Bearer %s\n' "$DRUPITO_API_TOKEN" | curl "${args[@]}" "$API$2" || true
+      [ -z "$traced" ] || set -x
+    }
+
+    # api_fail <status> <response-file>: Drupito's errors carry their own instructions.
+    api_fail() {
+      case "$1" in ""|000) die "could not reach $API" ;; esac
+      local msg; msg="$(json "$2" .error)"
+      die "${msg:-Drupito API error (HTTP $1)}"
+    }
+
+    # skip_symlinks <dir> writes the symlinks under <dir> to $WORK/exclude.txt for tar -X,
+    # since Drupito does not accept them in a files backup.
+    skip_symlinks() {
+      (cd "$1" && find . -type l) > "$WORK/exclude.txt"
+      [ -s "$WORK/exclude.txt" ] || return 0
+      echo "Note: $(wc -l < "$WORK/exclude.txt") symbolic link(s) in $1 were left out, since Drupito does not accept them:"
+      head -n 5 "$WORK/exclude.txt" | sed 's,^\./,  ,'
+    }
+
+    # drupal_dirs sets PUBLIC_DIR from upload_dirs and PRIVATE_DIR from the project-relative
+    # DRUPITO_PRIVATE_FILES_DIR ('' when unset).
+    drupal_dirs() {
+      PUBLIC_DIR="${DDEV_FILES_DIRS%%,*}"
+      [ -n "$PUBLIC_DIR" ] || die "no upload_dirs configured for this project; see https://docs.ddev.com/en/stable/users/configuration/config/#upload_dirs"
+      PRIVATE_DIR="$(project_dir "${DRUPITO_PRIVATE_FILES_DIR:-}")"
+    }
+
+    # project_dir <project-relative path> -> absolute path, or '' for an empty path
+    project_dir() {
+      local rel="${1#/}"; rel="${rel%/}"
+      [ -z "$rel" ] || echo "$PROJECT/$rel"
+    }
+
+    # push_backup <db|files> <file>
+    push_backup() {
+      local type="$1" file="$2" what=files size sha status url code msg name value
+      [ "$type" != db ] || what=database
+      size="$(stat -c %s "$file")"
+      [ "$size" -gt 0 ] || die "the $what backup is empty"
+      [ "$size" -le "$MAX_BYTES" ] || die "the $what backup is $((size / 1048576)) MiB; backups must be 5 GiB or smaller"
+      sha="$(sha256sum "$file" | cut -d' ' -f1)"
+
+      jq -n --arg type "$type" --argjson size "$size" --arg sha "$sha" --arg name "$(basename "$file")" \
+        '{type: $type, size_bytes: $size, sha256: $sha, filename: $name}' > "$WORK/request.json"
+      echo "Requesting an upload link for the $type backup ($((size / 1048576)) MiB)..."
+      status="$(api POST "/api/v1/sites/$SITE/import" "$WORK/response.json" "$WORK/request.json")"
+      case "$status" in 200|201) ;; *) api_fail "$status" "$WORK/response.json" ;; esac
+      url="$(json "$WORK/response.json" .upload.url)"
+      case "$url" in https://*) ;; *) die "API returned a non-https upload URL" ;; esac
+
+      # Send the headers the PUT link was signed with; curl sets Content-Length itself.
+      local hdrs=()
+      while IFS= read -r -d '' name && IFS= read -r -d '' value; do
+        case "$(printf '%s' "$name" | tr 'A-Z' 'a-z')" in content-length|host) continue ;; esac
+        hdrs+=(-H "$name: $value")
+      done < <(jq -j '.upload.headers // {} | to_entries[] | "\(.key)\u0000\(.value)\u0000"' "$WORK/response.json")
+      echo "Uploading..."
+      status="$(curl -sS -o "$WORK/s3.xml" -w '%{http_code}' --connect-timeout 15 \
+        -X PUT "${hdrs[@]}" --upload-file "$file" "$url" || true)"
+      case "$status" in
+        200) ;;
+        ""|000) die "upload failed: could not reach the upload server. Run the push again; if Drupito reports a pending import, wait for this upload link to expire (up to 1 hour)." ;;
+        *) code="$(sed -n 's:.*<Code>\([^<]*\)</Code>.*:\1:p' "$WORK/s3.xml" | head -n1)"
+           msg="$(sed -n 's:.*<Message>\([^<]*\)</Message>.*:\1:p' "$WORK/s3.xml" | head -n1)"
+           die "upload refused (HTTP $status${code:+ $code}${msg:+: $msg}). Run the push again; if Drupito reports a pending import, wait for this upload link to expire (up to 1 hour)." ;;
+      esac
+      echo "Your $what backup was pushed to Drupito and will appear in the site's backups."
+      echo "Nothing on the site has changed. To use it, import or restore the backup from the Drupito UI."
+    }
+
+    # download_backup <db|files> <dest-file>
+    download_backup() {
+      local type="$1" dest="$2" attempt status url size sha
+      for attempt in 1 2; do
+        echo "Requesting a download link for the latest $type backup ($TARGET)..."
+        status="$(api POST "/api/v1/sites/$SITE/backups/latest/download?type=$type&$SELECTOR" "$WORK/response.json")"
+        case "$status" in 200|201) ;; *) api_fail "$status" "$WORK/response.json" ;; esac
+        url="$(json "$WORK/response.json" .download.url)"
+        case "$url" in https://*) ;; *) die "API returned a non-https download URL" ;; esac
+        size="$(json "$WORK/response.json" .size_bytes)"
+        sha="$(json "$WORK/response.json" .sha256)"
+        echo "Downloading $(json "$WORK/response.json" .filename) ($((${size:-0} / 1048576)) MiB)..."
+        # The link allows one GET within 120 s, so it is used right away and never probed.
+        status="$(curl -sS -o "$dest" -w '%{http_code}' --connect-timeout 15 "$url" || true)"
+        case "$status" in
+          200) break ;;
+          410) [ "$attempt" = 1 ] || die "the download link expired twice; try again on a faster connection"
+               echo "The download link expired; requesting a new one..." ;;
+          ""|000) die "could not reach the download server" ;;
+          *) die "download failed (HTTP $status): $(head -c 300 "$dest" 2>/dev/null || true)" ;;
+        esac
+      done
+      [ -z "$size" ] || [ "$(stat -c %s "$dest")" = "$size" ] || die "downloaded $type backup has the wrong size; try again"
+      [ -z "$sha" ] || [ "$(sha256sum "$dest" | cut -d' ' -f1)" = "$sha" ] || die "downloaded $type backup failed its SHA-256 check; try again"
+      echo "Downloaded and verified."
+    }
+
+    # extract_member <archive> <member> <dest-dir> <description>: merges one top-level
+    # directory of the archive into dest-dir; members may be "x/..." or "./x/...".
+    extract_member() {
+      local list="$WORK/members.txt" prefix="" strip=1
+      [ -s "$list" ] || tar -tzf "$1" > "$list"
+      if grep -q "^\./$2/" "$list"; then prefix="./"; strip=2
+      elif ! grep -q "^$2/" "$list"; then return 1
+      fi
+      if [ -z "$3" ]; then
+        echo "Note: the backup contains $2/ but the $4 directory is unknown, so it was skipped."
+        return 0
+      fi
+      echo "Extracting $2/ into $3 ..."
+      mkdir -p "$3"
+      tar -xzf "$1" -C "$3" --strip-components="$strip" --anchored --wildcards "$prefix$2/*"
+    }
+    HELPER
+    echo "Drupito: site '$DRUPITO_SITE' (${instance:+instance }${instance:-$env}) via $api"
+
+db_pull_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    [ -f /tmp/drupito-provider.sh ] || { echo "Run this through: ddev pull drupito" >&2; exit 1; }
+    source /tmp/drupito-provider.sh
+    download_backup db /var/www/html/.ddev/.downloads/db.sql.gz
+    echo "After the database is imported, you may need to clear the site's cache, for example with: ddev drush cr"
+
+files_pull_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    [ -f /tmp/drupito-provider.sh ] || { echo "Run this through: ddev pull drupito" >&2; exit 1; }
+    source /tmp/drupito-provider.sh
+    drupal_dirs
+    download_backup files "$WORK/files.tar.gz"
+    # DDEV imports .ddev/.downloads/files into the public files directory itself.
+    extract_member "$WORK/files.tar.gz" public-files /var/www/html/.ddev/.downloads/files "public files" \
+      || die "the files backup has no public-files/ directory; it starts with: $(head -n 3 "$WORK/members.txt" | tr '\n' ' ')"
+    extract_member "$WORK/files.tar.gz" private-files "$PRIVATE_DIR" "private files" || true
+
+# DDEV exports the local database to .ddev/.downloads/db.sql.gz before this runs.
+db_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    [ -f /tmp/drupito-provider.sh ] || { echo "Run this through: ddev push drupito" >&2; exit 1; }
+    source /tmp/drupito-provider.sh
+    push_backup db /var/www/html/.ddev/.downloads/db.sql.gz
+
+files_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    [ -f /tmp/drupito-provider.sh ] || { echo "Run this through: ddev push drupito" >&2; exit 1; }
+    source /tmp/drupito-provider.sh
+    drupal_dirs
+    [ -d "$PUBLIC_DIR" ] || die "no public files directory at $PUBLIC_DIR"
+    skip_symlinks "$PUBLIC_DIR"
+    echo "Packing $PUBLIC_DIR as public-files/ ..."
+    # Drupal regenerates php/, css/, js/ and styles/, and .htaccess belongs to the site.
+    tar -cf "$WORK/files.tar" -C "$PUBLIC_DIR" --transform='s,^\.,public-files,' -X "$WORK/exclude.txt" \
+      --exclude=./php --exclude=./css --exclude=./js --exclude=./styles --exclude=./.htaccess .
+
+    # append_dir <dir> <archive prefix> <description>
+    append_dir() {
+      [ -n "$1" ] || return 0
+      if [ ! -d "$1" ]; then echo "Note: no $3 directory at $1, skipped."; return 0; fi
+      skip_symlinks "$1"
+      echo "Packing $1 as $2/ ..."
+      tar -rf "$WORK/files.tar" -C "$1" --transform="s,^\.,$2," -X "$WORK/exclude.txt" .
+    }
+    append_dir "$PRIVATE_DIR" private-files "private files"
+    gzip "$WORK/files.tar"
+    push_backup files "$WORK/files.tar.gz"
