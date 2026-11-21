@@ -486,7 +486,6 @@ Flags:
 * `--webimage-extra-packages`: Comma-delimited list of Debian packages that should be added to `web` container when the project is started or `--webimage-extra-packages=""` to remove any previously configured packages.
 * `--webserver-type`: Set the project’s desired web server type: `nginx-fpm`, `apache-fpm`, `generic` (see [default](../configuration/config.md#webserver_type)).
 * `--working-dir-defaults`: Unset all service working directory overrides.
-* `--xdebug-enabled`: Whether Xdebug is enabled in the `web` container.
 * `--xhprof-mode`: XHProf mode, possible values are `global`, `prepend`, `xhgui` (see [default](../configuration/config.md#xhprof_mode)).
 * `--xhprof-mode-reset`: Reset XHProf mode to global configuration.
 

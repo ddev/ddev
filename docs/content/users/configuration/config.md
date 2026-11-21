@@ -871,14 +871,6 @@ Example: `working_dir: { web: "/var/www", db: "/etc" }` sets the working directo
 
 May also be set via `ddev config global --wsl2-no-windows-hosts-mgt` or `ddev config global --wsl2-no-windows-hosts-mgt=false`.
 
-## `xdebug_enabled`
-
-Whether Xdebug should be enabled for [step debugging](../debugging-profiling/step-debugging.md) or [profiling](../debugging-profiling/xdebug-profiling.md).
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project | `false` | Please leave this `false` in most cases. Most people use [`ddev xdebug`](../usage/commands.md#xdebug) and `ddev xdebug off` (or `ddev xdebug toggle`) commands.
-
 ## `xdebug_ide_location`
 
 !!!warning "Proceed with caution"
