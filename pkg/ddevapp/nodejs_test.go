@@ -193,39 +193,39 @@ func TestCorepackEnable(t *testing.T) {
 			app.CorepackEnable = false
 			err := app.Restart()
 			require.NoError(t, err)
-			out, _, err := app.Exec(&ddevapp.ExecOpts{
+			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Cmd: `node --version`,
 			})
-			require.NoError(t, err)
+			require.NoError(t, err, "stdout=%s stderr=%s", out, stderr)
 			require.True(t, strings.HasPrefix(out, "v"+tc.nodeJSVersion+"."), "Expected node version to start with 'v%s.', but got %s", tc.nodeJSVersion, out)
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Cmd: `command -v yarn && ls -l "$(command -v yarn)"`,
 			})
-			require.NoError(t, err)
+			require.NoError(t, err, "stdout=%s stderr=%s", out, stderr)
 			require.Contains(t, out, "/usr/local/n/bin/yarn")
 			require.NotContains(t, out, "corepack")
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Cmd: `yarn --version`,
 			})
-			require.NoError(t, err)
+			require.NoError(t, err, "stdout=%s stderr=%s", out, stderr)
 			require.True(t, strings.HasPrefix(out, "1."))
 
 			app.CorepackEnable = true
 			err = app.Restart()
 			require.NoError(t, err)
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Cmd: `command -v yarn && ls -l "$(command -v yarn)"`,
 			})
-			require.NoError(t, err)
+			require.NoError(t, err, "stdout=%s stderr=%s", out, stderr)
 			require.Contains(t, out, "/usr/local/n/bin/yarn")
 			require.Contains(t, out, "corepack")
 
 			// Outside the project, so the packageManager field yarn writes
 			// can't leak into the next subtest or later tests
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Cmd: `mkdir -p /tmp/corepack-test && cd /tmp/corepack-test && echo '{}' >package.json && yarn set version stable >/dev/null && yarn --version`,
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: `mkdir -p /tmp/corepack-test && cd /tmp/corepack-test && echo '{}' >package.json && yarn set version stable >&2 && yarn --version`,
 			})
-			require.NoError(t, err)
+			require.NoError(t, err, "stdout=%s stderr=%s", out, stderr)
 			require.True(t, strings.HasPrefix(out, "4."), "Expected yarn 4.x, but got %s", out)
 		})
 	}
