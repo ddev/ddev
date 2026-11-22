@@ -45,14 +45,20 @@ func TestUtilityAgentSkillCmd(t *testing.T) {
 	require.FileExists(t, claudeSkill)
 	require.FileExists(t, agentsSkill)
 
-	// A #ddev-generated copy from another version is updated
+	// A dry run says "Would be" only for files it would change
+	out, err = exec.RunCommand(DdevBin, []string{"utility", "agent-skill", "install", "--dry-run"})
+	require.NoError(t, err, "out=%s", out)
+	require.Contains(t, out, "Unchanged: "+claudeSkill)
+	require.NotContains(t, out, "Would be")
+
+	// A changed #ddev-generated copy is replaced
 	content, err := os.ReadFile(claudeSkill)
 	require.NoError(t, err)
 	old := strings.Replace(string(content), "Running that command", "An older DDEV wrote this. Running that command", 1)
 	require.NoError(t, os.WriteFile(claudeSkill, []byte(old), 0644))
 	out, err = exec.RunCommand(DdevBin, []string{"utility", "agent-skill", "status"})
 	require.NoError(t, err, "out=%s", out)
-	require.Contains(t, out, claudeSkill+": written by DDEV")
+	require.Contains(t, out, claudeSkill+": changed since DDEV")
 	out, err = exec.RunCommand(DdevBin, []string{"utility", "agent-skill", "install", "--agent=claude"})
 	require.NoError(t, err, "out=%s", out)
 	require.Contains(t, out, "Updated")
@@ -70,7 +76,8 @@ func TestUtilityAgentSkillCmd(t *testing.T) {
 	require.NoError(t, err, "out=%s", out)
 	require.Contains(t, out, "Removed: "+claudeSkill)
 	require.Contains(t, out, agentsSkill+": left alone")
-	require.NoFileExists(t, claudeSkill)
+	// The now-empty .claude directory is removed with the skill
+	require.NoDirExists(t, filepath.Join(tmpdir, ".claude"))
 	after, err := os.ReadFile(agentsSkill)
 	require.NoError(t, err)
 	require.Equal(t, edited, string(after))

@@ -31,6 +31,11 @@ extensions, database, and environment:
   the project is mounted at `/var/www/html`; `ddev exec -s db <command>`
   runs it in the database container.
 
+Host paths don't exist in the container: `/home/me/project/web/index.php`
+on the host is `/var/www/html/web/index.php` there. Give `ddev exec` and
+the tools paths relative to the project root, which is the default working
+directory: `ddev php web/index.php`.
+
 Run `ddev help` to see which of these this project provides. Don't install
 PHP, Composer, Node.js, or a database on the host to work around a failure;
 find out why the DDEV command failed.
@@ -53,15 +58,21 @@ nested quotes, either:
 each argument unchanged. Run `ddev exec --help` for `--dir`, `--service`,
 and `--user`.
 
-## Commands that only work on the host
+## Commands with no equivalent in the container
 
-These manage containers or touch the host, and only work where `ddev` is
-installed: `ddev start`, `ddev stop`, `ddev restart`, `ddev poweroff`,
+These manage containers or touch the host, so nothing inside the container
+can do their job: `ddev start`, `ddev stop`, `ddev restart`, `ddev poweroff`,
 `ddev config`, `ddev add-on`, `ddev import-db`, `ddev export-db`,
 `ddev import-files`, `ddev snapshot`, `ddev pull`, `ddev push`,
 `ddev launch`, `ddev share`, `ddev delete`, and `ddev utility rebuild`.
 After changing `.ddev/config.yaml` or a file in `.ddev/`, run
 `ddev restart` for it to take effect.
+
+Don't edit files that contain `#ddev-generated`, such as
+`settings.ddev.php`, `wp-config-ddev.php`, or generated files in `.ddev/`,
+because DDEV rewrites them. Put changes in `.ddev/config.yaml`, a new
+`.ddev/config.*.yaml`, or a new file, see
+<@@DOCS_URL@@/users/extend/customization-extendibility/>.
 
 ## When you are inside the web container
 
@@ -86,8 +97,10 @@ Use the project's URLs from `ddev describe` rather than guessing them.
 
 The DDEV docs are published as Markdown for agents:
 
-- <@@DOCS_URL@@/llms.txt> lists each page with a link to its Markdown version.
-- <@@DOCS_URL@@/llms-full.txt> has every page in one file.
+- <@@DOCS_URL@@/llms.txt> lists each page with a link to its Markdown
+  version. Read it, then fetch only the page you need.
+- <@@DOCS_URL@@/llms-full.txt> has every page in one file. It is about
+  1 MB, too large to read whole; search it instead.
 
 These are published for the `stable` (latest release) and `latest`
 (development) docs only, not for each release. If `ddev --version` is

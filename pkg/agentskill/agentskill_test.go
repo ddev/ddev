@@ -45,23 +45,24 @@ func TestRender(t *testing.T) {
 }
 
 func TestInstallUpdateRemove(t *testing.T) {
-	skill := filepath.Join(t.TempDir(), ".claude", "skills", "ddev", "SKILL.md")
+	base := t.TempDir()
+	skill := filepath.Join(base, ".claude", "skills", "ddev", "SKILL.md")
 
 	status, _, err := agentskill.Inspect(skill, "v1.25.5")
 	require.NoError(t, err)
 	require.Equal(t, agentskill.NotInstalled, status)
 
-	action, err := agentskill.Install(skill, "v1.25.5", true)
+	action, _, err := agentskill.Install(skill, "v1.25.5", true)
 	require.NoError(t, err)
 	require.Equal(t, agentskill.Created, action)
 	require.NoFileExists(t, skill, "dry run must not write")
 
-	action, err = agentskill.Install(skill, "v1.25.5", false)
+	action, _, err = agentskill.Install(skill, "v1.25.5", false)
 	require.NoError(t, err)
 	require.Equal(t, agentskill.Created, action)
 	require.FileExists(t, skill)
 
-	action, err = agentskill.Install(skill, "v1.25.5", false)
+	action, _, err = agentskill.Install(skill, "v1.25.5", false)
 	require.NoError(t, err)
 	require.Equal(t, agentskill.Unchanged, action)
 
@@ -70,9 +71,10 @@ func TestInstallUpdateRemove(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, agentskill.Outdated, status)
 	require.Equal(t, "v1.25.5", installed)
-	action, err = agentskill.Install(skill, "v1.26.0", false)
+	action, installed, err = agentskill.Install(skill, "v1.26.0", false)
 	require.NoError(t, err)
 	require.Equal(t, agentskill.Updated, action)
+	require.Equal(t, "v1.25.5", installed)
 	content, err := os.ReadFile(skill)
 	require.NoError(t, err)
 	require.Contains(t, string(content), "from DDEV v1.26.0.")
@@ -85,7 +87,9 @@ func TestInstallUpdateRemove(t *testing.T) {
 	action, err = agentskill.Remove(skill, false)
 	require.NoError(t, err)
 	require.Equal(t, agentskill.Removed, action)
-	require.NoDirExists(t, filepath.Dir(skill))
+	// The now-empty skill, skills, and .claude directories go too
+	require.NoDirExists(t, filepath.Join(base, ".claude"))
+	require.DirExists(t, base)
 
 	action, err = agentskill.Remove(skill, false)
 	require.NoError(t, err)
@@ -94,7 +98,7 @@ func TestInstallUpdateRemove(t *testing.T) {
 
 func TestEditedSkillIsLeftAlone(t *testing.T) {
 	skill := filepath.Join(t.TempDir(), ".agents", "skills", "ddev", "SKILL.md")
-	_, err := agentskill.Install(skill, "v1.25.5", false)
+	_, _, err := agentskill.Install(skill, "v1.25.5", false)
 	require.NoError(t, err)
 
 	// Removing the #ddev-generated line marks the file as the user's own
@@ -113,7 +117,7 @@ func TestEditedSkillIsLeftAlone(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, agentskill.Edited, status)
 
-	action, err := agentskill.Install(skill, "v1.26.0", false)
+	action, _, err := agentskill.Install(skill, "v1.26.0", false)
 	require.NoError(t, err)
 	require.Equal(t, agentskill.Skipped, action)
 
@@ -124,4 +128,19 @@ func TestEditedSkillIsLeftAlone(t *testing.T) {
 	after, err := os.ReadFile(skill)
 	require.NoError(t, err)
 	require.Equal(t, edited, string(after))
+}
+
+func TestRemoveKeepsNonEmptyDirs(t *testing.T) {
+	base := t.TempDir()
+	skill := filepath.Join(base, ".claude", "skills", "ddev", "SKILL.md")
+	other := filepath.Join(base, ".claude", "settings.json")
+	_, _, err := agentskill.Install(skill, "v1.25.5", false)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(other, []byte("{}"), 0644))
+
+	action, err := agentskill.Remove(skill, false)
+	require.NoError(t, err)
+	require.Equal(t, agentskill.Removed, action)
+	require.NoDirExists(t, filepath.Join(base, ".claude", "skills"))
+	require.FileExists(t, other)
 }

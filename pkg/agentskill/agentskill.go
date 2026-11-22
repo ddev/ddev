@@ -142,34 +142,36 @@ func Inspect(path string, version string) (Status, string, error) {
 
 // Install writes the skill for version to path unless the file there has
 // been edited. With dryRun it reports what it would do without writing.
-func Install(path string, version string, dryRun bool) (Action, error) {
-	status, _, err := Inspect(path, version)
+// It also returns the DDEV version that wrote the file it found, if known.
+func Install(path string, version string, dryRun bool) (Action, string, error) {
+	status, installed, err := Inspect(path, version)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	action := Updated
 	switch status {
 	case Current:
-		return Unchanged, nil
+		return Unchanged, installed, nil
 	case Edited:
-		return Skipped, nil
+		return Skipped, installed, nil
 	case NotInstalled:
 		action = Created
 	}
 	if dryRun {
-		return action, nil
+		return action, installed, nil
 	}
 	if err = os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return "", err
+		return "", "", err
 	}
 	if err = os.WriteFile(path, []byte(Render(version)), 0644); err != nil {
-		return "", err
+		return "", "", err
 	}
-	return action, nil
+	return action, installed, nil
 }
 
-// Remove deletes a #ddev-generated skill file at path, and its directory if
-// that is then empty. An edited file is left alone.
+// Remove deletes a #ddev-generated skill file at path, and the skill,
+// skills, and agent directories above it while they are empty. An edited
+// file is left alone.
 func Remove(path string, dryRun bool) (Action, error) {
 	status, _, err := Inspect(path, "")
 	if err != nil {
@@ -187,7 +189,14 @@ func Remove(path string, dryRun bool) (Action, error) {
 	if err = os.Remove(path); err != nil {
 		return "", err
 	}
-	// Fails harmlessly when the user added other files to the skill directory
-	_ = os.Remove(filepath.Dir(path))
+	// Remove skills/ddev, skills, and .claude or .agents while they are
+	// empty. os.Remove fails harmlessly once a directory isn't empty.
+	dir := filepath.Dir(path)
+	for range 3 {
+		if os.Remove(dir) != nil {
+			break
+		}
+		dir = filepath.Dir(dir)
+	}
 	return Removed, nil
 }

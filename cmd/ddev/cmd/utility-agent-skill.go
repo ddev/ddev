@@ -49,11 +49,7 @@ alone, so delete that line to keep your own edits.`,
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		version := versionconstants.DdevVersion
 		for _, f := range files {
-			_, installed, err := agentskill.Inspect(f, version)
-			if err != nil {
-				util.Failed("Failed to read %s: %v", f, err)
-			}
-			action, err := agentskill.Install(f, version, dryRun)
+			action, installed, err := agentskill.Install(f, version, dryRun)
 			if err != nil {
 				util.Failed("Failed to write %s: %v", f, err)
 			}
@@ -78,10 +74,14 @@ var UtilityAgentSkillStatusCmd = &cobra.Command{
 			}
 			switch status {
 			case agentskill.Outdated:
-				if installed == "" {
-					installed = "an unknown version"
+				switch installed {
+				case "":
+					util.Warning("%s: written by an unknown DDEV version, run 'ddev utility agent-skill install' to replace it", f)
+				case version:
+					util.Warning("%s: changed since DDEV %s wrote it, run 'ddev utility agent-skill install' to replace it", f, installed)
+				default:
+					util.Warning("%s: written by DDEV %s, run 'ddev utility agent-skill install' to update it for DDEV %s", f, installed, version)
 				}
-				util.Warning("%s: written by DDEV %s, run 'ddev utility agent-skill install' to update it for DDEV %s", f, installed, version)
 			case agentskill.Edited:
 				util.Warning("%s: %s", f, status)
 			default:
@@ -120,7 +120,7 @@ func agentSkillFiles(cmd *cobra.Command) []string {
 	} else {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
-			util.Failed("Run this in a DDEV project, or use --global to install for your user: %v", err)
+			util.Failed("Run this in a DDEV project, or use --global for the skill in your home directory: %v", err)
 		}
 		baseDir = app.AppRoot
 	}
@@ -133,7 +133,7 @@ func agentSkillFiles(cmd *cobra.Command) []string {
 
 func reportAgentSkillAction(file string, action agentskill.Action, installed string, dryRun bool) {
 	verb := strings.ToUpper(string(action[:1])) + string(action[1:])
-	if dryRun {
+	if dryRun && (action == agentskill.Created || action == agentskill.Updated || action == agentskill.Removed) {
 		verb = "Would be " + string(action)
 	}
 	switch action {
