@@ -148,8 +148,8 @@ func TestNetworkAmbiguity(t *testing.T) {
 // This verifies the functionality of https://docs.docker.com/reference/compose-file/services/#aliases
 // Related test: TestInternalAndExternalAccessToURL
 func TestNetworkAliases(t *testing.T) {
-	if dockerutil.IsPodmanRootless() || dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: podman rootless and Apple Container cannot bind privileged ports 80/443")
+	if dockerutil.IsPodmanRootless()  || dockerutil.IsAppleContainer() || dockerutil.IsKiriMacOS() {
+		t.Skip("Skipping: podman rootless, Apple Container, Kiri on macOS cannot bind privileged ports 80/443")
 	}
 	runNetworkAliasesTest(t, "80", "443", "80", "443")
 }
@@ -158,8 +158,8 @@ func TestNetworkAliases(t *testing.T) {
 // network aliases when the two projects use different HTTP/HTTPS ports.
 // app1 uses ports 8080/8443 and app2 uses the default 80/443.
 func TestNetworkAliasesDifferentPorts(t *testing.T) {
-	if dockerutil.IsPodmanRootless() || dockerutil.IsAppleContainer() {
-		t.Skip("Skipping: podman rootless and Apple Container cannot bind privileged ports 80/443")
+	if dockerutil.IsPodmanRootless() || || dockerutil.IsAppleContainer() || dockerutil.IsKiriMacOS() {
+		t.Skip("Skipping: podman rootless, Apple Container, Kiri on macOS cannot bind privileged ports 80/443")
 	}
 	runNetworkAliasesTest(t, "8080", "8443", "80", "443")
 }

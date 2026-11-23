@@ -213,6 +213,9 @@ func StartDdevRouter() (err error) {
 			Start: api.StartOptions{Project: routerProject},
 		})
 		if err != nil {
+			if dockerutil.IsKiriMacOS() && strings.Contains(err.Error(), "Permission denied") {
+				return fmt.Errorf("failed to start ddev-router: %v\nKiri on macOS can't publish ports below 1024 on 127.0.0.1. Use unprivileged router ports, for example 'ddev config global --router-http-port=8080 --router-https-port=8443', and make sure no running project uses lower ports", err)
+			}
 			return fmt.Errorf("failed to start ddev-router: %v", err)
 		}
 	} else {

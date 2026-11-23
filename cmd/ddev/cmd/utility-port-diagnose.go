@@ -923,6 +923,8 @@ func activeDockerProvider() string {
 		return "Lima"
 	case dockerutil.IsAppleContainer():
 		return "Apple Container"
+	case dockerutil.IsKiri():
+		return "Kiri"
 	default:
 		return "Docker"
 	}

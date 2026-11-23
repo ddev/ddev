@@ -113,6 +113,8 @@ func GetDockerPlatform() (string, error) {
 		platform = "podman"
 	case dockerutil.IsAppleContainer():
 		platform = "apple-container"
+	case dockerutil.IsKiri():
+		platform = "kiri"
 	case nodeps.IsWSL2() && info.OSType == "linux":
 		platform = "wsl2-docker-ce"
 	case !nodeps.IsWSL2() && info.OSType == "linux":
