@@ -248,7 +248,7 @@ testddevapp: $(DEFAULT_BUILD) setup
 testnotddevapp: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); $(call gotest,testnotddevapp) $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(EMBARGO_SKIP_FLAG) $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); $(call gotest,testnotddevapp) $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell go list ./pkg/... | grep -v '/pkg/ddevapp$$') $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 testfullsitesetup: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
