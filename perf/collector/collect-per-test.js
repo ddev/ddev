@@ -12,7 +12,12 @@
 // GITHUB_REPOSITORY, and BUILDKITE_API_TOKEN -- if unset, Buildkite rows in
 // test-runtime-history.ndjson are skipped, not an error, same tolerance).
 //
-// Usage: node perf/collector/collect-per-test.js <path-to-test-runtime-history.ndjson> <path-to-per-test-history.ndjson> <path-to-cursor.json> [--since=ISO8601]
+// Usage: node perf/collector/collect-per-test.js <path-to-test-runtime-history.ndjson> <path-to-per-test-history.ndjson> <path-to-cursor.json> [--since=ISO8601] [--last-ran=<path-to-last-ran.json>]
+//
+// --last-ran also folds every test and subtest event from the same artifacts
+// (not just the slow-or-failing top-level ones kept in
+// per-test-history.ndjson) into a compact last-ran/last-skipped index; see
+// last-ran-index.js and report-tests-not-run.js.
 //
 // --since is normally omitted: derived from cursor.json's
 // processedThroughTimestamp, written at the end of every run. A run/build
@@ -24,11 +29,14 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
+const lastRan = require('./last-ran-index');
 
 const args = process.argv.slice(2);
 const positional = args.filter((a) => !a.startsWith('--'));
 const [RUNTIME_HISTORY_PATH, PER_TEST_HISTORY_PATH, CURSOR_PATH] = positional;
 const sinceArg = args.find((a) => a.startsWith('--since='));
+const lastRanArg = args.find((a) => a.startsWith('--last-ran='));
+const LAST_RAN_PATH = lastRanArg ? lastRanArg.slice('--last-ran='.length) : null;
 
 let hadErrors = false;
 // Mirrors the ERROR lines logged below, so the workflow's final failing step
@@ -74,8 +82,19 @@ function readNdjson(filePath) {
   return rows;
 }
 
+// When --last-ran names a file that does not exist yet (first run with it,
+// or a `fresh` rebuild), reach back far enough to fill the report's window
+// instead of starting the index from tonight. Runs already in
+// per-test-history.ndjson are deduped by pointKey(), so re-reading them only
+// costs the downloads.
+const LAST_RAN_BOOTSTRAP_DAYS = 30;
+
 function computeSince() {
   if (sinceArg) return sinceArg.slice('--since='.length);
+  if (LAST_RAN_PATH && !fs.existsSync(LAST_RAN_PATH)) {
+    console.log(`${LAST_RAN_PATH} does not exist; backfilling ${LAST_RAN_BOOTSTRAP_DAYS} days to build it`);
+    return new Date(Date.now() - LAST_RAN_BOOTSTRAP_DAYS * 86400 * 1000).toISOString();
+  }
   if (!fs.existsSync(CURSOR_PATH)) {
     return new Date(Date.now() - DEFAULT_BACKFILL_DAYS * 86400 * 1000).toISOString();
   }
@@ -87,22 +106,13 @@ function computeSince() {
 // per test action (run/pause/cont/output/pass/fail/skip). Only the terminal
 // pass/fail/skip event at the top level carries the test's total Elapsed
 // seconds -- subtests (Test containing "/") are excluded here, matching the
-// same top-level-only scope #8696 used, to keep cardinality manageable.
+// same top-level-only scope #8696 used, to keep cardinality manageable. The
+// parsing itself lives in last-ran-index.js, which keeps subtests too.
 function extractTestEvents(ndjsonText) {
-  const events = [];
-  for (const line of ndjsonText.split('\n')) {
-    if (!line.trim()) continue;
-    let event;
-    try {
-      event = JSON.parse(line);
-    } catch {
-      continue; // gotestsum's jsonfile is one object per line; skip a corrupt one
-    }
-    if (!event.Test || event.Test.includes('/')) continue;
-    if (!['pass', 'fail', 'skip'].includes(event.Action)) continue;
-    events.push({ package: event.Package, test: event.Test, elapsed_s: event.Elapsed || 0, outcome: event.Action });
-  }
-  return events;
+  return lastRan
+    .extractAllTestEvents(ndjsonText)
+    .filter((e) => !e.test.includes('/'))
+    .map(({ package: pkg, test, elapsed_s, outcome }) => ({ package: pkg, test, elapsed_s, outcome }));
 }
 
 module.exports = { extractTestEvents, MIN_ELAPSED_S, RETENTION_DAYS };
@@ -126,6 +136,8 @@ function ghApiPages(urlPath, params) {
 // podman-rootless-mutagen invoke the reusable workflow twice per run, once
 // per make_target, each uploading its own artifact (see
 // collect-test-runtime.js's stage_analysis comment for why).
+// Returns every event, subtests and skips included; main() applies
+// qualifies() for per-test-history.ndjson and keeps the rest for the index.
 function githubTestEvents(row) {
   const repo = process.env.GITHUB_REPOSITORY;
   let artifacts;
@@ -149,7 +161,7 @@ function githubTestEvents(row) {
     for (const file of fs.readdirSync(tmpDir).filter((f) => f.endsWith('.ndjson'))) {
       const makeTarget = path.basename(file, '.ndjson');
       const text = fs.readFileSync(path.join(tmpDir, file), 'utf8');
-      for (const event of extractTestEvents(text).filter(qualifies)) {
+      for (const event of lastRan.extractAllTestEvents(text)) {
         rows.push({ ...event, make_target: makeTarget });
       }
     }
@@ -194,7 +206,7 @@ async function buildkiteTestEvents(row) {
       if (!res.ok) throw new Error(`download failed: HTTP ${res.status}`);
       const text = await res.text();
       const makeTarget = path.basename(artifact.filename, '.ndjson');
-      for (const event of extractTestEvents(text).filter(qualifies)) {
+      for (const event of lastRan.extractAllTestEvents(text)) {
         rows.push({ ...event, make_target: makeTarget });
       }
     } catch (err) {
@@ -208,6 +220,17 @@ function pointKey(row) {
   return `${row.source}:${row.workflow}:${row.run_id}|${row.run_attempt}:${row.package}/${row.test}`;
 }
 
+// Prunes and writes the index even when nothing new arrived, so entries age
+// out on schedule and the file exists for perf-collect.yml's `git add`.
+function writeLastRanIndex(index) {
+  const prunedTests = lastRan.pruneIndex(index);
+  lastRan.saveIndex(LAST_RAN_PATH, index);
+  console.log(
+    `Wrote ${Object.keys(index.tests).length} test(s) to ${LAST_RAN_PATH}` +
+      (prunedTests ? `, pruned ${prunedTests} not seen in ${lastRan.INDEX_RETENTION_DAYS} days` : '')
+  );
+}
+
 async function main() {
   const since = computeSince();
   const runtimeRows = readNdjson(RUNTIME_HISTORY_PATH)
@@ -216,10 +239,12 @@ async function main() {
 
   if (!runtimeRows.length) {
     console.warn(`No test-runtime-history rows newer than ${since}; nothing to process`);
+    if (LAST_RAN_PATH) writeLastRanIndex(lastRan.loadIndex(LAST_RAN_PATH));
     return;
   }
 
   const seen = new Set(readNdjson(PER_TEST_HISTORY_PATH).map(pointKey));
+  const index = LAST_RAN_PATH ? lastRan.loadIndex(LAST_RAN_PATH) : null;
   const fresh = [];
   let latestProcessed = since;
 
@@ -244,7 +269,16 @@ async function main() {
       continue; // don't advance latestProcessed past a run we failed to read -- retry it next time
     }
 
+    if (index) {
+      lastRan.updateIndex(index, events, {
+        at: runtimeRow.timestamp,
+        leg: runtimeRow.workflow,
+        url: runtimeRow.html_url,
+      });
+    }
+
     for (const event of events) {
+      if (event.test.includes('/') || !qualifies(event)) continue;
       const row = {
         timestamp: runtimeRow.timestamp,
         source: runtimeRow.source,
@@ -280,12 +314,14 @@ async function main() {
     console.log(`Pruned ${allRows.length - kept.length} row(s) older than ${RETENTION_DAYS} days`);
   }
 
+  if (index) writeLastRanIndex(index);
+
   fs.writeFileSync(CURSOR_PATH, JSON.stringify({ processedThroughTimestamp: latestProcessed }, null, 2) + '\n');
 }
 
 if (require.main === module) {
   if (!RUNTIME_HISTORY_PATH || !PER_TEST_HISTORY_PATH || !CURSOR_PATH) {
-    console.error('Usage: collect-per-test.js <test-runtime-history.ndjson> <per-test-history.ndjson> <cursor.json> [--since=ISO8601]');
+    console.error('Usage: collect-per-test.js <test-runtime-history.ndjson> <per-test-history.ndjson> <cursor.json> [--since=ISO8601] [--last-ran=<last-ran.json>]');
     process.exit(1);
   }
 

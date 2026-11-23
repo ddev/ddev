@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       fresh:
-        description: 'Wipe ci/test-runtime-history.ndjson and ci/tests/per-test-history.ndjson and rebuild both from scratch instead of appending (use after a schema change to either row format, so old rows do not miss new fields)'
+        description: 'Wipe ci/test-runtime-history.ndjson, ci/tests/per-test-history.ndjson and ci/tests/last-ran.json and rebuild them from scratch instead of appending (use after a schema change to any of them, so old rows do not miss new fields). Set since at least 14 days back so the weekly tests-not-run report has a full window.'
         required: false
         type: boolean
         default: false
@@ -125,7 +125,9 @@ jobs:
       # slow-or-failing top-level Go test to per-test-history.ndjson --
       # turns per-test detail that otherwise lives only in a 90-day build
       # artifact into a lasting, trend-able dataset. See collect-per-test.js
-      # and HANDOFF.md.
+      # and HANDOFF.md. From the same artifacts it also keeps
+      # ci/tests/last-ran.json, the last time each test and subtest ran or
+      # skipped, which tests-not-run.yml reads every week.
       - name: Collect per-test results
         id: collect-per-test
         env:
@@ -134,10 +136,10 @@ jobs:
           mkdir -p ../performance-data/ci/tests
           if [ "${{ inputs.fresh }}" = "true" ]; then
             echo "fresh=true: rebuilding per-test-history.ndjson from scratch"
-            rm -f ../performance-data/ci/tests/per-test-history.ndjson ../performance-data/ci/tests/per-test-cursor.json
+            rm -f ../performance-data/ci/tests/per-test-history.ndjson ../performance-data/ci/tests/per-test-cursor.json ../performance-data/ci/tests/last-ran.json
           fi
           touch ../performance-data/ci/tests/per-test-history.ndjson
-          node perf/collector/collect-per-test.js ../performance-data/ci/test-runtime-history.ndjson ../performance-data/ci/tests/per-test-history.ndjson ../performance-data/ci/tests/per-test-cursor.json ${{ inputs.since != '' && format('--since={0}', inputs.since) || '' }}
+          node perf/collector/collect-per-test.js ../performance-data/ci/test-runtime-history.ndjson ../performance-data/ci/tests/per-test-history.ndjson ../performance-data/ci/tests/per-test-cursor.json --last-ran=../performance-data/ci/tests/last-ran.json ${{ inputs.since != '' && format('--since={0}', inputs.since) || '' }}
           cp perf/collector/per-test-dashboard.html ../performance-data/ci/tests/index.html
 
       - name: Commit and push results
@@ -146,7 +148,7 @@ jobs:
           cd ../performance-data
           git config user.name "ddev-perf-bot"
           git config user.email "actions@github.com"
-          git add history.ndjson index.html dashboard-common.js dashboard-common.css ci/index.html ci/test-runtime-history.ndjson ci/tests/index.html ci/tests/per-test-history.ndjson ci/tests/per-test-cursor.json
+          git add history.ndjson index.html dashboard-common.js dashboard-common.css ci/index.html ci/test-runtime-history.ndjson ci/tests/index.html ci/tests/per-test-history.ndjson ci/tests/per-test-cursor.json ci/tests/last-ran.json
           if git diff --cached --quiet; then
             echo "No new results to commit"
             echo "changed=false" >> "$GITHUB_OUTPUT"

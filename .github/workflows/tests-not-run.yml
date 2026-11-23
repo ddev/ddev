@@ -1,0 +1,109 @@
+name: Tests that ran nowhere
+
+# Weekly report of Go tests and subtests that ran in no CI job on main:
+# tests every job skipped, and test functions no job reported at all
+# (including whole packages no make target compiles). It reads
+# ci/tests/last-ran.json, which perf-collect.yml keeps on the
+# performance-data branch from the gotestsum artifacts of every GitHub
+# Actions and Buildkite test leg, and keeps one tracking issue up to date:
+# opened when something is listed, rewritten on later runs, closed when the
+# list is empty. Findings never fail the job; broken inputs do (no index, an
+# index perf-collect.yml has stopped updating, or an invalid allowlist).
+# Tests that cannot run in CI go in .github/tests-not-run-in-ci.yml, each
+# with a reason. See perf/collector/README.md.
+
+on:
+  schedule:
+    # Mondays, after perf-collect.yml's 06:00 UTC run has had time to finish.
+    - cron: '23 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      window_days:
+        description: 'Days of CI history a test must have run in (less than the index retention of 90)'
+        required: false
+        type: string
+        default: '14'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-not-run
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ISSUE_TITLE: "CI: Go tests that ran in no CI job"
+      WINDOW_DAYS: ${{ inputs.window_days || '14' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      # Only for `go list` across GOOS values; the repo vendors its modules,
+      # so nothing is downloaded or compiled.
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Fetch the last-ran index
+        run: |
+          git fetch --depth=1 origin performance-data
+          git show FETCH_HEAD:ci/tests/last-ran.json > "$RUNNER_TEMP/last-ran.json"
+
+      - name: Build report
+        id: report
+        env:
+          BLOB: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node perf/collector/report-tests-not-run.js \
+            --index="$RUNNER_TEMP/last-ran.json" \
+            --allowlist=.github/tests-not-run-in-ci.yml \
+            --window-days="$WINDOW_DAYS" \
+            --blob-base="$BLOB" \
+            --run-url="$RUN_URL" \
+            --out=report.md
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+      # The issue steps run only on main. A dispatch from another branch is a
+      # dry run whose report is only in the step summary above.
+      - name: Open or update the tracking issue
+        if: github.ref == 'refs/heads/main' && steps.report.outputs.status == 'ok' && steps.report.outputs.count != '0'
+        run: |
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "\"$ISSUE_TITLE\" in:title" --json number,title \
+            | jq -r --arg t "$ISSUE_TITLE" \
+                '[.[] | select(.title == $t)] | first | .number // empty')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --repo "$GITHUB_REPOSITORY" --body-file report.md
+            echo "Updated issue #$existing"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "$ISSUE_TITLE" --body-file report.md
+          fi
+
+      - name: Close the tracking issue when nothing is listed
+        if: github.ref == 'refs/heads/main' && steps.report.outputs.status == 'ok' && steps.report.outputs.count == '0'
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "\"$ISSUE_TITLE\" in:title" --json number,title \
+            | jq -r --arg t "$ISSUE_TITLE" \
+                '[.[] | select(.title == $t)] | first | .number // empty')
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$GITHUB_REPOSITORY" \
+              --comment "Every Go test ran in at least one CI job in the last $WINDOW_DAYS days, or is in \`.github/tests-not-run-in-ci.yml\` ([report run]($RUN_URL))."
+          fi
