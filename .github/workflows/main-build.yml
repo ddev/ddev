@@ -510,7 +510,7 @@ jobs:
       - name: Install syft
         if: inputs.release_tag != ''
         id: syft
-        uses: anchore/sbom-action/download-syft@v0
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
       - name: Put syft on PATH
         if: inputs.release_tag != ''
         run: dirname "${{ steps.syft.outputs.cmd }}" >> "${GITHUB_PATH}"
