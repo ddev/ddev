@@ -51,10 +51,13 @@ func TestWebCAROOTCopied(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, strings.TrimSpace(string(hostCA)), strings.TrimSpace(out), "the old CAROOT path should still lead to the CA")
 
-	uid, _, _ := dockerutil.GetContainerUser()
+	// The CA belongs to the web container's user, which is 0 on Docker rootless with bind mounts.
+	web, err := dockerutil.InspectContainer(ddevapp.GetContainerName(app, "web"))
+	require.NoError(t, err)
+	webUID, _, _ := strings.Cut(web.Config.User, ":")
 	out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: `stat -c "%u %a" "$CAROOT/rootCA-key.pem"`})
 	require.NoError(t, err)
-	require.Equal(t, uid+" 600", strings.TrimSpace(out))
+	require.Equal(t, webUID+" 600", strings.TrimSpace(out))
 
 	out, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: `openssl verify -CAfile "$CAROOT/rootCA.pem" /etc/ssl/certs/master.crt`})
 	require.NoError(t, err, "web should sign its certificate with the host's root CA, output=%s", out)
