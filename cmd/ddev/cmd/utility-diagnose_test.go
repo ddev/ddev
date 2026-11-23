@@ -38,14 +38,8 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 
 	// Test with basic project
 	t.Run("BasicProject", func(t *testing.T) {
-		origDir, _ := os.Getwd()
-		testDir := filepath.Join(origDir, "testdata", t.Name())
-		err := os.Chdir(testDir)
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			err = os.Chdir(origDir)
-			require.NoError(t, err)
-		})
+		projectDir := copyDiagnoseTestProject(t, testcommon.CreateTmpDir("TestUtilityDiagnose-BasicProject"), "BasicProject")
+		t.Cleanup(testcommon.Chdir(projectDir))
 
 		out, err := exec.RunHostCommand(DdevBin, "utility", "diagnose")
 		require.NoError(t, err, "ddev utility diagnose failed\n==== ddev utility diagnose output ====\n%s\n==== end ddev utility diagnose output ====", out)
@@ -57,14 +51,8 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 
 	// Test with customizations
 	t.Run("ProjectWithCustomizations", func(t *testing.T) {
-		origDir, _ := os.Getwd()
-		testDir := filepath.Join(origDir, "testdata", t.Name())
-		err := os.Chdir(testDir)
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			err = os.Chdir(origDir)
-			require.NoError(t, err)
-		})
+		projectDir := copyDiagnoseTestProject(t, testcommon.CreateTmpDir("TestUtilityDiagnose-ProjectWithCustomizations"), "ProjectWithCustomizations")
+		t.Cleanup(testcommon.Chdir(projectDir))
 
 		out, err := exec.RunHostCommand(DdevBin, "utility", "diagnose")
 		require.NoError(t, err, "ddev utility diagnose failed\n==== ddev utility diagnose output ====\n%s\n==== end ddev utility diagnose output ====", out)
@@ -82,25 +70,26 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 		// testcommon.CreateTmpDir is under ~/tmp, so use the system temp dir instead.
 		tmpDir, err := os.MkdirTemp("", "TestUtilityDiagnose-OutsideHome")
 		require.NoError(t, err)
-		origDir, _ := os.Getwd()
-		t.Cleanup(func() {
-			_ = os.Chdir(origDir)
-			_ = os.RemoveAll(tmpDir)
-		})
+		projectDir := copyDiagnoseTestProject(t, tmpDir, "BasicProject")
 		homeDir := util.GetHomeDir()
 		if homeDir != "" && strings.HasPrefix(tmpDir, homeDir) {
 			t.Skipf("Skipping outside home test, temp dir %s is inside home directory %s", tmpDir, homeDir)
 		}
-
-		projectDir := filepath.Join(tmpDir, "BasicProject")
-		testDir := filepath.Join(origDir, "testdata", "TestUtilityDiagnoseCmd/BasicProject")
-		err = fileutil.CopyDir(testDir, projectDir)
-		require.NoError(t, err)
-
-		err = os.Chdir(projectDir)
-		require.NoError(t, err)
+		t.Cleanup(testcommon.Chdir(projectDir))
 
 		out, _ := exec.RunHostCommand(DdevBin, "utility", "diagnose")
 		require.Contains(t, out, "should usually be in a subdirectory of your home directory")
 	})
+}
+
+// copyDiagnoseTestProject copies testdata/TestUtilityDiagnoseCmd/<name> into
+// tmpDir, because ddev writes generated files into the project it runs in.
+// It removes tmpDir when the test ends.
+func copyDiagnoseTestProject(t *testing.T, tmpDir string, name string) string {
+	t.Helper()
+	t.Cleanup(func() { _ = os.RemoveAll(tmpDir) })
+	projectDir := filepath.Join(tmpDir, name)
+	err := fileutil.CopyDir(filepath.Join("testdata", "TestUtilityDiagnoseCmd", name), projectDir)
+	require.NoError(t, err)
+	return projectDir
 }
