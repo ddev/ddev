@@ -298,9 +298,18 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 		// rejects extra_hosts on a container sharing another's network namespace.
 		sharesNetNS := strings.HasPrefix(service.NetworkMode, "service:") || strings.HasPrefix(service.NetworkMode, "container:")
 		if service.NetworkMode == "" {
-			if _, ok := service.Networks[dockerutil.NetName]; !ok {
-				service.Networks[dockerutil.NetName] = nil
+			// Compose registers the service name as an alias on every network, so on
+			// the shared ddev_default "db" would match every project's db. Keep short
+			// names to the project network; ddev-<project>-<service> still reaches
+			// other projects. Respect a use_service_name_alias the user set.
+			ddevNet := service.Networks[dockerutil.NetName]
+			if ddevNet == nil {
+				ddevNet = &composeTypes.ServiceNetworkConfig{}
 			}
+			if ddevNet.UseServiceNameAlias == nil {
+				ddevNet.UseServiceNameAlias = new(false)
+			}
+			service.Networks[dockerutil.NetName] = ddevNet
 			if _, ok := service.Networks["default"]; !ok {
 				service.Networks["default"] = nil
 			}

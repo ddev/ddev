@@ -6,3 +6,6 @@ services:
       - HTTP_EXPOSE=9101
       - HTTPS_EXPOSE=9102
       - VIRTUAL_HOST=$DDEV_HOSTNAME
+    networks:
+      ddev_default:
+        use_service_name_alias: true
