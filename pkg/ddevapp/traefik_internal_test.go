@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
@@ -51,5 +53,57 @@ func TestRemoveStaleTraefikFiles(t *testing.T) {
 		} else {
 			require.FileExists(t, app.GetConfigPath(name))
 		}
+	}
+}
+
+// TestProcessHTTPExposeMailpit checks when the Mailpit route is omitted.
+func TestProcessHTTPExposeMailpit(t *testing.T) {
+	origHardened := globalconfig.DdevGlobalConfig.UseHardenedImages
+	origLetsEncrypt := globalconfig.DdevGlobalConfig.UseLetsEncrypt
+	origBindAll := globalconfig.DdevGlobalConfig.RouterBindAllInterfaces
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.UseHardenedImages = origHardened
+		globalconfig.DdevGlobalConfig.UseLetsEncrypt = origLetsEncrypt
+		globalconfig.DdevGlobalConfig.RouterBindAllInterfaces = origBindAll
+	})
+
+	// On a remote Docker host the router is reachable from other hosts
+	// even without router_bind_all_interfaces.
+	remote := dockerutil.IsRemoteDockerHost()
+
+	testCases := []struct {
+		name          string
+		hardened      bool
+		letsEncrypt   bool
+		bindAll       bool
+		expectMailpit bool
+	}{
+		{name: "default", expectMailpit: true},
+		{name: "bind all interfaces", bindAll: true, expectMailpit: true},
+		{name: "letsencrypt on localhost", letsEncrypt: true, expectMailpit: !remote},
+		{name: "letsencrypt on all interfaces", letsEncrypt: true, bindAll: true, expectMailpit: false},
+		{name: "hardened images", hardened: true, expectMailpit: false},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			globalconfig.DdevGlobalConfig.UseHardenedImages = tc.hardened
+			globalconfig.DdevGlobalConfig.UseLetsEncrypt = tc.letsEncrypt
+			globalconfig.DdevGlobalConfig.RouterBindAllInterfaces = tc.bindAll
+
+			routes, err := processHTTPExpose("web", "80:80,8025:8025", false, []string{"example.ddev.site"})
+			require.NoError(t, err)
+
+			var ports []string
+			for _, r := range routes {
+				ports = append(ports, r.Service.InternalServicePort)
+			}
+			require.Contains(t, ports, "80")
+			if tc.expectMailpit {
+				require.Contains(t, ports, "8025")
+			} else {
+				require.NotContains(t, ports, "8025")
+			}
+		})
 	}
 }
