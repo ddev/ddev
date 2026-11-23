@@ -2,6 +2,9 @@
 
 package nodeps
 
+// MySQLDefaultVersion is the MySQL version `ddev config` offers first
+const MySQLDefaultVersion = MySQL84
+
 // ValidMySQLVersions is the versions of MySQL that are valid
 var ValidMySQLVersions = map[string]bool{
 	MySQL55: true,
