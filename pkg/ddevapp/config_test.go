@@ -486,9 +486,11 @@ func TestConfigCommand(t *testing.T) {
 		util.SetInputScanner(scanner)
 
 		restoreOutput := util.CaptureUserOut()
+		restoreStdout := util.CaptureStdOut()
 		err = app.PromptForConfig()
-		require.NoError(t, err)
+		prompts := restoreStdout()
 		out := restoreOutput()
+		require.NoError(t, err, "output=%s\nprompts=%s", out, prompts)
 
 		// Ensure we have expected vales in output.
 		assert.Contains(out, testDir)
@@ -501,9 +503,11 @@ func TestConfigCommand(t *testing.T) {
 		util.SetInputScanner(scanner)
 
 		restoreOutput = util.CaptureUserOut()
+		restoreStdout = util.CaptureStdOut()
 		err = app.PromptForConfig()
-		assert.NoError(err)
+		prompts = restoreStdout()
 		out = restoreOutput()
+		assert.NoError(err, "output=%s\nprompts=%s", out, prompts)
 
 		// Ensure we have expected vales in output.
 		assert.Contains(out, testDir)
@@ -541,9 +545,11 @@ func TestConfigCommandSuggested(t *testing.T) {
 	prompt := func(app *ddevapp.DdevApp, input string) string {
 		util.SetInputScanner(bufio.NewScanner(strings.NewReader(input)))
 		restoreOutput := util.CaptureUserOut()
+		restoreStdout := util.CaptureStdOut()
 		err := app.PromptForConfig()
+		prompts := restoreStdout()
 		out := restoreOutput()
-		require.NoError(t, err, "output=%s", out)
+		require.NoError(t, err, "output=%s\nprompts=%s", out, prompts)
 		return out
 	}
 
