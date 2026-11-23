@@ -100,7 +100,7 @@ type DdevApp struct {
 	DBImage                   string                `yaml:"dbimage,omitempty"`
 	RouterHTTPPort            string                `yaml:"router_http_port,omitempty"`
 	RouterHTTPSPort           string                `yaml:"router_https_port,omitempty"`
-	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
+	XdebugEnabled             bool                  `yaml:"xdebug_enabled,omitempty"`
 	NoProjectMount            bool                  `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`

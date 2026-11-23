@@ -772,8 +772,10 @@
       }
     },
     "xdebug_enabled": {
-      "description": "Whether Xdebug is enabled in the web container.",
-      "type": "boolean"
+      "description": "Deprecated: use `ddev xdebug on` and `ddev xdebug off` instead. Whether Xdebug is enabled at every start and restart.",
+      "type": "boolean",
+      "deprecated": true,
+      "doNotSuggest": true
     },
     "xhgui_http_port": {
       "description": "Router port to be used for XHGui HTTP access.",

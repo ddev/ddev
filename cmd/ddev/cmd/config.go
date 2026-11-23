@@ -261,6 +261,8 @@ func registerConfigCmd() {
 	_ = ConfigCommand.RegisterFlagCompletionFunc("router-https-port", configCompletionFunc([]string{nodeps.DdevDefaultRouterHTTPSPort}))
 	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether Xdebug is enabled in the web container")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("xdebug-enabled", configCompletionFunc([]string{"true", "false"}))
+	// Hidden in favor of `ddev xdebug on|off`, still works for existing scripts, see #9094.
+	_ = ConfigCommand.Flags().MarkHidden("xdebug-enabled")
 	ConfigCommand.Flags().BoolVar(&noProjectMountArg, "no-project-mount", false, "Whether to skip mounting project code into the web container")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("no-project-mount", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", `Comma-delimited list of project hostnames or --additional-hostnames="" to remove any configured additional hostnames`)

@@ -226,6 +226,10 @@ func TestConfigSetValues(t *testing.T) {
 	out, err := exec.RunHostCommand(DdevBin, args...)
 	require.NoError(t, err, "error running ddev %v: %v, output=%s", args, err, out)
 
+	out, err = exec.RunHostCommand(DdevBin, "config", "--help")
+	require.NoError(t, err, "output=%s", out)
+	require.NotContains(t, out, "xdebug-enabled", "--xdebug-enabled still works but must not appear in help")
+
 	// The second run of the config should not change the unspecified options,
 	// using the auto option here should not change the config at all
 	out, err = exec.RunHostCommand(DdevBin, "config", "--auto")

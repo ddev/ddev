@@ -43,11 +43,6 @@ const ConfigInstructions = `
 # router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
 # router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
 
-# xdebug_enabled: false  # Set to true to enable Xdebug and "ddev start" or "ddev restart"
-# Note that for most people the commands
-# "ddev xdebug" to enable Xdebug and "ddev xdebug off" to disable it work better,
-# as leaving Xdebug enabled all the time is a big performance hit.
-
 # xhgui_http_port: "8143"
 # xhgui_https_port: "8142"
 # The XHGui ports can be changed from the default 8143 and 8142
