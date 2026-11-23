@@ -1498,6 +1498,55 @@ func TestPostgresConfigOverride(t *testing.T) {
 	assert.Equal(" 200\n\n", out, "out: %s, stderr: %s", out, stderr)
 }
 
+// TestPostgresSnapshotRestore restores a PostgreSQL 17 snapshot. In 15-17 the restore
+// writes to /etc/postgresql/conf.d, which upstream images give to root, not postgres.
+// It isn't skipped with GOTEST_SHORT, so it runs on macOS, where the host gid
+// (usually 20) is already taken in the image and the user gets another group;
+// TestDdevAllDatabases covers every version, but only where GOTEST_SHORT is unset.
+func TestPostgresSnapshotRestore(t *testing.T) {
+	origDir, _ := os.Getwd()
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(tmpDir, false)
+	require.NoError(t, err)
+	app.Name = t.Name()
+	app.Database = ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.Postgres17}
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	psql := func(sql string) (string, error) {
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: `psql -tA -c "` + sql + `"`})
+		if err != nil {
+			return out, fmt.Errorf("%v, stderr=%s", err, stderr)
+		}
+		return out, nil
+	}
+
+	_, err = psql("CREATE TABLE snapshot_restore_test (x int); INSERT INTO snapshot_restore_test VALUES (42);")
+	require.NoError(t, err)
+	_, err = app.Snapshot(t.Name(), false)
+	require.NoError(t, err)
+	_, err = psql("DROP TABLE snapshot_restore_test;")
+	require.NoError(t, err)
+
+	err = app.RestoreSnapshot(t.Name(), false)
+	require.NoError(t, err)
+	out, err := psql("SELECT x FROM snapshot_restore_test;")
+	require.NoError(t, err)
+	require.Equal(t, "42", strings.TrimRight(out, "\r\n"))
+}
+
 // TestExtraPackages tests to make sure that *extra_packages config.yaml directives
 // work (and are overridden by *-build/Dockerfile).
 func TestExtraPackages(t *testing.T) {
