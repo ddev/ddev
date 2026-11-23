@@ -3,12 +3,14 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -77,25 +79,28 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 			t.Skip("Skipping outside home test - set DDEV_TEST_OUTSIDE_HOME=true to enable")
 		}
 
+		// testcommon.CreateTmpDir is under ~/tmp, so use the system temp dir instead.
+		tmpDir, err := os.MkdirTemp("", "TestUtilityDiagnose-OutsideHome")
+		require.NoError(t, err)
 		origDir, _ := os.Getwd()
-		tmpDir := testcommon.CreateTmpDir("TestUtilityDiagnose-OutsideHome")
 		t.Cleanup(func() {
-			_ = os.RemoveAll(tmpDir)
 			_ = os.Chdir(origDir)
+			_ = os.RemoveAll(tmpDir)
 		})
+		homeDir := util.GetHomeDir()
+		if homeDir != "" && strings.HasPrefix(tmpDir, homeDir) {
+			t.Skipf("Skipping outside home test, temp dir %s is inside home directory %s", tmpDir, homeDir)
+		}
 
-		// Copy test project to /tmp or similar
+		projectDir := filepath.Join(tmpDir, "BasicProject")
 		testDir := filepath.Join(origDir, "testdata", "TestUtilityDiagnoseCmd/BasicProject")
-		err := fileutil.CopyDir(testDir, tmpDir)
+		err = fileutil.CopyDir(testDir, projectDir)
 		require.NoError(t, err)
 
-		err = os.Chdir(tmpDir)
+		err = os.Chdir(projectDir)
 		require.NoError(t, err)
 
 		out, _ := exec.RunHostCommand(DdevBin, "utility", "diagnose")
-		// Should warn about not being in home directory
-		if os.Getenv("HOME") != "" && tmpDir[:len(os.Getenv("HOME"))] != os.Getenv("HOME") {
-			require.Contains(t, out, "should usually be in a subdirectory of your home directory")
-		}
+		require.Contains(t, out, "should usually be in a subdirectory of your home directory")
 	})
 }
