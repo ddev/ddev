@@ -15,9 +15,9 @@ import (
 // take the default.
 func TestConfirmSuggestedConfig(t *testing.T) {
 	t.Cleanup(func() { util.SetInputScanner(bufio.NewScanner(os.Stdin)) })
-	// The prompt has no trailing newline, so if it reached the test output
-	// it would join the next "=== RUN" or "--- PASS" line, and go test -v -json
-	// (gotestsum in CI) would lose those events and report the test as failed.
+	// The prompt has no trailing newline. In the test output, the last prompt
+	// would join the "--- PASS" line, so go test -json (gotestsum in CI)
+	// would get no pass event and report the test as failed.
 	restoreStdout := util.CaptureStdOut()
 	t.Cleanup(func() { _ = restoreStdout() })
 	restoreUserErr := util.CaptureUserErr()
