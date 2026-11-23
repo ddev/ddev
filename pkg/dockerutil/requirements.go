@@ -6,6 +6,7 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -15,18 +16,24 @@ import (
 )
 
 type DockerVersionMatrix struct {
-	APIVersion    string
-	Version       string
-	PodmanVersion string
+	APIVersion        string
+	Version           string
+	PodmanVersion     string
+	SocktainerVersion string
 }
+
+// socktainerReleaseVersion matches a release version. Builds from source report
+// "unspecified" or "0.0.0-dev", and aren't compared.
+var socktainerReleaseVersion = regexp.MustCompile(`^[0-9]+\.[0-9]+(\.[0-9]+)?$`)
 
 // DockerRequirements defines the minimum Docker version recommended by DDEV.
 // We compare using the APIVersion because it's a consistent and reliable value.
 // The Version is displayed to users as it's more readable and user-friendly.
 var DockerRequirements = DockerVersionMatrix{
-	APIVersion:    versionconstants.DockerMinAPIVersion,
-	Version:       versionconstants.DockerMinVersion,
-	PodmanVersion: versionconstants.PodmanMinVersion,
+	APIVersion:        versionconstants.DockerMinAPIVersion,
+	Version:           versionconstants.DockerMinVersion,
+	PodmanVersion:     versionconstants.PodmanMinVersion,
+	SocktainerVersion: versionconstants.SocktainerMinVersion,
 }
 
 // CheckDockerVersion determines if the Docker version of the host system meets the provided
@@ -51,6 +58,15 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 			return fmt.Errorf("installed Podman version %s is not supported, please update to version %s or newer", currentVersion, dockerVersionMatrix.PodmanVersion)
 		}
 		return nil
+	}
+
+	// A matrix without SocktainerVersion asks only about the Docker API version,
+	// and a socktainer that reports no release version isn't compared.
+	if dockerVersionMatrix.SocktainerVersion != "" && IsSocktainer() {
+		socktainerVersion, err := GetSocktainerVersion()
+		if err == nil && socktainerReleaseVersion.MatchString(socktainerVersion) && !versions.GreaterThanOrEqualTo(socktainerVersion, dockerVersionMatrix.SocktainerVersion) {
+			return fmt.Errorf("installed socktainer version %s is not supported, please update to version %s or newer", socktainerVersion, dockerVersionMatrix.SocktainerVersion)
+		}
 	}
 
 	// Check against recommended API version, if it fails, suggest the minimum Docker version that relates to supported API

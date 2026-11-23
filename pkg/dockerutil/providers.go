@@ -1,6 +1,7 @@
 package dockerutil
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -147,4 +148,49 @@ func IsSELinux() bool {
 		return false
 	}
 	return slices.Contains(info.SecurityOptions, "name=selinux")
+}
+
+// IsAppleContainer reports whether containers are being run by apple container
+// (github.com/apple/container). Prefer this over IsSocktainer() wherever the reason
+// is something the runtime does — single-writer volumes, hostname uniqueness, virtiofs
+// bind mounts — rather than something the API shim does.
+//
+// socktainer is currently the only Docker-compatible API in front of apple container,
+// so this is detected through it; the two are separate questions and may not stay 1:1.
+func IsAppleContainer() bool {
+	return IsSocktainer()
+}
+
+// IsSocktainer detects if the Docker provider is socktainer, the
+// Docker-compatible API that fronts apple container. This is a statement about the
+// API being spoken, not about the runtime behind it — see IsAppleContainer().
+func IsSocktainer() bool {
+	serverVersion, err := GetServerVersion()
+	if err != nil {
+		return false
+	}
+	if serverVersion.Platform.Name == "socktainer" {
+		return true
+	}
+	for _, v := range serverVersion.Components {
+		if strings.HasPrefix(v.Name, "socktainer") {
+			return true
+		}
+	}
+	return false
+}
+
+// GetSocktainerVersion returns the version socktainer reports for itself, without a
+// leading "v". The server's own Version field is only the Docker API version it serves.
+func GetSocktainerVersion() (string, error) {
+	serverVersion, err := GetServerVersion()
+	if err != nil {
+		return "", err
+	}
+	for _, v := range serverVersion.Components {
+		if v.Name == "socktainer" {
+			return strings.TrimPrefix(v.Version, "v"), nil
+		}
+	}
+	return "", fmt.Errorf("socktainer did not report its version")
 }
