@@ -827,6 +827,14 @@ SectionGroup /e "${PRODUCT_NAME}"
         File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
         File /oname=license.txt "..\LICENSE"
 
+        ; The experimental desktop app, for all installation types. It runs
+        ; ddev.exe next to it in a traditional install, or ddev in WSL2.
+        ; A running copy would lock the file, so stop it first.
+        nsExec::ExecToStack 'taskkill /IM ddev-desktop.exe /F'
+        Pop $0
+        Pop $1
+        File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-desktop.exe"
+
         ; Install Linux DDEV binaries to temp directory for WSL2 installations
         ${If} $INSTALL_OPTION == "wsl2-docker-ce"
         ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
@@ -924,6 +932,14 @@ Section -Post
 
     ; Uninstall link opens Windows Settings Apps page (modern approach)
     CreateShortCut "$SMPROGRAMS\DDEV\Uninstall DDEV.lnk" "ms-settings:appsfeatures"
+
+    ; The desktop app uses ddev in the WSL2 distro chosen here, which need
+    ; not be the default one.
+    ${If} $INSTALL_OPTION == "traditional"
+        CreateShortCut "$SMPROGRAMS\DDEV\DDEV Desktop (experimental).lnk" "$INSTDIR\ddev-desktop.exe" "" "$INSTDIR\Icons\ddev.ico"
+    ${Else}
+        CreateShortCut "$SMPROGRAMS\DDEV\DDEV Desktop (experimental).lnk" "$INSTDIR\ddev-desktop.exe" '--wsl-distro "$SELECTED_DISTRO"' "$INSTDIR\Icons\ddev.ico"
+    ${EndIf}
 SectionEnd
 
 Section Uninstall
@@ -937,7 +953,13 @@ Section Uninstall
     EnVar::SetHKCU
     EnVar::DeleteValue "Path" "$INSTDIR"
 
+    ; Stop the desktop app, which would lock its file
+    nsExec::ExecToStack 'taskkill /IM ddev-desktop.exe /F'
+    Pop $0
+    Pop $1
+
     ; Remove all installed files
+    Delete "$INSTDIR\ddev-desktop.exe"
     Delete "$INSTDIR\ddev.exe"
     Delete "$INSTDIR\ddev-hostname.exe"
     Delete "$INSTDIR\mkcert.exe"
@@ -956,6 +978,7 @@ Section Uninstall
     Delete "$SMPROGRAMS\DDEV\DDEV Documentation.lnk"
     Delete "$SMPROGRAMS\DDEV\DDEV Website.lnk"
     Delete "$SMPROGRAMS\DDEV\Uninstall DDEV.lnk"
+    Delete "$SMPROGRAMS\DDEV\DDEV Desktop (experimental).lnk"
     RMDir "$SMPROGRAMS\DDEV"
 
     ; Remove registry keys

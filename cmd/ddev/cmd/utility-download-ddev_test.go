@@ -232,6 +232,40 @@ func TestDownloadDdevExtractAndCopy(t *testing.T) {
 	}
 }
 
+// TestDownloadDdevCopyDesktopApp checks that the desktop app in a CI
+// artifact lands next to ddev, and that a build without it is no error.
+func TestDownloadDdevCopyDesktopApp(t *testing.T) {
+	extract, out := t.TempDir(), t.TempDir()
+	linux := buildTarget{goos: "linux", osName: "linux", arch: "amd64"}
+
+	dest, err := copyDesktopApp(extract, out, linux)
+	require.NoError(t, err)
+	require.Empty(t, dest, "an artifact without the app")
+
+	require.NoError(t, os.WriteFile(filepath.Join(extract, "ddev-desktop"), []byte("#!/bin/sh\n"), 0o644))
+	dest, err = copyDesktopApp(extract, out, linux)
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(out, "ddev-desktop"), dest)
+	require.FileExists(t, dest)
+
+	if !nodeps.IsMacOS() {
+		return
+	}
+	// DDEV.app arrives zipped by ditto, which keeps its permissions.
+	app := filepath.Join(t.TempDir(), "DDEV.app")
+	require.NoError(t, os.MkdirAll(filepath.Join(app, "Contents", "MacOS"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(app, "Contents", "MacOS", "ddev-desktop"), []byte("#!/bin/sh\n"), 0o755))
+	macExtract := t.TempDir()
+	zipOut, err := exec.RunHostCommand("ditto", "-c", "-k", "--keepParent", app, filepath.Join(macExtract, "DDEV.app.zip"))
+	require.NoError(t, err, zipOut)
+	dest, err = copyDesktopApp(macExtract, out, buildTarget{goos: "darwin", osName: "macos", arch: "arm64"})
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(out, "DDEV.app"), dest)
+	info, err := os.Stat(filepath.Join(dest, "Contents", "MacOS", "ddev-desktop"))
+	require.NoError(t, err)
+	require.NotZero(t, info.Mode()&0o111, "the app's executable must stay executable")
+}
+
 // TestDownloadDdevFlagGroups verifies the mutually-exclusive / one-required source
 // selectors on a throwaway command (so the shared command's flag state is not
 // mutated).

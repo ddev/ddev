@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=DDEV
+GenericName=DDEV Desktop (experimental)
+Comment=Manage DDEV projects
+Exec=ddev-desktop
+Icon=ddev-desktop
+Terminal=false
+Categories=Development;
+Keywords=ddev;docker;php;

@@ -51,6 +51,9 @@ jobs:
         with:
           go-version: '>=1.23'
           check-latest: true
+          cache-dependency-path: |
+            go.sum
+            desktop/go.sum
 
       # Find out info about how github is getting the hash
       - run: "git describe --tags --always --dirty"
@@ -107,6 +110,7 @@ jobs:
             .gotmp/bin/windows_amd64/ddev.exe
             .gotmp/bin/windows_amd64/ddev-hostname.exe
             .gotmp/bin/windows_amd64/mkcert.exe
+            .gotmp/bin/windows_amd64/ddev-desktop.exe
       - name: Upload windows_amd64 installer
         uses: actions/upload-artifact@v7
         with:
@@ -120,18 +124,24 @@ jobs:
             .gotmp/bin/windows_arm64/ddev.exe
             .gotmp/bin/windows_arm64/ddev-hostname.exe
             .gotmp/bin/windows_arm64/mkcert.exe
+            .gotmp/bin/windows_arm64/ddev-desktop.exe
       - name: Upload windows_arm64 installer
         uses: actions/upload-artifact@v7
         with:
           name: ddev-windows-arm64-installer
           path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
 
-  # The experimental desktop app (desktop/README.md). These jobs may fail
-  # without failing the workflow, so the download comment still appears.
-  # Their artifacts are unsigned; main-build.yml signs and notarizes.
+  # The experimental desktop app (desktop/README.md) joins each OS's ddev
+  # artifact, so `ddev utility download-ddev --pr` brings the app with the
+  # ddev it runs. The Windows app is already there: the build job
+  # cross-builds it, and the installers carry it. macOS and Linux need CGO,
+  # so they build here and upload the ddev artifacts again with the app.
+  # These jobs may fail without failing the workflow, so the download comment
+  # still appears. Their builds are unsigned; main-build.yml signs.
   desktop-macos:
     name: Desktop app on macOS
     runs-on: macos-latest
+    needs: build
     continue-on-error: true
     timeout-minutes: 30
     steps:
@@ -144,44 +154,55 @@ jobs:
         with:
           go-version: '>=1.23'
           check-latest: true
-          cache-dependency-path: |
-            go.sum
-            desktop/go.sum
+          cache-dependency-path: desktop/go.sum
 
-      - name: Build ddev and the app for arm64 and amd64
+      - name: Build the universal DDEV.app
+        run: make -C desktop
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: ddev-macos-*
+          path: ddev-artifacts
+
+      - name: Add DDEV.app.zip to the ddev artifacts
         run: |
-          make darwin_arm64 darwin_amd64
-          make -C desktop GOARCH=arm64
-          make -C desktop GOARCH=amd64
+          set -eu -o pipefail
+          for arch in arm64 amd64; do
+            cp .gotmp/bin/darwin_universal/DDEV.app.zip "ddev-artifacts/ddev-macos-${arch}/"
+          done
+          chmod +x ddev-artifacts/ddev-macos-arm64/*
 
-      - name: Upload macos-arm64 app
+      - name: Upload macos-amd64 binary and app
         uses: actions/upload-artifact@v7
         with:
-          name: ddev-desktop-macos-arm64
-          path: .gotmp/bin/darwin_arm64/DDEV.app.zip
+          name: ddev-macos-amd64
+          path: ddev-artifacts/ddev-macos-amd64/*
+          overwrite: true
 
-      - name: Upload macos-amd64 app
+      - name: Upload macos-arm64 binary and app
         uses: actions/upload-artifact@v7
         with:
-          name: ddev-desktop-macos-amd64
-          path: .gotmp/bin/darwin_amd64/DDEV.app.zip
+          name: ddev-macos-arm64
+          path: ddev-artifacts/ddev-macos-arm64/*
+          overwrite: true
 
       - name: Go tests
         env:
-          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/darwin_arm64/ddev
+          DDEV_BINARY: ${{ github.workspace }}/ddev-artifacts/ddev-macos-arm64/ddev
         run: make -C desktop test
 
       # Drives the dashboard in the app's own window; see desktop/selftest.js.
       - name: Self-test in the app window
         env:
           DDEV_DESKTOP_SELFTEST: "true"
-        run: |
-          DDEV_DESKTOP_MODE=embedded .gotmp/bin/darwin_arm64/DDEV.app/Contents/MacOS/ddev-desktop
-          DDEV_DESKTOP_MODE=loopback .gotmp/bin/darwin_arm64/DDEV.app/Contents/MacOS/ddev-desktop
+          DDEV_NO_INSTRUMENTATION: "true"
+          DDEV_BINARY: ${{ github.workspace }}/ddev-artifacts/ddev-macos-arm64/ddev
+        run: .gotmp/bin/darwin_universal/DDEV.app/Contents/MacOS/ddev-desktop
 
   desktop-linux:
-    name: Desktop app on Linux ${{ matrix.arch }}${{ matrix.arch == 'amd64' && ', and Windows builds' || '' }}
+    name: Desktop app on Linux ${{ matrix.arch }}
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
+    needs: build
     continue-on-error: true
     timeout-minutes: 30
     strategy:
@@ -198,9 +219,7 @@ jobs:
         with:
           go-version: '>=1.23'
           check-latest: true
-          cache-dependency-path: |
-            go.sum
-            desktop/go.sum
+          cache-dependency-path: desktop/go.sum
 
       - name: Install GTK 4 and WebKitGTK
         run: |
@@ -208,55 +227,44 @@ jobs:
           sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev xvfb
 
       # Wails needs CGO on Linux, so each architecture builds on its own runner.
-      - name: Build ddev and the app
+      - name: Build the app
+        run: make -C desktop
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: ddev-linux-${{ matrix.arch }}
+          path: ddev-artifact
+
+      - name: Add ddev-desktop to the ddev artifact
         run: |
-          make linux_${{ matrix.arch }}
-          make -C desktop
+          cp .gotmp/bin/linux_${{ matrix.arch }}/ddev-desktop ddev-artifact/
+          chmod +x ddev-artifact/*
 
-      - name: Build the Windows apps
-        if: matrix.arch == 'amd64'
-        run: |
-          make -C desktop GOOS=windows GOARCH=amd64 binary
-          make -C desktop GOOS=windows GOARCH=arm64 binary
-
-      - name: Upload linux-${{ matrix.arch }} app
+      - name: Upload linux-${{ matrix.arch }} binary and app
         uses: actions/upload-artifact@v7
         with:
-          name: ddev-desktop-linux-${{ matrix.arch }}
-          path: .gotmp/bin/linux_${{ matrix.arch }}/ddev-desktop
-
-      - name: Upload windows-amd64 app
-        if: matrix.arch == 'amd64'
-        uses: actions/upload-artifact@v7
-        with:
-          name: ddev-desktop-windows-amd64
-          path: .gotmp/bin/windows_amd64/ddev-desktop.exe
-
-      - name: Upload windows-arm64 app
-        if: matrix.arch == 'amd64'
-        uses: actions/upload-artifact@v7
-        with:
-          name: ddev-desktop-windows-arm64
-          path: .gotmp/bin/windows_arm64/ddev-desktop.exe
+          name: ddev-linux-${{ matrix.arch }}
+          path: ddev-artifact/*
+          overwrite: true
 
       - name: Go tests
         env:
-          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_${{ matrix.arch }}/ddev
+          DDEV_BINARY: ${{ github.workspace }}/ddev-artifact/ddev
         run: make -C desktop test
 
+      # The app runs the ddev next to it, as a package installs them.
       - name: Self-test in the app window
         env:
           DDEV_DESKTOP_SELFTEST: "true"
-          DDEV_BINARY: ${{ github.workspace }}/.gotmp/bin/linux_${{ matrix.arch }}/ddev
-        run: |
-          DDEV_DESKTOP_MODE=embedded xvfb-run --auto-servernum .gotmp/bin/linux_${{ matrix.arch }}/ddev-desktop
-          DDEV_DESKTOP_MODE=loopback xvfb-run --auto-servernum .gotmp/bin/linux_${{ matrix.arch }}/ddev-desktop
+          DDEV_NO_INSTRUMENTATION: "true"
+        run: xvfb-run --auto-servernum ddev-artifact/ddev-desktop
 
-  # WebView2 cannot stream, so on Windows the window loads a local URL.
+  # The build job's ddev-windows-amd64 artifact holds the app next to
+  # ddev.exe, as a traditional Windows install does.
   desktop-windows:
     name: Desktop app on Windows
     runs-on: windows-latest
-    needs: [ build, desktop-linux ]
+    needs: build
     continue-on-error: true
     timeout-minutes: 20
     steps:
@@ -265,17 +273,8 @@ jobs:
           name: ddev-windows-amd64
           path: ddev
 
-      - uses: actions/download-artifact@v8
-        with:
-          name: ddev-desktop-windows-amd64
-          path: app
-
       - name: Self-test in the app window
         env:
           DDEV_DESKTOP_SELFTEST: "true"
-          DDEV_DESKTOP_MODE: loopback
           DDEV_NO_INSTRUMENTATION: "true"
-        run: |
-          DDEV_BINARY="$(cygpath -w "$PWD/ddev/ddev.exe")"
-          export DDEV_BINARY
-          ./app/ddev-desktop.exe | cat
+        run: ./ddev/ddev-desktop.exe | cat

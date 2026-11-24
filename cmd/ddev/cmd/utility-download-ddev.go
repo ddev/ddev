@@ -38,7 +38,9 @@ var DownloadDdevCmd = &cobra.Command{
 	Short:       "Download ddev and ddev-hostname binaries built by CI or a release",
 	Long: `Download the ddev and ddev-hostname binaries built by DDEV CI for a given
 source (PR, branch, commit, release tag, latest stable release, or main HEAD)
-and write them into a directory. Exactly one source flag is required.
+and write them into a directory. Exactly one source flag is required. A CI
+build that includes the experimental desktop app (ddev-desktop, or DDEV.app
+on macOS) brings it too, next to the ddev it runs.
 
 Releases and main builds are signed; PR and other branch builds are not. No
 source needs a GitHub token, but one (DDEV_GITHUB_TOKEN, GH_TOKEN, or
@@ -210,9 +212,17 @@ func runDownloadDdev(cmd *cobra.Command) error {
 		}
 	}
 
+	desktopDest, err := copyDesktopApp(extractDir, outputDir, target)
+	if err != nil {
+		return err
+	}
+
 	paths := []string{ddevDest}
 	if hostnameDest != "" {
 		paths = append(paths, hostnameDest)
+	}
+	if desktopDest != "" {
+		paths = append(paths, desktopDest)
 	}
 	autoUnblocked := false
 	if !spec.signed {
@@ -225,11 +235,61 @@ func runDownloadDdev(cmd *cobra.Command) error {
 	}
 
 	printResult(ddevDest, hostnameDest, target, spec.signed, autoUnblocked)
+	printDesktopResult(desktopDest, target)
 	return nil
 }
 
+// copyDesktopApp copies the experimental desktop app, which CI puts in each
+// OS's artifact, next to ddev, where the app looks for the ddev it runs.
+// On macOS it is DDEV.app, zipped by ditto to keep its permissions and
+// signature. It returns "" when the build has no desktop app.
+func copyDesktopApp(extractDir, outputDir string, t buildTarget) (string, error) {
+	bin := "ddev-desktop" + t.exeExt
+	if src := filepath.Join(extractDir, bin); fileutil.FileExists(src) {
+		dest := filepath.Join(outputDir, bin)
+		return dest, copyExecutable(src, dest)
+	}
+	zipped := filepath.Join(extractDir, "DDEV.app.zip")
+	if !fileutil.FileExists(zipped) {
+		return "", nil
+	}
+	if runtime.GOOS != "darwin" || !util.IsCommandAvailable("ditto") {
+		dest := filepath.Join(outputDir, "DDEV.app.zip")
+		return dest, fileutil.CopyFile(zipped, dest)
+	}
+	dest := filepath.Join(outputDir, "DDEV.app")
+	if err := os.RemoveAll(dest); err != nil {
+		return "", err
+	}
+	if out, err := exec.Command("ditto", "-x", "-k", zipped, outputDir).CombinedOutput(); err != nil {
+		return "", fmt.Errorf("unable to unzip DDEV.app: %v: %s", err, out)
+	}
+	return dest, nil
+}
+
+// printDesktopResult says where the desktop app landed and how to start it.
+func printDesktopResult(dest string, t buildTarget) {
+	if dest == "" {
+		return
+	}
+	util.Success("Downloaded the experimental desktop app to %s", dest)
+	if !t.isNative || strings.HasSuffix(dest, ".zip") {
+		return
+	}
+	output.UserOut.Println("It runs the ddev next to it. To start it:")
+	switch t.goos {
+	case "darwin":
+		output.UserOut.Printf("  open %q", dest)
+	case "windows":
+		output.UserOut.Printf("  & %q", dest)
+	default:
+		output.UserOut.Printf("  %q &", dest)
+	}
+}
+
 // clearMacQuarantine best-effort clears the macOS "com.apple.quarantine" xattr
-// from freshly downloaded files, so Gatekeeper doesn't refuse to run them.
+// from freshly downloaded files and app bundles, so Gatekeeper doesn't refuse
+// to run them.
 // Returns whether it attempted the clear (the xattr tool was found); a missing
 // or absent attribute is not treated as a failure, since the file may not
 // have been quarantined in the first place.
@@ -238,7 +298,7 @@ func clearMacQuarantine(paths []string) bool {
 		return false
 	}
 	for _, p := range paths {
-		_ = exec.Command("xattr", "-d", "com.apple.quarantine", p).Run()
+		_ = exec.Command("xattr", "-dr", "com.apple.quarantine", p).Run()
 	}
 	return true
 }

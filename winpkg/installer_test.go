@@ -803,6 +803,12 @@ func testDdevTraditionalInstallation(t *testing.T) {
 	// Verify files exist in expected per-user location
 	require.True(t, fileutil.FileExists(ddevPath), "ddev.exe not found at %s", ddevPath)
 	require.True(t, fileutil.FileExists(hostnamePath), "ddev-hostname.exe not found at %s", hostnamePath)
+	// The desktop app sits next to ddev.exe, which it runs.
+	desktopPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev-desktop.exe")
+	require.True(t, fileutil.FileExists(desktopPath), "ddev-desktop.exe not found at %s", desktopPath)
+	appData := os.Getenv("APPDATA")
+	shortcut := filepath.Join(appData, "Microsoft", "Windows", "Start Menu", "Programs", "DDEV", "DDEV Desktop (experimental).lnk")
+	require.True(t, fileutil.FileExists(shortcut), "desktop app shortcut not found at %s", shortcut)
 
 	// Test ddev version using full path
 	out, err := exec.RunHostCommand(ddevPath, "version")
