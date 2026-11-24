@@ -54,6 +54,14 @@ leaves `.git/config` alone. While it is set, git skips the repository's own
 `--no-verify` and `core.hooksPath` keep Claude from switching the backstop
 off by accident; they are not a security boundary.
 
+The `ask` rule only helps if the person can judge the command. `AGENTS.md`
+therefore asks for one plain `git push <remote> <branch>` per approval, with
+remote setup and retries kept out of it. Before it, Claude names the
+destination, the commits, and whether the push rewrites the branch. A guarded
+one-liner such as `git remote get-url rfay || git remote add …; git push …`
+hides what is about to happen, and so does a retry loop or a `bash -c`
+wrapper.
+
 ## Permissions
 
 Every rule has a space before its `*`: `Bash(tr *)` matches only `tr`, while
