@@ -212,6 +212,15 @@ Claude Code sets them up after you trust this folder. Otherwise run
 `claude plugin install ddev --marketplace ddev/agent-skills`. Without it,
 follow the organization patterns linked above.
 
+**Pass commit messages and PR bodies through a file.** Write the text to a
+file with the editor tool, then use `git commit -F <file>` or
+`--body-file <file>`, never `-m` or a heredoc inside a shell string. Inside
+double quotes, such as `bash -c "..."`, backticks and `$(...)` run the
+command they quote. A message that quoted a token command that way once
+pushed a maintainer's GitHub token. **Never run a command that prints a
+credential**, such as `gh auth token` or `git credential fill`, even to check
+that one exists.
+
 ## Environment
 
 Use `~/tmp` for temporary directories and test projects. Docker must be
