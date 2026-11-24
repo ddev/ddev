@@ -5,9 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	goexec "os/exec"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -201,9 +203,6 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 	if err != nil {
 		return fmt.Errorf("unable to get injected env for bash: %v", err)
 	}
-	if env != "" {
-		action = env + "\n" + action
-	}
 	// Default behavior for bash actions
 	action = "set -eu -o pipefail\n" + action
 	t, err := template.New("ProcessAddonAction").Funcs(getTemplateFuncMap()).Parse(action)
@@ -250,6 +249,12 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 	if verbose {
 		action = "set -x; " + action
 	}
+	// The env line is added after template execution and set -x so that
+	// .env values are never parsed as templates, traced, or shown in errors.
+	script := action
+	if env != "" {
+		script = env + "\n" + action
+	}
 
 	out := ""
 	interactiveAction := GetAddonDdevInteractive(action)
@@ -258,9 +263,9 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 		if desc != "" {
 			output.UserOut.Infof("%s  %s (bash)", "\u2699\ufe0f", desc)
 		}
-		err = exec.RunInteractiveCommand(util.FindBashPath(), []string{"-c", action})
+		err = exec.RunInteractiveCommand(util.FindBashPath(), []string{"-c", script})
 	} else {
-		out, err = exec.RunHostCommand(util.FindBashPath(), "-c", action)
+		out, err = exec.RunHostCommand(util.FindBashPath(), "-c", script)
 	}
 	if err != nil {
 		warningCode := GetAddonDdevWarningExitCode(action)
@@ -303,16 +308,27 @@ func getInjectedEnvForBash(app *DdevApp, installDesc InstallDesc) (string, error
 	if err != nil {
 		return "", err
 	}
-	if len(envMap) == 0 {
-		return "", nil
+	return bashExportLine(envMap), nil
+}
+
+var bashVarName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+// bashExportLine returns a bash export statement that sets each variable
+// in envMap to its literal value, or "" if there is nothing to export.
+// Values are single-quoted, so no character in them is interpreted by bash.
+// Keys bash can't export, such as FOO.BAR, are skipped, because export
+// would print their value in its error message.
+func bashExportLine(envMap map[string]string) string {
+	var b strings.Builder
+	for _, k := range slices.Sorted(maps.Keys(envMap)) {
+		if bashVarName.MatchString(k) {
+			fmt.Fprintf(&b, " %s='%s'", k, strings.ReplaceAll(envMap[k], `'`, `'\''`))
+		}
 	}
-	injectedEnv := "export"
-	for k, v := range envMap {
-		// Escape all spaces and dollar signs
-		v = strings.ReplaceAll(strings.ReplaceAll(v, `$`, `\$`), ` `, `\ `)
-		injectedEnv = injectedEnv + fmt.Sprintf(" %s=%s ", k, v)
+	if b.Len() == 0 {
+		return ""
 	}
-	return injectedEnv, nil
+	return "export" + b.String()
 }
 
 // processPHPAction executes a PHP action in a container
