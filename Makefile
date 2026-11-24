@@ -286,7 +286,7 @@ setup:
 	@if [ -n "$(GOTESTSUM_JSONFILE_DIR)" ]; then mkdir -p "$(GOTESTSUM_JSONFILE_DIR)"; fi
 
 # Required static analysis targets for pre-push.
-staticrequired: setup golangci-lint desktop-lint markdownlint zensical check-image-tags
+staticrequired: setup golangci-lint desktop-mod-tidy desktop-lint markdownlint zensical check-image-tags
 
 # A changed image whose tag never made it into versionconstants.go ships a
 # binary pulling tags nothing builds. Checked rather than fixed here, because
@@ -490,6 +490,17 @@ GOLANGCI_LINT_HINT = Install golangci-lint from https://golangci-lint.run/docs/w
 golangci-lint:
 	@echo "golangci-lint: "
 	$(call run_tool,golangci-lint,run $(SRC_AND_UNDER),$(GOLANGCI_LINT_HINT))
+
+# desktop/ requires this module through a replace directive, so the root's
+# module versions are its minimums. Anything that changes the root go.mod,
+# including a rebase onto a main whose dependencies moved, leaves
+# desktop/go.mod stale. This tidies it and fails until the result is staged
+# for commit, as CI's Static Validation does.
+.PHONY: desktop-mod-tidy
+desktop-mod-tidy:
+	@echo "desktop-mod-tidy: "
+	@cd desktop && go mod tidy
+	@git diff --quiet -- desktop/go.mod desktop/go.sum || { echo "desktop/go.mod or go.sum changed after 'go mod tidy'; stage and commit them."; exit 1; }
 
 # desktop/ is a separate, unvendored module, so it downloads its modules.
 # Lint it as Windows code, which needs no CGO or GTK headers; its own files
