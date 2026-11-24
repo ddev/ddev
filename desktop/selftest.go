@@ -35,7 +35,7 @@ type selfTestResult struct {
 
 // newSelfTest isolates DDEV's global configuration in a temporary directory,
 // so the test's project never reaches the user's project list. It must run
-// before the global configuration is read.
+// before ddev serve starts, which inherits the setting.
 func newSelfTest() (*selfTest, error) {
 	root, err := os.MkdirTemp("", "ddev-desktop-selftest-")
 	if err != nil {

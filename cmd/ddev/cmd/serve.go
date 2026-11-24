@@ -42,7 +42,7 @@ ddev serve --no-open`,
 			util.Failed("Unable to start the dashboard: %v", err)
 		}
 		if desktop {
-			srv.SetDesktop("", nil)
+			srv.SetDesktop()
 			// The desktop app holds stdin open, so this server stops with it.
 			go func() {
 				_, _ = io.Copy(io.Discard, os.Stdin)
@@ -74,7 +74,7 @@ ddev serve --no-open`,
 func registerServeCmd() {
 	ServeCmd.Flags().Int("port", 0, "Port to listen on at 127.0.0.1; a free port is chosen when 0")
 	ServeCmd.Flags().Bool("no-open", false, "Print the URL without opening a browser")
-	// The desktop app on Windows shows a WSL2 dashboard with this flag.
+	// The desktop app runs `ddev serve --desktop` and shows it in its window.
 	ServeCmd.Flags().Bool("desktop", false, "Open links in the default browser, for a desktop window that shows the dashboard")
 	_ = ServeCmd.Flags().MarkHidden("desktop")
 	RootCmd.AddCommand(ServeCmd)

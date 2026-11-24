@@ -26,6 +26,9 @@ type projectSummary struct {
 	URL     string `json:"url,omitempty"`
 	Mailpit string `json:"mailpit,omitempty"`
 	AppRoot string `json:"approot"`
+	// Up is IsUp(Status), so that the desktop app's tray need not know
+	// DDEV's statuses.
+	Up bool `json:"up"`
 }
 
 // IsUp is whether a project's containers run, healthy or not.
@@ -42,6 +45,8 @@ type status struct {
 	Error string `json:"error,omitempty"`
 	// Desktop is set when a desktop window, not a browser, shows the page.
 	Desktop bool `json:"desktop,omitempty"`
+	// Version is the version of this ddev, which the desktop app shows.
+	Version string `json:"version"`
 }
 
 // loadStatus lists the projects the way `ddev list` does, with the router's
@@ -68,7 +73,8 @@ func loadStatus() status {
 	for _, app := range apps {
 		p := projectSummary{Name: app.GetName(), Type: app.GetType(), AppRoot: app.GetAppRoot()}
 		p.Status, _ = app.SiteStatus()
-		if IsUp(p.Status) {
+		p.Up = IsUp(p.Status)
+		if p.Up {
 			p.URL = app.GetPrimaryURL()
 			p.Mailpit = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
 		}

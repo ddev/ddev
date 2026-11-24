@@ -1,33 +1,31 @@
 // Command ddev-desktop is an experimental desktop app for DDEV. It shows the
 // `ddev serve` dashboard in a native window through Wails, and adds a tray
-// menu and notifications. On macOS and Linux it opens no network port; see
-// modes.go for Windows.
+// menu and notifications.
 //
-// It is a separate module so that Wails, and the CGO it needs on macOS and
-// Linux, stay out of the ddev binary and its vendor directory.
+// It holds no DDEV code: it runs `ddev serve --desktop` from the ddev it
+// finds (see serve.go), so the window, the tray, and the terminal all use
+// one ddev. It is a separate module so that Wails, and the CGO it needs on
+// macOS and Linux, stay out of the ddev binary and its vendor directory.
 package main
 
 import (
 	"context"
 	_ "embed"
 	"fmt"
+	"html"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"os/signal"
-	"regexp"
+	"runtime"
 	"slices"
 	"strings"
 	"sync/atomic"
 	"syscall"
 	"time"
 
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/ddev/ddev/pkg/webui"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 	"github.com/wailsapp/wails/v3/pkg/services/notifications"
@@ -48,76 +46,65 @@ func main() {
 	}
 	shareHiddenConsole()
 	useLoginShellPath()
-	ddevBinary, findErr := findDdev()
-	if findErr != nil {
-		log.Print(findErr)
-	}
 
-	m, err := chooseMode()
-	if err != nil {
-		log.Fatal(err)
-	}
 	var st *selfTest
 	if os.Getenv("DDEV_DESKTOP_SELFTEST") == "true" {
-		if m == modeWSL {
-			log.Fatal("The self-test runs in embedded or loopback mode")
-		}
+		var err error
 		if st, err = newSelfTest(); err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	globalconfig.EnsureGlobalConfig()
-	_ = os.Setenv("DOCKER_CLI_HINTS", "false")
-	_ = globalconfig.GetMutagenDataDirectory()
-	// Hooks would print to nowhere; the subcommands still run theirs.
-	ddevapp.SkipHooks = true
-
-	var wrap func(http.Handler) http.Handler
-	if st != nil || os.Getenv("DDEV_DESKTOP_DEBUG") == "true" {
-		wrap = func(h http.Handler) http.Handler {
-			if st != nil {
-				h = st.wrap(h)
-			}
-			if os.Getenv("DDEV_DESKTOP_DEBUG") == "true" {
-				h = logRequests(h)
-			}
-			return h
+	// startErr is shown in the window and a dialog when ddev serve cannot
+	// run, such as when ddev is missing or too old to have `ddev serve`.
+	var startErr error
+	var srv *serveClient
+	tgt, err := chooseTarget(argValue(os.Args[1:], "--wsl-distro"))
+	if err == nil {
+		log.Printf("Running ddev serve from %s", tgt)
+		srv, err = startServe(tgt)
+	}
+	if err != nil {
+		startErr = err
+		log.Print(err)
+		if st != nil {
+			fmt.Printf("SELFTEST FAIL: %v\n", err)
+			st.cleanup()
+			os.Exit(1)
 		}
 	}
 
-	// srv is the in-process dashboard; it is nil in WSL2 mode.
-	var srv *webui.Server
-	var be backend
-	var remote *remoteServer
-	handler := http.NotFoundHandler()
+	// handler serves the window through the Wails asset server. On macOS
+	// and Linux it passes the window's requests to ddev serve. WebView2 on
+	// Windows cannot stream a response through it, so there the window
+	// loads ddev serve's URL instead.
+	handler := errorPage(startErr)
 	windowURL := "/"
-	switch m {
-	case modeEmbedded:
-		srv = webui.NewEmbedded(ddevBinary)
-		handler = srv.Handler()
-		if wrap != nil {
-			handler = wrap(handler)
+	if srv != nil {
+		handler = srv.Proxy()
+		if runtime.GOOS == "windows" {
+			windowURL = srv.URL()
 		}
-	case modeLoopback:
-		if srv, err = webui.New(0); err != nil {
-			log.Fatal(err)
-		}
-		srv.SetDesktop(ddevBinary, wrap)
-		windowURL = srv.URL()
-	case modeWSL:
-		if remote, err = startRemote(ddevBinary); err != nil {
-			log.Fatal(err)
-		}
-		windowURL = remote.URL()
-		be = remote
 	}
+	if st != nil {
+		handler = st.wrap(handler)
+		if runtime.GOOS == "windows" {
+			// The self-test must add its script to the page, so on Windows
+			// the window loads the proxy from a port of its own.
+			if windowURL, err = serveLoopback(handler); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+	if os.Getenv("DDEV_DESKTOP_DEBUG") == "true" {
+		handler = logRequests(handler)
+	}
+
 	notifier := notifications.New()
 	// notifyOn is set once the notifier has started; jobs may end before.
 	var notifyOn atomic.Bool
 	var window *application.WebviewWindow
 	if srv != nil {
-		be = srv
 		srv.OnJobDone = func(title, project, errText string) {
 			// A notification is only useful when the window is not in front.
 			if !notifyOn.Load() || (window.IsVisible() && window.IsFocused()) {
@@ -132,23 +119,11 @@ func main() {
 			}
 			_ = notifier.SendNotification(n)
 		}
-	}
-	if m == modeLoopback {
-		go func() {
-			if err := srv.Serve(); err != nil {
-				log.Print(err)
-			}
-		}()
+		go srv.Follow()
 	}
 	shutdown := func() {
 		if srv != nil {
-			// Open status streams never go idle, so do not wait for them long.
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-			_ = srv.Shutdown(ctx)
-		}
-		if remote != nil {
-			remote.Close()
+			srv.Close()
 		}
 	}
 
@@ -170,7 +145,7 @@ func main() {
 	}
 
 	// quitter asks before a quit would kill running jobs.
-	q := &quitter{be: be}
+	q := &quitter{srv: srv}
 	app := application.New(application.Options{
 		Name:        "DDEV",
 		Description: "Experimental DDEV desktop app " + version,
@@ -213,16 +188,11 @@ func main() {
 		if st != nil {
 			go runSelfTest(srv, st)
 		}
-		if ddevBinary == "" && m != modeWSL {
-			app.Dialog.Error().SetTitle("ddev not found").SetMessage(findErr.Error()).Show()
-		}
-		// WSL2 mode reads and acts on projects with the one ddev inside WSL2.
-		if ddevBinary != "" && m != modeWSL && st == nil {
-			go warnVersionMismatch(app, ddevBinary)
-		}
-		if srv == nil {
+		if startErr != nil {
+			app.Dialog.Error().SetTitle("DDEV cannot start").SetMessage(startErr.Error()).Show()
 			return
 		}
+		go watchExit(app, srv, q)
 		// Notifications need an app bundle on macOS and a session bus on
 		// Linux; without them the app runs without notifications. Windows
 		// registers a COM class, which needs the main thread.
@@ -248,7 +218,7 @@ func main() {
 	if u, err := url.Parse(windowURL); err == nil && u.Host != "" {
 		pageURL = u.Scheme + "://" + u.Host + "/"
 	}
-	t := &trayMenu{app: app, tray: tray, srv: be, show: showWindow, reveal: func(name string) {
+	t := &trayMenu{app: app, tray: tray, srv: srv, startErr: startErr, show: showWindow, reveal: func(name string) {
 		// The page selects the project that its location's hash names.
 		// A change to the hash alone does not reload the page. ExecJS would
 		// wait for the Wails runtime, which the page does not load.
@@ -262,9 +232,66 @@ func main() {
 	}
 }
 
+// argValue returns the value of a --name=value or --name value argument.
+func argValue(args []string, name string) string {
+	for i, a := range args {
+		if v, ok := strings.CutPrefix(a, name+"="); ok {
+			return v
+		}
+		if a == name && i+1 < len(args) {
+			return args[i+1]
+		}
+	}
+	return ""
+}
+
+// errorPage tells the window why there is no dashboard.
+func errorPage(err error) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		msg := "Starting…"
+		if err != nil {
+			msg = err.Error()
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = fmt.Fprintf(w, `<!doctype html><title>DDEV</title><body style="font-family:system-ui;margin:2em"><h1>DDEV cannot start</h1><pre style="white-space:pre-wrap">%s</pre></body>`, html.EscapeString(msg))
+	})
+}
+
+// serveLoopback serves h on a free port of 127.0.0.1 and returns its URL.
+func serveLoopback(h http.Handler) (string, error) {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return "", err
+	}
+	go func() { _ = (&http.Server{Handler: h, ReadHeaderTimeout: 10 * time.Second}).Serve(l) }()
+	return "http://" + l.Addr().String() + "/", nil
+}
+
+// watchExit tells the user when ddev serve stops while the app runs, since
+// the window and the tray need it.
+func watchExit(app *application.App, srv *serveClient, q *quitter) {
+	<-srv.Exited()
+	if srv.Closing() {
+		return
+	}
+	msg := "ddev serve stopped, so DDEV must quit."
+	if out := srv.Output(); out != "" {
+		msg += "\n\n" + out
+	}
+	log.Print(msg)
+	application.InvokeAsync(func() {
+		d := app.Dialog.Error().SetTitle("DDEV stopped").SetMessage(msg)
+		d.AddButton("Quit").OnClick(func() {
+			q.force.Store(true)
+			go app.Quit()
+		})
+		d.Show()
+	})
+}
+
 // runSelfTest waits for selftest.js to report, prints the result, and exits
 // with its status. Wails' Quit ends the process without returning from Run.
-func runSelfTest(srv *webui.Server, st *selfTest) {
+func runSelfTest(srv *serveClient, st *selfTest) {
 	code := 1
 	select {
 	case res := <-st.result:
@@ -278,39 +305,16 @@ func runSelfTest(srv *webui.Server, st *selfTest) {
 	case <-time.After(3 * time.Minute):
 		fmt.Println("SELFTEST FAIL: no result from the window within 3 minutes")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	_ = srv.Shutdown(ctx)
+	srv.Close()
 	st.cleanup()
 	os.Exit(code)
 }
-
-// warnVersionMismatch warns when the ddev that actions run, or the ddev a
-// terminal would run, is not the version this app was built from.
-func warnVersionMismatch(app *application.App, ddevBinary string) {
-	bins := []string{ddevBinary}
-	if b, err := exec.LookPath(ddevName()); err == nil {
-		bins = append(bins, b)
-	}
-	bad := versionMismatches(versionconstants.DdevVersion, bins)
-	if len(bad) == 0 {
-		return
-	}
-	msg := fmt.Sprintf("This app is DDEV %s, but:\n\n%s\n\nThe app can show projects wrongly, and two versions that both start a project keep rewriting its files. Use one DDEV version for the app and the terminal.", versionconstants.DdevVersion, strings.Join(bad, "\n"))
-	log.Print(msg)
-	application.InvokeAsync(func() {
-		app.Dialog.Warning().SetTitle("DDEV versions differ").SetMessage(msg).Show()
-	})
-}
-
-// tokenParam matches the token in a launch URL, which a log must not show.
-var tokenParam = regexp.MustCompile(`(token=[0-9a-f]{4})[0-9a-f]*`)
 
 // logRequests logs each request the webview makes, since the window has no
 // developer tools in a production build.
 func logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s host=%q origin=%q", r.Method, tokenParam.ReplaceAllString(r.URL.RequestURI(), "${1}…"), r.Host, r.Header.Get("Origin"))
+		log.Printf("%s %s host=%q origin=%q", r.Method, r.URL.RequestURI(), r.Host, r.Header.Get("Origin"))
 		next.ServeHTTP(w, r)
 	})
 }
@@ -319,26 +323,38 @@ func logRequests(next http.Handler) http.Handler {
 type trayMenu struct {
 	app  *application.App
 	tray *application.SystemTray
-	srv  backend
-	show func()
+	// srv is nil when ddev serve could not start, and startErr says why.
+	srv      *serveClient
+	startErr error
+	show     func()
 	// reveal shows the window with a project selected.
-	reveal func(name string)
-	last   []webui.ProjectState
-	err    string
+	reveal  func(name string)
+	last    []project
+	err     string
+	version string
 }
 
 func (t *trayMenu) follow() {
 	first := true
 	for {
-		changed := t.srv.Changed()
-		projects, err := t.srv.Projects()
+		var changed <-chan struct{}
+		var projects []project
+		var err error
+		ver := ""
+		if t.srv != nil {
+			changed = t.srv.Changed()
+			projects, err = t.srv.Projects()
+			ver = t.srv.Version()
+		} else {
+			err = t.startErr
+		}
 		errText := ""
 		if err != nil {
 			errText = err.Error()
 		}
-		if first || errText != t.err || !slices.Equal(projects, t.last) {
-			first, t.last, t.err = false, projects, errText
-			menu := t.build(projects, errText)
+		if first || errText != t.err || ver != t.version || !slices.Equal(projects, t.last) {
+			first, t.last, t.err, t.version = false, projects, errText, ver
+			menu := t.build(projects, errText, ver)
 			application.InvokeAsync(func() { t.tray.SetMenu(menu) })
 		}
 		select {
@@ -348,11 +364,13 @@ func (t *trayMenu) follow() {
 	}
 }
 
-func (t *trayMenu) build(projects []webui.ProjectState, errText string) *application.Menu {
+func (t *trayMenu) build(projects []project, errText, ver string) *application.Menu {
 	m := t.app.NewMenu()
 	m.Add("Open DDEV").OnClick(func(*application.Context) { t.show() })
 	m.AddSeparator()
 	if errText != "" {
+		// A menu item shows one line.
+		errText, _, _ = strings.Cut(errText, "\n")
 		m.Add(errText).SetEnabled(false)
 	} else if len(projects) == 0 {
 		m.Add("No projects").SetEnabled(false)
@@ -363,7 +381,7 @@ func (t *trayMenu) build(projects []webui.ProjectState, errText string) *applica
 		sub.Add(p.Status + " · " + p.Type).SetEnabled(false)
 		sub.AddSeparator()
 		// A project that is starting or unhealthy is up too, and needs Stop.
-		if webui.IsUp(p.Status) {
+		if p.Up {
 			running++
 			if site := p.URL; site != "" {
 				sub.Add("Open site").OnClick(func(*application.Context) { _ = t.app.Browser.OpenURL(site) })
@@ -386,6 +404,13 @@ func (t *trayMenu) build(projects []webui.ProjectState, errText string) *applica
 	m.Add("Stop all").SetEnabled(running > 0).OnClick(t.confirm("Stop all projects?", "Every running DDEV project will be stopped.", "Stop all", t.global("stop-all")))
 	m.Add("Power off").OnClick(t.confirm("Power off DDEV?", "This stops all projects and DDEV’s shared containers.", "Power off", t.global("poweroff")))
 	m.AddSeparator()
+	if t.srv != nil {
+		about := t.srv.target.String()
+		if ver != "" {
+			about = "DDEV " + ver + " · " + about
+		}
+		m.Add(about).SetEnabled(false)
+	}
 	m.Add("Quit DDEV app").OnClick(func(*application.Context) { t.app.Quit() })
 	return m
 }
@@ -413,6 +438,9 @@ func (t *trayMenu) confirm(title, message, okLabel string, then func(*applicatio
 
 func (t *trayMenu) post(path string) func(*application.Context) {
 	return func(*application.Context) {
+		if t.srv == nil {
+			return
+		}
 		if err := t.srv.Post(path); err != nil {
 			t.app.Dialog.Error().SetTitle("DDEV").SetMessage(err.Error()).Show()
 		}
@@ -421,9 +449,9 @@ func (t *trayMenu) post(path string) func(*application.Context) {
 
 func statusMark(status string) string {
 	switch status {
-	case ddevapp.SiteRunning:
+	case "running":
 		return "●"
-	case ddevapp.SitePaused, ddevapp.SiteStopped:
+	case "paused", "stopped":
 		return "○"
 	}
 	return "◌"
@@ -433,7 +461,7 @@ func statusMark(status string) string {
 // them, which can leave a project half started or a database half restored.
 type quitter struct {
 	app *application.App
-	be  backend
+	srv *serveClient
 	// force is set once the user has agreed, or a signal asked to quit.
 	force atomic.Bool
 	// asking is set while the question is shown.
@@ -444,10 +472,10 @@ type quitter struct {
 // its question from another goroutine and refuses this quit; the answer
 // quits again.
 func (q *quitter) shouldQuit() bool {
-	if q.force.Load() || q.be == nil {
-		return true
+	var running []string
+	if q.srv != nil && !q.force.Load() {
+		running = q.srv.RunningJobs()
 	}
-	running := q.be.RunningJobs()
 	if len(running) == 0 {
 		return true
 	}

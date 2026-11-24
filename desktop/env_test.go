@@ -23,9 +23,38 @@ func TestFindDdev(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, fake, b)
 
+	known := t.TempDir()
+	orig := wellKnownDirs
+	t.Cleanup(func() { wellKnownDirs = orig })
+	wellKnownDirs = func() []string { return []string{known} }
 	t.Setenv("PATH", t.TempDir())
 	_, err = findDdev()
-	require.ErrorContains(t, err, "ddev was not found on PATH")
+	require.ErrorContains(t, err, "ddev was not found next to this app or on PATH")
+
+	// A login shell without Homebrew on its PATH still finds Homebrew's ddev.
+	brewed := filepath.Join(known, "ddev")
+	require.NoError(t, os.WriteFile(brewed, []byte("#!/bin/sh\n"), 0o755))
+	b, err = findDdev()
+	require.NoError(t, err)
+	require.Equal(t, brewed, b)
+}
+
+func TestDdevBeside(t *testing.T) {
+	dir := t.TempDir()
+	macos := filepath.Join(dir, "DDEV.app", "Contents", "MacOS")
+	require.NoError(t, os.MkdirAll(macos, 0o755))
+	require.Empty(t, ddevBeside(macos))
+
+	// As `ddev utility download-ddev` leaves them: ddev next to DDEV.app.
+	beside := filepath.Join(dir, "ddev")
+	require.NoError(t, os.WriteFile(beside, []byte("#!/bin/sh\n"), 0o755))
+	require.Equal(t, beside, ddevBeside(macos))
+	require.Equal(t, beside, ddevBeside(dir), "a Linux or Windows app next to ddev")
+
+	// A ddev inside the bundle wins.
+	inside := filepath.Join(macos, "ddev")
+	require.NoError(t, os.WriteFile(inside, []byte("#!/bin/sh\n"), 0o755))
+	require.Equal(t, inside, ddevBeside(macos))
 }
 
 func TestUseLoginShellPath(t *testing.T) {
@@ -41,25 +70,6 @@ func TestUseLoginShellPath(t *testing.T) {
 	t.Setenv("SHELL", filepath.Join(t.TempDir(), "missing"))
 	useLoginShellPath()
 	require.Equal(t, "/opt/login/bin:/usr/bin:/bin", os.Getenv("PATH"))
-}
-
-func TestVersionMismatches(t *testing.T) {
-	dir := t.TempDir()
-	script := func(name, body string) string {
-		p := filepath.Join(dir, name)
-		require.NoError(t, os.WriteFile(p, []byte("#!/bin/sh\n"+body+"\n"), 0o755))
-		return p
-	}
-	same := script("same", "echo 'ddev version v1.25.5'")
-	older := script("older", "echo 'A notice'; echo 'ddev version v1.24.10'")
-	silent := script("silent", "true")
-
-	require.Empty(t, versionMismatches("v1.25.5", []string{same, "", same}))
-	bad := versionMismatches("v1.25.5", []string{same, older, silent, filepath.Join(dir, "missing")})
-	require.Len(t, bad, 3)
-	require.Equal(t, older+" is v1.24.10", bad[0])
-	require.Equal(t, silent+" printed no version", bad[1])
-	require.Contains(t, bad[2], "missing")
 }
 
 func TestStatusMark(t *testing.T) {

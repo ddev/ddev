@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
 // refreshInterval is how often the status stream reloads the project list
@@ -28,7 +29,8 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		changed := s.changedCh()
 		st := loadStatus()
 		st.Jobs = s.jobs.summaries()
-		st.Desktop = s.embedded || s.desktop
+		st.Desktop = s.desktop
+		st.Version = versionconstants.DdevVersion
 		sse.send("status", st)
 		select {
 		case <-changed:

@@ -52,15 +52,8 @@ type Server struct {
 	baseEnv []string
 	// ddevBinary is the ddev binary subcommands run with.
 	ddevBinary string
-	// embedded is set when no port is open and a webview delivers requests.
-	embedded bool
 	// desktop is set when a desktop window, not a browser, shows the page.
 	desktop bool
-	// wrap, when set, wraps the handler that Serve uses.
-	wrap func(http.Handler) http.Handler
-
-	// OnJobDone, when set before serving, is called as each job ends.
-	OnJobDone func(title, project, errText string)
 
 	// changed is closed and replaced whenever a job starts or ends, so the
 	// status streams reload at once instead of on their next tick.
@@ -91,7 +84,7 @@ func New(port int) (*Server, error) {
 		ddevBinary: bin,
 		changed:    make(chan struct{}),
 	}
-	s.jobs = newJobs(s.notifyChanged, s.jobDone)
+	s.jobs = newJobs(s.notifyChanged)
 	actual := l.Addr().(*net.TCPAddr).Port
 	s.hosts, s.origins = map[string]bool{}, map[string]bool{}
 	for _, h := range []string{"127.0.0.1", "localhost"} {
@@ -103,34 +96,11 @@ func New(port int) (*Server, error) {
 	return s, nil
 }
 
-// SetDesktop prepares a server from New for a desktop window that loads its
-// URL: subcommands run with ddevBinary when it is set, links open through
-// the server, and wrap, when set, wraps the handler. Call it before Serve.
-func (s *Server) SetDesktop(ddevBinary string, wrap func(http.Handler) http.Handler) {
+// SetDesktop prepares the server for the desktop app's window, which opens
+// no new windows: the page asks the server to open links instead. Call it
+// before Serve.
+func (s *Server) SetDesktop() {
 	s.desktop = true
-	if ddevBinary != "" {
-		s.ddevBinary = ddevBinary
-	}
-	s.wrap = wrap
-}
-
-// NewEmbedded returns a server without a listener, for a desktop webview
-// that passes requests to Handler. Subcommands run with ddevBinary.
-func NewEmbedded(ddevBinary string) *Server {
-	s := &Server{
-		baseEnv:    os.Environ(),
-		ddevBinary: ddevBinary,
-		embedded:   true,
-		changed:    make(chan struct{}),
-	}
-	s.jobs = newJobs(s.notifyChanged, s.jobDone)
-	return s
-}
-
-func (s *Server) jobDone(j jobSummary) {
-	if s.OnJobDone != nil {
-		s.OnJobDone(j.Title, j.Project, j.Err)
-	}
 }
 
 // URL is the launch URL, which carries the token.
@@ -140,11 +110,7 @@ func (s *Server) URL() string {
 
 // Serve serves until Shutdown.
 func (s *Server) Serve() error {
-	h := s.Handler()
-	if s.wrap != nil {
-		h = s.wrap(h)
-	}
-	s.http.Handler = h
+	s.http.Handler = s.Handler()
 	err := s.http.Serve(s.listener)
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
@@ -190,11 +156,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/jobs/{id}", s.handleJobStream)
 	mux.HandleFunc("GET /api/project-types", s.handleProjectTypes)
 	mux.HandleFunc("GET /api/addons/registry", s.handleAddonRegistry)
-	if s.embedded || s.desktop {
+	if s.desktop {
 		mux.HandleFunc("POST /api/open-url", s.handleOpenURL)
-	}
-	if s.embedded {
-		return s.secureEmbedded(mux)
 	}
 	return s.secure(mux)
 }
@@ -205,24 +168,6 @@ func securityHeaders(h http.Header) {
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("Referrer-Policy", "no-referrer")
 	h.Set("Cache-Control", "no-store")
-}
-
-// dashboardHeader is sent by the page with every state change. A page from
-// another origin cannot add it without a CORS preflight, which the
-// dashboard never answers.
-const dashboardHeader = "X-DDEV-Dashboard"
-
-// secureEmbedded needs no token, since no port is open, but still refuses a
-// state change that another page in the webview could have sent.
-func (s *Server) secureEmbedded(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		securityHeaders(w.Header())
-		if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Header.Get(dashboardHeader) == "" {
-			http.Error(w, "request refused", http.StatusForbidden)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
 }
 
 // secure rejects requests to an unexpected host, without the token, or,

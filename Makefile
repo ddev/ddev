@@ -413,14 +413,20 @@ windows_install: windows_amd64_install windows_arm64_install
 # the installer is then signed itself. The signing and packaging targets take
 # no build prerequisites, so main-build.yml can run one on a machine holding
 # nothing but signtool and the files it downloaded.
-windows_amd64_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt
-windows_arm64_binaries: $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt
+windows_amd64_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt windows_amd64_desktop
+windows_arm64_binaries: $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt windows_arm64_desktop
 windows_binaries: windows_amd64_binaries windows_arm64_binaries
+
+# The desktop app (desktop/) needs no CGO on Windows, so it cross-builds here
+# and ships in the installer next to ddev.exe. Its module has its own
+# dependencies, so Go rebuilds it only when something changed.
+windows_%_desktop:
+	$(MAKE) -C desktop GOOS=windows GOARCH=$* VERSION=$(VERSION) binary
 
 windows_%_sign_binaries:
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing $* binaries, DDEV_WINDOWS_SIGN not set"; else \
 		echo "Signing windows $* binaries..." && \
-		signtool sign -fd SHA256 "$(GOTMP)/bin/windows_$*/ddev.exe" "$(GOTMP)/bin/windows_$*/ddev-hostname.exe" "$(GOTMP)/bin/windows_$*/mkcert.exe" "$(GOTMP)/bin/windows_$*/ddev_gen_autocomplete.exe"; \
+		signtool sign -fd SHA256 "$(GOTMP)/bin/windows_$*/ddev.exe" "$(GOTMP)/bin/windows_$*/ddev-hostname.exe" "$(GOTMP)/bin/windows_$*/mkcert.exe" "$(GOTMP)/bin/windows_$*/ddev_gen_autocomplete.exe" "$(GOTMP)/bin/windows_$*/ddev-desktop.exe"; \
 	fi
 
 windows_sign_binaries: windows_amd64_sign_binaries windows_arm64_sign_binaries
@@ -491,11 +497,9 @@ golangci-lint:
 	@echo "golangci-lint: "
 	$(call run_tool,golangci-lint,run $(SRC_AND_UNDER),$(GOLANGCI_LINT_HINT))
 
-# desktop/ requires this module through a replace directive, so the root's
-# module versions are its minimums. Anything that changes the root go.mod,
-# including a rebase onto a main whose dependencies moved, leaves
-# desktop/go.mod stale. This tidies it and fails until the result is staged
-# for commit, as CI's Static Validation does.
+# desktop/ is a separate module, unvendored and independent of this one.
+# This tidies it and fails until the result is staged for commit, as CI's
+# Static Validation does.
 .PHONY: desktop-mod-tidy
 desktop-mod-tidy:
 	@echo "desktop-mod-tidy: "
@@ -528,8 +532,6 @@ go-mod-update:
 	go get -u ./...
 	go mod tidy
 	go mod vendor
-	@# desktop/ builds against this module, so its go.mod must follow it.
-	cd desktop && go mod tidy
 
 quickstart-test: build dummy-project
 	@echo "quickstart-test:"
@@ -551,8 +553,10 @@ webui-e2e-real: build
 
 .PHONY: desktop
 # Experimental Wails desktop app, a separate module; see desktop/README.md.
+# On Linux and Windows it lands next to the ddev built here; on macOS it is
+# .gotmp/bin/darwin_universal/DDEV.app.
 desktop: build
-	$(MAKE) -C desktop VERSION=$(VERSION) DDEV_BIN=$(abspath $(GOTMP)/bin/$(DEFAULT_BUILD))
+	$(MAKE) -C desktop VERSION=$(VERSION)
 
 # bats refuses ever to exit until all processes started by it
 # have exited. So we don't want to let bats/ddev start mutagen daemon

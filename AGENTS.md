@@ -216,12 +216,6 @@ a push must read the way they would type it by hand:
 - On a network error, report it and run the same command again as a new
   call. Never write a retry loop.
 
-**After a rebase onto `main`, run `make desktop-mod-tidy`.** The `desktop/`
-module requires the root module through a `replace` directive, so when `main`
-has bumped a dependency in the root `go.mod`, `desktop/go.mod` and
-`desktop/go.sum` go stale and Static Validation fails. Commit the result
-before you push the rebased branch.
-
 When creating a branch, use `YYYYMMDD_<username>_<short_description>`, for
 example `20250108_rfay_fix_networking`. Create one from upstream rather than
 from a possibly-stale local `main`, and compare against the same base:
