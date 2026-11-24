@@ -1197,7 +1197,9 @@ RUN <<EOF
 set -eu -o pipefail
 chmod ugo+rx /healthcheck.sh
 mkdir -p /etc/postgresql/conf.d
-chgrp "$username" /etc/postgresql/conf.d
+# The container runs as $uid:$gid. Use the numeric gid: on macOS, gid 20 already
+# exists in the image (dialout), so the user's own group gets another gid.
+chgrp "$gid" /etc/postgresql/conf.d
 chmod g+rwx,o-w /etc/postgresql/conf.d
 ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
 
