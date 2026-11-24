@@ -1,0 +1,30 @@
+# Go tests that are intentionally not run (or not visible as run) in CI.
+#
+# .github/workflows/tests-not-run.yml lists every Go test and subtest that
+# no CI job on main ran (passed or failed) in the last 14 days, using the
+# gotestsum results perf-collect.yml collects. Tests listed here are left
+# out of that report.
+#
+# Each entry:
+#   test:        Required. A top-level test (covers all of its subtests) or
+#                one subtest, as `go test` names it: TestFoo/bar_baz.
+#   package:     Optional. Directory relative to the repo root, such as
+#                pkg/ddevapp. Without it, the entry matches the test name in
+#                any package.
+#   reason:      Required. Why CI does not run it, and how to run it by hand.
+#   window_days: Optional, below 90. Keep the test in the report, but judge
+#                it over this many days instead of 14. For tests that run
+#                only in a job that runs rarely.
+#
+# The report also lists entries here that match no test function anymore.
+
+tests:
+  - test: TestWindowsInstallerWSL2
+    package: winpkg
+    reason: Runs only in the ddev-windows-installer Buildkite pipeline (`make testwininstaller`), which calls plain `go test` without gotestsum, so no results are collected.
+  - test: TestWindowsInstallerTraditional
+    package: winpkg
+    reason: Runs only in the ddev-windows-installer Buildkite pipeline (`make testwininstaller`), which calls plain `go test` without gotestsum, so no results are collected.
+  - test: TestWSL2InstallScripts
+    package: winpkg
+    reason: Runs only in the ddev-windows-installer Buildkite pipeline (`make testwsl2scripts`), which calls plain `go test` without gotestsum, so no results are collected.

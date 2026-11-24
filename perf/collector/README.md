@@ -107,6 +107,50 @@ should have finished.
   `extractTestEvents()` (the test2json parser) is a pure function verified
   against fixture data, same ad hoc approach as `collect-test-runtime.js`'s
   pure functions.
+- `last-ran-index.js` keeps a fourth file from the same artifacts
+  `collect-per-test.js` downloads (passed `--last-ran=`): `last-ran.json`,
+  one entry per package and test name, subtests included, holding only the
+  latest run in which it passed or failed (time, leg, outcome, run URL) and
+  the latest run in which it skipped (the same, plus the `file.go:N: text`
+  line the skip printed). Nothing is filtered by duration, so it covers
+  every test that ran, at a few thousand entries rather than one row per
+  run. Entries with nothing newer than 90 days (`INDEX_RETENTION_DAYS`, the
+  artifact retention) are pruned; `covers_since` records how far back the
+  file's history goes. When the file does not exist yet, the collector
+  reaches back 30 days instead of starting from its cursor, so the first
+  report has a full window; per-test rows are deduped, so the overlap only
+  costs downloads.
+
+  `report-tests-not-run.js` reads it every Monday from
+  `.github/workflows/tests-not-run.yml` and lists, for a window of 14 days
+  by default (`window_days` on a manual dispatch):
+    - tests and subtests whose only outcomes in the window were skips, with
+    the skip message;
+    - every top-level `func TestXxx(t *testing.T)` in a package `go list
+    ./...` finds for linux, darwin, or windows that has no outcome at all in
+    the window. This catches whole packages that no `make` target passes to
+    `go test`;
+    - entries in `.github/tests-not-run-in-ci.yml` that match no test.
+
+  Each entry links to its `file:line` at the swept commit. The workflow
+  opens a single issue titled `CI: Go tests that ran in no CI job`,
+  rewrites its body on later runs, and closes it when the list is empty.
+  `.github/tests-not-run-in-ci.yml` holds the tests CI deliberately does
+  not run, each with a required reason; a test that runs only in a job that
+  runs rarely can instead get a longer `window_days` there. When
+  `covers_since` is newer than the window start, the report says the index
+  is incomplete and the workflow leaves the issue alone. Only `main` runs
+  count, and only legs that upload gotestsum results: Quickstart (Bats),
+  the Windows installer pipeline (plain `go test`), and Buildkite legs
+  without `BUILDKITE_API_TOKEN` contribute nothing. Run it locally with:
+
+  ```bash
+  git fetch origin performance-data
+  git show origin/performance-data:ci/tests/last-ran.json > ~/tmp/last-ran.json
+  node perf/collector/report-tests-not-run.js --index=$HOME/tmp/last-ran.json \
+    --allowlist=.github/tests-not-run-in-ci.yml
+  ```
+
 - **Two separate dashboard pages, not one page with a dataset switcher.**
   The nightly perf benchmarks and CI test runtime are unrelated datasets for
   unrelated audiences -- the perf numbers are plausibly public-interesting
@@ -160,7 +204,7 @@ the `performance-data` branch, the CI-test-runtime files
 (`ci/test-runtime-history.ndjson`, `ci/index.html`) under its `ci/`
 subdirectory, and the per-test files (`ci/tests/per-test-history.ndjson`,
 `ci/tests/index.html`, plus the collector's own `ci/tests/per-test-cursor.json`
-bookkeeping file) under `ci/tests/`, then (if anything changed) triggers
+bookkeeping file and the `ci/tests/last-ran.json` index) under `ci/tests/`, then (if anything changed) triggers
 `docs-publish.yml`, which checks out that branch and folds all three into the
 site under `/perf/`, `/perf/ci/`, and `/perf/ci/tests/` respectively.
 
