@@ -432,8 +432,10 @@ windows_%_sign_binaries:
 windows_sign_binaries: windows_amd64_sign_binaries windows_arm64_sign_binaries
 
 # Packs whatever is already in $(GOTMP)/bin/windows_$* and $(GOTMP)/bin/linux_$*.
+# makensis aborts with std::bad_alloc under the C locale or none, as in a
+# minimal environment, so it gets a UTF-8 one.
 windows_%_package:
-	@makensis -DTARGET_ARCH=$* -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
+	@LC_ALL=C.UTF-8 makensis -DTARGET_ARCH=$* -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 
 windows_%_sign_installer:
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing $* installer, DDEV_WINDOWS_SIGN not set"; else \
