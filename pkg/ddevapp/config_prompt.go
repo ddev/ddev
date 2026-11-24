@@ -235,7 +235,7 @@ func DatabaseTypes() []string {
 func DatabaseVersions(dbType string) ([]string, string) {
 	switch dbType {
 	case nodeps.MySQL:
-		return nodeps.GetValidMySQLVersions(), nodeps.MySQL84
+		return nodeps.GetValidMySQLVersions(), nodeps.MySQLDefaultVersion
 	case nodeps.Postgres:
 		return nodeps.GetValidPostgresVersions(), nodeps.PostgresDefaultVersion
 	}

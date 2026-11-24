@@ -1,7 +1,8 @@
 package nodeps
 
-// PostgresDefaultVersion is the default PostgreSQL version
-const PostgresDefaultVersion = Postgres14
+// PostgresDefaultVersion is the PostgreSQL version `ddev config` offers first,
+// and the one tests use when the version doesn't matter
+const PostgresDefaultVersion = Postgres18
 
 // ValidPostgresVersions is the versions of PostgreSQL that are valid
 var ValidPostgresVersions = map[string]bool{
