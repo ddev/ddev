@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 )
 
@@ -82,7 +83,7 @@ func visibleNames(m AppModel) []string {
 func TestDashboardShowsProjects(t *testing.T) {
 	m := newModel(t, 120, 24, sampleProjects()...)
 	view := screen(m)
-	for _, want := range []string{"DDEV v", "alpha", "running", "drupal11", "beta", "stopped", "https://alpha.ddev.site", "3 projects · 1 running"} {
+	for _, want := range []string{"DDEV " + versionconstants.DdevVersion, "alpha", "running", "drupal11", "beta", "stopped", "https://alpha.ddev.site", "3 projects · 1 running"} {
 		require.Contains(t, view, want)
 	}
 	require.NotContains(t, view, "All projects are stopped")
@@ -189,7 +190,7 @@ func TestSharedContainerHealth(t *testing.T) {
 
 	ok := load(health{"healthy", "previously healthy, sleeping"}, health{"healthy", "ok"})
 	header := headerLine(ok)
-	require.True(t, strings.HasPrefix(header, "DDEV v"), header)
+	require.True(t, strings.HasPrefix(header, "DDEV "+versionconstants.DdevVersion), header)
 	require.True(t, strings.HasSuffix(header, "SSH agent ● healthy · Router ● healthy"), "on the right, as in the detail view: %q", header)
 	require.NotContains(t, screen(ok), "previously healthy", "a healthy container's log is routine")
 	require.Equal(t, lipgloss.Height(ok.footer()), 2, "a healthy footer is the divider and the help")

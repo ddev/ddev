@@ -25,10 +25,11 @@ var BuildSource = ""
 
 // unreleasedVersionPattern matches a DdevVersion that isn't a clean release
 // tag: the `git describe --tags --always --dirty` long form left by commits
-// past a tag (v1.2.3-15-gabcdef1), a dirty working tree (-dirty), or the
+// past a tag (v1.2.3-15-gabcdef1), a dirty working tree (-dirty), a bare
+// hash from a clone without tags, such as a fork (abcdef1), or the
 // debug.BuildInfo short-hash fallback used when a build has no embedded git
 // tag info (gabcdef1).
-var unreleasedVersionPattern = regexp.MustCompile(`-\d+-g[0-9a-f]{6,}|-dirty$|^g[0-9a-f]{6,}$`)
+var unreleasedVersionPattern = regexp.MustCompile(`-\d+-g[0-9a-f]{6,}|-dirty$|^g?[0-9a-f]{6,}$`)
 
 // IsUnreleasedDdevVersion returns true if version looks like it was built
 // from an untagged commit (a PR, local branch, or other dev build) rather
