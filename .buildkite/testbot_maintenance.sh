@@ -69,7 +69,8 @@ darwin)
     done
     brew link --force libpq
     brew link mysql-client@8.0
-    if [ -f ~/.config/ddev-icinga/env ]; then
+    # Only main builds install, so a PR or stale branch can't leave its copy behind.
+    if [ -f ~/.config/ddev-icinga/env ] && [ "${BUILDKITE_BRANCH:-}" = "main" ] && [ "${BUILDKITE_PULL_REQUEST:-false}" = "false" ]; then
         "$(dirname "$0")/icinga/install_icinga_push.sh" || true
     fi
     ;;

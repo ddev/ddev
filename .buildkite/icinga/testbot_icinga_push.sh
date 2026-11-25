@@ -146,7 +146,12 @@ function check_docker_providers {
     push "docker-providers" "${UNKNOWN}" "Neither gtimeout nor timeout is installed"
     return
   fi
-  for ctx in $(docker context ls --format '{{.Name}}' 2>/dev/null); do
+  local contexts
+  if ! contexts=$(docker context ls --format '{{.Name}}' 2>&1); then
+    push "docker-providers" "${UNKNOWN}" "docker context ls failed: ${contexts}"
+    return
+  fi
+  for ctx in ${contexts}; do
     [ "${ctx}" = "default" ] && continue
     endpoint=$(docker context inspect -f '{{.Endpoints.docker.Host}}' "${ctx}" 2>/dev/null)
     sock=${endpoint#unix://}

@@ -524,6 +524,17 @@ template Host "ddev-macos-runner" {
     vars.dummy_text = "No result pushed for 10 minutes"
 }
 
+template Service "ddev-macos-runner-pushed" {
+    check_command = "dummy"
+    enable_active_checks = true
+    enable_passive_checks = true
+    check_interval = 10m
+    retry_interval = 10m
+    max_check_attempts = 1
+    vars.dummy_state = 3
+    vars.dummy_text = "No result pushed for 10 minutes"
+}
+
 apply Service "docker-providers" {
     import "ddev-macos-runner-pushed"
     assign where "ddev-macos-runner" in host.templates
@@ -562,8 +573,9 @@ Then run `sudo icinga2 daemon -C && sudo systemctl reload icinga2`.
 3. From a checkout of this repository, run
    `.buildkite/icinga/testbot_icinga_push.sh --dry-run` to see the results
    without sending them, then `.buildkite/icinga/install_icinga_push.sh`.
-   After that, `testbot_maintenance.sh` reinstalls the script on every job, so
-   runners pick up changes merged to the repository.
+   After that, `testbot_maintenance.sh` reinstalls the script on every build
+   of `main`, so runners pick up changes once they are merged. Builds of other
+   branches and pull requests don't install; try changes there with `--dry-run`.
 4. Push failures go to `~/.config/ddev-icinga/push.log`.
 5. Add the runner to `/usr/local/bin/check_buildkite_agents.sh` on `monitor.ddev.com`.
 
