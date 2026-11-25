@@ -163,12 +163,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("letsencrypt-email").Changed {
-		val, _ := cmd.Flags().GetString("letsencrypt-email")
-		globalconfig.DdevGlobalConfig.LetsEncryptEmail = val
-		dirty = true
-	}
-
 	if cmd.Flag("table-style").Changed {
 		val, _ := cmd.Flags().GetString("table-style")
 		if nodeps.ArrayContainsString(globalconfig.ValidTableStyleList(), val) {
@@ -287,7 +281,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		tag = parts[0]
 		//name := typeOfVal.Field(i).Name
 		fieldValue := v.Field(i).Interface()
-		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" && tag != "router" {
+		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" && tag != "router" && tag != "letsencrypt_email" {
 			tagWithDashes := strings.ReplaceAll(tag, "_", "-")
 			valMap[tagWithDashes] = fmt.Sprintf("%v", fieldValue)
 			keys = append(keys, tagWithDashes)
@@ -360,7 +354,6 @@ func registerConfigGlobalCmd() {
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("internet-detection-timeout-ms", configCompletionFunc([]string{strconv.Itoa(nodeps.InternetDetectionTimeoutDefault)}))
 	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev config global --use-letsencrypt' or 'ddev config global --use-letsencrypt=false'")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("use-letsencrypt", configCompletionFunc([]string{"true", "false"}))
-	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, 'ddev config global --letsencrypt-email=me@example.com'")
 	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting for tables and implicitly set 'NO_COLOR=1'")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("simple-formatting", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().Bool("use-hardened-images", false, "If true, use more secure 'hardened' images for an actual internet deployment")
@@ -417,6 +410,8 @@ func registerConfigGlobalCmd() {
 	_ = configGlobalCommand.Flags().MarkDeprecated("use-docker-compose-from-path", "docker-compose is now embedded")
 	configGlobalCommand.Flags().String("router", globalconfigTypes.RouterTypeTraefik, "")
 	_ = configGlobalCommand.Flags().MarkDeprecated("router", "traefik is the only router")
+	configGlobalCommand.Flags().String("letsencrypt-email", "", "")
+	_ = configGlobalCommand.Flags().MarkDeprecated("letsencrypt-email", "Let's Encrypt no longer uses an account email, so it is ignored")
 
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

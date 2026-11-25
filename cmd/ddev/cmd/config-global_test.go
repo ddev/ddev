@@ -74,7 +74,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "router-bind-all-interfaces=false")
 	assert.Contains(out, "internet-detection-timeout-ms=3000")
 	assert.Contains(out, "use-letsencrypt=false")
-	assert.Contains(out, "letsencrypt-email=")
+	require.NotContains(t, out, "letsencrypt-email")
 	assert.Contains(out, "table-style=default")
 	assert.Contains(out, "simple-formatting=false")
 	assert.Contains(out, "use-hardened-images=false")

@@ -372,13 +372,11 @@ DDEV must detect whether the internet is working to determine whether to add hos
 
 ## `letsencrypt_email`
 
-Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_letsencrypt`](#use_letsencrypt).)
+Deprecated, and ignored since DDEV v1.26.0. Let’s Encrypt no longer stores an account email or sends expiration notices, so [`use_letsencrypt`](#use_letsencrypt) works without it. A `global_config.yaml` that still sets it loads without error, and `ddev config global --letsencrypt-email` prints a deprecation warning.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | `` | &zwnj;
-
-Set with `ddev config global --letsencrypt-email=me@example.com`. Used with the [hosting](../topics/hosting.md) feature.
 
 ## `mailpit_http_port`
 
@@ -770,13 +768,13 @@ When `true`, more secure hardened images are used for an internet deployment. Th
 
 ## `use_letsencrypt`
 
-Whether to enable Let’s Encrypt integration. (Works in conjunction with [`letsencrypt_email`](#letsencrypt_email).)
+Whether to enable Let’s Encrypt integration.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
-May also be set via `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [hosting](../topics/hosting.md) feature.
+May also be set via `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`. When `true`, the system must be available on the internet. Used with the [hosting](../topics/hosting.md) feature.
 
 ## `web_environment`
 

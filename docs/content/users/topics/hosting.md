@@ -22,7 +22,7 @@ Here’s how to try it for yourself:
 8. Tell DDEV to listen on all network interfaces, omit the SSH agent, use hardened images, and enable Let’s Encrypt:
 
     ```bash
-    ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --performance-mode=none --use-letsencrypt --letsencrypt-email=you@example.com
+    ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --performance-mode=none --use-letsencrypt
     ```
 
 9. Use a `.ddev/config.prod.yaml` to provide overrides for project configuration, rather than changing the `.ddev/config.yaml`, so that your checked-in local development code works as well as possible. An example `.ddev/config.prod.yaml` might be:

@@ -18,7 +18,6 @@ api:
 certificatesResolvers:
   acme-tlsChallenge:
     acme:
-      email: "{{ .LetsEncryptEmail }}"
       # To avoid Let's Encrypt rate-limiting,
       # we can uncomment `caServer` here to use the staging caServer and avoid messages like
       # rateLimited :: Error creating new order :: too many failed authorizations recently:

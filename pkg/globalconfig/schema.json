@@ -156,8 +156,10 @@
       "type": "string"
     },
     "letsencrypt_email": {
-      "description": "Email associated with Let's Encrypt feature. (Works in conjunction with use_letsencrypt.)",
-      "type": "string"
+      "description": "Deprecated and ignored: Let's Encrypt no longer uses an account email.",
+      "type": "string",
+      "deprecated": true,
+      "doNotSuggest": true
     },
     "mailpit_http_port": {
       "description": "Router port used for Mailpit HTTP, can be overridden in project config.",
@@ -361,7 +363,7 @@
       "type": "boolean"
     },
     "use_letsencrypt": {
-      "description": "Whether to enable Let's Encrypt integration. (Works in conjunction with letsencrypt_email.)",
+      "description": "Whether to enable Let's Encrypt integration.",
       "type": "boolean"
     },
     "web_environment": {

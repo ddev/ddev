@@ -504,7 +504,6 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--fail-on-hook-fail`: If true, `ddev start` will fail when a hook fails.
 * `--instrumentation-opt-in`: Whether to allow [instrumentation reporting](../usage/diagnostics.md) with `--instrumentation-opt-in=true` (see [default](../configuration/config.md#instrumentation_opt_in)).
 * `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds (see [default](../configuration/config.md#internet_detection_timeout_ms)).
-* `--letsencrypt-email`: Email associated with Let’s Encrypt, `ddev global --letsencrypt-email=me@example.com`.
 * `--mailpit-http-port`: The default Mailpit HTTP port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#mailpit_http_port)).
 * `--mailpit-https-port`: The default Mailpit HTTPS port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#mailpit_https_port)).
 * `--no-bind-mounts`: If `true`, don't use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible.

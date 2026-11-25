@@ -52,7 +52,7 @@ type GlobalConfig struct {
 	InstrumentationUser              string                      `yaml:"instrumentation_user,omitempty"`
 	InternetDetectionTimeout         int64                       `yaml:"internet_detection_timeout_ms"`
 	LastStartedVersion               string                      `yaml:"last_started_version"`
-	LetsEncryptEmail                 string                      `yaml:"letsencrypt_email"`
+	LetsEncryptEmail                 string                      `yaml:"letsencrypt_email,omitempty"` // Deprecated: ignored, Let's Encrypt no longer uses it
 	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
 	MkcertCARoot                     string                      `yaml:"mkcert_caroot"`
 	NoBindMounts                     bool                        `yaml:"no_bind_mounts"`
@@ -621,9 +621,6 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # use_letsencrypt: false
 # (Experimental, only useful on an internet-based server)
 # Set to true if certificates are to be obtained from https://letsencrypt.org/
-
-# letsencrypt_email: <email>
-# Email to be used for experimental letsencrypt certificates
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
