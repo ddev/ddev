@@ -45,7 +45,16 @@ The app runs, in this order:
    on macOS, and `/usr/bin`, `/usr/local/bin`, and Homebrew's directory on
    Linux.
 
-`DDEV_DESKTOP_MODE=native` or `wsl` overrides step 2.
+`DDEV_DESKTOP_MODE=native` or `wsl` overrides step 2. With `wsl`, or with
+`--wsl-distro`, the app ignores `DDEV_BINARY` and runs the `ddev` on the
+distro's login `PATH`. A `ddev.exe` left by an earlier traditional install
+wins over WSL2 when the app starts without the Start Menu shortcut.
+
+With ddev in WSL2, `ddev serve` listens on `127.0.0.1` inside the distro, and
+the window reaches it through WSL's localhost forwarding, which is on by
+default. Its links and folders open on Windows, through `rundll32.exe` and
+`explorer.exe`. User documentation is in
+`docs/content/users/usage/desktop-app.md`.
 
 `ddev serve --desktop` listens on `127.0.0.1` with a token, opens links in
 the default browser, and stops when its standard input closes, so it stops
@@ -152,7 +161,9 @@ window's page, which Edge's DevTools can then inspect.
   deletes at the end. It needs no Docker. On Linux, run it under `xvfb-run`
   when there is no display. On Windows the self-test's window loads the
   dashboard from a port of the app's own, since it must add its script to
-  the page.
+  the page. Do not run it against ddev in WSL2: its temporary directories
+  are Windows paths that ddev inside WSL2 never sees, so the test project
+  would land in your real global configuration.
 - Without Docker, a project's detail fails before it runs host commands
   such as `git`. `TestStopWithStdin` in `pkg/webui` therefore checks without
   Docker that `ddev serve --desktop` keeps its stdin pipe from such
@@ -186,6 +197,8 @@ their output.
 - **Windows:** nobody has seen a notification there.
   The app has no icon resource, so a notification has no icon. The installer
   does not check for the WebView2 runtime.
-- **Linux:** no AUR or Homebrew package holds the app yet.
+- **Linux:** no AUR or Homebrew package holds the app yet. A closed window
+  does not come back, from the tray or by relaunching, which looks like
+  Wails' own `Show` after `Hide`.
 - **Updates:** the app has no update check of its own. Homebrew, the Linux
   packages, and the Windows installer update it with `ddev`.

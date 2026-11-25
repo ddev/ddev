@@ -1,0 +1,125 @@
+# Desktop App (Experimental)
+
+The DDEV desktop app shows the [`ddev serve`](../usage/commands.md#serve) dashboard in a window of its own, with a menu in the system tray or macOS menu bar. From the window or the tray you can start, stop, and restart projects, open their sites and Mailpit, and follow what each action prints.
+
+!!!warning "Experimental"
+    The desktop app is experimental. Its features and behavior may change, and it has no update check of its own; it updates when DDEV does.
+
+The app contains no DDEV code. It runs `ddev serve --desktop` from the `ddev` you already have, so the window, the tray, and your terminal always show the same projects and use the same version of DDEV.
+
+## Installing
+
+=== "macOS"
+
+    ```bash
+    brew install --cask ddev/ddev/ddev-desktop
+    ```
+
+    This also installs the `ddev` formula. The app is `/Applications/DDEV.app`. You can instead download `ddev-desktop_macos-universal.v<version>.zip` from a [DDEV release](https://github.com/ddev/ddev/releases).
+
+=== "Windows"
+
+    The [DDEV Windows installer](../install/ddev-installation.md#windows) installs the app for every installation type, traditional Windows and WSL2. It needs the WebView2 runtime, which Windows 11 includes.
+
+=== "Linux"
+
+    Install `ddev-desktop` from DDEV's package repository, which also installs `ddev`:
+
+    ```bash
+    # Debian and Ubuntu
+    sudo apt-get install ddev-desktop
+    # Fedora, Red Hat, and similar
+    sudo dnf install ddev-desktop
+    ```
+
+    The app needs GTK 4 and WebKitGTK 6, as in Ubuntu 24.04 or Debian 13 and later. The tray icon needs a StatusNotifierItem host: Ubuntu's GNOME and KDE Plasma have one, and GNOME elsewhere needs the AppIndicator extension.
+
+## Starting and Quitting
+
+Start the app as you start any other: from the Applications folder, the Start Menu (**DDEV** → **DDEV Desktop (experimental)**), or your desktop's launcher.
+
+Closing the window keeps the app running in the tray. To show the window again, choose **Open DDEV** in the tray menu, or on Windows click the tray icon. On macOS and Windows, launching the app again also shows its window.
+
+To quit, choose **Quit DDEV app** in the tray menu. If an action such as a project start is still running, the app asks first, since quitting stops that action.
+
+When an action ends while the window is in the background, the app shows a notification.
+
+=== "macOS"
+
+    The menu is in the menu bar, and the app has a Dock icon. Start it from the Applications folder or Spotlight, or from a terminal:
+
+    ```bash
+    open -a DDEV
+    # Quit it
+    osascript -e 'quit app "DDEV"'
+    ```
+
+    **Folder** opens the project in Finder. The app finds `ddev` on your login shell's `PATH`, so a Homebrew `ddev` works even though apps started from the Finder get a minimal `PATH`.
+
+=== "Windows"
+
+    The tray icon is in the notification area of the taskbar, possibly under the **^** overflow. Click it to show the window, or right-click it for the menu. From PowerShell:
+
+    ```powershell
+    & "$env:LOCALAPPDATA\Programs\DDEV\ddev-desktop.exe"
+    # Quit it
+    Stop-Process -Name ddev-desktop
+    ```
+
+    **Folder** opens the project in File Explorer. With DDEV in WSL2, see [Using DDEV in WSL2](#using-ddev-in-wsl2).
+
+=== "Linux"
+
+    Start the app from your desktop's launcher, or from a terminal:
+
+    ```bash
+    ddev-desktop &
+    # Quit it
+    pkill -x ddev-desktop
+    ```
+
+    **Folder** opens the project with `xdg-open`, which needs `xdg-utils`. The tray icon needs a StatusNotifierItem host, and notifications need a desktop session bus.
+
+    On Linux, a closed window does not come back yet, from the tray or by launching the app again. Quit the app and start it again to get the window back.
+
+## Using DDEV in WSL2
+
+When DDEV runs in WSL2, the desktop app runs on Windows and uses `ddev` inside your WSL2 distro:
+
+* Start it from the Start Menu: **DDEV** → **DDEV Desktop (experimental)**. The installer's shortcut names the distro you chose during installation, which need not be your default distro.
+* Your projects stay in WSL2, and the window shows their Linux paths, such as `/home/you/my-site`. To add a project, enter its Linux path.
+* **Open site** and **Mailpit** open your Windows browser. **Folder** opens File Explorer at the project's `\\wsl.localhost\` path, and **VS Code** opens the project in a VS Code window connected to WSL.
+* The window reaches the dashboard through localhost forwarding in WSL2, which is on by default.
+* Quitting the app also stops `ddev serve` inside WSL2.
+
+If you start `ddev-desktop.exe` without the Start Menu shortcut, it chooses which `ddev` to use:
+
+1. A `ddev.exe` in the same folder as `ddev-desktop.exe`, as a traditional Windows installation puts it.
+2. Otherwise, `ddev` in your default WSL2 distro.
+
+A `ddev.exe` left in `%LOCALAPPDATA%\Programs\DDEV` from an earlier traditional installation therefore takes priority over WSL2. Use the Start Menu shortcut, delete that `ddev.exe`, or name the distro yourself:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\DDEV\ddev-desktop.exe" --wsl-distro Ubuntu
+```
+
+Run `wsl --list` to see your distros' names.
+
+## Which `ddev` the App Uses
+
+The last line of the tray menu shows the DDEV version and the `ddev` the app runs. Outside WSL2, the app looks for `ddev` in this order:
+
+1. The `DDEV_BINARY` environment variable, when it is set.
+2. On Windows, the `ddev.exe` next to the app, or `ddev` in WSL2, as described in [Using DDEV in WSL2](#using-ddev-in-wsl2).
+3. The `ddev` in the same folder as the app, or next to `DDEV.app` on macOS.
+4. The first `ddev` on your login shell's `PATH`.
+5. The places DDEV's installers use: `/opt/homebrew/bin` and `/usr/local/bin` on macOS, and `/usr/bin`, `/usr/local/bin`, and Homebrew's directory on Linux.
+
+On Windows, `DDEV_DESKTOP_MODE=native` or `DDEV_DESKTOP_MODE=wsl` overrides step 2.
+
+## Troubleshooting
+
+If the app cannot start `ddev serve --desktop`, it shows a "DDEV cannot start" dialog with what `ddev` printed:
+
+* `ddev serve` is unknown: the `ddev` the app found is older than the app. [Upgrade DDEV](../install/ddev-upgrade.md).
+* `command not found`, or WSL cannot run `bash`: the WSL2 distro the app used has no DDEV installed, or is not a Linux distro you use, such as `docker-desktop`. Use the Start Menu shortcut, or pass `--wsl-distro` with the right distro.

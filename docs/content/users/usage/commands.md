@@ -1419,6 +1419,8 @@ Serve an experimental dashboard for managing DDEV projects in the browser. It of
 
 The dashboard listens on `127.0.0.1` only, and the URL it prints includes an access token. Keep that URL private: anyone who has it can control your projects.
 
+The [desktop app](../usage/desktop-app.md) shows the same dashboard in a window of its own, with a tray menu.
+
 Flags:
 
 * `--port`: Port to listen on at `127.0.0.1`. A free port is chosen when this is `0`, the default.
