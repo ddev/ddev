@@ -10,7 +10,6 @@ api:
 certificatesResolvers:
   acme-tlsChallenge:
     acme:
-      email: ""
       storage: /mnt/ddev-global-cache/traefik/acme.json
       tlsChallenge: {}
 entryPoints:
