@@ -88,6 +88,22 @@ func IsOrbStack() bool {
 	return false
 }
 
+// IsKiri detects if running on Kiri (https://github.com/libracoder/kiri)
+func IsKiri() bool {
+	info, err := GetDockerClientInfo()
+	if err != nil {
+		return false
+	}
+	return strings.HasPrefix(info.OperatingSystem, "Kiri")
+}
+
+// IsKiriMacOS detects Kiri on macOS. Kiri's engine runs as the user, and macOS
+// lets an unprivileged process bind ports below 1024 only on the wildcard
+// address, so Kiri can't publish 127.0.0.1:80 or 127.0.0.1:443.
+func IsKiriMacOS() bool {
+	return nodeps.IsMacOS() && IsKiri()
+}
+
 // IsPodman detects if running on Podman (either rootless or root)
 func IsPodman() bool {
 	serverVersion, err := GetServerVersion()

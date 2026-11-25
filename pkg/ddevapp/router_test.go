@@ -556,10 +556,16 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 	startOutput := getOutput()
 	require.NoError(t, err)
 
-	require.Contains(t, startOutput, reuseMessage,
-		"project2 should reuse the running router, output: %s", startOutput)
-	require.NotContains(t, startOutput, recreateMessage,
-		"project2 should NOT recreate the router just because the standard port freed up, output: %s", startOutput)
+	// Kiri can't update a running router's network aliases (it refuses to
+	// disconnect a running container from its first network), so DDEV recreates
+	// the router for project2's new hostnames. The substitute ports must survive that.
+	routerRecreatable := dockerutil.IsKiri()
+	if !routerRecreatable {
+		require.Contains(t, startOutput, reuseMessage,
+			"project2 should reuse the running router, output: %s", startOutput)
+		require.NotContains(t, startOutput, recreateMessage,
+			"project2 should NOT recreate the router just because the standard port freed up, output: %s", startOutput)
+	}
 
 	app2, err = ddevapp.NewApp(app2.GetAppRoot(), true)
 	require.NoError(t, err)
@@ -569,8 +575,10 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 
 	router, err = ddevapp.FindDdevRouter()
 	require.NoError(t, err)
-	require.Equal(t, originalRouterID, router.ID,
-		"router should not be recreated when a later project's proposed port frees up but was previously substituted")
+	if !routerRecreatable {
+		require.Equal(t, originalRouterID, router.ID,
+			"router should not be recreated when a later project's proposed port frees up but was previously substituted")
+	}
 }
 
 // TestProcessExposePorts tests the ProcessExposePorts function for various input scenarios
@@ -1149,6 +1157,11 @@ func TestRouterNotRebuiltOnHostnameChange(t *testing.T) {
 	// Windows can't handle this test, util.CaptureUserOut() can deadlock around a full app.Start()/Restart(), see #8644
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && nodeps.IsWindows() {
 		t.Skip("Skipping TestRouterNotRebuiltOnHostnameChange on Windows")
+	}
+	// Kiri refuses to disconnect a running container from its first network,
+	// so DDEV recreates the router instead of updating its aliases in place.
+	if dockerutil.IsKiri() {
+		t.Skip("Skipping: Kiri can't update a running router's network aliases in place")
 	}
 
 	// Start clean.

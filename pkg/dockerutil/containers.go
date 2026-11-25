@@ -1344,6 +1344,19 @@ func CopyArchiveToContainer(nameOrID string, dstPath string, content io.Reader) 
 	return err
 }
 
+// CopyArchiveToContainerAsUser is CopyArchiveToContainer with copyUIDGID set,
+// so the files belong to the container's configured user. Docker otherwise
+// keeps the tar's owners, but some engines (Kiri before libracoder/kiri#595)
+// make root the owner unless copyUIDGID is set.
+func CopyArchiveToContainerAsUser(nameOrID string, dstPath string, content io.Reader) error {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return err
+	}
+	_, err = apiClient.CopyToContainer(ctx, nameOrID, client.CopyToContainerOptions{DestinationPath: dstPath, Content: content, CopyUIDGID: true})
+	return err
+}
+
 // CopyFromContainer copies a path from a specified container and location to a dstPath on host
 func CopyFromContainer(containerName string, containerPath string, hostPath string) error {
 	startTime := time.Now()

@@ -1146,9 +1146,14 @@ func TestConfigValidate(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 	staticURI := site.Safe200URIWithExpectation.URI
-	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://x.ddev.site/"+staticURI)
+	// Use the router's HTTP port, which isn't 80 on providers that can't bind privileged ports
+	port := ""
+	if p := app.GetPrimaryRouterHTTPPort(); p != "" && p != "80" {
+		port = ":" + p
+	}
+	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://x.ddev.site"+port+"/"+staticURI)
 	require.NoError(t, err)
-	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://somethjingrandom.any.ddev.site/"+staticURI)
+	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://somethjingrandom.any.ddev.site"+port+"/"+staticURI)
 	require.NoError(t, err)
 
 	// Make sure that a bare "*" in the additional_hostnames does *not* work
