@@ -18,8 +18,8 @@ var UtilityAgentSkillCmd = &cobra.Command{
 	Annotations: map[string]string{NoDockerCommand: "true"},
 	Short:       "Install, check, or remove the DDEV skill for AI coding agents",
 	Long: `Install, check, or remove a skill that tells AI coding agents such as Claude Code
-and Codex how to use DDEV: run tools through ddev, which commands only work
-on the host, and where to find the docs. DDEV writes the skill only when you
+and Codex how to use DDEV: run tools through ddev, which commands have no
+equivalent in the container, and where to find the docs. DDEV writes the skill only when you
 run "ddev utility agent-skill install".
 
 The skill is written to .claude/skills/ddev/SKILL.md (Claude Code) and

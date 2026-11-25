@@ -190,10 +190,11 @@ func Remove(path string, dryRun bool) (Action, error) {
 		return "", err
 	}
 	// Remove skills/ddev, skills, and .claude or .agents while they are
-	// empty. os.Remove fails harmlessly once a directory isn't empty.
+	// empty. os.Remove fails harmlessly once a directory isn't empty, but
+	// deletes a symlink whatever it points to, so stop at one.
 	dir := filepath.Dir(path)
 	for range 3 {
-		if os.Remove(dir) != nil {
+		if fi, err := os.Lstat(dir); err != nil || !fi.IsDir() || os.Remove(dir) != nil {
 			break
 		}
 		dir = filepath.Dir(dir)

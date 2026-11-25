@@ -144,3 +144,47 @@ func TestRemoveKeepsNonEmptyDirs(t *testing.T) {
 	require.NoDirExists(t, filepath.Join(base, ".claude", "skills"))
 	require.FileExists(t, other)
 }
+
+func TestRemoveKeepsSymlinkedDirs(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("creating symlinks needs extra privileges on Windows")
+	}
+
+	// .claude/skills -> ../.agents/skills, with another skill beside ddev
+	base := t.TempDir()
+	other := filepath.Join(base, ".agents", "skills", "other")
+	require.NoError(t, os.MkdirAll(other, 0755))
+	require.NoError(t, os.MkdirAll(filepath.Join(base, ".claude"), 0755))
+	require.NoError(t, os.Symlink(filepath.Join("..", ".agents", "skills"), filepath.Join(base, ".claude", "skills")))
+	skill := filepath.Join(base, ".claude", "skills", "ddev", "SKILL.md")
+	_, _, err := agentskill.Install(skill, "v1.25.5", false)
+	require.NoError(t, err)
+
+	action, err := agentskill.Remove(skill, false)
+	require.NoError(t, err)
+	require.Equal(t, agentskill.Removed, action)
+	requireSymlink(t, filepath.Join(base, ".claude", "skills"))
+	require.DirExists(t, other)
+
+	// A symlinked .claude, as when it lives in a dotfiles repo
+	base = t.TempDir()
+	target := filepath.Join(base, "dotfiles-claude")
+	require.NoError(t, os.MkdirAll(target, 0755))
+	require.NoError(t, os.Symlink(target, filepath.Join(base, ".claude")))
+	skill = filepath.Join(base, ".claude", "skills", "ddev", "SKILL.md")
+	_, _, err = agentskill.Install(skill, "v1.25.5", false)
+	require.NoError(t, err)
+
+	action, err = agentskill.Remove(skill, false)
+	require.NoError(t, err)
+	require.Equal(t, agentskill.Removed, action)
+	requireSymlink(t, filepath.Join(base, ".claude"))
+	require.DirExists(t, target)
+}
+
+func requireSymlink(t *testing.T, path string) {
+	t.Helper()
+	fi, err := os.Lstat(path)
+	require.NoError(t, err)
+	require.Equal(t, os.ModeSymlink, fi.Mode()&os.ModeSymlink, "%s should still be a symlink", path)
+}
