@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"context"
-	"io"
-	"os"
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -43,19 +41,7 @@ ddev serve --no-open`,
 		}
 		if desktop {
 			srv.SetDesktop()
-			// The desktop app holds stdin open, so this server stops with it.
-			// No child may inherit that pipe: on Windows, starting one, such
-			// as the git that RunHostCommand runs, hangs behind this read.
-			appPipe := os.Stdin
-			if devNull, err := os.Open(os.DevNull); err == nil {
-				os.Stdin = devNull
-			}
-			go func() {
-				_, _ = io.Copy(io.Discard, appPipe)
-				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-				defer cancel()
-				_ = srv.Shutdown(ctx)
-			}()
+			srv.StopWithStdin()
 		}
 		unregister := interrupt.OnInterrupt(func(ctx context.Context) {
 			ctx, cancel := context.WithTimeout(ctx, 3*time.Second)

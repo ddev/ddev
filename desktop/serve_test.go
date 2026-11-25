@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -168,11 +170,13 @@ func TestServeClient(t *testing.T) {
 }
 
 func TestStartServeReportsOldDdev(t *testing.T) {
-	if os.Getenv("GOOS") == "windows" {
-		t.Skip("needs a shell script")
+	old := filepath.Join(t.TempDir(), "ddev")
+	script := "#!/bin/sh\necho 'Error: unknown command \"serve\" for \"ddev\"'\nexit 1\n"
+	if runtime.GOOS == "windows" {
+		old += ".cmd"
+		script = "@echo Error: unknown command \"serve\" for \"ddev\"\r\n@exit /b 1\r\n"
 	}
-	old := t.TempDir() + "/ddev"
-	require.NoError(t, os.WriteFile(old, []byte("#!/bin/sh\necho 'Error: unknown command \"serve\" for \"ddev\"'\nexit 1\n"), 0o755))
+	require.NoError(t, os.WriteFile(old, []byte(script), 0o755))
 	_, err := startServe(target{ddev: old})
 	require.ErrorContains(t, err, "needs a ddev with `ddev serve`")
 	require.ErrorContains(t, err, `unknown command "serve"`)

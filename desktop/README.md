@@ -14,6 +14,8 @@ This is an experimental desktop app for DDEV, built with
 - A Dock or taskbar icon. Closing the window keeps the app in the tray.
   Launching the app again shows the window, which is the way back on a
   desktop without a tray, such as GNOME without the AppIndicator extension.
+  On Windows, a click on the tray icon shows the window, and a right-click
+  opens the menu. A white icon replaces the black one on a dark taskbar.
 - A native notification when an action ends while the window is in the
   background. Notifications need the app bundle on macOS and a session bus on
   Linux; without them the app runs without notifications.
@@ -128,6 +130,9 @@ To try a PR's build, `ddev utility download-ddev --pr <number>` downloads its
 `ddev`. On macOS that is `DDEV.app` next to `ddev`.
 
 `DDEV_DESKTOP_DEBUG=true` logs each request the window makes.
+On Windows, `DDEV_DESKTOP_WEBVIEW2_ARGS` passes arguments to WebView2. With
+`--remote-debugging-port=9222`, `http://127.0.0.1:9222/json` lists the
+window's page, which Edge's DevTools can then inspect.
 
 ## Tests
 
@@ -140,12 +145,18 @@ To try a PR's build, `ddev utility download-ddev --pr <number>` downloads its
   window, then exits with its result. The script waits for the status stream,
   submits a missing directory to "Add project" and expects an error, then
   runs `ddev config` in an empty directory, waits for the job to finish, and
-  expects that project's detail to answer within 30 seconds.
-  The app keeps that project in a temporary global configuration, which it
+  expects that project's detail to answer within 30 seconds. On Windows it
+  then posts the shell's click messages to its own tray window: a click must
+  show the hidden window, a right-click must open the menu, and the menu's
+  Open DDEV must show the window again. The app keeps that project in a temporary global configuration, which it
   deletes at the end. It needs no Docker. On Linux, run it under `xvfb-run`
   when there is no display. On Windows the self-test's window loads the
   dashboard from a port of the app's own, since it must add its script to
   the page.
+- Without Docker, a project's detail fails before it runs host commands
+  such as `git`. `TestStopWithStdin` in `pkg/webui` therefore checks without
+  Docker that `ddev serve --desktop` keeps its stdin pipe from such
+  commands, which hang on Windows when they inherit it.
 - `make webui-e2e` runs the dashboard's Playwright tests in Chromium and in
   WebKit, the engine of the app's window on macOS and Linux.
 
@@ -154,7 +165,7 @@ DDEV_DESKTOP_SELFTEST=true DDEV_BINARY="$PWD/.gotmp/bin/darwin_arm64/ddev" .gotm
 # Expect "SELFTEST PASS" and exit status 0
 ```
 
-The tray menu, notifications, and hiding the window to the tray have no
+Notifications, the quit question, and the tray on macOS and Linux have no
 automated test.
 
 ## CI, signing, and releases
@@ -172,7 +183,7 @@ their output.
 
 ## Known limits
 
-- **Windows:** nobody has used the tray menu or seen a notification there.
+- **Windows:** nobody has seen a notification there.
   The app has no icon resource, so a notification has no icon. The installer
   does not check for the WebView2 runtime.
 - **Linux:** no AUR or Homebrew package holds the app yet.

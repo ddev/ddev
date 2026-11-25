@@ -5,8 +5,8 @@
 //
 // It listens on 127.0.0.1 only, and every request must carry the token from
 // the launch URL, since any page the user visits could otherwise reach it.
-// NewEmbedded serves the same dashboard to a desktop webview, which delivers
-// requests itself without a network port.
+// The desktop app in desktop/ runs `ddev serve --desktop` and shows the
+// same dashboard in its window.
 package webui
 
 import (
@@ -17,6 +17,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"net"
 	"net/http"
@@ -101,6 +102,23 @@ func New(port int) (*Server, error) {
 // before Serve.
 func (s *Server) SetDesktop() {
 	s.desktop = true
+}
+
+// StopWithStdin shuts the server down when standard input closes. The
+// desktop app holds it open, so the server stops with the app. Children get
+// the null device instead: on Windows, starting one that inherits the pipe,
+// such as the git that RunHostCommand runs, hangs behind this read.
+func (s *Server) StopWithStdin() {
+	in := os.Stdin
+	if devNull, err := os.Open(os.DevNull); err == nil {
+		os.Stdin = devNull
+	}
+	go func() {
+		_, _ = io.Copy(io.Discard, in)
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		_ = s.Shutdown(ctx)
+	}()
 }
 
 // URL is the launch URL, which carries the token.

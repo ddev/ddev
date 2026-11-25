@@ -268,10 +268,27 @@ jobs:
     continue-on-error: true
     timeout-minutes: 20
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: desktop/go.sum
+
       - uses: actions/download-artifact@v8
         with:
           name: ddev-windows-amd64
           path: ddev
+
+      - name: Go tests
+        shell: bash
+        env:
+          CGO_ENABLED: "0"
+          DDEV_BINARY: ${{ github.workspace }}\ddev\ddev.exe
+        run: cd desktop && go test -v -count=1 ./...
 
       - name: Self-test in the app window
         env:

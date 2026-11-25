@@ -37,6 +37,12 @@ var appIcon []byte
 //go:embed icons/tray.png
 var trayIcon []byte
 
+// trayIconLight is for a dark Windows taskbar, which does not recolor
+// macOS-style template icons.
+//
+//go:embed icons/tray-light.png
+var trayIconLight []byte
+
 // version is set by the Makefile.
 var version = "dev"
 
@@ -158,8 +164,11 @@ func main() {
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
 		SingleInstance: singleInstance,
-		OnShutdown:     shutdown,
-		ShouldQuit:     q.shouldQuit,
+		// Wails clears WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS, so a debugging
+		// port for the window's DevTools must come through here.
+		Windows:    application.WindowsOptions{AdditionalBrowserArgs: strings.Fields(os.Getenv("DDEV_DESKTOP_WEBVIEW2_ARGS"))},
+		OnShutdown: shutdown,
+		ShouldQuit: q.shouldQuit,
 		// Wails' own handler reads only the first signal, so a quit that
 		// ShouldQuit refused would leave the app deaf to the next one.
 		DisableDefaultSignalHandler: true,
@@ -186,7 +195,7 @@ func main() {
 	})
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 		if st != nil {
-			go runSelfTest(srv, st)
+			go runSelfTest(srv, st, func() error { return checkTray(window) })
 		}
 		if startErr != nil {
 			app.Dialog.Error().SetTitle("DDEV cannot start").SetMessage(startErr.Error()).Show()
@@ -212,6 +221,7 @@ func main() {
 
 	tray := app.SystemTray.New()
 	tray.SetTemplateIcon(trayIcon)
+	tray.SetDarkModeIcon(trayIconLight)
 	tray.SetTooltip("DDEV")
 	// pageURL is the dashboard page once loaded, without the launch token.
 	pageURL := "/"
@@ -225,6 +235,17 @@ func main() {
 		window.SetURL(pageURL + "#project=" + url.QueryEscape(name))
 		showWindow()
 	}}
+	// Wails opens the menu on a right-click only if the tray has a menu when
+	// the app starts, and follow's first menu arrives later.
+	firstErr := "Connecting to ddev serve…"
+	if startErr != nil {
+		firstErr = startErr.Error()
+	}
+	tray.SetMenu(t.build(nil, firstErr, ""))
+	if runtime.GOOS == "windows" {
+		// As other Windows tray apps do, a click shows the window.
+		tray.OnClick(showWindow)
+	}
 	go t.follow()
 
 	if err := app.Run(); err != nil {
@@ -291,11 +312,17 @@ func watchExit(app *application.App, srv *serveClient, q *quitter) {
 
 // runSelfTest waits for selftest.js to report, prints the result, and exits
 // with its status. Wails' Quit ends the process without returning from Run.
-func runSelfTest(srv *serveClient, st *selfTest) {
+// tray checks the tray menu once the page has passed.
+func runSelfTest(srv *serveClient, st *selfTest, tray func() error) {
 	code := 1
 	select {
 	case res := <-st.result:
 		res = st.check(res)
+		if res.OK {
+			if err := tray(); err != nil {
+				res = selfTestResult{Step: "tray menu", Error: err.Error()}
+			}
+		}
 		if res.OK {
 			fmt.Println("SELFTEST PASS")
 			code = 0

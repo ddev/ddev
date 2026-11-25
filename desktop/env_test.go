@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,7 @@ func TestFindDdev(t *testing.T) {
 	require.Equal(t, "/opt/ddev/bin/ddev", b)
 
 	dir := t.TempDir()
-	fake := filepath.Join(dir, "ddev")
+	fake := filepath.Join(dir, ddevName())
 	require.NoError(t, os.WriteFile(fake, []byte("#!/bin/sh\n"), 0o755))
 	t.Setenv("DDEV_BINARY", "")
 	t.Setenv("PATH", dir)
@@ -32,7 +33,7 @@ func TestFindDdev(t *testing.T) {
 	require.ErrorContains(t, err, "ddev was not found next to this app or on PATH")
 
 	// A login shell without Homebrew on its PATH still finds Homebrew's ddev.
-	brewed := filepath.Join(known, "ddev")
+	brewed := filepath.Join(known, ddevName())
 	require.NoError(t, os.WriteFile(brewed, []byte("#!/bin/sh\n"), 0o755))
 	b, err = findDdev()
 	require.NoError(t, err)
@@ -46,18 +47,21 @@ func TestDdevBeside(t *testing.T) {
 	require.Empty(t, ddevBeside(macos))
 
 	// As `ddev utility download-ddev` leaves them: ddev next to DDEV.app.
-	beside := filepath.Join(dir, "ddev")
+	beside := filepath.Join(dir, ddevName())
 	require.NoError(t, os.WriteFile(beside, []byte("#!/bin/sh\n"), 0o755))
 	require.Equal(t, beside, ddevBeside(macos))
 	require.Equal(t, beside, ddevBeside(dir), "a Linux or Windows app next to ddev")
 
 	// A ddev inside the bundle wins.
-	inside := filepath.Join(macos, "ddev")
+	inside := filepath.Join(macos, ddevName())
 	require.NoError(t, os.WriteFile(inside, []byte("#!/bin/sh\n"), 0o755))
 	require.Equal(t, inside, ddevBeside(macos))
 }
 
 func TestUseLoginShellPath(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("a Windows app gets the user's PATH, so it reads no login shell")
+	}
 	// Startup files often print, such as "Agent pid 1234" from ssh-agent.
 	shell := filepath.Join(t.TempDir(), "noisy-shell")
 	body := "#!/bin/sh\necho 'Agent pid 1234'\nexport PATH=/opt/login/bin:/usr/bin:/bin\nshift\nexec /bin/sh \"$@\"\n"
