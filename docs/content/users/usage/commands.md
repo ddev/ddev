@@ -813,7 +813,7 @@ ddev export-db my-project --file=/tmp/my-project.sql
 
 Open the experimental DDEV app, a graphical interface for managing DDEV projects. It offers what the [interactive TUI dashboard](../usage/cli.md#interactive-dashboard) does: start, stop, restart, and delete projects, open their sites, Mailpit, and XHGui, follow service logs, install and remove add-ons, create and restore snapshots, and toggle Xdebug.
 
-`ddev gui` selects the project you name, or the project in the current directory. It looks for the DDEV app next to `ddev`, then in `/Applications` and `~/Applications` on macOS, or on `PATH` on Linux and Windows. Without the app, or in WSL2, an SSH session, or a Linux session without a display, the same interface opens in the browser instead.
+`ddev gui` selects the project you name, or the project in the current directory. It looks for the DDEV app next to `ddev`, then in `/Applications` and `~/Applications` on macOS, or on `PATH` on Linux and Windows. In WSL2 it opens the Windows app, found on the Windows `PATH` or in `%LOCALAPPDATA%\Programs\DDEV`. Without the app, or in an SSH session or a Linux session without a display, the same interface opens in the browser instead.
 
 In the browser, the web UI listens on `127.0.0.1` only, and the URL it prints includes an access token. Keep that URL private: anyone who has it can control your projects.
 

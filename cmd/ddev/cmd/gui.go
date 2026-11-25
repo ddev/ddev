@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -130,7 +131,10 @@ func findDesktopApp() (exe string, reason string) {
 	}
 	switch {
 	case nodeps.IsWSL2():
-		return "", "The DDEV app does not run inside WSL2"
+		if exe := windowsAppFromWSL2(); exe != "" {
+			return exe, ""
+		}
+		return "", "The DDEV app for Windows, ddev-desktop.exe, was not found on the Windows PATH or in %LOCALAPPDATA%\\Programs\\DDEV"
 	case os.Getenv("SSH_CONNECTION") != "":
 		return "", "This is an SSH session"
 	case nodeps.IsLinux() && os.Getenv("DISPLAY") == "" && os.Getenv("WAYLAND_DISPLAY") == "":
@@ -167,16 +171,45 @@ func findDesktopApp() (exe string, reason string) {
 	return "", fmt.Sprintf("The DDEV app was not found next to %s", filepath.Join(dir, "ddev"))
 }
 
+// windowsAppFromWSL2 returns the Windows DDEV app as WSL2 sees it: on the
+// Windows PATH, which the installer extends, or in its install directory.
+// The Windows app shows the projects of ddev in a WSL2 distro.
+func windowsAppFromWSL2() string {
+	const name = "ddev-desktop.exe"
+	if p, err := exec.LookPath(name); err == nil {
+		return p
+	}
+	out, err := exec.Command("cmd.exe", "/c", "echo %LOCALAPPDATA%").Output()
+	localAppData := strings.TrimRight(string(out), "\r\n")
+	if err != nil || localAppData == "" || strings.Contains(localAppData, "%") {
+		return ""
+	}
+	dir, err := exec.Command("wslpath", "-u", localAppData).Output()
+	if err != nil {
+		return ""
+	}
+	p := filepath.Join(strings.TrimRight(string(dir), "\r\n"), "Programs", "DDEV", name)
+	if !fileutil.FileExists(p) {
+		return ""
+	}
+	return p
+}
+
 // launchDesktopApp starts the DDEV app, which runs this ddev. A running app
 // takes the arguments of the new one, shows its window, and selects the
 // project, so the new one exits.
 func launchDesktopApp(exe string, project string) error {
 	var args []string
+	// From WSL2, the Windows app runs the ddev on this distro's login PATH.
+	windowsFromWSL2 := nodeps.IsWSL2() && strings.EqualFold(filepath.Ext(exe), ".exe")
+	if distro := os.Getenv("WSL_DISTRO_NAME"); windowsFromWSL2 && distro != "" {
+		args = append(args, "--wsl-distro", distro)
+	}
 	if project != "" {
 		args = append(args, "--project", project)
 	}
 	c := exec.Command(exe, args...)
-	if self, err := os.Executable(); err == nil {
+	if self, err := os.Executable(); err == nil && !windowsFromWSL2 {
 		c.Env = append(os.Environ(), "DDEV_BINARY="+self)
 	}
 	// Its own process group keeps Ctrl+C in this terminal from reaching it.

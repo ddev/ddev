@@ -40,7 +40,7 @@ The app contains no DDEV code. It runs `ddev gui --desktop` from the `ddev` you 
 
 Run `ddev gui` in a terminal, or start the app as you start any other: from the Applications folder, the Start Menu (**DDEV** → **DDEV Desktop (experimental)**), or your desktop's launcher.
 
-`ddev gui` selects the project in the current directory, and `ddev gui my-project` selects `my-project`. If the app is already running, its window comes forward with that project selected. If `ddev gui` cannot find the app, or runs in WSL2, an SSH session, or a Linux session without a display, it opens the interface in your browser and says why.
+`ddev gui` selects the project in the current directory, and `ddev gui my-project` selects `my-project`. If the app is already running, its window comes forward with that project selected. In WSL2, `ddev gui` opens the Windows app with the projects of that distro. If `ddev gui` cannot find the app, or runs in an SSH session or a Linux session without a display, it opens the interface in your browser and says why.
 
 Closing the window keeps the app running in the tray. To show the window again, choose **Open DDEV** in the tray menu, or on Windows click the tray icon. On macOS and Windows, launching the app again, or running `ddev gui`, also shows its window.
 
@@ -90,7 +90,7 @@ When an action ends while the window is in the background, the app shows a notif
 
 When DDEV runs in WSL2, the desktop app runs on Windows and uses `ddev` inside your WSL2 distro:
 
-* Start it from the Start Menu: **DDEV** → **DDEV Desktop (experimental)**. The installer's shortcut names the distro you chose during installation, which need not be your default distro. `ddev gui` inside WSL2 does not start the Windows app; it opens the interface in your Windows browser.
+* Start it from the Start Menu: **DDEV** → **DDEV Desktop (experimental)**. The installer's shortcut names the distro you chose during installation, which need not be your default distro. You can also run `ddev gui` inside WSL2. It opens the Windows app with that distro's projects, and the app runs the `ddev` on the distro's login `PATH`. It finds the app on the Windows `PATH` or in `%LOCALAPPDATA%\Programs\DDEV`, and otherwise opens your Windows browser.
 * Your projects stay in WSL2, and the window shows their Linux paths, such as `/home/you/my-site`. To add a project, enter its Linux path.
 * **Open site** and **Mailpit** open your Windows browser. **Folder** opens File Explorer at the project's `\\wsl.localhost\` path, and **VS Code** opens the project in a VS Code window connected to WSL.
 * The window reaches `ddev gui --desktop` in WSL2 through localhost forwarding, which is on by default.
@@ -111,7 +111,7 @@ Run `wsl --list` to see your distros' names.
 
 ## Which `ddev` the App Uses
 
-The last line of the tray menu shows the DDEV version and the `ddev` the app runs. When `ddev gui` starts the app, the app runs that same `ddev`. Otherwise, outside WSL2, the app looks for `ddev` in this order:
+The last line of the tray menu shows the DDEV version and the `ddev` the app runs. When `ddev gui` starts the app outside WSL2, the app runs that same `ddev`. Otherwise, outside WSL2, the app looks for `ddev` in this order:
 
 1. The `DDEV_BINARY` environment variable, when it is set.
 2. On Windows, the `ddev.exe` next to the app, or `ddev` in WSL2, as described in [Using DDEV in WSL2](#using-ddev-in-wsl2).
