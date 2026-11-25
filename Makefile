@@ -555,10 +555,13 @@ webui-e2e-real: build
 
 .PHONY: gui
 # Experimental Wails GUI app, a separate module; see gui/README.md.
-# On Linux and Windows it lands next to the ddev built here; on macOS it is
-# .gotmp/bin/darwin_universal/DDEV.app.
+# On Linux and Windows it lands next to the ddev built here. On macOS it is
+# .gotmp/bin/darwin_universal/DDEV.app, linked next to ddev for `ddev gui`.
 gui: build
 	$(MAKE) -C gui VERSION=$(VERSION)
+ifeq ($(BUILD_OS),darwin)
+	ln -sfn ../darwin_universal/DDEV.app $(DDEV_PATH)/DDEV.app
+endif
 
 # bats refuses ever to exit until all processes started by it
 # have exited. So we don't want to let bats/ddev start mutagen daemon

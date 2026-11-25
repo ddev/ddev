@@ -42,11 +42,17 @@ Run `ddev gui` in a terminal, or start the app as you start any other: from the 
 
 `ddev gui` selects the project in the current directory, and `ddev gui my-project` selects `my-project`. If the app is already running, its window comes forward with that project selected. In WSL2, `ddev gui` opens the Windows app with the projects of that distro. If `ddev gui` cannot find the app, or runs in an SSH session or a Linux session without a display, it opens the interface in your browser and says why.
 
+`ddev gui` looks for the app next to `ddev`, then in `/Applications` and `~/Applications` on macOS, or on `PATH` on Linux and Windows. To use a copy elsewhere, set `DDEV_GUI_APP` to its path:
+
+```bash
+DDEV_GUI_APP=~/Downloads/DDEV.app ddev gui
+```
+
 Closing the window keeps the app running in the tray. To show the window again, choose **Open DDEV** in the tray menu, or on Windows click the tray icon. On macOS and Windows, launching the app again, or running `ddev gui`, also shows its window.
 
 To quit, choose **Quit DDEV app** in the tray menu. If an action such as a project start is still running, the app asks first, since quitting stops that action.
 
-When an action ends while the window is in the background, the app shows a notification.
+When an action ends while the window is in the background, the app shows a notification. On macOS, builds from pull requests and `make gui` are not signed with DDEV's certificate, and macOS shows no notifications for them.
 
 === "macOS"
 
