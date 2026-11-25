@@ -459,15 +459,18 @@ nfpms:
     dst: /usr/share/pixmaps/ddev-gui.png
     file_info:
       mode: 0644
+  # The first release with `ddev gui --desktop`; GoReleaser cannot template
+  # dependencies. "~" sorts before any suffix, so prereleases such as
+  # 1.25.7~alpha1 qualify. Raise it if the app ships in a later release.
   overrides:
     deb:
       dependencies:
-      - ddev
+      - ddev (>= 1.25.7~)
       - libgtk-4-1
       - libwebkitgtk-6.0-4
     rpm:
       dependencies:
-      - ddev
+      - ddev >= 1.25.7~
       - gtk4
       - webkitgtk6.0
 
