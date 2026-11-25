@@ -138,7 +138,8 @@ To try a PR's build, `ddev utility download-ddev --pr <number>` downloads its
 `ddev` and its desktop app into one directory, where the app finds that
 `ddev`. On macOS that is `DDEV.app` next to `ddev`.
 
-`DDEV_DESKTOP_DEBUG=true` logs each request the window makes.
+`DDEV_DESKTOP_DEBUG=true` logs each request the window makes, and Wails'
+own debug messages, such as a tray menu that failed to open.
 On Windows, `DDEV_DESKTOP_WEBVIEW2_ARGS` passes arguments to WebView2. With
 `--remote-debugging-port=9222`, `http://127.0.0.1:9222/json` lists the
 window's page, which Edge's DevTools can then inspect.

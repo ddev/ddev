@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -102,8 +103,10 @@ func main() {
 			}
 		}
 	}
+	logLevel := slog.LevelInfo
 	if os.Getenv("DDEV_DESKTOP_DEBUG") == "true" {
 		handler = logRequests(handler)
+		logLevel = slog.LevelDebug
 	}
 
 	notifier := notifications.New()
@@ -155,6 +158,7 @@ func main() {
 	app := application.New(application.Options{
 		Name:        "DDEV",
 		Description: "Experimental DDEV desktop app " + version,
+		LogLevel:    logLevel,
 		Icon:        appIcon,
 		Assets: application.AssetOptions{
 			Handler:        handler,
@@ -362,6 +366,7 @@ type trayMenu struct {
 }
 
 func (t *trayMenu) follow() {
+	waitForTrayWindow()
 	first := true
 	for {
 		var changed <-chan struct{}

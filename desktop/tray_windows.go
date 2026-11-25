@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"syscall"
@@ -45,6 +46,17 @@ const (
 	trayClassName  = "WailsWebviewWindow"
 	trayWaitPeriod = 10 * time.Second
 )
+
+// waitForTrayWindow returns once Wails has created the tray's window. A
+// SetMenu that runs earlier builds the popup menu with no owner window, and
+// Wails keeps that owner, so every right-click then fails. The window is
+// created on the main thread with the tray's first menu, so a SetMenu
+// dispatched after it appears runs after that.
+func waitForTrayWindow() {
+	if !waitFor(func() bool { return ownMessageWindow(trayClassName) != 0 }) {
+		log.Printf("no tray window after %v; the tray menu may not open", trayWaitPeriod)
+	}
+}
 
 // checkTray clicks the tray icon as the shell does, by posting its callback
 // message to the app's own tray window. A left-click must show the hidden
