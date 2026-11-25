@@ -513,20 +513,24 @@ func (q *quitter) shouldQuit() bool {
 }
 
 func (q *quitter) ask(running []string) {
-	d := q.app.Dialog.Question().
-		SetTitle("DDEV is still working").
-		SetMessage("Quitting stops these, which can leave a project half done:\n\n" + strings.Join(running, "\n"))
-	quit := d.AddButton("Quit anyway")
-	wait := d.AddButton("Keep running")
-	d.SetDefaultButton(wait)
-	d.SetCancelButton(wait)
-	quit.OnClick(func() {
-		q.asking.Store(false)
-		q.force.Store(true)
-		go q.app.Quit()
+	// GTK shows nothing for a dialog built off the main thread, so this goes
+	// back to it. shouldQuit has returned by the time the main loop runs it.
+	application.InvokeAsync(func() {
+		d := q.app.Dialog.Question().
+			SetTitle("DDEV is still working").
+			SetMessage("Quitting stops these, which can leave a project half done:\n\n" + strings.Join(running, "\n"))
+		quit := d.AddButton("Quit anyway")
+		wait := d.AddButton("Keep running")
+		d.SetDefaultButton(wait)
+		d.SetCancelButton(wait)
+		quit.OnClick(func() {
+			q.asking.Store(false)
+			q.force.Store(true)
+			go q.app.Quit()
+		})
+		wait.OnClick(func() { q.asking.Store(false) })
+		d.Show()
 	})
-	wait.OnClick(func() { q.asking.Store(false) })
-	d.Show()
 }
 
 // handleSignals quits without asking on SIGINT or SIGTERM, as from a
