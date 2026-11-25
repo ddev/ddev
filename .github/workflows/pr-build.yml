@@ -62,14 +62,6 @@ jobs:
       - name: Build DDEV executables
         run: make CGO_ENABLED=0 BUILDARGS="" linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64_install windows_arm64_install wsl_amd64 wsl_arm64 mkcert
 
-      - name: Generate artifacts
-        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
-
-      - name: Upload all artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: all-ddev-executables
-          path: ${{ github.workspace }}/artifacts/*
       - name: Upload macos-amd64 binary
         uses: actions/upload-artifact@v7
         with:
@@ -295,3 +287,48 @@ jobs:
           DDEV_DESKTOP_SELFTEST: "true"
           DDEV_NO_INSTRUMENTATION: "true"
         run: ./ddev/ddev-desktop.exe | cat
+
+  # The tarballs in all-ddev-executables carry the desktop app, so they are
+  # made after the jobs that add it to each OS's ddev artifact.
+  all-artifacts:
+    name: Archive all executables
+    runs-on: ubuntu-26.04
+    needs: [build, desktop-macos, desktop-linux]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # git describe names the version in each tarball
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: ddev-*
+          path: incoming
+
+      # Artifacts do not carry the executable bit.
+      - name: Assemble .gotmp/bin
+        run: |
+          set -eu -o pipefail
+          mkdir -p .gotmp/bin/darwin_universal
+          for arch in amd64 arm64; do
+            for os in linux macos windows; do
+              dir=$os
+              if [ $os = macos ]; then dir=darwin; fi
+              mkdir -p ".gotmp/bin/${dir}_${arch}"
+              cp -a "incoming/ddev-${os}-${arch}/." ".gotmp/bin/${dir}_${arch}/"
+            done
+            chmod +x .gotmp/bin/{linux,darwin}_${arch}/*
+          done
+          if [ -f .gotmp/bin/darwin_arm64/DDEV.app.zip ]; then
+            mv .gotmp/bin/darwin_arm64/DDEV.app.zip .gotmp/bin/darwin_universal/
+          fi
+
+      - name: Generate artifacts
+        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
+
+      - name: Upload all artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: all-ddev-executables
+          path: ${{ github.workspace }}/artifacts/*

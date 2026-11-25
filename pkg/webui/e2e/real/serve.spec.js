@@ -1,4 +1,4 @@
-// Drives a real `ddev serve` through one project's life: add, start, logs,
+// Drives a real `ddev gui --browser` through one project's life: add, start, logs,
 // Xdebug, snapshot, restore, delete. It needs Docker, so it runs only with
 // DDEV_WEBUI_E2E=true. DDEV_BINARY names the ddev to test (default: ddev
 // on PATH). Its projects live in a separate DDEV_XDG_CONFIG_HOME, so the
@@ -33,10 +33,10 @@ let dashboardURL;
 test.beforeAll(async () => {
   fs.mkdirSync(path.join(projectDir, 'web'), { recursive: true });
   fs.writeFileSync(path.join(projectDir, 'web', 'index.php'), `<?php echo "hello from ${name}";\n`);
-  serve = spawn(ddev, ['serve', '--no-open'], { env, cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+  serve = spawn(ddev, ['gui', '--browser', '--no-open'], { env, cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
   let output = '';
   dashboardURL = await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('ddev serve printed no URL:\n' + output)), 60000);
+    const timer = setTimeout(() => reject(new Error('ddev gui printed no URL:\n' + output)), 60000);
     const read = (chunk) => {
       output += chunk;
       const m = output.match(/http:\/\/127\.0\.0\.1:\d+\/\?token=[0-9a-f]+/);
@@ -47,7 +47,7 @@ test.beforeAll(async () => {
     };
     serve.stdout.on('data', read);
     serve.stderr.on('data', read);
-    serve.on('exit', (code) => reject(new Error(`ddev serve exited with ${code}:\n${output}`)));
+    serve.on('exit', (code) => reject(new Error(`ddev gui exited with ${code}:\n${output}`)));
   });
 });
 

@@ -8,12 +8,12 @@ on:
     branches: [ main ]
     paths:
       - "pkg/webui/**"
-      - "cmd/ddev/cmd/serve.go"
+      - "cmd/ddev/cmd/gui.go"
       - ".github/workflows/webui-e2e.yml"
   pull_request:
     paths:
       - "pkg/webui/**"
-      - "cmd/ddev/cmd/serve.go"
+      - "cmd/ddev/cmd/gui.go"
       - ".github/workflows/webui-e2e.yml"
   workflow_dispatch:
 

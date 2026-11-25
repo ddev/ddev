@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestOpenURLOnlyDesktop checks the link route of `ddev serve --desktop`,
+// TestOpenURLOnlyDesktop checks the link route of `ddev gui --desktop`,
 // which the desktop app's window uses because a webview opens no new
 // windows.
 func TestOpenURLOnlyDesktop(t *testing.T) {

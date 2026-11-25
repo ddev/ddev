@@ -1,4 +1,4 @@
-// DDEV dashboard for `ddev serve`. Plain DOM code, no build step: the page
+// DDEV web UI for `ddev gui`. Plain DOM code, no build step: the page
 // runs under a strict Content-Security-Policy, so nothing is inlined and all
 // text goes in through textContent.
 'use strict';

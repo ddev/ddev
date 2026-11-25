@@ -807,6 +807,40 @@ ddev export-db --compression=zstd > /tmp/db.sql.zst
 ddev export-db my-project --file=/tmp/my-project.sql
 ```
 
+## `gui`
+
+*Alias: `dashboard`.*
+
+Open the experimental DDEV app, a graphical interface for managing DDEV projects. It offers what the [interactive TUI dashboard](../usage/cli.md#interactive-dashboard) does: start, stop, restart, and delete projects, open their sites, Mailpit, and XHGui, follow service logs, install and remove add-ons, create and restore snapshots, and toggle Xdebug.
+
+`ddev gui` selects the project you name, or the project in the current directory. It looks for the DDEV app next to `ddev`, then in `/Applications` and `~/Applications` on macOS, or on `PATH` on Linux and Windows. Without the app, or in WSL2, an SSH session, or a Linux session without a display, the same interface opens in the browser instead.
+
+In the browser, the web UI listens on `127.0.0.1` only, and the URL it prints includes an access token. Keep that URL private: anyone who has it can control your projects.
+
+See [Desktop App (Experimental)](../usage/desktop-app.md) for installing the app, its tray menu, and using it with WSL2.
+
+Flags:
+
+* `--browser`: Open the web UI in the browser instead of the DDEV app.
+* `--port`: With `--browser`, the port to listen on at `127.0.0.1`. A free port is chosen when this is `0`, the default.
+* `--no-open`: With `--browser`, print the URL without opening a browser.
+
+Example:
+
+```shell
+# Open the DDEV app, with the current project selected
+ddev gui
+
+# Open the DDEV app with a project selected
+ddev gui my-project
+
+# Open the web UI in the default browser
+ddev gui --browser
+
+# Serve the web UI on a fixed port, for example to forward it over SSH
+ddev gui --browser --port 8765 --no-open
+```
+
 ## `heidisql`
 
 Open [HeidiSQL](https://www.heidisql.com/) with the current project's database (global shell host container command). This command is available on Windows, WSL2, and Linux.
@@ -1411,29 +1445,6 @@ Example:
 ```shell
 # Open the current project’s database in SequelAce
 ddev sequelace
-```
-
-## `serve`
-
-Serve an experimental dashboard for managing DDEV projects in the browser. It offers what the [interactive TUI dashboard](../usage/cli.md#interactive-dashboard) does: start, stop, restart, and delete projects, open their sites, Mailpit, and XHGui, follow service logs, install and remove add-ons, create and restore snapshots, and toggle Xdebug.
-
-The dashboard listens on `127.0.0.1` only, and the URL it prints includes an access token. Keep that URL private: anyone who has it can control your projects.
-
-The [desktop app](../usage/desktop-app.md) shows the same dashboard in a window of its own, with a tray menu.
-
-Flags:
-
-* `--port`: Port to listen on at `127.0.0.1`. A free port is chosen when this is `0`, the default.
-* `--no-open`: Print the URL without opening a browser.
-
-Example:
-
-```shell
-# Serve the dashboard and open it in the default browser
-ddev serve
-
-# Serve the dashboard on a fixed port, for example to forward it over SSH
-ddev serve --port 8765 --no-open
 ```
 
 ## `share`

@@ -544,12 +544,12 @@ quickstart-test: build dummy-project
 WEBUI_E2E=pkg/webui/e2e
 
 .PHONY: webui-e2e webui-e2e-real
-# Browser tests of the `ddev serve` dashboard against a fake API, in Chromium
+# Browser tests of the `ddev gui` dashboard against a fake API, in Chromium
 # and WebKit; no Docker.
 webui-e2e:
 	cd $(WEBUI_E2E) && npm ci --no-audit --no-fund && npx playwright install chromium webkit && npx playwright test --project=mocked --project=mocked-webkit
 
-# Browser test of a real `ddev serve`, which starts and deletes a project.
+# Browser test of a real `ddev gui`, which starts and deletes a project.
 webui-e2e-real: build
 	cd $(WEBUI_E2E) && npm ci --no-audit --no-fund && npx playwright install chromium && DDEV_WEBUI_E2E=true DDEV_BINARY=$(DDEV_BINARY_FULLPATH) npx playwright test --project=real
 

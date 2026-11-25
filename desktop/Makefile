@@ -1,6 +1,6 @@
 # Builds the experimental DDEV desktop app. `make desktop` in the repository
 # root builds ddev and this app. The app holds no DDEV code and no ddev
-# binary: it runs `ddev serve --desktop` from the installed ddev.
+# binary: it runs `ddev gui --desktop` from the installed ddev.
 
 GOTMP ?= ../.gotmp
 GOOS ?= $(shell go env GOOS)
@@ -49,7 +49,7 @@ endif
 binary:
 	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO) go build -trimpath -ldflags "$(LDFLAGS)" -o $(OUT)/ddev-desktop$(EXE) .
 
-# Set DDEV_BINARY to a ddev with `ddev serve` to run the tests that start it.
+# Set DDEV_BINARY to a ddev with `ddev gui` to run the tests that start it.
 test:
 	CGO_ENABLED=$(CGO) go test -v -count=1 ./...
 

@@ -1,8 +1,9 @@
 # Experimental DDEV desktop app
 
 This is an experimental desktop app for DDEV, built with
-[Wails v3](https://v3.wails.io/). It shows the dashboard from `ddev serve`
-(`pkg/webui`) in a native window, and adds what a browser tab cannot:
+[Wails v3](https://v3.wails.io/). `ddev gui` opens it, and
+`ddev gui --browser` opens the same web UI (`pkg/webui`) in a browser. The
+app shows that web UI in a native window, and adds what a browser tab cannot:
 
 - A tray menu, also called a menu bar extra on macOS. It lists each project
   with its status, starts, stops, or restarts it, and opens its site. It also
@@ -23,8 +24,8 @@ This is an experimental desktop app for DDEV, built with
 ## One ddev
 
 The app holds no DDEV code and carries no `ddev` binary. It runs
-`ddev serve --desktop` from the `ddev` you already have, shows that
-dashboard, and drives the tray through the same HTTP API. The window, the
+`ddev gui --desktop` from the `ddev` you already have, shows that web
+UI, and drives the tray through the same HTTP API. The window, the
 tray, and your terminal therefore read and change projects with one `ddev`,
 of one version. Upgrading `ddev` upgrades what the app shows.
 
@@ -50,24 +51,24 @@ The app runs, in this order:
 distro's login `PATH`. A `ddev.exe` left by an earlier traditional install
 wins over WSL2 when the app starts without the Start Menu shortcut.
 
-With ddev in WSL2, `ddev serve` listens on `127.0.0.1` inside the distro, and
-the window reaches it through WSL's localhost forwarding, which is on by
-default. Its links and folders open on Windows, through `rundll32.exe` and
-`explorer.exe`. User documentation is in
+With ddev in WSL2, `ddev gui --desktop` listens on `127.0.0.1` inside the
+distro, and the window reaches it through WSL's localhost forwarding, which
+is on by default. Its links and folders open on Windows, through
+`rundll32.exe` and `explorer.exe`. User documentation is in
 `docs/content/users/usage/desktop-app.md`.
 
-`ddev serve --desktop` listens on `127.0.0.1` with a token, opens links in
+`ddev gui --desktop` listens on `127.0.0.1` with a token, opens links in
 the default browser, and stops when its standard input closes, so it stops
 with the app, inside WSL2 too. On macOS and Linux the window reaches it
-through the Wails asset server, which passes each request to `ddev serve`
+through the Wails asset server, which passes each request to `ddev gui`
 with the token, so the window needs no token or cookie. A state change must
 carry the `X-DDEV-Dashboard` header, which the page always sends and a page
 from another origin cannot add without a CORS preflight. On Windows, Wails'
 WebView2 response writer cannot stream, so the window loads the URL of
-`ddev serve` instead, as a browser would.
+`ddev gui` instead, as a browser would.
 
-The app needs a `ddev` with `ddev serve`. With an older one, the window and
-a dialog say that `ddev serve --desktop` stopped, with what it printed.
+The app needs a `ddev` with `ddev gui`. With an older one, the window and
+a dialog say that `ddev gui --desktop` stopped, with what it printed.
 
 This is a separate Go module, so that Wails stays out of the `ddev` binary
 and `vendor/`. Wails needs CGO on macOS and Linux, but not on Windows, so the
@@ -102,8 +103,16 @@ On Windows the app needs the WebView2 runtime, which Windows 11 includes.
   `ddev-desktop.exe` next to `ddev.exe` in `.gotmp/bin/windows_amd64/`.
   `make windows_amd64_install` builds it into the installer.
 
-The app runs the `ddev` it finds as described above, which for a build of
-your own is often not the `ddev` you just built. Set `DDEV_BINARY`:
+`ddev gui` runs the app with `DDEV_BINARY` set to itself, so a local build
+of `ddev` opens a local build of the app if `DDEV_DESKTOP_APP` names it:
+
+```bash
+DDEV_DESKTOP_APP="$PWD/.gotmp/bin/darwin_universal/DDEV.app" .gotmp/bin/darwin_arm64/ddev gui
+```
+
+Started any other way, the app runs the `ddev` it finds as described above,
+which for a build of your own is often not the `ddev` you just built. Set
+`DDEV_BINARY`:
 
 ```bash
 # macOS; open passes none of your shell's variables, --env passes one
@@ -149,8 +158,8 @@ window's page, which Edge's DevTools can then inspect.
 - `make -C desktop test` runs the Go tests with CGO on, which Wails needs
   on macOS and Linux. They cover how the app finds `ddev`, reads the status
   stream, notices jobs that end, and proxies the window's requests. With
-  `DDEV_BINARY` set to a `ddev` with `ddev serve`, they also start a real
-  `ddev serve --desktop` and drive it.
+  `DDEV_BINARY` set to a `ddev` with `ddev gui`, they also start a real
+  `ddev gui --desktop` and drive it.
 - `DDEV_DESKTOP_SELFTEST=true` runs `selftest.js` inside the app's own
   window, then exits with its result. The script waits for the status stream,
   submits a missing directory to "Add project" and expects an error, then
@@ -167,7 +176,7 @@ window's page, which Edge's DevTools can then inspect.
   would land in your real global configuration.
 - Without Docker, a project's detail fails before it runs host commands
   such as `git`. `TestStopWithStdin` in `pkg/webui` therefore checks without
-  Docker that `ddev serve --desktop` keeps its stdin pipe from such
+  Docker that `ddev gui --desktop` keeps its stdin pipe from such
   commands, which hang on Windows when they inherit it.
 - `make webui-e2e` runs the dashboard's Playwright tests in Chromium and in
   WebKit, the engine of the app's window on macOS and Linux.

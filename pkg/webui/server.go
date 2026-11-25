@@ -1,12 +1,12 @@
-// Package webui serves an experimental browser dashboard for DDEV projects,
-// `ddev serve`. It reads projects through pkg/ddevapp, runs actions as ddev
+// Package webui serves the experimental DDEV web UI for `ddev gui`.
+// It reads projects through pkg/ddevapp, runs actions as ddev
 // subcommands the way `ddev tui` does, and streams their output and project
 // status to the browser with Server-Sent Events.
 //
 // It listens on 127.0.0.1 only, and every request must carry the token from
 // the launch URL, since any page the user visits could otherwise reach it.
-// The desktop app in desktop/ runs `ddev serve --desktop` and shows the
-// same dashboard in its window.
+// The desktop app in desktop/ runs `ddev gui --desktop` and shows the
+// same web UI in its window.
 package webui
 
 import (
@@ -33,7 +33,7 @@ var assets embed.FS
 
 // cookieName holds the token once the launch URL has been visited, so it
 // does not stay in the address bar or history.
-const cookieName = "ddev_serve_token"
+const cookieName = "ddev_gui_token"
 
 // Server is the dashboard's HTTP server.
 type Server struct {
@@ -217,7 +217,7 @@ func (s *Server) secure(next http.Handler) http.Handler {
 			}
 			bearer = true
 		} else if c, err := r.Cookie(cookieName); err != nil || !s.tokenMatches(c.Value) {
-			http.Error(w, "Open the URL that `ddev serve` printed, which includes the access token.", http.StatusUnauthorized)
+			http.Error(w, "Open the URL that `ddev gui --browser` printed, which includes the access token.", http.StatusUnauthorized)
 			return
 		}
 		// A cookie is sent with cross-site requests in some cases, so a

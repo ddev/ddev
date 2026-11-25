@@ -82,7 +82,7 @@ func TestSecurity(t *testing.T) {
 
 	rec = request(s, "GET", "/", withCookie(s))
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.Contains(t, rec.Body.String(), "<title>DDEV Dashboard</title>")
+	require.Contains(t, rec.Body.String(), "<title>DDEV</title>")
 	require.Contains(t, rec.Header().Get("Content-Security-Policy"), "default-src 'self'")
 
 	rec = request(s, "GET", "/app.js", func(r *http.Request) { r.Header.Set("Authorization", "Bearer "+s.token) })

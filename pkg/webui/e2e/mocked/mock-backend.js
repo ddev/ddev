@@ -1,4 +1,4 @@
-// A stand-in for the `ddev serve` API. It serves the real page files from
+// A stand-in for the `ddev gui` API. It serves the real page files from
 // ../../assets and keeps event streams open, so a test decides when status,
 // job output and log lines arrive.
 'use strict';

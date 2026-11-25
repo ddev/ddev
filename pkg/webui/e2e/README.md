@@ -1,4 +1,4 @@
-# Browser tests for `ddev serve`
+# Browser tests for `ddev gui`
 
 These [Playwright](https://playwright.dev/) tests drive the dashboard in
 `pkg/webui/assets` in Chromium. The Go tests in `pkg/webui` cover the server
@@ -8,7 +8,7 @@ side; these cover the page.
 | --- | --- | --- | --- |
 | `mocked` | The real page files served by `mocked/mock-backend.js`, a fake API whose event streams the tests control | No | `make webui-e2e` |
 | `mocked-webkit` | The same tests in WebKit, the engine of the desktop app's window | No | `make webui-e2e` |
-| `real` | A real `ddev serve`, which adds, starts, snapshots, and deletes a PHP project | Yes | `make webui-e2e-real` |
+| `real` | A real `ddev gui`, which adds, starts, snapshots, and deletes a PHP project | Yes | `make webui-e2e-real` |
 
 The mocked tests fail on any script error or Content-Security-Policy
 violation in the page. The mock sends the same policy as
@@ -30,4 +30,4 @@ runner, and `npx playwright show-trace test-results/*/trace.zip` replays a
 failure.
 
 `.github/workflows/webui-e2e.yml` runs both projects when `pkg/webui` or
-`ddev serve` change.
+`ddev gui` change.

@@ -1,8 +1,8 @@
 // Command ddev-desktop is an experimental desktop app for DDEV. It shows the
-// `ddev serve` dashboard in a native window through Wails, and adds a tray
+// `ddev gui` dashboard in a native window through Wails, and adds a tray
 // menu and notifications.
 //
-// It holds no DDEV code: it runs `ddev serve --desktop` from the ddev it
+// It holds no DDEV code: it runs `ddev gui --desktop` from the ddev it
 // finds (see serve.go), so the window, the tray, and the terminal all use
 // one ddev. It is a separate module so that Wails, and the CGO it needs on
 // macOS and Linux, stay out of the ddev binary and its vendor directory.
@@ -62,13 +62,13 @@ func main() {
 		}
 	}
 
-	// startErr is shown in the window and a dialog when ddev serve cannot
-	// run, such as when ddev is missing or too old to have `ddev serve`.
+	// startErr is shown in the window and a dialog when ddev gui cannot
+	// run, such as when ddev is missing or too old to have `ddev gui`.
 	var startErr error
 	var srv *serveClient
 	tgt, err := chooseTarget(argValue(os.Args[1:], "--wsl-distro"))
 	if err == nil {
-		log.Printf("Running ddev serve from %s", tgt)
+		log.Printf("Running ddev gui from %s", tgt)
 		srv, err = startServe(tgt)
 	}
 	if err != nil {
@@ -82,9 +82,9 @@ func main() {
 	}
 
 	// handler serves the window through the Wails asset server. On macOS
-	// and Linux it passes the window's requests to ddev serve. WebView2 on
+	// and Linux it passes the window's requests to ddev gui. WebView2 on
 	// Windows cannot stream a response through it, so there the window
-	// loads ddev serve's URL instead.
+	// loads ddev gui's URL instead.
 	handler := errorPage(startErr)
 	windowURL := "/"
 	if srv != nil {
@@ -102,6 +102,10 @@ func main() {
 				log.Fatal(err)
 			}
 		}
+	}
+	// `ddev gui <project>` starts the app with --project.
+	if p := argValue(os.Args[1:], "--project"); p != "" && srv != nil {
+		windowURL += "#project=" + url.QueryEscape(p)
 	}
 	logLevel := slog.LevelInfo
 	if os.Getenv("DDEV_DESKTOP_DEBUG") == "true" {
@@ -140,12 +144,21 @@ func main() {
 		window.Show()
 		window.Focus()
 	}
+	// reveal shows the window with a project selected.
+	var reveal func(name string)
 	singleInstance := &application.SingleInstanceOptions{
 		UniqueID: "com.ddev.desktop",
 		// Launching the app again is how a closed window comes back where
 		// there is no tray or Dock icon, such as GNOME without AppIndicator.
-		OnSecondInstanceLaunch: func(application.SecondInstanceData) {
-			application.InvokeAsync(showWindow)
+		// `ddev gui <project>` with the app running passes --project here.
+		OnSecondInstanceLaunch: func(d application.SecondInstanceData) {
+			application.InvokeAsync(func() {
+				if p := argValue(d.Args, "--project"); p != "" && reveal != nil {
+					reveal(p)
+					return
+				}
+				showWindow()
+			})
 		},
 	}
 	if st != nil {
@@ -232,16 +245,17 @@ func main() {
 	if u, err := url.Parse(windowURL); err == nil && u.Host != "" {
 		pageURL = u.Scheme + "://" + u.Host + "/"
 	}
-	t := &trayMenu{app: app, tray: tray, srv: srv, startErr: startErr, show: showWindow, reveal: func(name string) {
+	reveal = func(name string) {
 		// The page selects the project that its location's hash names.
 		// A change to the hash alone does not reload the page. ExecJS would
 		// wait for the Wails runtime, which the page does not load.
 		window.SetURL(pageURL + "#project=" + url.QueryEscape(name))
 		showWindow()
-	}}
+	}
+	t := &trayMenu{app: app, tray: tray, srv: srv, startErr: startErr, show: showWindow, reveal: reveal}
 	// Wails opens the menu on a right-click only if the tray has a menu when
 	// the app starts, and follow's first menu arrives later.
-	firstErr := "Connecting to ddev serve…"
+	firstErr := "Connecting to ddev gui…"
 	if startErr != nil {
 		firstErr = startErr.Error()
 	}
@@ -292,14 +306,14 @@ func serveLoopback(h http.Handler) (string, error) {
 	return "http://" + l.Addr().String() + "/", nil
 }
 
-// watchExit tells the user when ddev serve stops while the app runs, since
+// watchExit tells the user when ddev gui stops while the app runs, since
 // the window and the tray need it.
 func watchExit(app *application.App, srv *serveClient, q *quitter) {
 	<-srv.Exited()
 	if srv.Closing() {
 		return
 	}
-	msg := "ddev serve stopped, so DDEV must quit."
+	msg := "ddev gui stopped, so DDEV must quit."
 	if out := srv.Output(); out != "" {
 		msg += "\n\n" + out
 	}
@@ -354,7 +368,7 @@ func logRequests(next http.Handler) http.Handler {
 type trayMenu struct {
 	app  *application.App
 	tray *application.SystemTray
-	// srv is nil when ddev serve could not start, and startErr says why.
+	// srv is nil when ddev gui could not start, and startErr says why.
 	srv      *serveClient
 	startErr error
 	show     func()

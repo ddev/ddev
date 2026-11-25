@@ -3,7 +3,7 @@ const { defineConfig, devices } = require('@playwright/test');
 
 // "mocked" tests run the dashboard's own page against a fake API and need
 // no Docker; "mocked-webkit" runs them in WebKit, the engine of the desktop
-// app's window. "real" tests drive `ddev serve` with real projects.
+// app's window. "real" tests drive `ddev gui` with real projects.
 module.exports = defineConfig({
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',

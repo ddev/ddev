@@ -69,7 +69,7 @@ func RegisterCommands() {
 	registerPullCmd()
 	registerPushCmd()
 	registerRestartCmd()
-	registerServeCmd()
+	registerGUICmd()
 	registerShareCmd()
 	registerSnapshotCmd()
 	registerSnapshotRestoreCmd()

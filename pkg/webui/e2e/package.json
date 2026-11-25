@@ -2,7 +2,7 @@
   "name": "ddev-webui-e2e",
   "version": "1.0.0",
   "private": true,
-  "description": "Browser tests for the `ddev serve` dashboard (pkg/webui).",
+  "description": "Browser tests for the `ddev gui` dashboard (pkg/webui).",
   "scripts": {
     "test": "playwright test --project=mocked --project=mocked-webkit",
     "test:real": "playwright test --project=real"

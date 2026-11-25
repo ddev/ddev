@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-// The app holds no DDEV code. It runs `ddev serve --desktop` from the one
+// The app holds no DDEV code. It runs `ddev gui --desktop` from the one
 // ddev it finds, shows that dashboard in its window, and drives the tray
 // through the same HTTP API, so the window, the tray, and the terminal all
 // use the same ddev.
@@ -121,7 +121,7 @@ type serveStatus struct {
 	Version  string     `json:"version"`
 }
 
-// serveClient runs `ddev serve --desktop` and follows its status stream.
+// serveClient runs `ddev gui --desktop` and follows its status stream.
 type serveClient struct {
 	target target
 	cmd    *exec.Cmd
@@ -132,7 +132,7 @@ type serveClient struct {
 	token  string
 	client *http.Client
 	output *tail
-	// closing is set once the app stops ddev serve itself.
+	// closing is set once the app stops ddev gui itself.
 	closing atomic.Bool
 
 	// OnJobDone, when set before Follow, is called as each job ends.
@@ -148,14 +148,14 @@ type serveClient struct {
 
 var serveURL = regexp.MustCompile(`http://127\.0\.0\.1:\d+/\?token=[0-9a-f]+`)
 
-// startServe starts `ddev serve --desktop` and waits for the URL it prints.
+// startServe starts `ddev gui --desktop` and waits for the URL it prints.
 func startServe(t target) (*serveClient, error) {
-	args := []string{"serve", "--no-open", "--desktop"}
+	args := []string{"gui", "--desktop"}
 	cmd := exec.Command(t.ddev, args...)
 	if t.wsl {
 		cmd = exec.Command("wsl.exe", wslArgs(t.distro, "ddev "+strings.Join(args, " "))...)
 	}
-	// ddev serve --desktop stops when its stdin closes, so it does not
+	// ddev gui --desktop stops when its stdin closes, so it does not
 	// outlive this app, inside WSL2 or not.
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -208,23 +208,23 @@ func startServe(t target) (*serveClient, error) {
 			jobs:    map[int]bool{},
 		}, nil
 	case <-exited:
-		return nil, fmt.Errorf("`ddev serve --desktop` from %s stopped without printing a URL. This app needs a ddev with `ddev serve`.\n\n%s", t, out.String())
+		return nil, fmt.Errorf("`ddev gui --desktop` from %s stopped without printing a URL. This app needs a ddev with `ddev gui`.\n\n%s", t, out.String())
 	case <-time.After(2 * time.Minute):
 		_ = cmd.Process.Kill()
-		return nil, fmt.Errorf("`ddev serve --desktop` from %s printed no URL within 2 minutes.\n\n%s", t, out.String())
+		return nil, fmt.Errorf("`ddev gui --desktop` from %s printed no URL within 2 minutes.\n\n%s", t, out.String())
 	}
 }
 
 // URL is the launch URL, which carries the token.
 func (c *serveClient) URL() string { return c.launch }
 
-// Exited is closed when ddev serve has stopped.
+// Exited is closed when ddev gui has stopped.
 func (c *serveClient) Exited() <-chan struct{} { return c.exited }
 
-// Closing is whether the app stopped ddev serve itself.
+// Closing is whether the app stopped ddev gui itself.
 func (c *serveClient) Closing() bool { return c.closing.Load() }
 
-// Output is the last lines ddev serve printed.
+// Output is the last lines ddev gui printed.
 func (c *serveClient) Output() string { return c.output.String() }
 
 func (c *serveClient) authorize(h http.Header) {
@@ -234,10 +234,10 @@ func (c *serveClient) authorize(h http.Header) {
 
 // dashboardHeader is sent by the page with every state change. A page from
 // another origin cannot add it without a CORS preflight, which neither the
-// proxy nor ddev serve answers.
+// proxy nor ddev gui answers.
 const dashboardHeader = "X-DDEV-Dashboard"
 
-// Proxy passes the window's requests to ddev serve with the token, so the
+// Proxy passes the window's requests to ddev gui with the token, so the
 // window needs no token, cookie, or port of its own. A state change must
 // still carry the page's header, which another page could not send.
 func (c *serveClient) Proxy() http.Handler {
@@ -263,14 +263,14 @@ func (c *serveClient) Proxy() http.Handler {
 	})
 }
 
-// Follow reads the status stream until ddev serve stops, reconnecting when
+// Follow reads the status stream until ddev gui stops, reconnecting when
 // the stream breaks.
 func (c *serveClient) Follow() {
 	for {
 		err := c.stream()
 		select {
 		case <-c.exited:
-			c.setStatus(nil, errors.New("ddev serve stopped"))
+			c.setStatus(nil, errors.New("ddev gui stopped"))
 			return
 		default:
 		}
@@ -369,7 +369,7 @@ func (c *serveClient) Projects() ([]project, error) {
 	case c.statErr != nil:
 		return nil, c.statErr
 	case c.status == nil:
-		return nil, errors.New("connecting to ddev serve…")
+		return nil, errors.New("connecting to ddev gui…")
 	case c.status.Error != "":
 		return nil, errors.New(c.status.Error)
 	}
@@ -402,7 +402,7 @@ func (c *serveClient) RunningJobs() []string {
 	return out
 }
 
-// Post sends a POST to ddev serve as the page would, so that an action
+// Post sends a POST to ddev gui as the page would, so that an action
 // started from the tray shows in the page's activity list.
 func (c *serveClient) Post(path string) error {
 	req, err := http.NewRequest(http.MethodPost, c.base.String()+path, nil)
@@ -422,7 +422,7 @@ func (c *serveClient) Post(path string) error {
 	return nil
 }
 
-// Close stops ddev serve by closing its stdin, which also stops the jobs it
+// Close stops ddev gui by closing its stdin, which also stops the jobs it
 // runs, then kills it if needed.
 func (c *serveClient) Close() {
 	c.closing.Store(true)

@@ -92,7 +92,7 @@ func TestJobNotifications(t *testing.T) {
 	require.Len(t, ended, 2, "a reconnect repeats no notification")
 }
 
-// TestProxy checks that the window's requests reach ddev serve with the
+// TestProxy checks that the window's requests reach ddev gui with the
 // token, and that a state change without the page's header does not.
 func TestProxy(t *testing.T) {
 	var gotAuth, gotCookie, gotHost string
@@ -113,16 +113,16 @@ func TestProxy(t *testing.T) {
 	require.Equal(t, http.StatusTeapot, rec.Code)
 	require.Equal(t, "Bearer secret", gotAuth)
 	require.Empty(t, gotCookie)
-	require.Equal(t, u.Host, gotHost, "ddev serve answers only to its own host")
+	require.Equal(t, u.Host, gotHost, "ddev gui answers only to its own host")
 
 	gotAuth = ""
 	rec = httptest.NewRecorder()
 	c.Proxy().ServeHTTP(rec, httptest.NewRequest("POST", "/api/actions/poweroff", nil))
 	require.Equal(t, http.StatusForbidden, rec.Code)
-	require.Empty(t, gotAuth, "the refused request did not reach ddev serve")
+	require.Empty(t, gotAuth, "the refused request did not reach ddev gui")
 }
 
-// TestServeClient runs a real `ddev serve --desktop`. It needs
+// TestServeClient runs a real `ddev gui --desktop`. It needs
 // DDEV_BINARY, a ddev built from this branch.
 func TestServeClient(t *testing.T) {
 	bin := os.Getenv("DDEV_BINARY")
@@ -165,19 +165,19 @@ func TestServeClient(t *testing.T) {
 	select {
 	case <-c.Exited():
 	case <-time.After(10 * time.Second):
-		t.Fatal("ddev serve did not stop when its stdin closed")
+		t.Fatal("ddev gui did not stop when its stdin closed")
 	}
 }
 
 func TestStartServeReportsOldDdev(t *testing.T) {
 	old := filepath.Join(t.TempDir(), "ddev")
-	script := "#!/bin/sh\necho 'Error: unknown command \"serve\" for \"ddev\"'\nexit 1\n"
+	script := "#!/bin/sh\necho 'Error: unknown command \"gui\" for \"ddev\"'\nexit 1\n"
 	if runtime.GOOS == "windows" {
 		old += ".cmd"
-		script = "@echo Error: unknown command \"serve\" for \"ddev\"\r\n@exit /b 1\r\n"
+		script = "@echo Error: unknown command \"gui\" for \"ddev\"\r\n@exit /b 1\r\n"
 	}
 	require.NoError(t, os.WriteFile(old, []byte(script), 0o755))
 	_, err := startServe(target{ddev: old})
-	require.ErrorContains(t, err, "needs a ddev with `ddev serve`")
-	require.ErrorContains(t, err, `unknown command "serve"`)
+	require.ErrorContains(t, err, "needs a ddev with `ddev gui`")
+	require.ErrorContains(t, err, `unknown command "gui"`)
 }
