@@ -46,7 +46,10 @@ type Server struct {
 	origins  map[string]bool
 	listener net.Listener
 	http     *http.Server
-	jobs     *jobs
+	// endRequests cancels every request's context, so open streams return
+	// and Shutdown need not wait for its timeout.
+	endRequests context.CancelFunc
+	jobs        *jobs
 	// baseEnv is the environment from before any project was described.
 	// Describe sets project variables on this process, which must not leak
 	// into a subcommand for another project.
@@ -93,7 +96,9 @@ func New(port int) (*Server, error) {
 		s.hosts[hp] = true
 		s.origins["http://"+hp] = true
 	}
-	s.http = &http.Server{ReadHeaderTimeout: 10 * time.Second}
+	base, cancel := context.WithCancel(context.Background())
+	s.endRequests = cancel
+	s.http = &http.Server{ReadHeaderTimeout: 10 * time.Second, BaseContext: func(net.Listener) context.Context { return base }}
 	return s, nil
 }
 
@@ -142,6 +147,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	if s.http == nil {
 		return nil
 	}
+	s.endRequests()
 	return s.http.Shutdown(ctx)
 }
 

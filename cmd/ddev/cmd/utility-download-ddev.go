@@ -276,14 +276,13 @@ func printGUIResult(dest string, t buildTarget) {
 	if !t.isNative || strings.HasSuffix(dest, ".zip") {
 		return
 	}
-	output.UserOut.Println("It runs the ddev next to it. To start it:")
-	switch t.goos {
-	case "darwin":
-		output.UserOut.Printf("  open %q", dest)
-	case "windows":
-		output.UserOut.Printf("  & %q", dest)
-	default:
-		output.UserOut.Printf("  %q &", dest)
+	// `ddev gui` finds the app next to it and makes the app run that ddev.
+	ddev := filepath.Join(filepath.Dir(dest), "ddev"+t.exeExt)
+	output.UserOut.Println("To open it:")
+	if t.goos == "windows" {
+		output.UserOut.Printf("  & %q gui", ddev)
+	} else {
+		output.UserOut.Printf("  %q gui", ddev)
 	}
 }
 

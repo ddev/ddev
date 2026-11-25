@@ -9,6 +9,7 @@ test('toggles Xdebug', async ({ page, backend }) => {
   expect((await nthPost(backend, 1)).path).toBe('/api/projects/d11/actions/xdebug-on');
   // While the job runs, the switch keeps the requested state.
   await expect(page.locator('.switch')).toContainText('enabling…');
+  await expect(page.locator('#activity')).toHaveClass(/collapsed/);
   await expect(toggle).toBeChecked();
   await expect(toggle).toBeDisabled();
   backend.details.d11.xdebug = 'on';

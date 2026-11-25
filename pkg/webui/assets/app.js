@@ -66,10 +66,10 @@ async function post(url, params) {
 }
 
 // runJob starts a job and shows its output, and returns whether it started.
-async function runJob(url, params) {
+async function runJob(url, params, openActivity = true) {
   try {
     const job = await post(url, params);
-    showJob(job.id, true);
+    showJob(job.id, openActivity);
     return true;
   } catch (e) {
     toast(e.message, true);
@@ -174,17 +174,29 @@ function renderChips() {
   $('status-chips').replaceChildren(...chips.map(([id, label, n]) => h('button', {
     class: 'chip' + (state.show === id ? ' active' : ''),
     'aria-pressed': state.show === id ? 'true' : 'false',
-    onclick: () => { state.show = id; localStorage.setItem('ddev.show', id); renderProjects(); },
+    onclick: () => { state.show = id; localStorage.setItem('ddev.show', id); renderProjects(); selectShown(); },
   }, label + ' ', h('span', { class: 'chip-count' }, String(n)))));
+}
+
+function shownProjects() {
+  const f = state.filter.toLowerCase();
+  return state.projects.filter((p) =>
+    (state.show === 'all' || (state.show === 'up') === isUp(p.status)) &&
+    (!f || p.name.toLowerCase().includes(f) || p.type.toLowerCase().includes(f) || p.status.toLowerCase().includes(f)));
+}
+
+// selectShown keeps the detail on a listed project after the user narrows
+// the list. Status updates do not call it, so a project stopped under the
+// Running chip stays selected.
+function selectShown() {
+  const shown = shownProjects();
+  if (shown.length && !shown.some((p) => p.name === state.selected)) selectProject(shown[0].name);
 }
 
 function renderProjects() {
   renderChips();
   const list = $('project-list');
-  const f = state.filter.toLowerCase();
-  const shown = state.projects.filter((p) =>
-    (state.show === 'all' || (state.show === 'up') === isUp(p.status)) &&
-    (!f || p.name.toLowerCase().includes(f) || p.type.toLowerCase().includes(f) || p.status.toLowerCase().includes(f)));
+  const shown = shownProjects();
   list.replaceChildren(...shown.map((p) => {
     const busy = runningJobFor(p.name);
     return h('li', {
@@ -296,7 +308,7 @@ function toolbar(p) {
     running
       ? h('button', { class: 'btn', disabled: busy, onclick: act('stop') }, 'Stop')
       : h('button', { class: 'btn primary', disabled: busy, onclick: act('start') }, 'Start'),
-    h('button', { class: 'btn', disabled: busy, onclick: act('restart') }, 'Restart'),
+    h('button', { class: 'btn', disabled: busy || !running, onclick: act('restart') }, 'Restart'),
     h('span', { class: 'sep' }),
     h('a', { class: 'btn', href: p.url || '#', target: '_blank', rel: 'noopener noreferrer', hidden: !p.url }, 'Open site ↗'),
     mailpit && running ? h('a', { class: 'btn', href: mailpit, target: '_blank', rel: 'noopener noreferrer' }, 'Mailpit ↗') : null,
@@ -345,7 +357,9 @@ function overviewTab(p, d) {
           disabled: !running || !!runningJobFor(p.name),
           onchange: async (e) => {
             state.xdebugWanted[p.name] = e.target.checked;
-            if (!await runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/xdebug-' + (e.target.checked ? 'on' : 'off'))) {
+            // The switch's label shows progress, and the Activity panel
+            // would cover it. A failure still shows as a toast.
+            if (!await runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/xdebug-' + (e.target.checked ? 'on' : 'off'), undefined, false)) {
               // The panel may not rebuild, since its key can match the last one.
               delete state.xdebugWanted[p.name];
               e.target.checked = !e.target.checked;
@@ -356,7 +370,7 @@ function overviewTab(p, d) {
         'Xdebug ', h('span', { class: 'muted' }, !running ? '(project stopped)'
           : wanted !== undefined ? (wanted ? 'enabling…' : 'disabling…') : (xdebugOn ? 'enabled' : 'disabled')))),
     h('div', { class: 'card' }, h('h3', {}, 'Terminal'),
-      h('p', { class: 'muted' }, 'A browser cannot host a shell. Paste this into a terminal:'),
+      h('p', { class: 'muted' }, 'To open a shell, paste this into a terminal:'),
       copyable(shell)));
 }
 
@@ -621,7 +635,7 @@ async function addProject() {
   if (!state.types) {
     state.types = await fetch('/api/project-types').then((r) => r.json()).catch(() => []);
   }
-  const dir = h('input', { type: 'text', id: 'f-dir', placeholder: '/home/me/projects/my-site', required: true });
+  const dir = h('input', { type: 'text', id: 'f-dir', placeholder: 'Full path to the project directory', required: true });
   const type = h('select', { id: 'f-type' }, h('option', { value: '' }, 'detect automatically'),
     state.types.map((t) => h('option', { value: t }, t)));
   const name = h('input', { type: 'text', id: 'f-name', placeholder: 'defaults to the directory name' });
@@ -640,7 +654,7 @@ async function addProject() {
 // ---------- startup ----------
 
 function init() {
-  $('filter').addEventListener('input', (e) => { state.filter = e.target.value; renderProjects(); });
+  $('filter').addEventListener('input', (e) => { state.filter = e.target.value; renderProjects(); selectShown(); });
   document.addEventListener('keydown', (e) => {
     if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && !$('dialog').open) {
       e.preventDefault();

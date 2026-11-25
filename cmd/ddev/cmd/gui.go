@@ -24,7 +24,9 @@ import (
 var GUICmd = &cobra.Command{
 	Use:     "gui [project]",
 	Aliases: []string{"dashboard"},
-	Short:   "Open the experimental DDEV app, or the web UI in a browser",
+	// The window or page shows a Docker error itself, so it opens without Docker.
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Open the experimental DDEV app, or the web UI in a browser",
 	Long: `Open the experimental DDEV app, a graphical interface with the features of
 'ddev tui': start, stop, and delete projects, follow their logs, manage
 add-ons and snapshots, and toggle Xdebug.

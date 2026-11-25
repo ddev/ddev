@@ -190,7 +190,7 @@ func main() {
 		// ShouldQuit refused would leave the app deaf to the next one.
 		DisableDefaultSignalHandler: true,
 	})
-	q.app = app
+	q.app, q.show = app, showWindow
 	q.handleSignals()
 
 	window = app.Window.NewWithOptions(application.WebviewWindowOptions{
@@ -202,6 +202,7 @@ func main() {
 		MinHeight: 480,
 		URL:       windowURL,
 	})
+	q.window = window
 	// Closing the window keeps the app in the tray, as Docker Desktop does.
 	window.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		window.Hide()
@@ -252,7 +253,7 @@ func main() {
 		window.SetURL(pageURL + "#project=" + url.QueryEscape(name))
 		showWindow()
 	}
-	t := &trayMenu{app: app, tray: tray, srv: srv, startErr: startErr, show: showWindow, reveal: reveal}
+	t := &trayMenu{app: app, tray: tray, window: window, srv: srv, startErr: startErr, show: showWindow, reveal: reveal}
 	// Wails opens the menu on a right-click only if the tray has a menu when
 	// the app starts, and follow's first menu arrives later.
 	firstErr := "Connecting to ddev gui…"
@@ -366,8 +367,9 @@ func logRequests(next http.Handler) http.Handler {
 
 // trayMenu keeps the tray menu in step with the projects.
 type trayMenu struct {
-	app  *application.App
-	tray *application.SystemTray
+	app    *application.App
+	tray   *application.SystemTray
+	window *application.WebviewWindow
 	// srv is nil when ddev gui could not start, and startErr says why.
 	srv      *serveClient
 	startErr error
@@ -478,8 +480,19 @@ func (t *trayMenu) confirm(title, message, okLabel string, then func(*applicatio
 		d.SetDefaultButton(cancel)
 		d.SetCancelButton(cancel)
 		ok.OnClick(func() { go then(ctx) })
-		d.Show()
+		showQuestion(d, t.window, t.show)
 	}
+}
+
+// showQuestion shows d on the window, which comes forward first. On macOS a
+// question on its own blocks the whole app, the tray included, even once it
+// hides behind another app; on the window it blocks only the window.
+func showQuestion(d *application.MessageDialog, window *application.WebviewWindow, show func()) {
+	if runtime.GOOS == "darwin" && window != nil {
+		show()
+		d.AttachToWindow(window)
+	}
+	d.Show()
 }
 
 func (t *trayMenu) post(path string) func(*application.Context) {
@@ -506,8 +519,10 @@ func statusMark(status string) string {
 // quitter keeps a quit from killing running jobs unasked: Shutdown kills
 // them, which can leave a project half started or a database half restored.
 type quitter struct {
-	app *application.App
-	srv *serveClient
+	app    *application.App
+	srv    *serveClient
+	window *application.WebviewWindow
+	show   func()
 	// force is set once the user has agreed, or a signal asked to quit.
 	force atomic.Bool
 	// asking is set while the question is shown.
@@ -548,7 +563,7 @@ func (q *quitter) ask(running []string) {
 			go q.app.Quit()
 		})
 		wait.OnClick(func() { q.asking.Store(false) })
-		d.Show()
+		showQuestion(d, q.window, q.show)
 	})
 }
 

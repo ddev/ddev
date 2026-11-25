@@ -2,6 +2,7 @@ package webui
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -173,6 +174,30 @@ func TestJobRunsAndStreams(t *testing.T) {
 	require.Contains(t, all, `"progress 100%"`, "only the text after a carriage return is kept")
 	require.NotContains(t, all, "progress 10%")
 	require.Equal(t, `end {"err":""}`, events[len(events)-1])
+}
+
+// TestShutdownEndsStreams checks that Ctrl+C does not wait for an open
+// browser tab's status stream until Shutdown's timeout.
+func TestShutdownEndsStreams(t *testing.T) {
+	s := newTestServer(t)
+	served := make(chan error, 1)
+	go func() { served <- s.Serve() }()
+
+	req, err := http.NewRequest("GET", "http://"+s.host()+"/api/events", nil)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+s.token)
+	res, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = res.Body.Close() })
+	_, err = bufio.NewReader(res.Body).ReadString('\n')
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	start := time.Now()
+	require.NoError(t, s.Shutdown(ctx))
+	require.Less(t, time.Since(start), 2*time.Second)
+	require.NoError(t, <-served)
 }
 
 func TestJobFailureAndBusy(t *testing.T) {

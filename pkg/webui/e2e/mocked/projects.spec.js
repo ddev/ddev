@@ -146,6 +146,8 @@ test('chips show running or stopped projects, with counts', async ({ page }) => 
   await chips.getByRole('button', { name: 'Stopped 1' }).click();
   await expect(items).toHaveCount(1);
   await expect(items).toContainText('wp');
+  // The detail follows to a listed project.
+  await expect(page.locator('.detail-head h1')).toContainText('wp');
   await expect(chips.getByRole('button', { name: 'Stopped 1' })).toHaveAttribute('aria-pressed', 'true');
   // The choice is kept for the next visit. The fixture clears storage on
   // every load, so read it instead of reloading.
