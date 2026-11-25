@@ -1,19 +1,16 @@
 package fileutil_test
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
-	"strings"
 	"testing"
 
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,41 +40,14 @@ func TestFileHash(t *testing.T) {
 			result, err := fileutil.FileHash(testFile, tc.optionalExtra)
 			require.NoError(t, err)
 
-			// But we have to add the filepath to the testFile before
-			// we can use the externalComputeSha1Sum successfully
+			// FileHash also hashes the file's path and the extra string
 			canonicalFileName := testFile
 			if nodeps.IsWindows() {
 				canonicalFileName = util.WindowsPathToCygwinPath(testFile)
 			}
-			f, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			require.NoError(t, err)
-			_, err = f.WriteString(canonicalFileName)
-			require.NoError(t, err)
-			if tc.optionalExtra != "" {
-				_, err = f.WriteString(tc.optionalExtra)
-				require.NoError(t, err)
-			}
-			_ = f.Close()
-
-			expectedHash, err := externalComputeSha1Sum(testFile)
-			require.NoError(t, err)
+			expectedHash := fmt.Sprintf("%x", sha1.Sum([]byte(tc.content+canonicalFileName+tc.optionalExtra)))
 
 			require.Equal(t, expectedHash, result)
 		})
 	}
-}
-
-// externalComputeSha1Sum uses external tool (sha1sum for example) to compute shasum
-// Used only in tests
-func externalComputeSha1Sum(filePath string) (string, error) {
-	dir := filepath.Dir(filePath)
-	fName := filepath.Base(filePath)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"sha1sum", path.Join("/mnt/mounteddir", fName)}, nil, nil, []string{dir + ":" + "/mnt/mounteddir"}, "0", true, false, nil, nil, nil)
-
-	if err != nil {
-		return "", err
-	}
-
-	hash, _, _ := strings.Cut(out, " ")
-	return hash, nil
 }

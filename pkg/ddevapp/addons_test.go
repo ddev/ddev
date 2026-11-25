@@ -74,6 +74,7 @@ func processTestAddon(app *ddevapp.DdevApp, testName, addonName string, verbose 
 }
 
 func TestProcessPHPAction(t *testing.T) {
+	testcommon.SkipIfNoBindMountsTest(t, "PHP add-on actions bind-mount the project, see https://github.com/ddev/ddev/issues/7815")
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 
 	// Create the project directory
@@ -161,6 +162,7 @@ echo "done"
 }
 
 func TestValidatePHPIncludesAndRequires(t *testing.T) {
+	testcommon.SkipIfNoBindMountsTest(t, "PHP add-on actions bind-mount the project, see https://github.com/ddev/ddev/issues/7815")
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 
 	// Create the project directory

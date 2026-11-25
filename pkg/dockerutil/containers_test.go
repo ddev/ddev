@@ -526,25 +526,29 @@ func TestRunSimpleContainer(t *testing.T) {
 	basename := fileutil.RandomFilenameBase()
 	pwd, _ := os.Getwd()
 	pwd, _ = filepath.Abs(pwd)
-	testdata := filepath.Join(pwd, "testdata")
-	require.DirExists(t, testdata)
+	// A volume, not a bind mount, so the test also runs where Docker can't see the host files
+	volume := "TestRunSimpleContainer" + basename
+	t.Cleanup(func() { _ = dockerutil.RemoveVolume(volume) })
+	err := dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", "simplescript.sh"), volume, "", "25", "", true)
+	require.NoError(t, err)
+	tempmount := []string{volume + ":/tempmount"}
 
 	// Try the success case; script found, runs, all good.
-	_, out, err := dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true, false, nil, nil, nil)
+	_, out, err := dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, tempmount, "25", true, false, nil, nil, nil)
 	require.NoError(t, err)
 	require.Contains(t, out, "simplescript.sh; TEMPENV=someenv UID=25")
 	require.Contains(t, out, "stdout is captured")
 	require.Contains(t, out, "stderr is also captured")
 
 	// Try the case of running nonexistent script
-	_, _, err = dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true, false, nil, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, tempmount, "25", true, false, nil, nil, nil)
 	require.Error(t, err)
 	if err != nil {
 		require.Contains(t, err.Error(), "failed to start container")
 	}
 
 	// Try the case of running a script that fails
-	_, _, err = dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25", true, false, nil, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, tempmount, "25", true, false, nil, nil, nil)
 	require.Error(t, err)
 	if err != nil {
 		require.Contains(t, err.Error(), "container run failed with exit code 5")

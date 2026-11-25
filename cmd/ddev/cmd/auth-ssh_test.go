@@ -24,6 +24,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
 		t.Skip("Skipping: ddev-ssh-agent doesn't run on Apple Container; TestAppleContainerSSHAgent covers its replacement")
 	}
+	testcommon.SkipIfNoBindMountsTest(t, "ddev auth ssh bind-mounts the keys, see https://github.com/ddev/ddev/issues/7815")
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping TestCmdAuthSSH on Apple Silicon because of Docker Desktop failures to connect")
 	}
@@ -105,6 +106,7 @@ func TestCmdAuthSSH(t *testing.T) {
 // TestCmdAuthSSHUpstream checks that `ddev auth ssh` lists the keys of an
 // upstream agent instead of adding key files, and explains a stopped agent.
 func TestCmdAuthSSHUpstream(t *testing.T) {
+	testcommon.SkipIfNoBindMountsTest(t, "the SSH agent relays a host socket")
 	sshAgentPath, lookErr := osexec.LookPath("ssh-agent")
 	// A socket in a host directory reaches containers only when Docker runs
 	// on the host itself, or is Docker Desktop mounting from a WSL2 distro,

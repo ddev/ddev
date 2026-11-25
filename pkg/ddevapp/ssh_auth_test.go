@@ -27,6 +27,7 @@ func TestSSHAuth(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
 		t.Skip("Skipping: ddev-ssh-agent doesn't run on Apple Container; TestAppleContainerSSHAgent covers its replacement")
 	}
+	testcommon.SkipIfNoBindMountsTest(t, "ddev auth ssh bind-mounts the keys, see https://github.com/ddev/ddev/issues/7815")
 	if dockerutil.IsColima() {
 		t.Skip("Skipping on Colima")
 	}
@@ -220,6 +221,7 @@ func TestSSHAgentUpstream(t *testing.T) {
 	if dockerutil.IsAppleContainer() {
 		t.Skip("Skipping: ddev-ssh-agent doesn't run on Apple Container; TestAppleContainerSSHAgent covers its replacement")
 	}
+	testcommon.SkipIfNoBindMountsTest(t, "the SSH agent relays a host socket")
 	origUpstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
 	// Code under test can write the global config, so restore the file too.
 	t.Cleanup(func() {
