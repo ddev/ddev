@@ -79,10 +79,23 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, []string, error) {
 	return table, hostnames, nil
 }
 
+// mailpitRouteDisabled reports whether the router should omit the Mailpit route.
+// Hardened images don't include Mailpit. A Let's Encrypt router that listens on
+// all interfaces or on a remote Docker host is treated as a hosting setup,
+// where Mailpit must not be public. A Let's Encrypt router on localhost keeps it.
+func mailpitRouteDisabled() bool {
+	if globalconfig.DdevGlobalConfig.UseHardenedImages {
+		return true
+	}
+	return globalconfig.DdevGlobalConfig.UseLetsEncrypt &&
+		(globalconfig.DdevGlobalConfig.RouterBindAllInterfaces || dockerutil.IsRemoteDockerHost())
+}
+
 // processHTTPExpose creates routing table entry from VIRTUAL_HOST and HTTP(S)_EXPOSE
 // environment variables
 func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, externalHostnames []string) ([]TraefikRouting, error) {
 	var routingTable []TraefikRouting
+	skipMailpit := mailpitRouteDisabled()
 	portPairs := strings.SplitSeq(httpExpose, ",")
 	for portPair := range portPairs {
 		ports := strings.Split(portPair, ":")
@@ -93,8 +106,8 @@ func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, exte
 		if len(ports) == 1 {
 			ports = append(ports, ports[0])
 		}
-		if ports[1] == "8025" && (globalconfig.DdevGlobalConfig.UseHardenedImages || globalconfig.DdevGlobalConfig.UseLetsEncrypt) {
-			util.Debug("skipping port 8025 (mailpit) because not appropriate in hosting environment")
+		if ports[1] == "8025" && skipMailpit {
+			util.Debug("skipping port 8025 (mailpit): hardened images don't run Mailpit, or the router uses Let's Encrypt and is reachable from other hosts")
 			continue
 		}
 		routingTable = append(routingTable, TraefikRouting{ExternalHostnames: externalHostnames, ExternalPort: ports[0],
