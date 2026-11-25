@@ -139,7 +139,8 @@ To try a PR's build, `ddev utility download-ddev --pr <number>` downloads its
 - `DDEV_DESKTOP_SELFTEST=true` runs `selftest.js` inside the app's own
   window, then exits with its result. The script waits for the status stream,
   submits a missing directory to "Add project" and expects an error, then
-  runs `ddev config` in an empty directory and waits for the job to finish.
+  runs `ddev config` in an empty directory, waits for the job to finish, and
+  expects that project's detail to answer within 30 seconds.
   The app keeps that project in a temporary global configuration, which it
   deletes at the end. It needs no Docker. On Linux, run it under `xvfb-run`
   when there is no display. On Windows the self-test's window loads the

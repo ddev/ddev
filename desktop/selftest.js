@@ -48,6 +48,12 @@
     await until('the job to finish', () => /✓ Done|✗ Failed/.test($('#job-output').textContent), 120000);
     if (!$('#job-output').textContent.includes('✓ Done')) throw new Error('the job failed');
 
+    // With Docker, a detail starts host commands such as git, which hang on
+    // Windows if they inherit the app's stdin pipe. Without Docker it fails
+    // before them, so only an answer is required.
+    step = 'project detail';
+    await fetch('/api/projects/selftest', { signal: AbortSignal.timeout(30000) });
+
     await report({ ok: true });
   } catch (e) {
     await report({ ok: false, step, error: String(e), output: ($('#job-output') || {}).textContent || '' });
