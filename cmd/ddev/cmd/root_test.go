@@ -437,8 +437,12 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	require.NoError(t, err)
 	out, err = exec.RunHostCommand(DdevBin, "start")
 	require.NoError(t, err, "start failed, out='%s', err=%v", out, err)
-	assert.Contains(out, "ddev-ssh-agent container has been removed")
-	assert.Contains(out, "ssh-agent container is running")
+	// ddev-ssh-agent doesn't run on Apple Container
+	sshAgentExpected := !dockerutil.IsAppleContainer()
+	if sshAgentExpected {
+		assert.Contains(out, "ddev-ssh-agent container has been removed")
+		assert.Contains(out, "ssh-agent container is running")
+	}
 
 	apps = ddevapp.GetActiveProjects()
 	activeCount = len(apps)
@@ -449,14 +453,15 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, routerC)
 	routerCreateTime := (*routerC).Created
-	sshC, err := dockerutil.FindContainerByName("ddev-ssh-agent")
-	require.NoError(t, err)
-	require.NotEmpty(t, sshC)
-	sshCreateTime := (*sshC).Created
 
 	// router and ssh-agent should have been created within after we started the new project
 	assert.GreaterOrEqual(routerCreateTime, oldTimeInt)
-	assert.GreaterOrEqual(sshCreateTime, oldTimeInt)
+	if sshAgentExpected {
+		sshC, err := dockerutil.FindContainerByName("ddev-ssh-agent")
+		require.NoError(t, err)
+		require.NotEmpty(t, sshC)
+		assert.GreaterOrEqual((*sshC).Created, oldTimeInt)
+	}
 }
 
 // TestNoPoweroffPromptWhenStopped checks that poweroff prompt is skipped when containers are already stopped

@@ -496,6 +496,7 @@ lose
 lsof
 lts
 macOS
+macOS's
 macos
 magento
 maho
@@ -670,6 +671,7 @@ snapshot's
 snapshotted
 snapshotting
 socio
+socktainer
 solr
 somefile
 sql

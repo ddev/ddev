@@ -108,7 +108,13 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		err := os.WriteFile(filepath.Join(buildDir, "Dockerfile"),
 			[]byte("FROM busybox\nLABEL com.ddev.image-tag=some-older-ddev-tag\n"), 0644)
 		require.NoError(t, err)
-		_, err = exec.RunHostCommand("docker", "build", "-t", staleImage, buildDir)
+		buildArgs := []string{"build", "-t", staleImage, buildDir}
+		// socktainer's builder is buildx's docker-container driver, which
+		// keeps the result in its cache unless asked to load it.
+		if dockerutil.IsAppleContainer() {
+			buildArgs = append(buildArgs, "--load")
+		}
+		_, err = exec.RunHostCommand("docker", buildArgs...)
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			_, _ = exec.RunHostCommand("docker", "rmi", "-f", staleImage)

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -17,6 +18,9 @@ import (
 )
 
 func TestPopulateGlobalCustomCommandFiles(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: socktainer's docker cp into a running container drops file mtimes, https://github.com/socktainer/socktainer/issues/514")
+	}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	app, err := ddevapp.NewApp(site.Dir, false)

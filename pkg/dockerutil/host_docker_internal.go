@@ -143,6 +143,11 @@ func GetHostDockerInternal() *HostDockerInternal {
 				}
 			}
 
+		case IsAppleContainer():
+			// socktainer resolves host-gateway to the network's gateway, where the Mac answers
+			message = "IsAppleContainer uses 'host-gateway' in extra_hosts"
+			extraHost = "host-gateway"
+
 		default:
 			message = "no other case was discovered"
 		}

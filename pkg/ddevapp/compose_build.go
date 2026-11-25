@@ -44,7 +44,19 @@ func (app *DdevApp) composeBuild(project *composeTypes.Project, opts api.BuildOp
 
 	opts.Progress = display.ModePlain
 	out, stderr, err := dockerutil.CaptureOutput(func(svc api.Compose) error {
-		return svc.Build(ctx, project, opts)
+		if !dockerutil.IsAppleContainer() {
+			return svc.Build(ctx, project, opts)
+		}
+		// socktainer loses one of two image tags loaded at once, so a parallel
+		// build can leave a service on its old image; build one at a time.
+		for _, name := range appleContainerBuildServices(project, opts.Services) {
+			one := opts
+			one.Services = []string{name}
+			if err := svc.Build(ctx, project, one); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 
 	stopDots()
@@ -65,6 +77,23 @@ func (app *DdevApp) composeBuild(project *composeTypes.Project, opts api.BuildOp
 	}
 
 	return nil
+}
+
+// appleContainerBuildServices returns the services composeBuild builds one at
+// a time on Apple Container: those named, or else every enabled service with a
+// build section, sorted.
+func appleContainerBuildServices(project *composeTypes.Project, named []string) []string {
+	if len(named) > 0 {
+		return named
+	}
+	var names []string
+	for name, service := range project.Services {
+		if service.Build != nil {
+			names = append(names, name)
+		}
+	}
+	slices.Sort(names)
+	return names
 }
 
 // buildProjectImages runs composeBuild. Offline, BuildKit can fail to resolve
