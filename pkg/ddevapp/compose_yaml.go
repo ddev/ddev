@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -242,6 +243,31 @@ func injectDdevLabels(project *composeTypes.Project, app *DdevApp) {
 	}
 }
 
+// composeBindMounts lists each service's bind mounts as "service: source:target",
+// including secrets and configs read from a file, which Docker also bind-mounts.
+func composeBindMounts(project *composeTypes.Project) []string {
+	var binds []string
+	for name, service := range project.Services {
+		for _, v := range service.Volumes {
+			if v.Type == composeTypes.VolumeTypeBind {
+				binds = append(binds, fmt.Sprintf("%s: %s:%s", name, v.Source, v.Target))
+			}
+		}
+		for _, s := range service.Secrets {
+			if file := project.Secrets[s.Source].File; file != "" {
+				binds = append(binds, fmt.Sprintf("%s: secret %s from %s", name, s.Source, file))
+			}
+		}
+		for _, c := range service.Configs {
+			if file := project.Configs[c.Source].File; file != "" {
+				binds = append(binds, fmt.Sprintf("%s: config %s from %s", name, c.Source, file))
+			}
+		}
+	}
+	slices.Sort(binds)
+	return binds
+}
+
 // fixupComposeYaml makes minor changes to the `docker-compose config` output
 // to make sure extra services are always compatible with ddev.
 func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeTypes.Project, error) {
@@ -415,6 +441,21 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 				if vol.Type == composeTypes.VolumeTypeBind && vol.ReadOnly {
 					vol.ReadOnly = false
 					service.Volumes[i] = vol
+				}
+			}
+		}
+
+		// Add-on services often mount the project .ddev directory, which
+		// remote Docker can't see, so give them the copy web and db use
+		if isNoBindMounts {
+			for i, vol := range service.Volumes {
+				if vol.Type == composeTypes.VolumeTypeBind && filepath.Clean(vol.Source) == app.AppConfDir() {
+					service.Volumes[i] = composeTypes.ServiceVolumeConfig{
+						Type:     composeTypes.VolumeTypeVolume,
+						Source:   "ddev-config",
+						Target:   vol.Target,
+						ReadOnly: vol.ReadOnly,
+					}
 				}
 			}
 		}

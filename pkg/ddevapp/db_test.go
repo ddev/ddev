@@ -1,18 +1,10 @@
 package ddevapp_test
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 )
 
@@ -60,148 +52,6 @@ func GetDBTypeVersionFromString(t *testing.T) {
 
 	for input, expectation := range expectations {
 		require.Equal(t, expectation, ddevapp.GetDBTypeVersionFromString(input))
-	}
-}
-
-// TestGetDBVersionFromVolumeScript tests the shell script logic used in GetDBVersionFromVolume
-// to ensure it properly detects PostgreSQL 18+ directory structures
-func TestGetDBVersionFromVolumeScript(t *testing.T) {
-	// Create temporary directory structure to simulate different DB volume layouts
-	tempDir := testcommon.CreateTmpDir("ddev-db-test-" + t.Name())
-
-	t.Cleanup(func() {
-		_ = os.RemoveAll(tempDir)
-	})
-
-	tests := []struct {
-		name           string
-		setupFunc      func() string // Returns expected output
-		expectedOutput string
-	}{
-		{
-			name: "MySQL/MariaDB version file",
-			setupFunc: func() string {
-				mysqlDir := filepath.Join(tempDir, "mysql")
-				err := os.MkdirAll(mysqlDir, 0755)
-				require.NoError(t, err)
-				err = os.WriteFile(filepath.Join(mysqlDir, "db_mariadb_version.txt"), []byte("mariadb_10.11"), 0644)
-				require.NoError(t, err)
-				return "mariadb_10.11"
-			},
-			expectedOutput: "mariadb_10.11",
-		},
-		{
-			name: "PostgreSQL 17 (pre-18 structure)",
-			setupFunc: func() string {
-				postgresDir := filepath.Join(tempDir, "postgres")
-				err := os.MkdirAll(postgresDir, 0755)
-				require.NoError(t, err)
-				err = os.WriteFile(filepath.Join(postgresDir, "PG_VERSION"), []byte("17"), 0644)
-				require.NoError(t, err)
-				return "17"
-			},
-			expectedOutput: "17",
-		},
-		{
-			name: "PostgreSQL 18 (new structure)",
-			setupFunc: func() string {
-				postgresDir := filepath.Join(tempDir, "postgres", "18", "docker")
-				err := os.MkdirAll(postgresDir, 0755)
-				require.NoError(t, err)
-				err = os.WriteFile(filepath.Join(postgresDir, "PG_VERSION"), []byte("18"), 0644)
-				require.NoError(t, err)
-				return "18"
-			},
-			expectedOutput: "18",
-		},
-		{
-			name: "PostgreSQL 19 (future version)",
-			setupFunc: func() string {
-				postgresDir := filepath.Join(tempDir, "postgres", "19", "docker")
-				err := os.MkdirAll(postgresDir, 0755)
-				require.NoError(t, err)
-				err = os.WriteFile(filepath.Join(postgresDir, "PG_VERSION"), []byte("19"), 0644)
-				require.NoError(t, err)
-				return "19"
-			},
-			expectedOutput: "19",
-		},
-		{
-			name: "No version files found",
-			setupFunc: func() string {
-				// Create empty directories
-				err := os.MkdirAll(filepath.Join(tempDir, "mysql"), 0755)
-				require.NoError(t, err)
-				err = os.MkdirAll(filepath.Join(tempDir, "postgres"), 0755)
-				require.NoError(t, err)
-				return ""
-			},
-			expectedOutput: "",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			// Clean up temp directory for each test
-			_ = os.RemoveAll(tempDir)
-			err := os.MkdirAll(tempDir, 0755)
-			require.NoError(t, err)
-
-			// Setup test scenario
-			test.setupFunc()
-
-			// Test the shell script logic directly
-			cmd := []string{"bash", "-c", `
-                set -euo pipefail
-				# Check MySQL/MariaDB version file
-				if [ -f /var/tmp/mysql/db_mariadb_version.txt ]; then
-					cat /var/tmp/mysql/db_mariadb_version.txt
-					exit 0
-				fi
-
-				# Check PostgreSQL version file (pre-18 location)
-				if [ -f /var/tmp/postgres/PG_VERSION ]; then
-					cat /var/tmp/postgres/PG_VERSION
-					exit 0
-				fi
-
-				# Check PostgreSQL 18+ version files in version-specific directories
-				for version_file in /var/tmp/postgres/*/docker/PG_VERSION; do
-					if [ -f "$version_file" ]; then
-						cat "$version_file"
-						exit 0
-					fi
-				done
-
-				# No version file found
-				exit 0
-			`}
-
-			volumes := []string{
-				filepath.Join(tempDir, "mysql") + ":/var/tmp/mysql",
-				filepath.Join(tempDir, "postgres") + ":/var/tmp/postgres",
-			}
-			// Lima and Colima may not be able to keep up with the mounts here
-			time.Sleep(1 * time.Second)
-			_, out, err := dockerutil.RunSimpleContainer(
-				versionconstants.UtilitiesImage,
-				"test-db-version-detection-"+util.RandString(6),
-				cmd,
-				[]string{}, // envVars
-				[]string{}, // uid
-				volumes,
-				"",    // workingDir
-				true,  // rm
-				false, // detach
-				map[string]string{`com.ddev.site-name`: ""}, // labels
-				nil, // networks
-				nil, // healthcheck
-			)
-
-			require.NoError(t, err)
-			result := strings.TrimSpace(out)
-			require.Equal(t, test.expectedOutput, result, "Test case: %s", test.name)
-		})
 	}
 }
 

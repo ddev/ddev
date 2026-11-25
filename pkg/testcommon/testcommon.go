@@ -481,6 +481,15 @@ func SkipUnlessDefaultEnvironment(t *testing.T) {
 	}
 }
 
+// SkipIfNoBindMountsTest skips t in the no-bind-mounts CI job, where Docker
+// can't see the host, for a feature that still needs a bind mount.
+func SkipIfNoBindMountsTest(t *testing.T, why string) {
+	t.Helper()
+	if nodeps.IsEnvTrue("DDEV_TEST_NO_BIND_MOUNTS") {
+		t.Skipf("Skip because DDEV_TEST_NO_BIND_MOUNTS is set and %s", why)
+	}
+}
+
 // SkipIfGotestShort skips t when GOTEST_SHORT is set, unless
 // DDEV_RUN_TEST_ANYWAY=true. The all-project-types CI job runs every test that
 // calls it, IsGotestShort, or UsesAllTestSites with GOTEST_SHORT unset, so

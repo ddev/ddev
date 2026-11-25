@@ -11,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -181,6 +182,7 @@ func getManifestMapFromLogs(t *testing.T, jsonOut string) map[string]map[string]
 
 // TestCmdAddonPHP tests the new PHP execution functionality in addons
 func TestCmdAddonPHP(t *testing.T) {
+	testcommon.SkipIfNoBindMountsTest(t, "PHP add-on actions bind-mount the project, see https://github.com/ddev/ddev/issues/7815")
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
