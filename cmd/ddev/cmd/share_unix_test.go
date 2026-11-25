@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"bufio"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -14,12 +15,16 @@ import (
 
 func TestStopShareProvider(t *testing.T) {
 	for _, tc := range []struct {
-		name        string
-		trap        string
-		wantCleanup bool
+		name            string
+		trap            string
+		wantCleanup     bool
+		wantExit        int
+		secondInterrupt bool
 	}{
 		{name: "runs cleanup", trap: `trap 'touch "$1"; exit 0' TERM`, wantCleanup: true},
-		{name: "kills an unresponsive provider", trap: `trap '' TERM`},
+		{name: "cleanup exits with signal status", trap: `trap 'touch "$1"; exit 143' TERM`, wantCleanup: true, wantExit: 143},
+		{name: "kills an unresponsive provider", trap: `trap '' TERM`, wantExit: -1},
+		{name: "second interrupt kills immediately", trap: `trap '' TERM`, wantExit: -1, secondInterrupt: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			marker := filepath.Join(t.TempDir(), "cleanup")
@@ -46,12 +51,25 @@ func TestStopShareProvider(t *testing.T) {
 			if !tc.wantCleanup {
 				grace = 100 * time.Millisecond
 			}
-			err = stopShareProvider(cmd, done, grace)
-			if tc.wantCleanup {
+			signals := make(chan os.Signal, 1)
+			if tc.secondInterrupt {
+				grace = 5 * time.Second
+				signals <- os.Interrupt
+			}
+			started := time.Now()
+			err = stopShareProvider(cmd, done, grace, signals)
+			if tc.wantExit == 0 {
 				require.NoError(t, err)
-				require.FileExists(t, marker)
 			} else {
 				require.Error(t, err)
+			}
+			if tc.secondInterrupt {
+				require.Less(t, time.Since(started), 2*time.Second)
+			}
+			require.Equal(t, tc.wantExit, cmd.ProcessState.ExitCode())
+			if tc.wantCleanup {
+				require.FileExists(t, marker)
+			} else {
 				require.NoFileExists(t, marker)
 			}
 		})

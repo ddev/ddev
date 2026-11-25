@@ -477,6 +477,56 @@ sleep 2
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 	})
 
+	t.Run("ProviderSignalCleanup", func(t *testing.T) {
+		for _, tc := range []struct {
+			name            string
+			trap            string
+			secondInterrupt bool
+		}{
+			{name: "EXIT cleanup", trap: `trap 'touch cleanup-marker; kill "$PID" 2>/dev/null || true' EXIT`},
+			{name: "TERM cleanup exits 143", trap: `trap 'touch cleanup-marker; exit 143' TERM`},
+			{name: "second interrupt", trap: `trap '' TERM`, secondInterrupt: true},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				marker := filepath.Join(site.Dir, "cleanup-marker")
+				mockPath := filepath.Join(site.Dir, ".ddev", "share-providers", "signal-cleanup-test.sh")
+				script := "#!/usr/bin/env bash\nsleep 100 &\nPID=$!\n" + tc.trap + "\necho https://signal-test.example.com\nwait $PID\n"
+				require.NoError(t, os.WriteFile(mockPath, []byte(script), 0755))
+				t.Cleanup(func() { _ = os.Remove(mockPath); _ = os.Remove(marker) })
+				cmd := exec.Command(DdevBin, "share", "--provider=signal-cleanup-test")
+				var stdoutBuf, stderrBuf syncBuffer
+				cmd.Stdout, cmd.Stderr = &stdoutBuf, &stderrBuf
+				exited := startCmd(t, cmd)
+				t.Cleanup(func() { _ = pKill(cmd); <-exited })
+				require.NoError(t, waitForContent(&stdoutBuf, "Tunnel URL:", exited, 30*time.Second))
+				require.NoError(t, cmd.Process.Signal(os.Interrupt))
+				require.NoError(t, waitForContent(&stdoutBuf, "Press Ctrl+C again", exited, 5*time.Second))
+				if tc.secondInterrupt {
+					require.NoError(t, cmd.Process.Signal(os.Interrupt))
+				}
+				select {
+				case <-exited:
+				case <-time.After(5 * time.Second):
+					t.Fatal("provider did not stop promptly")
+				}
+				require.True(t, cmd.ProcessState.Success(), "stdout=%s stderr=%s", stdoutBuf.String(), stderrBuf.String())
+				if !tc.secondInterrupt {
+					require.FileExists(t, marker)
+				}
+			})
+		}
+	})
+
+	t.Run("ProviderFailureReported", func(t *testing.T) {
+		mockPath := filepath.Join(site.Dir, ".ddev", "share-providers", "failure-test.sh")
+		require.NoError(t, os.WriteFile(mockPath, []byte("#!/usr/bin/env bash\necho https://failure-test.example.com\nexit 17\n"), 0755))
+		t.Cleanup(func() { _ = os.Remove(mockPath) })
+		out, err := exec.Command(DdevBin, "share", "--provider=failure-test").CombinedOutput()
+		require.Error(t, err)
+		require.Equal(t, 17, err.(*exec.ExitError).ExitCode())
+		require.Contains(t, string(out), "Provider 'failure-test' exited with code 17")
+	})
+
 	t.Run("ProviderExitReported", func(t *testing.T) {
 		mockScript := `#!/usr/bin/env bash
 echo "https://exit-test.example.com"

@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"os"
 	"os/exec"
 	"strconv"
 	"time"
@@ -25,7 +26,7 @@ func killProcessTree(cmd *exec.Cmd) {
 	}
 }
 
-func stopShareProvider(cmd *exec.Cmd, done <-chan error, _ time.Duration) error {
+func stopShareProvider(cmd *exec.Cmd, done <-chan error, _ time.Duration, _ <-chan os.Signal) error {
 	killProcessTree(cmd)
 	return <-done
 }

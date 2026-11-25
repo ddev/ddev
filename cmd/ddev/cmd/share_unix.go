@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"os"
 	"os/exec"
 	"syscall"
 	"time"
@@ -24,7 +25,7 @@ func killProcessTree(cmd *exec.Cmd) {
 }
 
 // stopShareProvider gives the provider time to release any remote state.
-func stopShareProvider(cmd *exec.Cmd, done <-chan error, grace time.Duration) error {
+func stopShareProvider(cmd *exec.Cmd, done <-chan error, grace time.Duration, signals <-chan os.Signal) error {
 	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM); err != nil {
 		killProcessTree(cmd)
 		return <-done
@@ -36,8 +37,9 @@ func stopShareProvider(cmd *exec.Cmd, done <-chan error, grace time.Duration) er
 	case err := <-done:
 		killProcessTree(cmd)
 		return err
+	case <-signals:
 	case <-timer.C:
-		killProcessTree(cmd)
-		return <-done
 	}
+	killProcessTree(cmd)
+	return <-done
 }

@@ -121,7 +121,7 @@ ddev share myproject`,
 		setProcessGroupAttr(providerCmd)
 
 		// Set up signal handling for SIGINT/SIGTERM
-		sigChan := make(chan os.Signal, 1)
+		sigChan := make(chan os.Signal, 2)
 		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 		releaseInterrupt := interrupt.Delegate(os.Interrupt, syscall.SIGTERM)
 		defer releaseInterrupt()
@@ -161,15 +161,15 @@ ddev share myproject`,
 		select {
 		case shareURL = <-urlChan:
 			if shareURL == "" {
-				_ = stopShareProvider(providerCmd, done, providerStopGrace)
+				_ = stopShareProvider(providerCmd, done, providerStopGrace, sigChan)
 				util.Failed("Provider '%s' did not output a URL", providerName)
 			}
 		case <-sigChan:
 			// Signal received before URL captured
-			_ = stopShareProvider(providerCmd, done, providerStopGrace)
+			_ = stopShareProvider(providerCmd, done, providerStopGrace, sigChan)
 			util.Failed("Interrupted before tunnel URL was established")
 		case <-time.After(60 * time.Second):
-			_ = stopShareProvider(providerCmd, done, providerStopGrace)
+			_ = stopShareProvider(providerCmd, done, providerStopGrace, sigChan)
 			util.Failed("Provider '%s' did not output a URL within 60 seconds", providerName)
 		}
 
@@ -177,7 +177,7 @@ ddev share myproject`,
 		shareURL = strings.TrimSpace(shareURL)
 		parsedURL, err := url.Parse(shareURL)
 		if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
-			_ = stopShareProvider(providerCmd, done, providerStopGrace)
+			_ = stopShareProvider(providerCmd, done, providerStopGrace, sigChan)
 			util.Failed("Provider '%s' output invalid URL: %s", providerName, shareURL)
 		}
 
@@ -205,8 +205,9 @@ ddev share myproject`,
 				util.Warning("Share provider '%s' exited, so the tunnel is closed", providerName)
 			}
 		case <-sigChan:
-			util.Success("Stopping tunnel (provider '%s')...", providerName)
-			err = stopShareProvider(providerCmd, done, providerStopGrace)
+			util.Success("Stopping tunnel (provider '%s'); waiting up to %s for cleanup. Press Ctrl+C again to stop immediately.", providerName, providerStopGrace)
+			_ = stopShareProvider(providerCmd, done, providerStopGrace, sigChan)
+			err = nil
 		}
 
 		// Process post-share hooks
