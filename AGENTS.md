@@ -73,6 +73,11 @@ make testcmd TESTARGS="-run TestName"     # Command tests
 make quickstart-test                      # Builds, then the Bats docs tests
 ```
 
+Make expands `$` in `TESTARGS`, so `-run '^TestX$'` loses its closing quote,
+the shell exits with code 2, and no test runs. Join names with `|`, as in
+`-run 'TestA|TestB'`, or write `$$` for each `$`. After a run, check for
+`--- PASS` or `--- FAIL` lines, not only the exit status.
+
 **Run only the tests relevant to your change,** with `GOTEST_SHORT=true` and
 `DDEV_NO_INSTRUMENTATION=true`. Never clear `GOTEST_SHORT`, and do not run
 `go test ./...` or `make test` to verify one thing — the suite is slow and
