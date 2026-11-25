@@ -575,24 +575,28 @@ jobs:
         with:
           name: all-ddev-executables
           path: ${{ github.workspace }}/artifacts/*
+      # Paths from two directories would make .gotmp/bin the artifact's root,
+      # but `ddev utility download-ddev` expects ddev and DDEV.app.zip at the
+      # top, so stage them in one directory first.
+      - name: Stage macOS artifacts
+        run: |
+          set -eu -o pipefail
+          for arch in amd64 arm64; do
+            mkdir -p "macos-artifacts/ddev-macos-${arch}"
+            cp -a ".gotmp/bin/darwin_${arch}/ddev" ".gotmp/bin/darwin_${arch}/ddev-hostname" ".gotmp/bin/darwin_${arch}/mkcert" .gotmp/bin/darwin_universal/DDEV.app.zip "macos-artifacts/ddev-macos-${arch}/"
+          done
       - name: Upload macos-amd64 binary
         uses: actions/upload-artifact@v7
         with:
           name: ddev-macos-amd64
-          path: |
-            .gotmp/bin/darwin_amd64/ddev
-            .gotmp/bin/darwin_amd64/ddev-hostname
-            .gotmp/bin/darwin_amd64/mkcert
-            .gotmp/bin/darwin_universal/DDEV.app.zip
+          path: macos-artifacts/ddev-macos-amd64/*
+          if-no-files-found: error
       - name: Upload macos-arm64 binary
         uses: actions/upload-artifact@v7
         with:
           name: ddev-macos-arm64
-          path: |
-            .gotmp/bin/darwin_arm64/ddev
-            .gotmp/bin/darwin_arm64/ddev-hostname
-            .gotmp/bin/darwin_arm64/mkcert
-            .gotmp/bin/darwin_universal/DDEV.app.zip
+          path: macos-artifacts/ddev-macos-arm64/*
+          if-no-files-found: error
       - name: Upload linux-arm64 binary
         uses: actions/upload-artifact@v7
         with:
