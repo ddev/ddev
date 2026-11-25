@@ -146,6 +146,7 @@ func GetHostDockerInternal() *HostDockerInternal {
 		case IsAppleContainer():
 			// socktainer resolves host-gateway to the network's gateway, where the Mac answers
 			message = "IsAppleContainer uses 'host-gateway' in extra_hosts"
+			extraHost = "host-gateway"
 
 		default:
 			message = "no other case was discovered"
@@ -153,8 +154,6 @@ func GetHostDockerInternal() *HostDockerInternal {
 
 		if ipAddress != "" {
 			extraHost = ipAddress
-		} else if IsAppleContainer() {
-			extraHost = "host-gateway"
 		} else if (nodeps.IsLinux() && !nodeps.IsWSL2() && !IsColima()) ||
 			(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
 			// Use "host-gateway" for Docker on Linux and for WSL2 with IDE in WSL2

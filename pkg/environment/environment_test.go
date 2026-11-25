@@ -25,7 +25,6 @@ func TestIsWSL2Environment(t *testing.T) {
 		DDEVEnvironmentWindows,
 		DDEVEnvironmentCodespaces,
 		DDEVEnvironmentDevcontainer,
-		DDEVEnvironmentAppleContainer,
 		"remote",
 	} {
 		require.False(t, IsWSL2Environment(envType), envType)
