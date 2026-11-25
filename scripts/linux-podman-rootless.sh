@@ -1205,7 +1205,7 @@ explain_buildx_error() {
   if printf '%s' "${out}" | grep -q 'oom_score_adj'; then
     hint "buildx starts its BuildKit container and then execs 'buildctl' inside it."
     hint "That exec failed because crun could not set the exec process's"
-    hint "oom_score_adj, which is containers/crun#2466 (crun 1.31 with Podman 6.2 or"
+    hint "oom_score_adj, which is containers/crun#2466 (crun 1.31 with Podman 6.2.0 or"
     hint "older). Removing the container does not help. The exec check below confirms"
     hint "it and shows the fix."
   elif printf '%s' "${out}" | grep -q 'booting buildkit'; then
@@ -1508,7 +1508,7 @@ check_healthcheck() {
 
 # crun 1.31 applies an exec process's oom_score_adj, its "kill me first" score
 # when memory runs out (https://github.com/containers/crun/issues/2466). Podman
-# 6.2 and older ask for 0 for containers created through the Docker API, but
+# 6.2.0 and older ask for 0 for containers created through the Docker API, but
 # podman.service runs under the systemd user manager, which sets a floor of 100
 # that an unprivileged process cannot go below. So every exec through the Docker
 # API fails, and DDEV needs exec for two things: healthchecks, and buildx, which
@@ -1558,24 +1558,24 @@ check_exec() {
   fail "docker exec fails: crun cannot set the exec process's oom_score_adj"
   hint "$(printf '%s' "${out}" | tail -1)"
   hint "Your runtime is ${runtime:-unknown}. crun 1.31 started applying the score Podman"
-  hint "asks for in exec, and Podman 6.2 and older ask for 0. podman.service runs"
+  hint "asks for in exec, and Podman 6.2.0 and older ask for 0. podman.service runs"
   hint "under the systemd user manager, whose floor is ${floor:-100}, so the write is"
   hint "refused and every exec fails. Healthchecks then never pass, so 'ddev start'"
   hint "times out, and buildx fails at 'booting buildkit'. Nothing in your setup is"
   hint "wrong: https://github.com/containers/crun/issues/2466"
-  hint "Podman is getting the fix, clamping the score the way it already does on"
-  hint "start. Until your Podman has it, use crun 1.30.1. DDEV's CI does that with"
-  hint "crun's static release, leaving the system package alone:"
+  hint "Podman 6.2.1 fixes it, clamping the score the way it already does on start."
+  hint "Upgrade Podman (with Homebrew: brew upgrade podman). If you can't upgrade yet,"
+  hint "use crun 1.30.1 from crun's static release, leaving the system package alone:"
   case "$(uname -m)" in aarch64|arm64) arch=arm64 ;; *) arch=amd64 ;; esac
   hint "  mkdir -p ~/.local/lib/ddev-crun ~/.config/containers/containers.conf.d"
   hint "  curl -fsSL -o ~/.local/lib/ddev-crun/crun https://github.com/containers/crun/releases/download/1.30.1/crun-1.30.1-linux-${arch}"
-  # The checksum DDEV's CI verifies; only the amd64 one is known here.
+  # Only the amd64 checksum is known here.
   [ "${arch}" = "amd64" ] &&
     hint "  echo '86d1e6a0e76945975d3aebfab39cbc6a26eea15f1c3fc66b6776d19e5dc346a0  ${HOME}/.local/lib/ddev-crun/crun' | sha256sum -c -"
   hint "  chmod +x ~/.local/lib/ddev-crun/crun"
   hint "  printf '[engine.runtimes]\\ncrun = [\"%s\"]\\n' ~/.local/lib/ddev-crun/crun > ~/.config/containers/containers.conf.d/zz-crun-pin.conf"
   hint "  systemctl --user restart podman.service"
-  hint "Delete zz-crun-pin.conf once your Podman includes the fix."
+  hint "Delete zz-crun-pin.conf once you have Podman 6.2.1 or later."
   return 0
 }
 
