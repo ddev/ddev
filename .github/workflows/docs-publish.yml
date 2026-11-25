@@ -1,4 +1,10 @@
 name: docspublish
+
+# Publishes https://ddev.github.io/ddev/:
+#   /             .github/pages/ (index, 404, docs/ redirect)
+#   /docs/en/*/   docs built from the main (latest) and stable branches
+#   /perf/        dashboards and data from the performance-data branch,
+#                 updated nightly by perf-collect.yml
 on:
   push:
     branches: [ main, stable ]
@@ -28,26 +34,24 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: main
-          path: checkout-main
+          path: docs-latest
           fetch-depth: 0
 
+      # From ddev/ddev, so a fork also gets the stable docs and dashboard data.
       - name: Checkout stable branch
-        id: checkout-stable
-        continue-on-error: true
         uses: actions/checkout@v7
         with:
+          repository: ddev/ddev
           ref: stable
-          path: checkout-stable
+          path: docs-stable
           fetch-depth: 0
 
-      # Perf dashboard data, updated nightly by perf-collect.yml. continue-on-error
-      # because the branch doesn't exist until perf-collect.yml has run once.
       - name: Checkout performance-data branch
-        continue-on-error: true
         uses: actions/checkout@v7
         with:
+          repository: ddev/ddev
           ref: performance-data
-          path: checkout-perf-data
+          path: perf-data
           fetch-depth: 1
 
       - name: Set up Python
@@ -61,111 +65,30 @@ jobs:
         with:
           limit-access-to-actor: true
 
-      - name: Install dependencies
+      - name: Copy static pages
         run: |
-          pip install -r checkout-main/docs/requirements.txt
-          if [ -f checkout-stable/docs/requirements.txt ]; then
-            pip install -r checkout-stable/docs/requirements.txt
-          fi
+          cp -rv docs-latest/.github/pages/. _site/
+          cp -v docs-latest/docs/content/favicon.png _site/
 
-      - name: Build latest docs
-        working-directory: checkout-main
+      - name: Build docs
+        env:
+          BASE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
-          if [ "${{ steps.checkout-stable.outcome }}" = "success" ]; then
-            site_url="${{ steps.pages.outputs.base_url }}/en/latest/"
-          else
-            site_url="${{ steps.pages.outputs.base_url }}/"
-          fi
-          sed -i "s|site_url:.*|site_url: ${site_url}|" mkdocs.yml
-          grep site_url mkdocs.yml
-          if [ "${{ steps.checkout-stable.outcome }}" = "success" ]; then
-            READTHEDOCS_VERSION_NAME=latest zensical build --clean --strict
-          else
-            zensical build --clean --strict
-          fi
+          mkdir -p _site/docs/en
+          for version in latest stable; do
+            pip install -r "docs-${version}/docs/requirements.txt"
+            sed -i "s|^site_url:.*|site_url: ${BASE_URL}/docs/en/${version}/|" "docs-${version}/mkdocs.yml"
+            (cd "docs-${version}" && READTHEDOCS_VERSION_NAME="${version}" zensical build --clean --strict)
+            mv "docs-${version}/site" "_site/docs/en/${version}"
+          done
 
-      - name: Build stable docs
-        if: steps.checkout-stable.outcome == 'success'
-        working-directory: checkout-stable
-        run: |
-          sed -i "s|site_url:.*|site_url: ${{ steps.pages.outputs.base_url }}/en/stable/|" mkdocs.yml
-          grep site_url mkdocs.yml
-          zensical build --clean --strict
-
-      - name: Assemble combined site
-        run: |
-          if [ -d checkout-stable/site ]; then
-            mkdir -p combined-site/en
-            mv -v checkout-main/site combined-site/en/latest
-            mv -v checkout-stable/site combined-site/en/stable
-            cp -v combined-site/en/stable/404.html combined-site/404.html
-            cat > combined-site/index.html <<'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta http-equiv="refresh" content="0; url=en/stable/">
-            <link rel="canonical" href="en/stable/">
-          </head>
-          <body>
-            <a href="en/stable/">Redirecting to stable docs...</a>
-          </body>
-          </html>
-          EOF
-          else
-            mv -v checkout-main/site combined-site
-          fi
-
-          # Perf dashboard, one repo-relative Pages site can only have one deploy
-          # per push, so it rides along under /perf/ instead of its own deploy --
-          # see perf-collect.yml.
-          #
-          # Guarded per file, not on the directory: actions/checkout creates its
-          # `path:` directory before it fails on a missing ref, so an empty
-          # checkout-perf-data/ exists whenever the performance-data branch
-          # doesn't. Testing the directory would let `cp` fail and take the whole
-          # docs deploy with it. Same reason the checkout-stable guards above test
-          # inner paths rather than the checkout dir.
-          if [ -f checkout-perf-data/index.html ]; then
-            mkdir -p combined-site/perf
-            cp -v checkout-perf-data/index.html combined-site/perf/index.html
-            if [ -f checkout-perf-data/dashboard-common.js ]; then
-              cp -v checkout-perf-data/dashboard-common.js combined-site/perf/dashboard-common.js
-            fi
-            if [ -f checkout-perf-data/dashboard-common.css ]; then
-              cp -v checkout-perf-data/dashboard-common.css combined-site/perf/dashboard-common.css
-            fi
-            if [ -f checkout-perf-data/history.ndjson ]; then
-              cp -v checkout-perf-data/history.ndjson combined-site/perf/history.ndjson
-            fi
-          fi
-
-          # CI test-runtime dashboard: a separate page under /perf/ci/, not a
-          # mode of the /perf/ page above -- unrelated dataset, unrelated
-          # (internal-only) audience. See HANDOFF.md. Same per-file guard
-          # reasoning as the block above.
-          if [ -f checkout-perf-data/ci/index.html ]; then
-            mkdir -p combined-site/perf/ci
-            cp -v checkout-perf-data/ci/index.html combined-site/perf/ci/index.html
-            if [ -f checkout-perf-data/ci/test-runtime-history.ndjson ]; then
-              cp -v checkout-perf-data/ci/test-runtime-history.ndjson combined-site/perf/ci/test-runtime-history.ndjson
-            fi
-          fi
-
-          # Per-test trend dashboard: a third page under /perf/ci/tests/,
-          # same reasoning as the block above -- aggregated from gotestsum's
-          # per-test JSON rather than per-run totals. See collect-per-test.js.
-          if [ -f checkout-perf-data/ci/tests/index.html ]; then
-            mkdir -p combined-site/perf/ci/tests
-            cp -v checkout-perf-data/ci/tests/index.html combined-site/perf/ci/tests/index.html
-            if [ -f checkout-perf-data/ci/tests/per-test-history.ndjson ]; then
-              cp -v checkout-perf-data/ci/tests/per-test-history.ndjson combined-site/perf/ci/tests/per-test-history.ndjson
-            fi
-          fi
+      - name: Copy performance dashboards
+        run: rsync -av --exclude=.git --exclude='*-cursor.json' perf-data/ _site/perf/
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: combined-site
+          path: _site
 
   # A separate job, because deploy-pages in the same job can look up the
   # artifact before GitHub lists it: actions/deploy-pages#451
@@ -177,12 +100,5 @@ jobs:
         uses: actions/deploy-pages@v5
         id: deployment
 
-      - name: Report deployed URLs
-        run: |
-          {
-            echo "### Deployed"
-            echo "- Docs: ${{ steps.deployment.outputs.page_url }}"
-            echo "- Perf dashboard: ${{ steps.deployment.outputs.page_url }}perf/"
-            echo "- CI test runtime: ${{ steps.deployment.outputs.page_url }}perf/ci/"
-            echo "- Per-test CI timing: ${{ steps.deployment.outputs.page_url }}perf/ci/tests/"
-          } | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Report deployed URL
+        run: echo "### Deployed ${{ steps.deployment.outputs.page_url }}" | tee -a "$GITHUB_STEP_SUMMARY"
