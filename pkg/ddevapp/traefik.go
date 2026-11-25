@@ -219,7 +219,6 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		TargetCertsPath    string
 		RouterPorts        []string
 		UseLetsEncrypt     bool
-		LetsEncryptEmail   string
 		TraefikMonitorPort string
 		HasCAROOT          bool
 	}
@@ -227,7 +226,6 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		TargetCertsPath:    inContainerTargetCertsPath,
 		RouterPorts:        determineRouterPorts(activeApps),
 		UseLetsEncrypt:     globalconfig.DdevGlobalConfig.UseLetsEncrypt,
-		LetsEncryptEmail:   globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		TraefikMonitorPort: globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 		HasCAROOT:          globalconfig.GetCAROOT() != "",
 	}
