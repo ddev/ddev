@@ -17,7 +17,7 @@ permissions:
   id-token: write
 
 jobs:
-  docs-deploy:
+  docs-build:
     runs-on: ubuntu-26.04
     steps:
       - name: Setup Pages
@@ -167,6 +167,12 @@ jobs:
         with:
           path: combined-site
 
+  # A separate job, because deploy-pages in the same job can look up the
+  # artifact before GitHub lists it: actions/deploy-pages#451
+  docs-deploy:
+    needs: docs-build
+    runs-on: ubuntu-26.04
+    steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v5
         id: deployment
