@@ -3,6 +3,7 @@ package remoteconfig
 import (
 	"math/rand"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -164,6 +165,31 @@ func (c *remoteConfig) ShowTicker() {
 			break
 		}
 	}
+}
+
+// TickerMessages returns the ticker messages whose conditions and versions
+// match, for a caller that shows them itself, such as `ddev gui`.
+func (c *remoteConfig) TickerMessages() []types.Message {
+	c.mu.Lock()
+	messages := slices.Clone(c.getTicker().Messages)
+	c.mu.Unlock()
+	return c.matching(messages)
+}
+
+// NotificationMessages returns the info and warning notifications whose
+// conditions and versions match, however recently they were shown.
+func (c *remoteConfig) NotificationMessages() (infos, warnings []types.Message) {
+	c.mu.Lock()
+	n := c.remoteConfig.Messages.Notifications
+	infos, warnings = slices.Clone(n.Infos), slices.Clone(n.Warnings)
+	c.mu.Unlock()
+	return c.matching(infos), c.matching(warnings)
+}
+
+func (c *remoteConfig) matching(messages []types.Message) []types.Message {
+	return slices.DeleteFunc(messages, func(m types.Message) bool {
+		return !c.checkConditions(m.Conditions) || !c.checkVersions(m.Versions)
+	})
 }
 
 // isNotificationsDisabled returns true if notifications should not be shown to

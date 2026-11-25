@@ -4,6 +4,8 @@ package types
 type RemoteConfig interface {
 	ShowNotifications()
 	ShowTicker()
+	TickerMessages() []Message
+	NotificationMessages() (infos, warnings []Message)
 	ShowSponsorshipAppreciation()
 }
 
