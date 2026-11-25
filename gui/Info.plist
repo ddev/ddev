@@ -7,9 +7,9 @@
 	<key>CFBundleDisplayName</key>
 	<string>DDEV</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.ddev.desktop</string>
+	<string>com.ddev.gui</string>
 	<key>CFBundleExecutable</key>
-	<string>ddev-desktop</string>
+	<string>ddev-gui</string>
 	<key>CFBundleIconFile</key>
 	<string>DDEV</string>
 	<key>CFBundlePackageType</key>

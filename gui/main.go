@@ -1,4 +1,4 @@
-// Command ddev-desktop is an experimental desktop app for DDEV. It shows the
+// Command ddev-gui is an experimental GUI app for DDEV. It shows the
 // `ddev gui` dashboard in a native window through Wails, and adds a tray
 // menu and notifications.
 //
@@ -55,7 +55,7 @@ func main() {
 	useLoginShellPath()
 
 	var st *selfTest
-	if os.Getenv("DDEV_DESKTOP_SELFTEST") == "true" {
+	if os.Getenv("DDEV_GUI_SELFTEST") == "true" {
 		var err error
 		if st, err = newSelfTest(); err != nil {
 			log.Fatal(err)
@@ -108,7 +108,7 @@ func main() {
 		windowURL += "#project=" + url.QueryEscape(p)
 	}
 	logLevel := slog.LevelInfo
-	if os.Getenv("DDEV_DESKTOP_DEBUG") == "true" {
+	if os.Getenv("DDEV_GUI_DEBUG") == "true" {
 		handler = logRequests(handler)
 		logLevel = slog.LevelDebug
 	}
@@ -147,7 +147,7 @@ func main() {
 	// reveal shows the window with a project selected.
 	var reveal func(name string)
 	singleInstance := &application.SingleInstanceOptions{
-		UniqueID: "com.ddev.desktop",
+		UniqueID: "com.ddev.gui",
 		// Launching the app again is how a closed window comes back where
 		// there is no tray or Dock icon, such as GNOME without AppIndicator.
 		// `ddev gui <project>` with the app running passes --project here.
@@ -170,7 +170,7 @@ func main() {
 	q := &quitter{srv: srv}
 	app := application.New(application.Options{
 		Name:        "DDEV",
-		Description: "Experimental DDEV desktop app " + version,
+		Description: "Experimental DDEV GUI app " + version,
 		LogLevel:    logLevel,
 		Icon:        appIcon,
 		Assets: application.AssetOptions{
@@ -183,7 +183,7 @@ func main() {
 		SingleInstance: singleInstance,
 		// Wails clears WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS, so a debugging
 		// port for the window's DevTools must come through here.
-		Windows:    application.WindowsOptions{AdditionalBrowserArgs: strings.Fields(os.Getenv("DDEV_DESKTOP_WEBVIEW2_ARGS"))},
+		Windows:    application.WindowsOptions{AdditionalBrowserArgs: strings.Fields(os.Getenv("DDEV_GUI_WEBVIEW2_ARGS"))},
 		OnShutdown: shutdown,
 		ShouldQuit: q.shouldQuit,
 		// Wails' own handler reads only the first signal, so a quit that

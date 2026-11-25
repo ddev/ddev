@@ -12,7 +12,7 @@ import (
 )
 
 // TestOpenURLOnlyDesktop checks the link route of `ddev gui --desktop`,
-// which the desktop app's window uses because a webview opens no new
+// which the GUI app's window uses because a webview opens no new
 // windows.
 func TestOpenURLOnlyDesktop(t *testing.T) {
 	s := newTestServer(t)
@@ -40,7 +40,7 @@ func TestIsUp(t *testing.T) {
 }
 
 // TestStopWithStdin checks that a host command still runs while the server
-// reads the desktop app's pipe on stdin, and that closing the pipe stops the
+// reads the GUI app's pipe on stdin, and that closing the pipe stops the
 // server. Docker is not needed, so CI on Windows catches the hang.
 func TestStopWithStdin(t *testing.T) {
 	r, w, err := os.Pipe()

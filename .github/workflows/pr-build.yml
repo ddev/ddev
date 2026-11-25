@@ -11,7 +11,7 @@ on:
       - ".ci-scripts/**"
       - "!.github/workflows/docs**"
       - "cmd/**"
-      - "desktop/**"
+      - "gui/**"
       - "pkg/**"
       - "third_party/**"
       - "vendor/**"
@@ -53,7 +53,7 @@ jobs:
           check-latest: true
           cache-dependency-path: |
             go.sum
-            desktop/go.sum
+            gui/go.sum
 
       # Find out info about how github is getting the hash
       - run: "git describe --tags --always --dirty"
@@ -102,7 +102,7 @@ jobs:
             .gotmp/bin/windows_amd64/ddev.exe
             .gotmp/bin/windows_amd64/ddev-hostname.exe
             .gotmp/bin/windows_amd64/mkcert.exe
-            .gotmp/bin/windows_amd64/ddev-desktop.exe
+            .gotmp/bin/windows_amd64/ddev-gui.exe
       - name: Upload windows_amd64 installer
         uses: actions/upload-artifact@v7
         with:
@@ -116,22 +116,22 @@ jobs:
             .gotmp/bin/windows_arm64/ddev.exe
             .gotmp/bin/windows_arm64/ddev-hostname.exe
             .gotmp/bin/windows_arm64/mkcert.exe
-            .gotmp/bin/windows_arm64/ddev-desktop.exe
+            .gotmp/bin/windows_arm64/ddev-gui.exe
       - name: Upload windows_arm64 installer
         uses: actions/upload-artifact@v7
         with:
           name: ddev-windows-arm64-installer
           path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
 
-  # The experimental desktop app (desktop/README.md) joins each OS's ddev
+  # The experimental GUI app (gui/README.md) joins each OS's ddev
   # artifact, so `ddev utility download-ddev --pr` brings the app with the
   # ddev it runs. The Windows app is already there: the build job
   # cross-builds it, and the installers carry it. macOS and Linux need CGO,
   # so they build here and upload the ddev artifacts again with the app.
   # These jobs may fail without failing the workflow, so the download comment
   # still appears. Their builds are unsigned; main-build.yml signs.
-  desktop-macos:
-    name: Desktop app on macOS
+  gui-macos:
+    name: GUI app on macOS
     runs-on: macos-latest
     needs: build
     continue-on-error: true
@@ -146,10 +146,10 @@ jobs:
         with:
           go-version: '>=1.23'
           check-latest: true
-          cache-dependency-path: desktop/go.sum
+          cache-dependency-path: gui/go.sum
 
       - name: Build the universal DDEV.app
-        run: make -C desktop
+        run: make -C gui
 
       - uses: actions/download-artifact@v8
         with:
@@ -181,18 +181,18 @@ jobs:
       - name: Go tests
         env:
           DDEV_BINARY: ${{ github.workspace }}/ddev-artifacts/ddev-macos-arm64/ddev
-        run: make -C desktop test
+        run: make -C gui test
 
-      # Drives the dashboard in the app's own window; see desktop/selftest.js.
+      # Drives the dashboard in the app's own window; see gui/selftest.js.
       - name: Self-test in the app window
         env:
-          DDEV_DESKTOP_SELFTEST: "true"
+          DDEV_GUI_SELFTEST: "true"
           DDEV_NO_INSTRUMENTATION: "true"
           DDEV_BINARY: ${{ github.workspace }}/ddev-artifacts/ddev-macos-arm64/ddev
-        run: .gotmp/bin/darwin_universal/DDEV.app/Contents/MacOS/ddev-desktop
+        run: .gotmp/bin/darwin_universal/DDEV.app/Contents/MacOS/ddev-gui
 
-  desktop-linux:
-    name: Desktop app on Linux ${{ matrix.arch }}
+  gui-linux:
+    name: GUI app on Linux ${{ matrix.arch }}
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     needs: build
     continue-on-error: true
@@ -211,7 +211,7 @@ jobs:
         with:
           go-version: '>=1.23'
           check-latest: true
-          cache-dependency-path: desktop/go.sum
+          cache-dependency-path: gui/go.sum
 
       - name: Install GTK 4 and WebKitGTK
         run: |
@@ -220,16 +220,16 @@ jobs:
 
       # Wails needs CGO on Linux, so each architecture builds on its own runner.
       - name: Build the app
-        run: make -C desktop
+        run: make -C gui
 
       - uses: actions/download-artifact@v8
         with:
           name: ddev-linux-${{ matrix.arch }}
           path: ddev-artifact
 
-      - name: Add ddev-desktop to the ddev artifact
+      - name: Add ddev-gui to the ddev artifact
         run: |
-          cp .gotmp/bin/linux_${{ matrix.arch }}/ddev-desktop ddev-artifact/
+          cp .gotmp/bin/linux_${{ matrix.arch }}/ddev-gui ddev-artifact/
           chmod +x ddev-artifact/*
 
       - name: Upload linux-${{ matrix.arch }} binary and app
@@ -242,19 +242,19 @@ jobs:
       - name: Go tests
         env:
           DDEV_BINARY: ${{ github.workspace }}/ddev-artifact/ddev
-        run: make -C desktop test
+        run: make -C gui test
 
       # The app runs the ddev next to it, as a package installs them.
       - name: Self-test in the app window
         env:
-          DDEV_DESKTOP_SELFTEST: "true"
+          DDEV_GUI_SELFTEST: "true"
           DDEV_NO_INSTRUMENTATION: "true"
-        run: xvfb-run --auto-servernum ddev-artifact/ddev-desktop
+        run: xvfb-run --auto-servernum ddev-artifact/ddev-gui
 
   # The build job's ddev-windows-amd64 artifact holds the app next to
   # ddev.exe, as a traditional Windows install does.
-  desktop-windows:
-    name: Desktop app on Windows
+  gui-windows:
+    name: GUI app on Windows
     runs-on: windows-latest
     needs: build
     continue-on-error: true
@@ -268,7 +268,7 @@ jobs:
         with:
           go-version: '>=1.23'
           check-latest: true
-          cache-dependency-path: desktop/go.sum
+          cache-dependency-path: gui/go.sum
 
       - uses: actions/download-artifact@v8
         with:
@@ -280,20 +280,20 @@ jobs:
         env:
           CGO_ENABLED: "0"
           DDEV_BINARY: ${{ github.workspace }}\ddev\ddev.exe
-        run: cd desktop && go test -v -count=1 ./...
+        run: cd gui && go test -v -count=1 ./...
 
       - name: Self-test in the app window
         env:
-          DDEV_DESKTOP_SELFTEST: "true"
+          DDEV_GUI_SELFTEST: "true"
           DDEV_NO_INSTRUMENTATION: "true"
-        run: ./ddev/ddev-desktop.exe | cat
+        run: ./ddev/ddev-gui.exe | cat
 
-  # The tarballs in all-ddev-executables carry the desktop app, so they are
+  # The tarballs in all-ddev-executables carry the GUI app, so they are
   # made after the jobs that add it to each OS's ddev artifact.
   all-artifacts:
     name: Archive all executables
     runs-on: ubuntu-26.04
-    needs: [build, desktop-macos, desktop-linux]
+    needs: [build, gui-macos, gui-linux]
     steps:
       - uses: actions/checkout@v7
         with:

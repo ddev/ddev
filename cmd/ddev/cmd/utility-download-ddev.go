@@ -39,7 +39,7 @@ var DownloadDdevCmd = &cobra.Command{
 	Long: `Download the ddev and ddev-hostname binaries built by DDEV CI for a given
 source (PR, branch, commit, release tag, latest stable release, or main HEAD)
 and write them into a directory. Exactly one source flag is required. A CI
-build that includes the experimental desktop app (ddev-desktop, or DDEV.app
+build that includes the experimental GUI app (ddev-gui, or DDEV.app
 on macOS) brings it too, next to the ddev it runs.
 
 Releases and main builds are signed; PR and other branch builds are not. No
@@ -212,7 +212,7 @@ func runDownloadDdev(cmd *cobra.Command) error {
 		}
 	}
 
-	desktopDest, err := copyDesktopApp(extractDir, outputDir, target)
+	guiDest, err := copyGUIApp(extractDir, outputDir, target)
 	if err != nil {
 		return err
 	}
@@ -221,8 +221,8 @@ func runDownloadDdev(cmd *cobra.Command) error {
 	if hostnameDest != "" {
 		paths = append(paths, hostnameDest)
 	}
-	if desktopDest != "" {
-		paths = append(paths, desktopDest)
+	if guiDest != "" {
+		paths = append(paths, guiDest)
 	}
 	autoUnblocked := false
 	if !spec.signed {
@@ -235,16 +235,16 @@ func runDownloadDdev(cmd *cobra.Command) error {
 	}
 
 	printResult(ddevDest, hostnameDest, target, spec.signed, autoUnblocked)
-	printDesktopResult(desktopDest, target)
+	printGUIResult(guiDest, target)
 	return nil
 }
 
-// copyDesktopApp copies the experimental desktop app, which CI puts in each
+// copyGUIApp copies the experimental GUI app, which CI puts in each
 // OS's artifact, next to ddev, where the app looks for the ddev it runs.
 // On macOS it is DDEV.app, zipped by ditto to keep its permissions and
-// signature. It returns "" when the build has no desktop app.
-func copyDesktopApp(extractDir, outputDir string, t buildTarget) (string, error) {
-	bin := "ddev-desktop" + t.exeExt
+// signature. It returns "" when the build has no GUI app.
+func copyGUIApp(extractDir, outputDir string, t buildTarget) (string, error) {
+	bin := "ddev-gui" + t.exeExt
 	if src := filepath.Join(extractDir, bin); fileutil.FileExists(src) {
 		dest := filepath.Join(outputDir, bin)
 		return dest, copyExecutable(src, dest)
@@ -267,12 +267,12 @@ func copyDesktopApp(extractDir, outputDir string, t buildTarget) (string, error)
 	return dest, nil
 }
 
-// printDesktopResult says where the desktop app landed and how to start it.
-func printDesktopResult(dest string, t buildTarget) {
+// printGUIResult says where the GUI app landed and how to start it.
+func printGUIResult(dest string, t buildTarget) {
 	if dest == "" {
 		return
 	}
-	util.Success("Downloaded the experimental desktop app to %s", dest)
+	util.Success("Downloaded the experimental GUI app to %s", dest)
 	if !t.isNative || strings.HasSuffix(dest, ".zip") {
 		return
 	}

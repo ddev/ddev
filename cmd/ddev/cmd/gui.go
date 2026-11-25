@@ -65,9 +65,9 @@ ddev gui --browser --port 8765 --no-open`,
 		}
 
 		if !browser {
-			exe, reason := findDesktopApp()
+			exe, reason := findGUIApp()
 			if exe != "" {
-				if err := launchDesktopApp(exe, project); err != nil {
+				if err := launchGUIApp(exe, project); err != nil {
 					util.Failed("Unable to open the DDEV app %s: %v", exe, err)
 				}
 				output.UserOut.Printf("Opened the DDEV app (experimental). Use 'ddev gui --browser' for the web UI.")
@@ -115,17 +115,17 @@ func serveGUI(port int, noOpen bool, desktop bool, project string) {
 	}
 }
 
-// findDesktopApp returns the DDEV app's executable, or why there is none.
-// $DDEV_DESKTOP_APP names it; otherwise the app is looked for next to this
+// findGUIApp returns the DDEV app's executable, or why there is none.
+// $DDEV_GUI_APP names it; otherwise the app is looked for next to this
 // ddev, where packages and 'ddev utility download-ddev' put it, then where
 // installers put it.
-func findDesktopApp() (exe string, reason string) {
-	if e := os.Getenv("DDEV_DESKTOP_APP"); e != "" {
+func findGUIApp() (exe string, reason string) {
+	if e := os.Getenv("DDEV_GUI_APP"); e != "" {
 		if nodeps.IsMacOS() && filepath.Ext(e) == ".app" {
-			e = filepath.Join(e, "Contents", "MacOS", "ddev-desktop")
+			e = filepath.Join(e, "Contents", "MacOS", "ddev-gui")
 		}
 		if !fileutil.FileExists(e) {
-			return "", fmt.Sprintf("DDEV_DESKTOP_APP names %s, which does not exist", e)
+			return "", fmt.Sprintf("DDEV_GUI_APP names %s, which does not exist", e)
 		}
 		return e, ""
 	}
@@ -134,7 +134,7 @@ func findDesktopApp() (exe string, reason string) {
 		if exe := windowsAppFromWSL2(); exe != "" {
 			return exe, ""
 		}
-		return "", "The DDEV app for Windows, ddev-desktop.exe, was not found on the Windows PATH or in %LOCALAPPDATA%\\Programs\\DDEV"
+		return "", "The DDEV app for Windows, ddev-gui.exe, was not found on the Windows PATH or in %LOCALAPPDATA%\\Programs\\DDEV"
 	case os.Getenv("SSH_CONNECTION") != "":
 		return "", "This is an SSH session"
 	case nodeps.IsLinux() && os.Getenv("DISPLAY") == "" && os.Getenv("WAYLAND_DISPLAY") == "":
@@ -151,10 +151,10 @@ func findDesktopApp() (exe string, reason string) {
 	if nodeps.IsMacOS() {
 		home, _ := os.UserHomeDir()
 		for _, d := range []string{dir, "/Applications", filepath.Join(home, "Applications")} {
-			candidates = append(candidates, filepath.Join(d, "DDEV.app", "Contents", "MacOS", "ddev-desktop"))
+			candidates = append(candidates, filepath.Join(d, "DDEV.app", "Contents", "MacOS", "ddev-gui"))
 		}
 	} else {
-		name := "ddev-desktop"
+		name := "ddev-gui"
 		if nodeps.IsWindows() {
 			name += ".exe"
 		}
@@ -175,7 +175,7 @@ func findDesktopApp() (exe string, reason string) {
 // Windows PATH, which the installer extends, or in its install directory.
 // The Windows app shows the projects of ddev in a WSL2 distro.
 func windowsAppFromWSL2() string {
-	const name = "ddev-desktop.exe"
+	const name = "ddev-gui.exe"
 	if p, err := exec.LookPath(name); err == nil {
 		return p
 	}
@@ -195,10 +195,10 @@ func windowsAppFromWSL2() string {
 	return p
 }
 
-// launchDesktopApp starts the DDEV app, which runs this ddev. A running app
+// launchGUIApp starts the DDEV app, which runs this ddev. A running app
 // takes the arguments of the new one, shows its window, and selects the
 // project, so the new one exits.
-func launchDesktopApp(exe string, project string) error {
+func launchGUIApp(exe string, project string) error {
 	var args []string
 	// From WSL2, the Windows app runs the ddev on this distro's login PATH.
 	windowsFromWSL2 := nodeps.IsWSL2() && strings.EqualFold(filepath.Ext(exe), ".exe")

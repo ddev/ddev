@@ -1,4 +1,4 @@
-module github.com/ddev/ddev/desktop
+module github.com/ddev/ddev/gui
 
 go 1.27.0
 

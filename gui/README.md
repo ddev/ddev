@@ -1,6 +1,6 @@
-# Experimental DDEV desktop app
+# Experimental DDEV GUI app
 
-This is an experimental desktop app for DDEV, built with
+This is an experimental GUI app for DDEV, built with
 [Wails v3](https://v3.wails.io/). `ddev gui` opens it, and
 `ddev gui --browser` opens the same web UI (`pkg/webui`) in a browser. The
 app shows that web UI in a native window, and adds what a browser tab cannot:
@@ -33,7 +33,7 @@ The app runs, in this order:
 
 1. `$DDEV_BINARY`, when it is set.
 2. On Windows, with no `--wsl-distro` argument, a `ddev.exe` next to
-   `ddev-desktop.exe`, as a traditional Windows install puts it. Otherwise
+   `ddev-gui.exe`, as a traditional Windows install puts it. Otherwise
    `ddev` in WSL2, through `wsl.exe -e bash -lc`, as the installer's WSL2
    choices put it. The installer's Start Menu shortcut passes
    `--wsl-distro <distro>` for the distro it installed DDEV in.
@@ -46,7 +46,7 @@ The app runs, in this order:
    on macOS, and `/usr/bin`, `/usr/local/bin`, and Homebrew's directory on
    Linux.
 
-`DDEV_DESKTOP_MODE=native` or `wsl` overrides step 2. With `wsl`, or with
+`DDEV_GUI_MODE=native` or `wsl` overrides step 2. With `wsl`, or with
 `--wsl-distro`, the app ignores `DDEV_BINARY` and runs the `ddev` on the
 distro's login `PATH`. A `ddev.exe` left by an earlier traditional install
 wins over WSL2 when the app starts without the Start Menu shortcut.
@@ -55,7 +55,7 @@ With ddev in WSL2, `ddev gui --desktop` listens on `127.0.0.1` inside the
 distro, and the window reaches it through WSL's localhost forwarding, which
 is on by default. Its links and folders open on Windows, through
 `rundll32.exe` and `explorer.exe`. User documentation is in
-`docs/content/users/usage/desktop-app.md`.
+`docs/content/users/usage/gui.md`.
 
 `ddev gui --desktop` listens on `127.0.0.1` with a token, opens links in
 the default browser, and stops when its standard input closes, so it stops
@@ -78,9 +78,9 @@ Windows app cross-builds anywhere.
 
 | OS | How | Where |
 | --- | --- | --- |
-| macOS | `brew install --cask ddev/ddev/ddev-desktop`, which also installs the `ddev` formula. Or download `ddev-desktop_macos-universal.v<version>.zip` from a release. | `/Applications/DDEV.app`, one universal app for Apple silicon and Intel |
-| Windows | The DDEV installer, for every install type. Start it from the Start Menu: DDEV, then DDEV Desktop (experimental). | `%LOCALAPPDATA%\Programs\DDEV\ddev-desktop.exe` |
-| Linux | `sudo apt install ddev-desktop` or `sudo dnf install ddev-desktop` from DDEV's package repository, which depends on `ddev`. The Linux release archives also hold `ddev-desktop`. | `/usr/bin/ddev-desktop`, with a launcher entry |
+| macOS | `brew install --cask ddev/ddev/ddev-gui`, which also installs the `ddev` formula. Or download `ddev-gui_macos-universal.v<version>.zip` from a release. | `/Applications/DDEV.app`, one universal app for Apple silicon and Intel |
+| Windows | The DDEV installer, for every install type. Start it from the Start Menu: DDEV, then DDEV GUI (experimental). | `%LOCALAPPDATA%\Programs\DDEV\ddev-gui.exe` |
+| Linux | `sudo apt install ddev-gui` or `sudo dnf install ddev-gui` from DDEV's package repository, which depends on `ddev`. The Linux release archives also hold `ddev-gui`. | `/usr/bin/ddev-gui`, with a launcher entry |
 
 The Linux app needs glibc 2.38 or later, GTK 4, and WebKitGTK 6, as in
 Ubuntu 24.04 or Debian 13. The tray icon needs a StatusNotifierItem host.
@@ -91,23 +91,23 @@ On Windows the app needs the WebView2 runtime, which Windows 11 includes.
 
 ## Build and run
 
-`make desktop` builds `ddev` for this OS, then the app:
+`make gui` builds `ddev` for this OS, then the app:
 
 - On macOS, a universal `DDEV.app` in `.gotmp/bin/darwin_universal/`, with
   `DDEV.app.zip` next to it, zipped by `ditto` to keep its signature. Building
   needs the Xcode command-line tools.
-- On Linux, `ddev-desktop` next to `ddev` in `.gotmp/bin/linux_<arch>/`.
+- On Linux, `ddev-gui` next to `ddev` in `.gotmp/bin/linux_<arch>/`.
   Building needs the GTK 4 and WebKitGTK 6 development packages, such as
   `libgtk-4-dev` and `libwebkitgtk-6.0-dev` on Debian and Ubuntu.
-- For Windows, from any OS, `make windows_amd64_desktop` puts
-  `ddev-desktop.exe` next to `ddev.exe` in `.gotmp/bin/windows_amd64/`.
+- For Windows, from any OS, `make windows_amd64_gui` puts
+  `ddev-gui.exe` next to `ddev.exe` in `.gotmp/bin/windows_amd64/`.
   `make windows_amd64_install` builds it into the installer.
 
 `ddev gui` runs the app with `DDEV_BINARY` set to itself, so a local build
-of `ddev` opens a local build of the app if `DDEV_DESKTOP_APP` names it:
+of `ddev` opens a local build of the app if `DDEV_GUI_APP` names it:
 
 ```bash
-DDEV_DESKTOP_APP="$PWD/.gotmp/bin/darwin_universal/DDEV.app" .gotmp/bin/darwin_arm64/ddev gui
+DDEV_GUI_APP="$PWD/.gotmp/bin/darwin_universal/DDEV.app" .gotmp/bin/darwin_arm64/ddev gui
 ```
 
 Started any other way, the app runs the `ddev` it finds as described above,
@@ -118,13 +118,13 @@ which for a build of your own is often not the `ddev` you just built. Set
 # macOS; open passes none of your shell's variables, --env passes one
 open --env DDEV_BINARY="$PWD/.gotmp/bin/darwin_arm64/ddev" .gotmp/bin/darwin_universal/DDEV.app
 # Or run it in the foreground, with its log in the terminal
-DDEV_BINARY="$PWD/.gotmp/bin/darwin_arm64/ddev" .gotmp/bin/darwin_universal/DDEV.app/Contents/MacOS/ddev-desktop
+DDEV_BINARY="$PWD/.gotmp/bin/darwin_arm64/ddev" .gotmp/bin/darwin_universal/DDEV.app/Contents/MacOS/ddev-gui
 # Quit it
 osascript -e 'quit app "DDEV"'
 
 # Linux; the app runs the ddev next to it
-.gotmp/bin/linux_amd64/ddev-desktop &
-pkill -x ddev-desktop
+.gotmp/bin/linux_amd64/ddev-gui &
+pkill -x ddev-gui
 ```
 
 `open --env` has no effect when the app is already running.
@@ -133,34 +133,34 @@ From PowerShell on Windows:
 
 ```powershell
 # Start it; it returns at once, since it is a GUI app
-.\ddev-desktop.exe
+.\ddev-gui.exe
 # Use ddev in a particular WSL2 distro
-.\ddev-desktop.exe --wsl-distro Ubuntu-24.04
+.\ddev-gui.exe --wsl-distro Ubuntu-24.04
 # Quit it, or use Quit in the tray menu
-Stop-Process -Name ddev-desktop
+Stop-Process -Name ddev-gui
 ```
 
 A GUI app prints nothing to the Windows console. To see its log, pipe it, as
-`./ddev-desktop.exe | cat` in Git Bash.
+`./ddev-gui.exe | cat` in Git Bash.
 
 To try a PR's build, `ddev utility download-ddev --pr <number>` downloads its
-`ddev` and its desktop app into one directory, where the app finds that
+`ddev` and its GUI app into one directory, where the app finds that
 `ddev`. On macOS that is `DDEV.app` next to `ddev`.
 
-`DDEV_DESKTOP_DEBUG=true` logs each request the window makes, and Wails'
+`DDEV_GUI_DEBUG=true` logs each request the window makes, and Wails'
 own debug messages, such as a tray menu that failed to open.
-On Windows, `DDEV_DESKTOP_WEBVIEW2_ARGS` passes arguments to WebView2. With
+On Windows, `DDEV_GUI_WEBVIEW2_ARGS` passes arguments to WebView2. With
 `--remote-debugging-port=9222`, `http://127.0.0.1:9222/json` lists the
 window's page, which Edge's DevTools can then inspect.
 
 ## Tests
 
-- `make -C desktop test` runs the Go tests with CGO on, which Wails needs
+- `make -C gui test` runs the Go tests with CGO on, which Wails needs
   on macOS and Linux. They cover how the app finds `ddev`, reads the status
   stream, notices jobs that end, and proxies the window's requests. With
   `DDEV_BINARY` set to a `ddev` with `ddev gui`, they also start a real
   `ddev gui --desktop` and drive it.
-- `DDEV_DESKTOP_SELFTEST=true` runs `selftest.js` inside the app's own
+- `DDEV_GUI_SELFTEST=true` runs `selftest.js` inside the app's own
   window, then exits with its result. The script waits for the status stream,
   submits a missing directory to "Add project" and expects an error, then
   runs `ddev config` in an empty directory, waits for the job to finish, and
@@ -182,7 +182,7 @@ window's page, which Edge's DevTools can then inspect.
   WebKit, the engine of the app's window on macOS and Linux.
 
 ```bash
-DDEV_DESKTOP_SELFTEST=true DDEV_BINARY="$PWD/.gotmp/bin/darwin_arm64/ddev" .gotmp/bin/darwin_universal/DDEV.app/Contents/MacOS/ddev-desktop
+DDEV_GUI_SELFTEST=true DDEV_BINARY="$PWD/.gotmp/bin/darwin_arm64/ddev" .gotmp/bin/darwin_universal/DDEV.app/Contents/MacOS/ddev-gui
 # Expect "SELFTEST PASS" and exit status 0
 ```
 
@@ -193,13 +193,13 @@ automated test.
 
 | Workflow | macOS | Linux | Windows |
 | --- | --- | --- | --- |
-| `pr-build.yml` | `DDEV.app.zip`, unsigned, added to the `ddev-macos-arm64` and `ddev-macos-amd64` artifacts | `ddev-desktop` added to the `ddev-linux-*` artifacts | `ddev-desktop.exe` in the `ddev-windows-*` artifacts and the installers |
-| `main-build.yml` | Signed with DDEV's Developer ID, notarized, and stapled, by `make -C desktop app sign notarize` | Built on native amd64 and arm64 runners | Signed by `signtool` with the other Windows binaries, before NSIS packs it |
-| Release, by goreleaser | `ddev-desktop_macos-universal.v<version>.zip` on the release, and the `ddev-desktop` cask in `ddev/homebrew-ddev`, from `packaging/ddev-desktop.rb.tmpl` by `.ci-scripts/update-desktop-cask.sh` | In the Linux archives, and the `ddev-desktop` deb and rpm | In the Windows zips and the installers |
+| `pr-build.yml` | `DDEV.app.zip`, unsigned, added to the `ddev-macos-arm64` and `ddev-macos-amd64` artifacts | `ddev-gui` added to the `ddev-linux-*` artifacts | `ddev-gui.exe` in the `ddev-windows-*` artifacts and the installers |
+| `main-build.yml` | Signed with DDEV's Developer ID, notarized, and stapled, by `make -C gui app sign notarize` | Built on native amd64 and arm64 runners | Signed by `signtool` with the other Windows binaries, before NSIS packs it |
+| Release, by goreleaser | `ddev-gui_macos-universal.v<version>.zip` on the release, and the `ddev-gui` cask in `ddev/homebrew-ddev`, from `packaging/ddev-gui.rb.tmpl` by `.ci-scripts/update-gui-cask.sh` | In the Linux archives, and the `ddev-gui` deb and rpm | In the Windows zips and the installers |
 
 The PR jobs run the Go tests and the self-test on each OS. They may fail
 without failing the workflow, so the download comment still appears. In
-`main-build.yml` the desktop jobs are required, since the release ships
+`main-build.yml` the GUI jobs are required, since the release ships
 their output.
 
 ## Known limits

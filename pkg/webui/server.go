@@ -5,7 +5,7 @@
 //
 // It listens on 127.0.0.1 only, and every request must carry the token from
 // the launch URL, since any page the user visits could otherwise reach it.
-// The desktop app in desktop/ runs `ddev gui --desktop` and shows the
+// The GUI app in gui/ runs `ddev gui --desktop` and shows the
 // same web UI in its window.
 package webui
 
@@ -97,7 +97,7 @@ func New(port int) (*Server, error) {
 	return s, nil
 }
 
-// SetDesktop prepares the server for the desktop app's window, which opens
+// SetDesktop prepares the server for the GUI app's window, which opens
 // no new windows: the page asks the server to open links instead. Call it
 // before Serve.
 func (s *Server) SetDesktop() {
@@ -105,7 +105,7 @@ func (s *Server) SetDesktop() {
 }
 
 // StopWithStdin shuts the server down when standard input closes. The
-// desktop app holds it open, so the server stops with the app. Children get
+// GUI app holds it open, so the server stops with the app. Children get
 // the null device instead: on Windows, starting one that inherits the pipe,
 // such as the git that RunHostCommand runs, hangs behind this read.
 func (s *Server) StopWithStdin() {

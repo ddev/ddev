@@ -19,7 +19,7 @@ class MockBackend {
     this.details = {};
     this.router = 'healthy';
     this.error = '';
-    // desktop marks the status as shown in the desktop app's webview.
+    // desktop marks the status as shown in the GUI app's webview.
     this.desktop = false;
     this.jobs = [];
     this.posts = [];

@@ -26,7 +26,7 @@ type projectSummary struct {
 	URL     string `json:"url,omitempty"`
 	Mailpit string `json:"mailpit,omitempty"`
 	AppRoot string `json:"approot"`
-	// Up is IsUp(Status), so that the desktop app's tray need not know
+	// Up is IsUp(Status), so that the GUI app's tray need not know
 	// DDEV's statuses.
 	Up bool `json:"up"`
 }
@@ -45,7 +45,7 @@ type status struct {
 	Error string `json:"error,omitempty"`
 	// Desktop is set when a desktop window, not a browser, shows the page.
 	Desktop bool `json:"desktop,omitempty"`
-	// Version is the version of this ddev, which the desktop app shows.
+	// Version is the version of this ddev, which the GUI app shows.
 	Version string `json:"version"`
 }
 

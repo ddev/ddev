@@ -16,18 +16,18 @@ import (
 )
 
 func TestChooseTarget(t *testing.T) {
-	t.Setenv("DDEV_DESKTOP_MODE", "loopback")
+	t.Setenv("DDEV_GUI_MODE", "loopback")
 	_, err := chooseTarget("")
 	require.ErrorContains(t, err, "must be native or wsl")
 
-	t.Setenv("DDEV_DESKTOP_MODE", "wsl")
+	t.Setenv("DDEV_GUI_MODE", "wsl")
 	tgt, err := chooseTarget("")
 	require.NoError(t, err)
 	require.Equal(t, target{ddev: "ddev", wsl: true}, tgt)
 	require.Equal(t, "ddev in WSL2", tgt.String())
 
 	// The installer's shortcut names the distro it installed ddev in.
-	t.Setenv("DDEV_DESKTOP_MODE", "")
+	t.Setenv("DDEV_GUI_MODE", "")
 	tgt, err = chooseTarget("Ubuntu-24.04")
 	require.NoError(t, err)
 	require.Equal(t, target{ddev: "ddev", wsl: true, distro: "Ubuntu-24.04"}, tgt)

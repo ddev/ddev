@@ -37,7 +37,7 @@ type selfTestResult struct {
 // so the test's project never reaches the user's project list. It must run
 // before ddev gui starts, which inherits the setting.
 func newSelfTest() (*selfTest, error) {
-	root, err := os.MkdirTemp("", "ddev-desktop-selftest-")
+	root, err := os.MkdirTemp("", "ddev-gui-selftest-")
 	if err != nil {
 		return nil, err
 	}

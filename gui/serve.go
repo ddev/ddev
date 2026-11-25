@@ -47,17 +47,17 @@ func (t target) String() string {
 	return "ddev in WSL2 (" + t.distro + ")"
 }
 
-// chooseTarget picks the ddev to run. $DDEV_DESKTOP_MODE, native or wsl,
+// chooseTarget picks the ddev to run. $DDEV_GUI_MODE, native or wsl,
 // overrides the choice. On Windows, a ddev.exe next to the app is a
 // traditional Windows install; otherwise the app uses ddev in WSL2, where
 // the installer's WSL2 choices put it, and finally a ddev.exe on PATH.
 // wslDistro, from --wsl-distro, names the distro and implies WSL2.
 func chooseTarget(wslDistro string) (target, error) {
-	mode := os.Getenv("DDEV_DESKTOP_MODE")
+	mode := os.Getenv("DDEV_GUI_MODE")
 	switch mode {
 	case "", "native", "wsl":
 	default:
-		return target{}, fmt.Errorf("DDEV_DESKTOP_MODE must be native or wsl, not %q", mode)
+		return target{}, fmt.Errorf("DDEV_GUI_MODE must be native or wsl, not %q", mode)
 	}
 	if mode == "wsl" || wslDistro != "" {
 		return target{ddev: "ddev", wsl: true, distro: wslDistro}, nil
@@ -251,7 +251,7 @@ func (c *serveClient) Proxy() http.Handler {
 		FlushInterval: -1,
 	}
 	// Streams break whenever the window reloads or the app quits.
-	if os.Getenv("DDEV_DESKTOP_DEBUG") != "true" {
+	if os.Getenv("DDEV_GUI_DEBUG") != "true" {
 		rp.ErrorLog = log.New(io.Discard, "", 0)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

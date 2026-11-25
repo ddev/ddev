@@ -1,9 +1,9 @@
-# Desktop App (Experimental)
+# DDEV GUI (Experimental)
 
-The DDEV desktop app manages DDEV projects in a window of its own, with a menu in the system tray or macOS menu bar. From the window or the tray you can start, stop, and restart projects, open their sites and Mailpit, and follow what each action prints.
+The DDEV GUI app manages DDEV projects in a window of its own, with a menu in the system tray or macOS menu bar. From the window or the tray you can start, stop, and restart projects, open their sites and Mailpit, and follow what each action prints.
 
 !!!warning "Experimental"
-    The desktop app is experimental. Its features and behavior may change, and it has no update check of its own; it updates when DDEV does.
+    The GUI app is experimental. Its features and behavior may change, and it has no update check of its own; it updates when DDEV does.
 
 [`ddev gui`](../usage/commands.md#gui) opens the app, and `ddev gui --browser` opens the same interface in your browser instead.
 
@@ -14,10 +14,10 @@ The app contains no DDEV code. It runs `ddev gui --desktop` from the `ddev` you 
 === "macOS"
 
     ```bash
-    brew install --cask ddev/ddev/ddev-desktop
+    brew install --cask ddev/ddev/ddev-gui
     ```
 
-    This also installs the `ddev` formula. The app is `/Applications/DDEV.app`. You can instead download `ddev-desktop_macos-universal.v<version>.zip` from a [DDEV release](https://github.com/ddev/ddev/releases).
+    This also installs the `ddev` formula. The app is `/Applications/DDEV.app`. You can instead download `ddev-gui_macos-universal.v<version>.zip` from a [DDEV release](https://github.com/ddev/ddev/releases).
 
 === "Windows"
 
@@ -25,20 +25,20 @@ The app contains no DDEV code. It runs `ddev gui --desktop` from the `ddev` you 
 
 === "Linux"
 
-    Install `ddev-desktop` from DDEV's package repository, which also installs `ddev`:
+    Install `ddev-gui` from DDEV's package repository, which also installs `ddev`:
 
     ```bash
     # Debian and Ubuntu
-    sudo apt-get install ddev-desktop
+    sudo apt-get install ddev-gui
     # Fedora, Red Hat, and similar
-    sudo dnf install ddev-desktop
+    sudo dnf install ddev-gui
     ```
 
     The app needs GTK 4 and WebKitGTK 6, as in Ubuntu 24.04 or Debian 13 and later. The tray icon needs a StatusNotifierItem host: Ubuntu's GNOME and KDE Plasma have one, and GNOME elsewhere needs the AppIndicator extension.
 
 ## Starting and Quitting
 
-Run `ddev gui` in a terminal, or start the app as you start any other: from the Applications folder, the Start Menu (**DDEV** → **DDEV Desktop (experimental)**), or your desktop's launcher.
+Run `ddev gui` in a terminal, or start the app as you start any other: from the Applications folder, the Start Menu (**DDEV** → **DDEV GUI (experimental)**), or your desktop's launcher.
 
 `ddev gui` selects the project in the current directory, and `ddev gui my-project` selects `my-project`. If the app is already running, its window comes forward with that project selected. In WSL2, `ddev gui` opens the Windows app with the projects of that distro. If `ddev gui` cannot find the app, or runs in an SSH session or a Linux session without a display, it opens the interface in your browser and says why.
 
@@ -65,9 +65,9 @@ When an action ends while the window is in the background, the app shows a notif
     The tray icon is in the notification area of the taskbar, possibly under the **^** overflow. Click it to show the window, or right-click it for the menu. From PowerShell:
 
     ```powershell
-    & "$env:LOCALAPPDATA\Programs\DDEV\ddev-desktop.exe"
+    & "$env:LOCALAPPDATA\Programs\DDEV\ddev-gui.exe"
     # Quit it
-    Stop-Process -Name ddev-desktop
+    Stop-Process -Name ddev-gui
     ```
 
     **Folder** opens the project in File Explorer. With DDEV in WSL2, see [Using DDEV in WSL2](#using-ddev-in-wsl2).
@@ -77,9 +77,9 @@ When an action ends while the window is in the background, the app shows a notif
     Start the app from your desktop's launcher, or from a terminal:
 
     ```bash
-    ddev-desktop &
+    ddev-gui &
     # Quit it
-    pkill -x ddev-desktop
+    pkill -x ddev-gui
     ```
 
     **Folder** opens the project with `xdg-open`, which needs `xdg-utils`. The tray icon needs a StatusNotifierItem host, and notifications need a desktop session bus.
@@ -88,23 +88,23 @@ When an action ends while the window is in the background, the app shows a notif
 
 ## Using DDEV in WSL2
 
-When DDEV runs in WSL2, the desktop app runs on Windows and uses `ddev` inside your WSL2 distro:
+When DDEV runs in WSL2, the GUI app runs on Windows and uses `ddev` inside your WSL2 distro:
 
-* Start it from the Start Menu: **DDEV** → **DDEV Desktop (experimental)**. The installer's shortcut names the distro you chose during installation, which need not be your default distro. You can also run `ddev gui` inside WSL2. It opens the Windows app with that distro's projects, and the app runs the `ddev` on the distro's login `PATH`. It finds the app on the Windows `PATH` or in `%LOCALAPPDATA%\Programs\DDEV`, and otherwise opens your Windows browser.
+* Start it from the Start Menu: **DDEV** → **DDEV GUI (experimental)**. The installer's shortcut names the distro you chose during installation, which need not be your default distro. You can also run `ddev gui` inside WSL2. It opens the Windows app with that distro's projects, and the app runs the `ddev` on the distro's login `PATH`. It finds the app on the Windows `PATH` or in `%LOCALAPPDATA%\Programs\DDEV`, and otherwise opens your Windows browser.
 * Your projects stay in WSL2, and the window shows their Linux paths, such as `/home/you/my-site`. To add a project, enter its Linux path.
 * **Open site** and **Mailpit** open your Windows browser. **Folder** opens File Explorer at the project's `\\wsl.localhost\` path, and **VS Code** opens the project in a VS Code window connected to WSL.
 * The window reaches `ddev gui --desktop` in WSL2 through localhost forwarding, which is on by default.
 * Quitting the app also stops `ddev gui --desktop` inside WSL2.
 
-If you start `ddev-desktop.exe` without the Start Menu shortcut, it chooses which `ddev` to use:
+If you start `ddev-gui.exe` without the Start Menu shortcut, it chooses which `ddev` to use:
 
-1. A `ddev.exe` in the same folder as `ddev-desktop.exe`, as a traditional Windows installation puts it.
+1. A `ddev.exe` in the same folder as `ddev-gui.exe`, as a traditional Windows installation puts it.
 2. Otherwise, `ddev` in your default WSL2 distro.
 
 A `ddev.exe` left in `%LOCALAPPDATA%\Programs\DDEV` from an earlier traditional installation therefore takes priority over WSL2. Use the Start Menu shortcut, delete that `ddev.exe`, or name the distro yourself:
 
 ```powershell
-& "$env:LOCALAPPDATA\Programs\DDEV\ddev-desktop.exe" --wsl-distro Ubuntu
+& "$env:LOCALAPPDATA\Programs\DDEV\ddev-gui.exe" --wsl-distro Ubuntu
 ```
 
 Run `wsl --list` to see your distros' names.
@@ -119,7 +119,7 @@ The last line of the tray menu shows the DDEV version and the `ddev` the app run
 4. The first `ddev` on your login shell's `PATH`.
 5. The places DDEV's installers use: `/opt/homebrew/bin` and `/usr/local/bin` on macOS, and `/usr/bin`, `/usr/local/bin`, and Homebrew's directory on Linux.
 
-On Windows, `DDEV_DESKTOP_MODE=native` or `DDEV_DESKTOP_MODE=wsl` overrides step 2.
+On Windows, `DDEV_GUI_MODE=native` or `DDEV_GUI_MODE=wsl` overrides step 2.
 
 ## Troubleshooting
 

@@ -1,4 +1,4 @@
-# Builds the experimental DDEV desktop app. `make desktop` in the repository
+# Builds the experimental DDEV GUI app. `make gui` in the repository
 # root builds ddev and this app. The app holds no DDEV code and no ddev
 # binary: it runs `ddev gui --desktop` from the installed ddev.
 
@@ -47,20 +47,20 @@ endif
 # On Linux and Windows the app lands next to ddev in $(OUT), as packages
 # install it, and runs that ddev.
 binary:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO) go build -trimpath -ldflags "$(LDFLAGS)" -o $(OUT)/ddev-desktop$(EXE) .
+	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO) go build -trimpath -ldflags "$(LDFLAGS)" -o $(OUT)/ddev-gui$(EXE) .
 
 # Set DDEV_BINARY to a ddev with `ddev gui` to run the tests that start it.
 test:
 	CGO_ENABLED=$(CGO) go test -v -count=1 ./...
 
 # A bundle gives macOS an identity for notifications and the Dock. It holds
-# only ddev-desktop, which runs the ddev on the login shell's PATH. It is
+# only ddev-gui, which runs the ddev on the login shell's PATH. It is
 # signed ad hoc here; `sign` replaces that with the Developer ID.
 app:
 	for a in $(MAC_ARCHS); do $(MAKE) GOOS=darwin GOARCH=$$a binary || exit 1; done
 	rm -rf "$(APP)" "$(MAC_OUT)/DDEV.iconset"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources" "$(MAC_OUT)/DDEV.iconset"
-	lipo -create $(foreach a,$(MAC_ARCHS),$(GOTMP)/bin/darwin_$(a)/ddev-desktop) -output "$(APP)/Contents/MacOS/ddev-desktop"
+	lipo -create $(foreach a,$(MAC_ARCHS),$(GOTMP)/bin/darwin_$(a)/ddev-gui) -output "$(APP)/Contents/MacOS/ddev-gui"
 	for s in 16 32 128 256 512; do \
 		sips -z $$s $$s icons/appicon.png --out "$(MAC_OUT)/DDEV.iconset/icon_$${s}x$${s}.png" >/dev/null; \
 		sips -z $$((s*2)) $$((s*2)) icons/appicon.png --out "$(MAC_OUT)/DDEV.iconset/icon_$${s}x$${s}@2x.png" >/dev/null; \
@@ -89,6 +89,6 @@ sign:
 notarize:
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "DDEV_MACOS_APP_PASSWORD is required"; exit 1; fi
 	curl -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f $(SIGNING_TOOLS_RAW_URL)/macos_notarize.sh | \
-		bash -s - --app-specific-password="$(DDEV_MACOS_APP_PASSWORD)" --apple-id=$(DDEV_MACOS_APPLE_ID) --team-id=$(DDEV_MACOS_TEAM_ID) --primary-bundle-id=com.ddev.desktop --target-binary="$(APP)"
+		bash -s - --app-specific-password="$(DDEV_MACOS_APP_PASSWORD)" --apple-id=$(DDEV_MACOS_APPLE_ID) --team-id=$(DDEV_MACOS_TEAM_ID) --primary-bundle-id=com.ddev.gui --target-binary="$(APP)"
 	xcrun stapler staple "$(APP)"
 	$(MAKE) zip

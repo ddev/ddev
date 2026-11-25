@@ -817,7 +817,7 @@ Open the experimental DDEV app, a graphical interface for managing DDEV projects
 
 In the browser, the web UI listens on `127.0.0.1` only, and the URL it prints includes an access token. Keep that URL private: anyone who has it can control your projects.
 
-See [Desktop App (Experimental)](../usage/desktop-app.md) for installing the app, its tray menu, and using it with WSL2.
+See [GUI (Experimental)](../usage/gui.md) for installing the app, its tray menu, and using it with WSL2.
 
 Flags:
 

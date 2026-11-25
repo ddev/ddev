@@ -43,11 +43,11 @@ builds:
   binary: ddev-hostname
 
 
-# The experimental desktop app (desktop/README.md). main-build.yml builds it
+# The experimental GUI app (gui/README.md). main-build.yml builds it
 # for Linux on native runners, since it needs CGO there, and signs the
 # Windows build with ddev.exe. DDEV.app for macOS is released separately,
 # below in release.extra_files.
-- id: ddev-desktop
+- id: ddev-gui
   builder: prebuilt
   goos:
   - linux
@@ -58,8 +58,8 @@ builds:
   goamd64:
   - v1
   prebuilt:
-    path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev-desktop{{.Ext}}
-  binary: ddev-desktop
+    path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev-gui{{.Ext}}
+  binary: ddev-gui
 
 - id: mkcert
   # requires make completions
@@ -207,7 +207,7 @@ archives:
   ids:
     - ddev
     - ddev-hostname
-    - ddev-desktop
+    - ddev-gui
     - mkcert
     - ddev_bash_completion.sh
     - ddev_zsh_completion.sh
@@ -250,7 +250,7 @@ checksum:
   name_template: "checksums.txt"
   extra_files:
   - glob: .gotmp/bin/darwin_universal/DDEV.app.zip
-    name_template: "ddev-desktop_macos-universal.v{{ .Version }}.zip"
+    name_template: "ddev-gui_macos-universal.v{{ .Version }}.zip"
 
 
 #### RELEASE ####
@@ -259,10 +259,10 @@ release:
   # Releases are created manually via the GitHub UI before the tag is pushed
   mode: append
   # The signed and notarized DDEV.app, zipped by ditto so it stays signed.
-  # .ci-scripts/update-desktop-cask.sh points the ddev-desktop cask at it.
+  # .ci-scripts/update-gui-cask.sh points the ddev-gui cask at it.
   extra_files:
   - glob: .gotmp/bin/darwin_universal/DDEV.app.zip
-    name_template: "ddev-desktop_macos-universal.v{{ .Version }}.zip"
+    name_template: "ddev-gui_macos-universal.v{{ .Version }}.zip"
   github:
     owner: "{{ .Env.REPOSITORY_OWNER }}"
     name: ddev
@@ -436,27 +436,27 @@ nfpms:
       dependencies:
       - nss-tools
 
-# The experimental desktop app, apart from ddev so that ddev itself needs no
+# The experimental GUI app, apart from ddev so that ddev itself needs no
 # GTK or WebKitGTK. It runs the ddev from the ddev package.
-- id: ddev-desktop
+- id: ddev-gui
   maintainer: DDEV Maintainers
   license: "Apache 2"
   homepage: https://github.com/ddev/ddev
   description: |
-    Experimental desktop app for DDEV, with a window and a tray menu
-  package_name: ddev-desktop
+    Experimental GUI app for DDEV, with a window and a tray menu
+  package_name: ddev-gui
   ids:
-  - ddev-desktop
+  - ddev-gui
   formats:
   - deb
   - rpm
   contents:
-  - src: desktop/packaging/ddev-desktop.desktop
-    dst: /usr/share/applications/ddev-desktop.desktop
+  - src: gui/packaging/ddev-gui.desktop
+    dst: /usr/share/applications/ddev-gui.desktop
     file_info:
       mode: 0644
-  - src: desktop/icons/appicon.png
-    dst: /usr/share/pixmaps/ddev-desktop.png
+  - src: gui/icons/appicon.png
+    dst: /usr/share/pixmaps/ddev-gui.png
     file_info:
       mode: 0644
   overrides:

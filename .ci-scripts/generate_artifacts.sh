@@ -45,8 +45,8 @@ fi
 
 
 # mkcert comes from `make mkcert`, already in each .gotmp/bin platform directory.
-# The desktop app is built in other jobs, so it is added only where present:
-# ddev-desktop next to ddev, and DDEV.app.zip from darwin_universal.
+# The GUI app is built in other jobs, so it is added only where present:
+# ddev-gui next to ddev, and DDEV.app.zip from darwin_universal.
 
 # archive <os>-<arch> <dir> <files...>
 archive() {
@@ -54,7 +54,7 @@ archive() {
   shift 2
   local files=("$@")
   local extra=()
-  for f in ddev-desktop ddev-desktop.exe; do
+  for f in ddev-gui ddev-gui.exe; do
     if [ -f "$BASE_DIR/$dir/$f" ]; then files+=("$f"); fi
   done
   if [[ $name == macos-* ]] && [ -f "$BASE_DIR/.gotmp/bin/darwin_universal/DDEV.app.zip" ]; then

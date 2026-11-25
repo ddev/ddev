@@ -216,7 +216,7 @@ nav:
       - 'Common Tasks':
           - users/usage/index.md
           - users/usage/cli.md
-          - users/usage/desktop-app.md
+          - users/usage/gui.md
           - users/usage/database-management.md
           - users/usage/cms-settings.md
           - users/usage/vite.md

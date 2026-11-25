@@ -663,7 +663,7 @@ function init() {
     e.preventDefault();
     post('/api/open-url', { url: a.href }).catch((err) => toast(err.message, true));
   });
-  // A link such as #project=d11 selects that project; the desktop app's
+  // A link such as #project=d11 selects that project; the GUI app's
   // tray uses it.
   const fromHash = () => {
     const m = /(?:^#|&)project=([^&]+)/.exec(location.hash);
