@@ -829,8 +829,8 @@ SectionGroup /e "${PRODUCT_NAME}"
 
         ; The experimental GUI app, for all installation types. It runs
         ; ddev.exe next to it in a traditional install, or ddev in WSL2.
-        ; A running copy would lock the file, so stop it first.
-        nsExec::ExecToStack 'taskkill /IM ddev-gui.exe /F'
+        ; A running copy and its ddev.exe child lock their files; /T stops both.
+        nsExec::ExecToStack 'taskkill /IM ddev-gui.exe /F /T'
         Pop $0
         Pop $1
         File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-gui.exe"
@@ -953,8 +953,8 @@ Section Uninstall
     EnVar::SetHKCU
     EnVar::DeleteValue "Path" "$INSTDIR"
 
-    ; Stop the GUI app, which would lock its file
-    nsExec::ExecToStack 'taskkill /IM ddev-gui.exe /F'
+    ; Stop the GUI app and its ddev.exe child, which would lock their files
+    nsExec::ExecToStack 'taskkill /IM ddev-gui.exe /F /T'
     Pop $0
     Pop $1
 
