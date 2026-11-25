@@ -15,6 +15,8 @@ func TestIsUnreleasedDdevVersion(t *testing.T) {
 		"v1.25.3-111-geadf098e9-dirty",
 		"geadf098", // debug.BuildInfo short-hash fallback
 		"geadf098-dirty",
+		"0d337116c", // git describe in a clone without tags, such as a fork
+		"0d337116c-dirty",
 	}
 	for _, v := range unreleased {
 		require.True(t, IsUnreleasedDdevVersion(v), "expected %q to be detected as unreleased", v)
