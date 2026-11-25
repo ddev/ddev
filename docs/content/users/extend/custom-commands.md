@@ -210,8 +210,8 @@ Output:
 
 ```bash
 Flags:
-  -h, --help          help for ddev
-      --flag          sets the flag option
+  -h, --help[=true|false]   help for ddev
+      --flag[=true|false]   sets the flag option
 ```
 
 Multiple flags are separated by a comma:
@@ -222,9 +222,9 @@ Output:
 
 ```bash
 Flags:
-  -h, --help          help for ddev
-  -f, --flag1         flag1 usage
-      --flag2         flag2 usage
+  -h, --help[=true|false]    help for ddev
+  -f, --flag1[=true|false]   flag1 usage
+      --flag2[=true|false]   flag2 usage
 ```
 
 The following fields can be used for a flag definition:

@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"sort"
 	"strings"
 
 	"os"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -19,8 +19,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -84,35 +82,14 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		dockerIP = "127.0.0.1"
 	}
 
-	var out bytes.Buffer
-
-	t := table.NewWriter()
-	t.SetOutputMirror(&out)
-	styles.SetGlobalTableStyle(t, false)
-	tWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
-	urlPortWidth := float64(tWidth) / 2.5
-	infoWidth := tWidth / 4
-	if !globalconfig.DdevGlobalConfig.SimpleFormatting && isatty.IsTerminal(os.Stdout.Fd()) {
-		t.SetColumnConfigs([]table.ColumnConfig{
-			{
-				Name:     "Service",
-				WidthMax: 12,
-			},
-			{
-				Name:     "URL/Port",
-				WidthMax: int(urlPortWidth),
-				// Wrap each embedded line individually to preserve intentional line breaks
-				WidthMaxEnforcer: ddevapp.FitTableCell,
-			},
-			{
-				Name:     "Info",
-				WidthMax: infoWidth,
-			},
-		})
+	t := styles.NewTable("Service", "Stat", "URL/Port", "Info")
+	t.SetColumnStyle(0, styles.Strong())
+	link := func(u string) string {
+		return styles.Link().Render(output.Hyperlink(u, u))
 	}
 	dockerPlatform, err := version.GetDockerPlatform()
 	if err != nil {
-		dockerPlatform = util.ColorizeText(err.Error(), "red")
+		dockerPlatform = styles.Bad().Render(err.Error())
 	}
 
 	router := globalconfig.DdevGlobalConfig.Router
@@ -120,8 +97,15 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		router = "disabled"
 	}
 
-	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s\nDDEV version: %s", app.Name, output.Hyperlink(output.FileURL(app.GetAppRoot()), desc["shortroot"].(string)), output.Hyperlink(app.GetPrimaryURL(), app.GetPrimaryURL()), dockerPlatform, router, versionconstants.DdevVersion))
-	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
+	title := []string{fmt.Sprintf("%s  %s  %s", styles.Strong().Render(app.Name), output.Hyperlink(output.FileURL(app.GetAppRoot()), desc["shortroot"].(string)), link(app.GetPrimaryURL()))}
+	details := []string{"Docker platform: " + dockerPlatform, "Router: " + router, "DDEV version: " + versionconstants.DdevVersion}
+	termWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
+	if joined := strings.Join(details, styles.Hint().Render(" · ")); ansi.StringWidth(joined) <= termWidth {
+		title = append(title, joined)
+	} else {
+		title = append(title, details...)
+	}
+	t.SetTitle(title...)
 
 	// Only show extended status for running sites.
 	serviceNames := []string{}
@@ -150,34 +134,34 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		case !ddevapp.IsRouterDisabled(app):
 			if httpsURL, ok := v["https_url"].(string); ok && !app.CanUseHTTPOnly() {
 				u := netutil.NormalizeURL(httpsURL)
-				urlPortParts = append(urlPortParts, output.Hyperlink(u, u))
+				urlPortParts = append(urlPortParts, link(u))
 			} else if httpURL, ok = v["http_url"].(string); ok {
 				u := netutil.NormalizeURL(httpURL)
-				urlPortParts = append(urlPortParts, output.Hyperlink(u, u))
+				urlPortParts = append(urlPortParts, link(u))
 			}
 
 		// Codespaces, web container only, using port proxied by Codespaces/Devcontainer
 		case nodeps.IsDevcontainer() && k == "web":
-			urlPortParts = append(urlPortParts, output.Hyperlink(app.GetPrimaryURL(), app.GetPrimaryURL()))
+			urlPortParts = append(urlPortParts, link(app.GetPrimaryURL()))
 
 		// Router disabled, but not because of Codespaces, use direct http url
 		case ddevapp.IsRouterDisabled(app):
 			if httpURL, ok := v["host_http_url"].(string); ok && httpURL != "" {
 				u := netutil.NormalizeURL(httpURL)
-				urlPortParts = append(urlPortParts, output.Hyperlink(u, u))
+				urlPortParts = append(urlPortParts, link(u))
 			}
 		}
 
-		var portStr strings.Builder
-		portStr.WriteString("InDocker")
+		portLabel := "InDocker"
 		var portMappingDockerHost = map[string]string{}
 		if p, ok := v["host_ports_mapping"].([]map[string]string); ok && len(p) != 0 {
-			portStr.WriteString(" -> Host")
+			portLabel += " -> Host"
 			for _, portMapping := range p {
 				portMappingDockerHost[portMapping["exposed_port"]] = portMapping["host_port"]
 			}
 		}
-		portStr.WriteString(":")
+		var portStr strings.Builder
+		portStr.WriteString(styles.Hint().Render(portLabel + ":"))
 
 		if p, ok := v["exposed_ports"].(string); ok {
 			if p != "" {
@@ -226,7 +210,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		if !ok {
 			status = ddevapp.SiteStopped
 		}
-		t.AppendRow(table.Row{k, ddevapp.FormatSiteStatus(status), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
+		t.AppendRow(k, ddevapp.FormatSiteStatus(status), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n"))
 	}
 
 	if !ddevapp.IsRouterDisabled(app) {
@@ -238,7 +222,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		if _, ok := desc["mailpit_https_url"]; ok && !app.CanUseHTTPOnly() {
 			mailpitURL = desc["mailpit_https_url"].(string)
 		}
-		t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\nLaunch: ddev mailpit", output.Hyperlink(mailpitURL, mailpitURL))})
+		t.AppendRow("Mailpit", "", link(mailpitURL)+"\nLaunch: ddev mailpit")
 
 		ddevapp.SyncGenericWebserverPortsWithRouterPorts(app)
 
@@ -249,7 +233,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 				scheme, port = "http", extraPort.HTTPPort
 			}
 			url := netutil.NormalizeURL(fmt.Sprintf("%s://%s:%d", scheme, app.GetHostname(), port))
-			t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("%s\nInDocker: web:%d", output.Hyperlink(url, url), extraPort.WebContainerPort)})
+			t.AppendRow(extraPort.Name, "", fmt.Sprintf("%s\n%s web:%d", link(url), styles.Hint().Render("InDocker:"), extraPort.WebContainerPort))
 		}
 
 		// All URLs stanza, one per line so each stays an intact clickable link
@@ -257,9 +241,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		if len(urls) > 0 {
 			linkedURLs := make([]string, len(urls))
 			for i, u := range urls {
-				linkedURLs[i] = output.Hyperlink(u, u)
+				linkedURLs[i] = link(u)
 			}
-			t.AppendRow(table.Row{"Project URLs", "", strings.Join(linkedURLs, "\n")})
+			t.AppendRow("Project URLs", "", strings.Join(linkedURLs, "\n"))
 		}
 	}
 	bindInfo := []string{}
@@ -270,21 +254,22 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		bindInfo = append(bindInfo, "router-bind-all-interfaces ENABLED")
 	}
 	if len(bindInfo) > 0 {
-		t.AppendRow(table.Row{"Network", "", strings.Join(bindInfo, "\n")})
+		t.AppendRow("Network", "", strings.Join(bindInfo, "\n"))
 	}
 	if !ddevapp.IsRouterDisabled(app) {
 		// If there is a problem with the router, add it to the table
 		routerStatus, errorInfo := ddevapp.RenderRouterStatus()
 		if errorInfo != "" {
-			t.AppendFooter(table.Row{
-				"Router", routerStatus, text.WrapSoft(errorInfo, int(urlPortWidth)),
-			})
+			if globalconfig.DdevGlobalConfig.SimpleFormatting || !isatty.IsTerminal(os.Stdout.Fd()) {
+				// Without column limits, nothing else wraps the error
+				errorInfo = ansi.Wordwrap(errorInfo, 35, "")
+			}
+			t.SetFooter("Router", routerStatus, errorInfo)
 		}
 	}
+	t.FitTerminal()
 
-	t.Render()
-
-	return out.String(), nil
+	return t.Render(), nil
 }
 
 func registerDescribeCmd() {

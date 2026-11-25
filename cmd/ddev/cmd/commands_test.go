@@ -176,7 +176,7 @@ func TestCustomCommands(t *testing.T) {
 
 	out, err = exec.RunHostCommand(DdevBin, "help", c)
 	assert.NoError(err, "Failed to run ddev %s %v", "help", c)
-	assert.Contains(out, "  -t, --test   Usage of test")
+	assert.Contains(out, "  -t, --test[=true|false]   Usage of test")
 
 	// Tests with app type PHP
 	app.Type = nodeps.AppTypePHP

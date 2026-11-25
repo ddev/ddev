@@ -28,6 +28,11 @@ func (r *relativePathsResolver) maybeUnixPath(a any) (any, error) {
 	if !ok {
 		return a, nil
 	}
+	if p == "" {
+		// an empty path stays empty rather than becoming the working directory,
+		// as for the other path attributes
+		return p, nil
+	}
 	p = ExpandUser(p)
 	// Check if source is an absolute path (either Unix or Windows), to
 	// handle a Windows client with a Unix daemon or vice-versa.

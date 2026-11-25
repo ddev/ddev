@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"bytes"
 	"os"
 	"regexp"
 	"testing"
@@ -84,8 +83,7 @@ func TestListWithoutDir(t *testing.T) {
 	// Make a whole table and make sure our app directory missing shows up.
 	// This could be done otherwise, but we'd have to go find the site in the
 	// array first.
-	out := bytes.Buffer{}
-	table := ddevapp.CreateAppTable(&out, true)
+	table := ddevapp.CreateAppTable(true)
 	for _, site := range apps {
 		desc, err := site.Describe(false)
 		if err != nil {
@@ -94,8 +92,8 @@ func TestListWithoutDir(t *testing.T) {
 
 		ddevapp.RenderAppRow(table, desc)
 	}
-	table.Render()
-	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDir), out.String())
+	out := ddevapp.RenderAppTable(table)
+	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDir), out)
 
 	err = app.Stop(true, false)
 	assert.NoError(err)
@@ -111,23 +109,4 @@ func TestDdevList(_ *testing.T) {
 		ContinuousSleepTime: 1,
 		TypeFilter:          "",
 	})
-}
-
-func TestFitTableCell(t *testing.T) {
-	link := "\x1b]8;;file:///home/user/.ddev\x1b\\~/.ddev/some/long/path/here\x1b]8;;\x1b\\"
-	tests := []struct {
-		name string
-		col  string
-		want string
-	}{
-		{"short line unchanged", "~/.ddev", "~/.ddev"},
-		{"long line wraps", "port 80 is already in use", "port 80 is\nalready in\nuse"},
-		{"line breaks kept", "Run 'ddev auth ssh'\nagent gone", "Run 'ddev \nauth ssh'\nagent gone"},
-		{"hyperlink snipped", link + "\nok", "\x1b]8;;file:///home/user/.ddev\x1b\\~/.ddev/s\x1b]8;;\x1b\\…\nok"},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.want, ddevapp.FitTableCell(tc.col, 10))
-		})
-	}
 }

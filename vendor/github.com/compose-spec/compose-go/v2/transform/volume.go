@@ -19,6 +19,7 @@ package transform
 import (
 	"fmt"
 	"path"
+	"strconv"
 
 	"github.com/compose-spec/compose-go/v2/format"
 	"github.com/compose-spec/compose-go/v2/tree"
@@ -27,6 +28,19 @@ import (
 func transformVolumeMount(data any, p tree.Path, ignoreParseError bool) (any, error) {
 	switch v := data.(type) {
 	case map[string]any:
+		if tmpfs, ok := v["tmpfs"].(map[string]any); ok {
+			if mode, ok := tmpfs["mode"].(string); ok {
+				// the Docker CLI reads the mode of a tmpfs as an octal number
+				i, err := strconv.ParseUint(mode, 8, 32)
+				if err != nil {
+					if ignoreParseError {
+						return v, nil
+					}
+					return nil, fmt.Errorf("%s.tmpfs.mode: invalid mode %q: must be an octal number that fits in 32 bits", p, mode)
+				}
+				tmpfs["mode"] = uint32(i)
+			}
+		}
 		return v, nil
 	case string:
 		volume, err := format.ParseVolume(v) // TODO(ndeloof) ParseVolume should not rely on types and return map[string]

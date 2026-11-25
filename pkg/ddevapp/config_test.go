@@ -451,6 +451,11 @@ func TestConfigCommand(t *testing.T) {
 
 	for testName, testValues := range testMatrix {
 		testDir := testcommon.CreateTmpDir(t.Name() + "_" + testName)
+		// "magento" is followed by a Magento version question.
+		typeAnswer := testValues[apptypePos]
+		if typeAnswer == nodeps.AppTypeMagento {
+			typeAnswer += "\n1"
+		}
 
 		// Create a docroot folder.
 		err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
@@ -476,14 +481,16 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create an example input buffer that writes the sitename, a valid document root,
 		// an invalid app type, and finally a valid app type (from test matrix)
-		input := fmt.Sprintf("%s\ndocroot\n%s\n%s", name, invalidAppType, testValues[apptypePos])
+		input := fmt.Sprintf("no\n%s\ndocroot\n%s\n%s", name, invalidAppType, typeAnswer)
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
 		restoreOutput := util.CaptureUserOut()
+		restoreStdout := util.CaptureStdOut()
 		err = app.PromptForConfig()
-		require.NoError(t, err)
+		prompts := restoreStdout()
 		out := restoreOutput()
+		require.NoError(t, err, "output=%s\nprompts=%s", out, prompts)
 
 		// Ensure we have expected vales in output.
 		assert.Contains(out, testDir)
@@ -491,14 +498,16 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create an example input buffer that writes an invalid projectname, then a valid-project-name,
 		// a valid document root, a valid app type
-		input = fmt.Sprintf("invalid_project_name\n%s\ndocroot\n%s", name, testValues[apptypePos])
+		input = fmt.Sprintf("no\ninvalid_project_name\n%s\ndocroot\n%s", name, typeAnswer)
 		scanner = bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
 		restoreOutput = util.CaptureUserOut()
+		restoreStdout = util.CaptureStdOut()
 		err = app.PromptForConfig()
-		assert.NoError(err)
+		prompts = restoreStdout()
 		out = restoreOutput()
+		assert.NoError(err, "output=%s\nprompts=%s", out, prompts)
 
 		// Ensure we have expected vales in output.
 		assert.Contains(out, testDir)
@@ -512,6 +521,167 @@ func TestConfigCommand(t *testing.T) {
 		err = ddevapp.PrepDdevDirectory(app)
 		assert.NoError(err)
 	}
+}
+
+// TestConfigCommandSuggested checks the configuration PromptForConfig offers,
+// and that the PHP version, database, and webserver can be chosen instead.
+func TestConfigCommandSuggested(t *testing.T) {
+	origDir, _ := os.Getwd()
+	testDir := testcommon.CreateTmpDir(t.Name())
+	require.NoError(t, os.MkdirAll(filepath.Join(testDir, "web", "core"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(testDir, "web", "index.php"), nil, 0644))
+	defaultName := ddevapp.NormalizeProjectName(filepath.Base(testDir))
+
+	newApp := func() *ddevapp.DdevApp {
+		app, err := ddevapp.NewApp(testDir, true)
+		require.NoError(t, err)
+		return app
+	}
+	t.Cleanup(func() {
+		_ = newApp().Stop(true, false)
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(testDir)
+	})
+	prompt := func(app *ddevapp.DdevApp, input string) string {
+		util.SetInputScanner(bufio.NewScanner(strings.NewReader(input)))
+		restoreOutput := util.CaptureUserOut()
+		restoreStdout := util.CaptureStdOut()
+		err := app.PromptForConfig()
+		prompts := restoreStdout()
+		out := restoreOutput()
+		require.NoError(t, err, "output=%s\nprompts=%s", out, prompts)
+		return out
+	}
+
+	t.Run("accepted", func(t *testing.T) {
+		app := newApp()
+		out := prompt(app, "\n")
+		require.Contains(t, out, "DDEV suggests this configuration:")
+		require.Contains(t, out, "Docroot:   web")
+		require.Equal(t, defaultName, app.Name)
+		require.Equal(t, "web", app.Docroot)
+		require.Equal(t, nodeps.AppTypePHP, app.Type)
+		require.Equal(t, nodeps.PHPDefault, app.PHPVersion)
+		require.Equal(t, ddevapp.DatabaseDefault, app.Database)
+	})
+
+	t.Run("defaults", func(t *testing.T) {
+		app := newApp()
+		_ = prompt(app, "no\n")
+		require.Equal(t, defaultName, app.Name)
+		require.Equal(t, "web", app.Docroot)
+		require.Equal(t, nodeps.AppTypePHP, app.Type)
+		require.Equal(t, nodeps.PHPDefault, app.PHPVersion)
+		require.Equal(t, ddevapp.DatabaseDefault, app.Database)
+		require.Equal(t, nodeps.WebserverDefault, app.WebserverType)
+	})
+
+	t.Run("customized", func(t *testing.T) {
+		app := newApp()
+		// Each invalid answer is asked again; the empty one takes MySQL's default version.
+		input := strings.Join([]string{
+			"no", "customized", "", "drupal7",
+			"9.9", nodeps.PHP83,
+			"oracle", nodeps.MySQL, "11.8", "",
+			nodeps.WebserverApacheFPM,
+		}, "\n")
+		out := prompt(app, input)
+		require.Contains(t, out, "'9.9' is not a valid PHP version")
+		require.Contains(t, out, "'oracle' is not a valid database type")
+		require.Contains(t, out, "'11.8' is not a valid MySQL version")
+		require.Equal(t, "customized", app.Name)
+		require.Equal(t, nodeps.AppTypeDrupal7, app.Type)
+		require.Equal(t, nodeps.PHP83, app.PHPVersion)
+		require.Equal(t, ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL84}, app.Database)
+		require.Equal(t, nodeps.WebserverApacheFPM, app.WebserverType)
+	})
+
+	t.Run("drupal version", func(t *testing.T) {
+		app := newApp()
+		// After "drupal" comes its version; an empty answer means the latest stable.
+		_ = prompt(app, "no\n\n\ndrupal\n\n")
+		require.Equal(t, nodeps.AppTypeDrupalLatestStable, app.Type)
+
+		app = newApp()
+		out := prompt(app, "no\n\n\ndrupal\n13\n7\n")
+		require.Contains(t, out, "'13' is not a valid project version")
+		require.Equal(t, nodeps.AppTypeDrupal7, app.Type)
+		require.Equal(t, nodeps.PHP82, app.PHPVersion)
+	})
+
+	t.Run("magento and bedrock", func(t *testing.T) {
+		app := newApp()
+		// An empty answer after "magento" means Magento 2.
+		_ = prompt(app, "no\n\n\nmagento\n\n")
+		require.Equal(t, nodeps.AppTypeMagento2, app.Type)
+
+		app = newApp()
+		_ = prompt(app, "no\n\n\nmagento\n1\n")
+		require.Equal(t, nodeps.AppTypeMagento, app.Type)
+
+		// Bedrock is its own type, with no second question.
+		app = newApp()
+		_ = prompt(app, "no\n\n\nwp-bedrock\n")
+		require.Equal(t, nodeps.AppTypeWPBedrock, app.Type)
+	})
+
+	t.Run("project type families", func(t *testing.T) {
+		families := ddevapp.ProjectTypeFamilies()
+		for _, family := range []string{nodeps.AppTypeDrupal, nodeps.AppTypeMagento, nodeps.AppTypeWordPress, nodeps.AppTypeWPBedrock, nodeps.AppTypeMaho, nodeps.AppTypeBackdrop} {
+			require.Contains(t, families, family)
+		}
+		for _, member := range []string{nodeps.AppTypeDrupal11, nodeps.AppTypeMagento2} {
+			require.NotContains(t, families, member)
+		}
+
+		versions, fallback := ddevapp.ProjectTypeVersions(nodeps.AppTypeDrupal)
+		require.Equal(t, []string{"6", "7", "8", "9", "10", "11", "12"}, versions)
+		require.Equal(t, "11", fallback)
+		versions, fallback = ddevapp.ProjectTypeVersions(nodeps.AppTypeMagento)
+		require.Equal(t, []string{"1", "2"}, versions)
+		require.Equal(t, "2", fallback)
+		versions, _ = ddevapp.ProjectTypeVersions(nodeps.AppTypeMaho)
+		require.Nil(t, versions)
+
+		for appType, want := range map[string][2]string{
+			nodeps.AppTypeDrupal10:  {nodeps.AppTypeDrupal, "10"},
+			nodeps.AppTypeMagento:   {nodeps.AppTypeMagento, "1"},
+			nodeps.AppTypeMagento2:  {nodeps.AppTypeMagento, "2"},
+			nodeps.AppTypeWordPress: {nodeps.AppTypeWordPress, ""},
+			nodeps.AppTypeWPBedrock: {nodeps.AppTypeWPBedrock, ""},
+			nodeps.AppTypeMaho:      {nodeps.AppTypeMaho, ""},
+		} {
+			family, option := ddevapp.SplitProjectType(appType)
+			require.Equal(t, want, [2]string{family, option}, appType)
+			require.Equal(t, appType, ddevapp.JoinProjectType(family, option))
+		}
+		require.Equal(t, "1 / OpenMage", ddevapp.ProjectTypeOptionDisplay(nodeps.AppTypeMagento, "1"))
+	})
+
+	t.Run("configured type", func(t *testing.T) {
+		app := newApp()
+		app.Type = nodeps.AppTypeDrupal11
+		require.Equal(t, nodeps.AppTypeDrupal11, app.SuggestedConfigChoices().Type)
+	})
+
+	t.Run("applied choices", func(t *testing.T) {
+		app := newApp()
+		choices := app.ConfigTypeDefaults(ddevapp.ConfigChoices{Name: "applied", Docroot: "web", Type: nodeps.AppTypeDrupal7})
+		require.Equal(t, nodeps.PHP82, choices.PHPVersion)
+		choices.Database = ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.Postgres17}
+		require.NoError(t, app.ApplyConfigChoices(choices))
+		require.Equal(t, choices, ddevapp.ConfigChoices{Name: app.Name, Docroot: app.Docroot, Type: app.Type, PHPVersion: app.PHPVersion, Database: app.Database, WebserverType: app.WebserverType})
+
+		choices.Name = "not_valid"
+		require.ErrorContains(t, newApp().ApplyConfigChoices(choices), "not a valid project name")
+	})
+
+	t.Run("kept database version", func(t *testing.T) {
+		app := newApp()
+		app.Database = ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.Postgres17}
+		_ = prompt(app, "no\n")
+		require.Equal(t, ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.Postgres17}, app.Database)
+	})
 }
 
 // TestConfigCommandProjectNormalization tests behavior when normalizing project names.
@@ -589,7 +759,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Create an example input buffer that writes the site name, accepts the
 		// default document root and provides a valid app type.
-		input := fmt.Sprintf("%s\n\ndrupal8", name)
+		input := fmt.Sprintf("no\n%s\n\ndrupal8", name)
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
@@ -648,7 +818,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Create an example input buffer that writes the site name, accepts the
 	// default document root and provides a valid app type.
-	input := fmt.Sprintf("%s\n\ndrupal8", name)
+	input := fmt.Sprintf("no\n%s\n\ndrupal8", name)
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 
@@ -1332,6 +1502,55 @@ func TestPostgresConfigOverride(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Equal(" 200\n\n", out, "out: %s, stderr: %s", out, stderr)
+}
+
+// TestPostgresSnapshotRestore restores a PostgreSQL 17 snapshot. In 15-17 the restore
+// writes to /etc/postgresql/conf.d, which upstream images give to root, not postgres.
+// It isn't skipped with GOTEST_SHORT, so it runs on macOS, where the host gid
+// (usually 20) is already taken in the image and the user gets another group;
+// TestDdevAllDatabases covers every version, but only where GOTEST_SHORT is unset.
+func TestPostgresSnapshotRestore(t *testing.T) {
+	origDir, _ := os.Getwd()
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(tmpDir, false)
+	require.NoError(t, err)
+	app.Name = t.Name()
+	app.Database = ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.Postgres17}
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	psql := func(sql string) (string, error) {
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: `psql -tA -c "` + sql + `"`})
+		if err != nil {
+			return out, fmt.Errorf("%v, stderr=%s", err, stderr)
+		}
+		return out, nil
+	}
+
+	_, err = psql("CREATE TABLE snapshot_restore_test (x int); INSERT INTO snapshot_restore_test VALUES (42);")
+	require.NoError(t, err)
+	_, err = app.Snapshot(t.Name(), false)
+	require.NoError(t, err)
+	_, err = psql("DROP TABLE snapshot_restore_test;")
+	require.NoError(t, err)
+
+	err = app.RestoreSnapshot(t.Name(), false)
+	require.NoError(t, err)
+	out, err := psql("SELECT x FROM snapshot_restore_test;")
+	require.NoError(t, err)
+	require.Equal(t, "42", strings.TrimRight(out, "\r\n"))
 }
 
 // TestExtraPackages tests to make sure that *extra_packages config.yaml directives

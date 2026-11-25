@@ -15,6 +15,8 @@
 package api
 
 // DaemonVersion holds version information reported by the daemon.
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/version.DaemonVersion] instead.
 type DaemonVersion struct {
 	Version    Version
 	Date       string

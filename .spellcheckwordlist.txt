@@ -142,6 +142,7 @@ OSs
 OpenMage
 OpenSearch
 OpenSSH
+OpenSSL
 OrbStack
 Packagist
 PECL
@@ -495,6 +496,7 @@ lose
 lsof
 lts
 macOS
+macOS's
 macos
 magento
 maho
@@ -669,6 +671,7 @@ snapshot's
 snapshotted
 snapshotting
 socio
+socktainer
 solr
 somefile
 sql

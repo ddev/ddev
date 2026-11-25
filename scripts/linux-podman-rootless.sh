@@ -30,9 +30,9 @@
 #
 # Environment variables:
 #   Name                    Default                     Effect when set
-#   PODMAN_SKIP_SMOKE_TEST  false                       true skips the three checks that start
-#                                                       a real container -- smoke test, image
-#                                                       load, healthcheck -- which are the slow
+#   PODMAN_SKIP_SMOKE_TEST  false                       true skips the checks that start a
+#                                                       real container -- builder start, smoke
+#                                                       test, image load, healthcheck -- the slow
 #                                                       ones, and the only proof the setup works
 #   BREW_PREFIX             /home/linuxbrew/.linuxbrew  Where a Homebrew podman, and the
 #                                                       policy.json it ships, are looked for
@@ -66,6 +66,10 @@ warnings=0
 DOCKERCHECK_STATUS="not run"
 IMAGELOAD_STATUS="not run"
 HEALTHCHECK_STATUS="not run"
+BUILDER_STATUS="not run"
+EXEC_STATUS="not run"
+# Set by check_buildx_builder, for hints that name the container to remove.
+DDEV_BUILDER_CONTAINER=""
 
 if [ -t 1 ]; then
   red=$'\033[31m'; yellow=$'\033[33m'; green=$'\033[32m'; reset=$'\033[0m'
@@ -1151,6 +1155,144 @@ check_buildx() {
   ok "buildx ${ver} (${path})"
 }
 
+# Runs `docker buildx` the way docker compose, and so `ddev start`, runs it.
+# Compose sets DOCKER_HOST to the active context's endpoint, and the docker CLI
+# treats any DOCKER_HOST as the "default" context. buildx then picks the builder
+# for "default", not the one named after your context, so `docker buildx` in a
+# shell and `ddev start` can use two different BuildKit containers.
+compose_buildx() {
+  local host
+  host="${DOCKER_HOST:-$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null)}"
+  DOCKER_HOST="${host}" DOCKER_CONTEXT="$(docker context show 2>/dev/null)" docker buildx "$@"
+}
+
+# Sets BX_NAME, BX_DRIVER, BX_NODE, BX_ENDPOINT, BX_STATUS and BX_ERROR from
+# `docker buildx inspect` text: builder fields first, then one block per node.
+# Only the first node matters; DDEV never sets up multi-node builders.
+parse_buildx_inspect() {
+  BX_NAME=""; BX_DRIVER=""; BX_NODE=""; BX_ENDPOINT=""; BX_STATUS=""; BX_ERROR=""
+  local line key value in_nodes=0
+  while IFS= read -r line; do
+    [ "${line}" = "Nodes:" ] && in_nodes=1 && continue
+    key="${line%%:*}"
+    value="$(printf '%s' "${line#*:}" | sed 's/^[[:space:]]*//')"
+    if [ "${in_nodes}" -eq 0 ]; then
+      case "${key}" in
+        Name) BX_NAME="${value}" ;;
+        Driver) BX_DRIVER="${value}" ;;
+      esac
+    else
+      case "${key}" in
+        Name) [ -n "${BX_NODE}" ] && break; BX_NODE="${value}" ;;
+        Endpoint) BX_ENDPOINT="${value}" ;;
+        Status) BX_STATUS="${value}" ;;
+        Error) BX_ERROR="${value}" ;;
+      esac
+    fi
+  done <<< "$1"
+}
+
+# Prints hints for a failed buildx run, recognising the failures this script
+# knows. The last lines of buildx output are usually BuildKit's replayed log
+# noise, so quote the lines that say "Error" rather than the tail.
+explain_buildx_error() {
+  local out="$1" errors
+  errors="$(printf '%s\n' "${out}" | grep -E '(^|[[:space:]])(Error|ERROR):' | tail -3)"
+  [ -z "${errors}" ] && errors="$(printf '%s\n' "${out}" | tail -3)"
+  hint "The errors it reported:"
+  printf '%s\n' "${errors}" | while IFS= read -r line; do hint "  ${line}"; done
+
+  if printf '%s' "${out}" | grep -q 'oom_score_adj'; then
+    hint "buildx starts its BuildKit container and then execs 'buildctl' inside it."
+    hint "That exec failed because crun could not set the exec process's"
+    hint "oom_score_adj, which is containers/crun#2466 (crun 1.31 with Podman 6.2.0 or"
+    hint "older). Removing the container does not help. The exec check below confirms"
+    hint "it and shows the fix."
+  elif printf '%s' "${out}" | grep -q 'booting buildkit'; then
+    hint "buildx could not start its BuildKit container, so no build can run. The"
+    hint "build itself never started. Removing the container often fixes it, because"
+    hint "buildx creates a fresh one on the next build:"
+    hint "  docker rm -f ${DDEV_BUILDER_CONTAINER:-<the buildx_buildkit_... container>}"
+  fi
+}
+
+# Podman has no BuildKit API of its own, so buildx runs BuildKit in a container
+# (the docker-container driver), one per builder: buildx_buildkit_<node>. That
+# container is created once and reused for every build. If it breaks, every
+# `ddev start` fails at "booting buildkit", while a plain `docker run` keeps
+# working. Inspect and start the builder DDEV uses, which is not necessarily the
+# one `docker buildx` in a shell uses (see compose_buildx).
+check_buildx_builder() {
+  heading "buildx builder (the one 'ddev start' builds with)"
+  if ! command -v docker >/dev/null 2>&1 || ! docker buildx version >/dev/null 2>&1; then
+    warn "skipped, this needs the buildx plugin the check above asks for"
+    return 0
+  fi
+
+  local out shell_name shell_node host
+  if [ -n "${BUILDX_BUILDER:-}" ]; then
+    warn "BUILDX_BUILDER=${BUILDX_BUILDER} is set, so every build, DDEV's too, uses it"
+    hint "Unset it unless you created that builder on purpose for this engine."
+  fi
+
+  # The builder a plain `docker buildx` in this shell uses, for comparison.
+  if out="$(docker buildx inspect 2>&1)"; then
+    parse_buildx_inspect "${out}"
+    shell_name="${BX_NAME}"; shell_node="${BX_NODE}"
+  fi
+
+  if ! out="$(compose_buildx inspect 2>&1)"; then
+    BUILDER_STATUS="FAIL (cannot inspect)"
+    fail "buildx cannot inspect the builder DDEV would use"
+    hint "$(printf '%s' "${out}" | tail -2)"
+    return 0
+  fi
+  parse_buildx_inspect "${out}"
+  if [ "${BX_DRIVER}" = "docker-container" ] && [ -n "${BX_NODE}" ]; then
+    DDEV_BUILDER_CONTAINER="buildx_buildkit_${BX_NODE}"
+  fi
+  ok "DDEV builds with builder '${BX_NAME}': driver ${BX_DRIVER:-?}, status ${BX_STATUS:-?}${DDEV_BUILDER_CONTAINER:+, container ${DDEV_BUILDER_CONTAINER}}"
+  [ -n "${BX_ERROR}" ] && hint "buildx reports an error for this builder: ${BX_ERROR}"
+  if [ -n "${shell_name}" ] && [ "${shell_name}" != "${BX_NAME}" ]; then
+    hint "'docker buildx' in this shell uses builder '${shell_name}' instead. That"
+    hint "is expected: DDEV builds through docker compose, which sets DOCKER_HOST,"
+    hint "and buildx then picks its 'default' builder. Each builder has its own"
+    hint "BuildKit container, so one can be broken while the other works. This check"
+    hint "and the image-load check below test DDEV's."
+    if [ "${BX_DRIVER}" = "docker-container" ] && [ -n "${shell_node}" ]; then
+      hint "(buildx_buildkit_${shell_node} is the shell's; ${DDEV_BUILDER_CONTAINER} is DDEV's.)"
+    fi
+  fi
+
+  # A builder pinned with `docker buildx use --global` can live on another engine,
+  # and then builds land there, out of reach of Podman.
+  host="${DOCKER_HOST:-$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null)}"
+  case "${BX_ENDPOINT}" in
+    unix://*|tcp://*|ssh://*)
+      if [ "${BX_ENDPOINT}" != "${host}" ]; then
+        fail "builder '${BX_NAME}' runs on ${BX_ENDPOINT}, but the active engine is ${host}"
+        hint "Its builds would run on another engine, not in Podman. Switch back with:"
+        hint "  docker buildx use --global default"
+      fi ;;
+  esac
+
+  if [ "${PODMAN_SKIP_SMOKE_TEST}" = "true" ]; then
+    BUILDER_STATUS="not started (${BX_NAME}, ${BX_DRIVER})"
+    ok "not starting the builder (PODMAN_SKIP_SMOKE_TEST=true)"
+    return 0
+  fi
+  # Inspect alone does not start the container, and a stopped one looks normal.
+  step "starting builder '${BX_NAME}' (the first start can take a minute)"
+  if out="$(compose_buildx inspect --bootstrap 2>&1)"; then
+    BUILDER_STATUS="ok (${BX_NAME}, ${BX_DRIVER})"
+    ok "builder '${BX_NAME}' started and answered"
+  else
+    BUILDER_STATUS="FAIL (${BX_NAME} will not start)"
+    fail "builder '${BX_NAME}' will not start, so every 'ddev start' fails at its build step"
+    explain_buildx_error "${out}"
+  fi
+}
+
 check_storage() {
   heading "Storage driver"
   local driver native
@@ -1200,7 +1342,7 @@ check_smoke_test() {
 # The load that follows a build applies the signature policy to a docker-archive,
 # so a policy rejecting that transport fails `ddev start` after the build has
 # fully succeeded. Nothing else here reaches that path: `podman run` loads no
-# archive, and `ddev debug dockercheck` builds without --load.
+# archive, and `ddev utility dockercheck` builds with the shell's builder.
 check_image_load() {
   heading "Image load (the step after a build)"
   if [ "${PODMAN_SKIP_SMOKE_TEST}" = "true" ]; then
@@ -1216,7 +1358,8 @@ check_image_load() {
 
   local tag="ddev-load-probe" ctx out
   ctx="$(mktemp -d)"
-  if out="$(printf 'FROM scratch\n' | docker buildx build --load -f - -t "${tag}" "${ctx}" 2>&1)"; then
+  # Through compose_buildx, so the build uses the same builder `ddev start` uses.
+  if out="$(printf 'FROM scratch\n' | compose_buildx build --load -f - -t "${tag}" "${ctx}" 2>&1)"; then
     IMAGELOAD_STATUS="ok"
     ok "buildx can build an image and load it into the engine"
   elif printf '%s' "${out}" | grep -q 'rejected by policy'; then
@@ -1228,14 +1371,47 @@ check_image_load() {
     hint "Fix it in $(active_policy_file): either allow the docker-archive and"
     hint "oci-archive transports buildx --load uses, or accept everything with"
     hint '  {"default": [{"type": "insecureAcceptAnything"}]}'
+  elif printf '%s' "${out}" | grep -q 'oom_score_adj\|booting buildkit'; then
+    IMAGELOAD_STATUS="FAIL (builder will not start)"
+    fail "the build never ran, because buildx could not start its BuildKit container"
+    explain_buildx_error "${out}"
   else
     IMAGELOAD_STATUS="FAIL"
-    fail "a built image could not be loaded into the engine"
-    hint "$(printf '%s' "${out}" | tail -3)"
+    fail "a trivial image could not be built and loaded into the engine"
+    explain_buildx_error "${out}"
   fi
 
   docker rmi -f "${tag}" >/dev/null 2>&1 || true
   rm -rf "${ctx}"
+}
+
+# Runs the probe's healthcheck by hand after the scheduled one failed, to show
+# the run's own error. `docker exec` goes through the Podman service, like the
+# compat API DDEV uses. `podman healthcheck run` is what the timer runs, but here
+# it runs from this shell, so its result can differ from the timer's.
+explain_healthcheck_by_hand() {
+  local name="$1" out rc all=""
+  printf '\n'
+  hint "Running the same steps by hand, to show their own errors:"
+  out="$(docker exec "${name}" true 2>&1)"; rc=$?; all="${out}"
+  if [ "${rc}" -eq 0 ]; then
+    hint "  docker exec ${name} true: ok, so exec through the Podman service works."
+  else
+    hint "  docker exec ${name} true: exit ${rc}: $(printf '%s' "${out}" | tail -1)"
+    hint "  Exec itself fails, so no healthcheck can run in any container."
+  fi
+  if command -v podman >/dev/null 2>&1; then
+    out="$(podman healthcheck run "${name}" 2>&1)"; rc=$?; all="${all}${out}"
+    if [ "${rc}" -eq 0 ]; then
+      hint "  podman healthcheck run ${name}: ok, so the check works when run from here;"
+      hint "  what fails is the scheduled run, or the environment the timer runs it in."
+    else
+      hint "  podman healthcheck run ${name}: exit ${rc}: $(printf '%s' "${out}" | tail -1)"
+    fi
+  fi
+  if printf '%s' "${all}" | grep -q 'oom_score_adj'; then
+    hint "  The oom_score_adj error is explained in the exec check above."
+  fi
 }
 
 # `ddev start` waits for each container's own HEALTHCHECK, so one that never runs
@@ -1324,9 +1500,83 @@ check_healthcheck() {
       hint "  systemctl --user list-timers --all | grep ${cid:0:12}"
       hint "  journalctl --user --since '-5min' | grep ${cid:0:12}"
     fi
+    explain_healthcheck_by_hand "${name}"
   fi
 
   docker rm -f "${name}" >/dev/null 2>&1 || true
+}
+
+# crun 1.31 applies an exec process's oom_score_adj, its "kill me first" score
+# when memory runs out (https://github.com/containers/crun/issues/2466). Podman
+# 6.2.0 and older ask for 0 for containers created through the Docker API, but
+# podman.service runs under the systemd user manager, which sets a floor of 100
+# that an unprivileged process cannot go below. So every exec through the Docker
+# API fails, and DDEV needs exec for two things: healthchecks, and buildx, which
+# execs `buildctl` to boot BuildKit. Exec into a probe the way DDEV does.
+check_exec() {
+  heading "Exec into a container (what healthchecks and buildx rely on)"
+  if [ "${PODMAN_SKIP_SMOKE_TEST}" = "true" ]; then
+    EXEC_STATUS="skipped"
+    ok "skipped (PODMAN_SKIP_SMOKE_TEST=true)"
+    return 0
+  fi
+  if ! command -v docker >/dev/null 2>&1; then
+    EXEC_STATUS="skipped (no docker CLI)"
+    warn "skipped, no docker CLI"
+    return 0
+  fi
+
+  local name="ddev-exec-probe" out rc runtime floor arch
+  docker rm -f "${name}" >/dev/null 2>&1 || true
+  if ! out="$(docker run -d --name "${name}" "${SMOKE_TEST_IMAGE}" sleep 60 2>&1)"; then
+    EXEC_STATUS="FAIL (probe container would not start)"
+    fail "could not start a container to test exec with"
+    hint "$(printf '%s' "${out}" | tail -2)"
+    return 0
+  fi
+  out="$(docker exec "${name}" true 2>&1)"; rc=$?
+  docker rm -f "${name}" >/dev/null 2>&1 || true
+
+  if [ "${rc}" -eq 0 ]; then
+    EXEC_STATUS="ok"
+    ok "docker exec into a running container works"
+    return 0
+  fi
+
+  runtime="$(podman info --format '{{.Host.OCIRuntime.Name}} {{.Host.OCIRuntime.Version}}' 2>/dev/null | head -1)"
+  if ! printf '%s' "${out}" | grep -q 'oom_score_adj'; then
+    EXEC_STATUS="FAIL"
+    fail "docker exec into a running container fails (exit ${rc})"
+    hint "$(printf '%s' "${out}" | tail -2)"
+    hint "Healthchecks and buildx both need exec, so 'ddev start' cannot work."
+    hint "See the server side with: journalctl --user -u podman.service --since '-5min'"
+    return 0
+  fi
+
+  EXEC_STATUS="FAIL (crun oom_score_adj, containers/crun#2466)"
+  floor="$(systemctl show "user@$(id -u).service" -p OOMScoreAdjust --value 2>/dev/null || true)"
+  fail "docker exec fails: crun cannot set the exec process's oom_score_adj"
+  hint "$(printf '%s' "${out}" | tail -1)"
+  hint "Your runtime is ${runtime:-unknown}. crun 1.31 started applying the score Podman"
+  hint "asks for in exec, and Podman 6.2.0 and older ask for 0. podman.service runs"
+  hint "under the systemd user manager, whose floor is ${floor:-100}, so the write is"
+  hint "refused and every exec fails. Healthchecks then never pass, so 'ddev start'"
+  hint "times out, and buildx fails at 'booting buildkit'. Nothing in your setup is"
+  hint "wrong: https://github.com/containers/crun/issues/2466"
+  hint "Podman 6.2.1 fixes it, clamping the score the way it already does on start."
+  hint "Upgrade Podman (with Homebrew: brew upgrade podman). If you can't upgrade yet,"
+  hint "use crun 1.30.1 from crun's static release, leaving the system package alone:"
+  case "$(uname -m)" in aarch64|arm64) arch=arm64 ;; *) arch=amd64 ;; esac
+  hint "  mkdir -p ~/.local/lib/ddev-crun ~/.config/containers/containers.conf.d"
+  hint "  curl -fsSL -o ~/.local/lib/ddev-crun/crun https://github.com/containers/crun/releases/download/1.30.1/crun-1.30.1-linux-${arch}"
+  # Only the amd64 checksum is known here.
+  [ "${arch}" = "amd64" ] &&
+    hint "  echo '86d1e6a0e76945975d3aebfab39cbc6a26eea15f1c3fc66b6776d19e5dc346a0  ${HOME}/.local/lib/ddev-crun/crun' | sha256sum -c -"
+  hint "  chmod +x ~/.local/lib/ddev-crun/crun"
+  hint "  printf '[engine.runtimes]\\ncrun = [\"%s\"]\\n' ~/.local/lib/ddev-crun/crun > ~/.config/containers/containers.conf.d/zz-crun-pin.conf"
+  hint "  systemctl --user restart podman.service"
+  hint "Delete zz-crun-pin.conf once you have Podman 6.2.1 or later."
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -1412,7 +1662,17 @@ do_report() {
   sec "docker front end"
   run "docker context ls"
   run "docker buildx version"
+  # The shell's builders, then the one docker compose (and so DDEV) uses.
+  run "docker buildx ls"
+  run "compose_buildx inspect | sed -n '1,/^Status/p'"
+  run "podman ps -a --filter name=buildx_buildkit --format '{{.Names}} {{.Status}} created {{.CreatedHuman}}'"
+
   run "systemctl is-active docker.service; systemctl --user is-active docker.service"
+
+  sec "exec and oom_score_adj (containers/crun#2466)"
+  run "podman info --format '{{.Host.OCIRuntime.Name}} {{.Host.OCIRuntime.Version}}' | head -1"
+  run "systemctl show user@\$(id -u).service -p OOMScoreAdjust"
+  run "for p in \$(pgrep -u \$(id -u) -f 'podman.* system service'); do echo \"\$p oom_score_adj=\$(cat /proc/\$p/oom_score_adj)\"; done"
 
   sec "storage"
   run "podman info --format 'driver={{.Store.GraphDriverName}} nativeOverlayDiff={{index .Store.GraphStatus \"Native Overlay Diff\"}}'"
@@ -1509,7 +1769,9 @@ report_summary() {
   kv "userns"        "apparmor_restrict_unprivileged_userns=${userns}"
   kv "docker ctx"    "${ctx:-?} (buildx ${bx:-none})"
   kv "dockercheck"   "${DOCKERCHECK_STATUS}"
+  kv "ddev builder"  "${BUILDER_STATUS}"
   kv "image load"    "${IMAGELOAD_STATUS}"
+  kv "exec"          "${EXEC_STATUS}"
   kv "healthchecks"  "${HEALTHCHECK_STATUS}"
   kv "podman -tags"  "$(podman_build_tags || echo 'unknown')"
   kv "policy.json"   "$(active_policy_file 2>/dev/null || echo 'none -- pulls will fail with "no policy.json file found"')"
@@ -1537,8 +1799,10 @@ run_checks() {
   check_subuid
   check_docker_cli
   check_buildx
+  check_buildx_builder
   check_smoke_test
   check_image_load
+  check_exec
   check_healthcheck
   set -o errexit
 

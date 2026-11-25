@@ -9,7 +9,6 @@ import (
 
 	"github.com/DefangLabs/secret-detector/pkg/dataformat"
 	"github.com/DefangLabs/secret-detector/pkg/secrets"
-	"github.com/inhies/go-bytesize"
 )
 
 const (
@@ -90,8 +89,7 @@ func (s *scanner) ScanFile(path string) ([]secrets.DetectedSecret, error) {
 		return nil, err
 	}
 	if !s.validateThreshold(stat.Size()) {
-		byteSize := bytesize.New(float64(stat.Size()))
-		return []secrets.DetectedSecret{{Type: SizeThresholdViolationType, Key: path, Value: byteSize.String()}}, nil
+		return []secrets.DetectedSecret{{Type: SizeThresholdViolationType, Key: path, Value: formatByteSize(stat.Size())}}, nil
 	}
 
 	return s.ScanWithFormat(f, dataformat.FromPath(path))
@@ -109,8 +107,7 @@ func (s *scanner) ScanFileReader(in io.Reader, path string, size int64) ([]secre
 
 	// Check the threshold _before_ materializing the data in memory to avoid potential OOMs with large text files
 	if !s.validateThreshold(size) {
-		byteSize := bytesize.New(float64(size))
-		return []secrets.DetectedSecret{{Type: SizeThresholdViolationType, Key: path, Value: byteSize.String()}}, nil
+		return []secrets.DetectedSecret{{Type: SizeThresholdViolationType, Key: path, Value: formatByteSize(size)}}, nil
 	}
 
 	remainingStr, err := readerToString(in)
@@ -166,9 +163,8 @@ func (s *scanner) scan(in string, transformers []secrets.Transformer) (res []sec
 	}
 
 	// a file that exceeds the threshold size is considered as a suspicious file, so a detection is returned
-	if !s.validateThreshold(int64(len(in))) {
-		byteSize := bytesize.New(float64(len(in)))
-		return []secrets.DetectedSecret{{Type: SizeThresholdViolationType, Value: byteSize.String()}}, nil
+	if size := int64(len(in)); !s.validateThreshold(size) {
+		return []secrets.DetectedSecret{{Type: SizeThresholdViolationType, Value: formatByteSize(size)}}, nil
 	}
 
 	if keyValueMap, isTransformed := transform(in, transformers); isTransformed {
@@ -254,4 +250,19 @@ func reduceDuplicateDetections(detections []secrets.DetectedSecret) []secrets.De
 		}
 	}
 	return res
+}
+
+// formatByteSize formats size as a human-readable byte size using powers of
+// 1024 and suffixes such as KB, MB, and GB, with two decimal places.
+func formatByteSize(size int64) string {
+	units := [...]string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
+
+	value := float64(size)
+	unit := 0
+	for value >= 1024 && unit < len(units)-1 {
+		value /= 1024
+		unit++
+	}
+
+	return fmt.Sprintf("%.2f%s", value, units[unit])
 }

@@ -1,6 +1,5 @@
 # INI
 
-[![GitHub Workflow Status](https://img.shields.io/github/checks-status/go-ini/ini/main?logo=github&style=for-the-badge)](https://github.com/go-ini/ini/actions?query=branch%3Amain)
 [![GoDoc](https://img.shields.io/badge/GoDoc-Reference-blue?style=for-the-badge&logo=go)](https://pkg.go.dev/github.com/go-ini/ini?tab=doc)
 
 ![](https://avatars0.githubusercontent.com/u/10216035?v=3&s=200)
@@ -37,8 +36,6 @@ $ go get gopkg.in/ini.v1@latest
 ## Getting Help
 
 - [Getting Started](https://ini.unknwon.io/docs/intro/getting_started)
-- [API Documentation](https://gowalker.org/gopkg.in/ini.v1)
-- 中国大陆镜像：https://ini.unknwon.cn
 
 ## License
 

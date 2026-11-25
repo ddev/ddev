@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
 )
 
 var inputScanner = bufio.NewScanner(os.Stdin)
@@ -18,7 +19,14 @@ func SetInputScanner(scanner *bufio.Scanner) {
 
 // GetInput reads input from an input buffer and returns the result as a string.
 func GetInput(defaultValue string) string {
-	inputScanner.Scan()
+	value, _ := GetInputOK(defaultValue)
+	return value
+}
+
+// GetInputOK is GetInput that also reports whether a line was read. False means
+// the input has ended, so asking again can only return defaultValue again.
+func GetInputOK(defaultValue string) (string, bool) {
+	ok := inputScanner.Scan()
 	input := inputScanner.Text()
 
 	// If the value from the input buffer is blank, then use the default instead.
@@ -27,7 +35,7 @@ func GetInput(defaultValue string) string {
 		value = defaultValue
 	}
 
-	return value
+	return value, ok
 }
 
 // GetQuotedInput reads input from an input buffer in single or double quotes and returns the result as a string.
@@ -48,6 +56,30 @@ func Prompt(prompt string, defaultValue string) string {
 	fullPrompt := fmt.Sprintf("%s (%s)", prompt, defaultValue)
 	fmt.Print(fullPrompt + ": ")
 	return GetInput(defaultValue)
+}
+
+// PromptChoice asks for one of choices, named by what (like "project type"),
+// until it gets one, and returns it. An empty answer means defaultValue.
+// If the input ends without a valid answer it returns defaultValue as is.
+func PromptChoice(what string, choices []string, defaultValue string) string {
+	return PromptChoiceFrom(what, choices, choices, defaultValue)
+}
+
+// PromptChoiceFrom is PromptChoice that lists shown but accepts any of choices.
+func PromptChoiceFrom(what string, shown []string, choices []string, defaultValue string) string {
+	for {
+		fmt.Printf("%s%s [%s] (%s): ", strings.ToUpper(what[:1]), what[1:], strings.Join(shown, ", "), defaultValue)
+		answer, ok := GetInputOK(defaultValue)
+		for _, choice := range choices {
+			if strings.EqualFold(choice, answer) {
+				return choice
+			}
+		}
+		if !ok {
+			return defaultValue
+		}
+		output.UserOut.Print(ColorizeText(fmt.Sprintf("'%s' is not a valid %s", answer, what), "yellow"))
+	}
 }
 
 // Confirm handles the asking and interpreting of a basic yes/no question.

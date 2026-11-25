@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/compose-spec/compose-go/v2/consts"
 	"github.com/compose-spec/compose-go/v2/override"
@@ -27,8 +28,17 @@ import (
 	"github.com/compose-spec/compose-go/v2/types"
 )
 
+// extendable are the top-level sections whose entries can extend another entry
+// of the same section: a service extends a service, a job extends a job.
+var extendable = []string{"services", "jobs"}
+
+// kindOf returns the singular of an extendable section, for error messages.
+func kindOf(section string) string {
+	return strings.TrimSuffix(section, "s")
+}
+
 func ApplyExtends(ctx context.Context, dict map[string]any, opts *Options, tracker *cycleTracker, post PostProcessor) error {
-	for _, key := range []string{"services", "jobs"} {
+	for _, key := range extendable {
 		a, ok := dict[key]
 		if !ok {
 			continue
@@ -38,7 +48,7 @@ func ApplyExtends(ctx context.Context, dict map[string]any, opts *Options, track
 			return fmt.Errorf("%s must be a mapping", key)
 		}
 		for name := range entries {
-			merged, err := applyServiceExtends(ctx, name, entries, opts, tracker, post)
+			merged, err := applyServiceExtends(ctx, key, name, entries, opts, tracker, post)
 			if err != nil {
 				return err
 			}
@@ -49,14 +59,16 @@ func ApplyExtends(ctx context.Context, dict map[string]any, opts *Options, track
 	return nil
 }
 
-func applyServiceExtends(ctx context.Context, name string, services map[string]any, opts *Options, tracker *cycleTracker, post PostProcessor) (any, error) {
+// applyServiceExtends resolves the extends of the entry name of the section
+// (services or jobs), among the entries of that section.
+func applyServiceExtends(ctx context.Context, section, name string, services map[string]any, opts *Options, tracker *cycleTracker, post PostProcessor) (any, error) {
 	s := services[name]
 	if s == nil {
 		return nil, nil
 	}
 	service, ok := s.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("services.%s must be a mapping", name)
+		return nil, fmt.Errorf("%s.%s must be a mapping", section, name)
 	}
 	extends, ok := service["extends"]
 	if !ok {
@@ -87,8 +99,11 @@ func applyServiceExtends(ctx context.Context, name string, services map[string]a
 	)
 
 	if file != nil {
-		refFilename := file.(string)
-		services, processor, err = getExtendsBaseFromFile(ctx, name, ref, filename, refFilename, opts, tracker)
+		refFilename, ok := file.(string)
+		if !ok {
+			return nil, fmt.Errorf("extends.%s.file must be a string", name)
+		}
+		services, processor, err = getExtendsBaseFromFile(ctx, section, name, ref, filename, refFilename, opts, tracker)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +117,7 @@ func applyServiceExtends(ctx context.Context, name string, services map[string]a
 	} else {
 		_, ok := services[ref]
 		if !ok {
-			return nil, fmt.Errorf("cannot extend service %q in %s: service %q not found", name, filename, ref)
+			return nil, fmt.Errorf("cannot extend %s %q in %s: %s %q not found", kindOf(section), name, filename, kindOf(section), ref)
 		}
 	}
 
@@ -112,7 +127,7 @@ func applyServiceExtends(ctx context.Context, name string, services map[string]a
 	}
 
 	// recursively apply `extends`
-	base, err = applyServiceExtends(ctx, ref, services, opts, tracker, processor)
+	base, err = applyServiceExtends(ctx, section, ref, services, opts, tracker, processor)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +138,7 @@ func applyServiceExtends(ctx context.Context, name string, services map[string]a
 	source := deepClone(base).(map[string]any)
 
 	err = post.Apply(map[string]any{
-		"services": map[string]any{
+		section: map[string]any{
 			name: source,
 		},
 	})
@@ -147,9 +162,12 @@ type extendsCacheKey struct{}
 type extendsRef struct {
 	path       string
 	workingDir string
+	section    string
 }
 
 type extendsBase struct {
+	// services are the entries of the section of the file the extending entry
+	// belongs to: the services of a service, the jobs of a job
 	services  map[string]any
 	processor PostProcessor
 }
@@ -169,7 +187,7 @@ func extendsCache(ctx context.Context) map[extendsRef]extendsBase {
 
 func getExtendsBaseFromFile(
 	ctx context.Context,
-	name, ref string,
+	section, name, ref string,
 	path, refPath string,
 	opts *Options,
 	ct *cycleTracker,
@@ -185,14 +203,14 @@ func getExtendsBaseFromFile(
 		relworkingdir := loader.Dir(refPath)
 
 		cache := extendsCache(ctx)
-		cacheKey := extendsRef{path: local, workingDir: relworkingdir}
+		cacheKey := extendsRef{path: local, workingDir: relworkingdir, section: section}
 		base, hit := cache[cacheKey]
 		if hit {
 			// hand out a copy: resolving an extends chain writes merged
 			// services back into this map (see applyServiceExtends)
 			base.services = deepClone(base.services).(map[string]any)
 		} else {
-			base, err = loadExtendsBase(ctx, name, local, relworkingdir, opts, ct)
+			base, err = loadExtendsBase(ctx, section, name, local, relworkingdir, opts, ct)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -206,9 +224,11 @@ func getExtendsBaseFromFile(
 
 		if _, ok := base.services[ref]; !ok {
 			return nil, nil, fmt.Errorf(
-				"cannot extend service %q in %s: service %q not found in %s",
+				"cannot extend %s %q in %s: %s %q not found in %s",
+				kindOf(section),
 				name,
 				path,
+				kindOf(section),
 				ref,
 				refPath,
 			)
@@ -218,7 +238,7 @@ func getExtendsBaseFromFile(
 	return nil, nil, fmt.Errorf("cannot read %s", refPath)
 }
 
-func loadExtendsBase(ctx context.Context, name, local, relworkingdir string, opts *Options, ct *cycleTracker) (extendsBase, error) {
+func loadExtendsBase(ctx context.Context, section, name, local, relworkingdir string, opts *Options, ct *cycleTracker) (extendsBase, error) {
 	extendsOpts := opts.clone()
 	// replace localResourceLoader with a new flavour, using extended file base path
 	extendsOpts.ResourceLoaders = append(opts.RemoteResourceLoaders(), localResourceLoader{
@@ -236,13 +256,13 @@ func loadExtendsBase(ctx context.Context, name, local, relworkingdir string, opt
 	if err != nil {
 		return extendsBase{}, err
 	}
-	m, ok := source["services"]
+	m, ok := source[section]
 	if !ok {
-		return extendsBase{}, fmt.Errorf("cannot extend service %q in %s: no services section", name, local)
+		return extendsBase{}, fmt.Errorf("cannot extend %s %q in %s: no %s section", kindOf(section), name, local, section)
 	}
 	services, ok := m.(map[string]any)
 	if !ok {
-		return extendsBase{}, fmt.Errorf("cannot extend service %q in %s: services must be a mapping", name, local)
+		return extendsBase{}, fmt.Errorf("cannot extend %s %q in %s: %s must be a mapping", kindOf(section), name, local, section)
 	}
 
 	var remotes []paths.RemoteResource

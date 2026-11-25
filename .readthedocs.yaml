@@ -10,6 +10,9 @@ build:
   tools:
     python: "3.14"
   jobs:
+    # Read the Docs clones shallow; full history gives accurate "Last update" dates
+    post_checkout:
+      - git fetch --unshallow || true
     install:
       - pip install -r docs/requirements.txt
       - 'sed -i "s|site_url:.*|site_url: $READTHEDOCS_CANONICAL_URL|" mkdocs.yml'

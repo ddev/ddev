@@ -35,7 +35,8 @@ rules below by hand. With it:
   change other files there. Editing a `.md` file lints and fixes that file.
 - `git push` asks for approval every time, and a `pre-push` hook in
   `.claude/git-hooks/` refuses pushes to `ddev/ddev`, deletions, and
-  non-fast-forwards.
+  anything but a branch. Force-pushes to a fork pass the hook; plain
+  `--force`, `-f`, and `+<refspec>` are denied, so use `--force-with-lease`.
 - Common forms of `docker push`, `go build`, and clearing `GOTEST_SHORT` are
   denied; the rules below still apply to any other form. A denied `go build`
   returns a message that says to use `make` instead.
@@ -71,6 +72,11 @@ make testpkg TESTARGS="-run TestName"     # Subset of package tests
 make testcmd TESTARGS="-run TestName"     # Command tests
 make quickstart-test                      # Builds, then the Bats docs tests
 ```
+
+Make expands `$` in `TESTARGS`, so `-run '^TestX$'` loses its closing quote,
+the shell exits with code 2, and no test runs. Join names with `|`, as in
+`-run 'TestA|TestB'`, or write `$$` for each `$`. After a run, check for
+`--- PASS` or `--- FAIL` lines, not only the exit status.
 
 **Run only the tests relevant to your change,** with `GOTEST_SHORT=true` and
 `DDEV_NO_INSTRUMENTATION=true`. Never clear `GOTEST_SHORT`, and do not run
@@ -181,10 +187,33 @@ delete the word, and if that changes the meaning, the claim needed evidence.
 **Commit locally; push only to a fork, with approval.** Committing, branching,
 and amending local commits are expected. Push a branch only after the user
 approves that push, only to a fork such as `rfay/ddev`, **never to
-`ddev/ddev`**, and never with `--force`, `--delete`, or `--no-verify`. **Never
+`ddev/ddev`**, and never with `--delete` or `--no-verify`. Force-pushing is
+allowed only to the task's own branch on the fork, for example after a rebase
+or an amend on a PR branch; use `--force-with-lease`, not `--force`, and say
+in the approval request that the push rewrites the branch. **Never
 run `docker push`.** When there is no fork to push to, finish at the commit,
 report which commits are unpushed, and say the next step needs the maintainer
 to push.
+
+**Make each push easy to approve.** The user decides from the command text, so
+a push must read the way they would type it by hand:
+
+- Setup is its own step, never combined with a push. Find the fork with
+  `git remote -v`. If there is none, add it alone, named for its owner:
+  `git remote add <owner> <fork URL>`. Use whatever URL scheme the
+  environment's instructions name. Otherwise, use the scheme `origin` uses.
+- Push with one plain command that names the remote and branch, run from the
+  checkout: `git push -u <remote> <branch>` for a new branch, then
+  `git push <remote> <branch>`, or `git push --force-with-lease <remote>
+  <branch>` after a rebase or amend. Don't use `&&`, `;`, pipes, loops,
+  `sleep`, variables, subshells, `cd`, `bash -c`, or `git -C`, which the
+  `ask` rule can't see.
+- Right before the push, say in a line or two which branch is going to which
+  remote URL, list the commits (from a separate
+  `git log --oneline <remote>/<branch>..HEAD`, or against the base for a new
+  branch), and say whether it rewrites the branch and why.
+- On a network error, report it and run the same command again as a new
+  call. Never write a retry loop.
 
 When creating a branch, use `YYYYMMDD_<username>_<short_description>`, for
 example `20250108_rfay_fix_networking`. Create one from upstream rather than
@@ -203,9 +232,19 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 type is one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`,
 `refactor`, `style`, or `test`. Write a commit message, PR, or issue with the
 `/ddev:commit` skill from [ddev/agent-skills](https://github.com/ddev/agent-skills).
-Install it in Claude Code with
+`.claude/settings.json` declares that marketplace and its `ddev` plugin, so
+Claude Code sets them up after you trust this folder. Otherwise run
 `claude plugin install ddev --marketplace ddev/agent-skills`. Without it,
 follow the organization patterns linked above.
+
+**Pass commit messages and PR bodies through a file.** Write the text to a
+file with the editor tool, then use `git commit -F <file>` or
+`--body-file <file>`, never `-m` or a heredoc inside a shell string. Inside
+double quotes, such as `bash -c "..."`, backticks and `$(...)` run the
+command they quote. A message that quoted a token command that way once
+pushed a maintainer's GitHub token. **Never run a command that prints a
+credential**, such as `gh auth token` or `git credential fill`, even to check
+that one exists.
 
 ## Environment
 

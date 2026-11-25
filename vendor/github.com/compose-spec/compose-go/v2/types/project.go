@@ -698,8 +698,11 @@ func (p *Project) WithServicesDisabled(names ...string) *Project {
 // It returns a new Project instance with the changes and keep the original Project unchanged.
 // Besides the service image, this also resolves the images services depend on:
 //   - pre_start hook images, which run as ephemeral init containers with their own image
-//   - `type: image` volume sources — source is always a docker image reference, not
-//     a reference to another service (there is no such thing in the Compose Spec)
+//   - `type: image` volume sources, of the services and of their pre_start hooks — source is
+//     always a docker image reference, not a reference to another service (there is no such
+//     thing in the Compose Spec)
+//
+// The jobs are resolved the same way: their image, and their `type: image` volume sources.
 func (p *Project) WithImagesResolved(resolver func(named reference.Named) (godigest.Digest, error)) (*Project, error) {
 	// Deduplicate resolutions per raw image string across the whole call, on two axes:
 	//   - cache (sync.Map) memoizes results for the whole call, so images resolved at
@@ -733,33 +736,63 @@ func (p *Project) WithImagesResolved(resolver func(named reference.Named) (godig
 		}
 		return r.(string), nil
 	}
-	return p.WithServicesTransform(func(_ string, service ServiceConfig) (ServiceConfig, error) {
+	resolved, err := p.WithServicesTransform(func(_ string, service ServiceConfig) (ServiceConfig, error) {
 		image, err := resolve(service.Image)
 		if err != nil {
 			return service, err
 		}
 		service.Image = image
 
-		for i, hook := range service.PreStart {
-			image, err := resolve(hook.Image)
-			if err != nil {
+		for i := range service.PreStart {
+			if err := resolveContainerImages(&service.PreStart[i].ContainerSpec, resolve); err != nil {
 				return service, err
 			}
-			service.PreStart[i].Image = image
 		}
 
-		for i, vol := range service.Volumes {
-			if vol.Type != VolumeTypeImage {
-				continue
-			}
-			image, err := resolve(vol.Source)
-			if err != nil {
-				return service, err
-			}
-			service.Volumes[i].Source = image
+		if err := resolveVolumeImages(service.Volumes, resolve); err != nil {
+			return service, err
 		}
 		return service, nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// resolved is a copy of the project: its jobs can be updated in place
+	for name, job := range resolved.Jobs {
+		if err := resolveContainerImages(&job.ContainerSpec, resolve); err != nil {
+			return nil, err
+		}
+		resolved.Jobs[name] = job
+	}
+	return resolved, nil
+}
+
+// resolveContainerImages resolves the image of a container specification, and the
+// `type: image` volumes it mounts.
+func resolveContainerImages(spec *ContainerSpec, resolve func(string) (string, error)) error {
+	image, err := resolve(spec.Image)
+	if err != nil {
+		return err
+	}
+	spec.Image = image
+	return resolveVolumeImages(spec.Volumes, resolve)
+}
+
+// resolveVolumeImages resolves the source of the `type: image` volumes, which is
+// always an image reference.
+func resolveVolumeImages(volumes []ServiceVolumeConfig, resolve func(string) (string, error)) error {
+	for i, vol := range volumes {
+		if vol.Type != VolumeTypeImage {
+			continue
+		}
+		image, err := resolve(vol.Source)
+		if err != nil {
+			return err
+		}
+		volumes[i].Source = image
+	}
+	return nil
 }
 
 // resolveImageDigest returns image with its digest resolved by resolver, unless

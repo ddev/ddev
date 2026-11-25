@@ -57,18 +57,18 @@ func TestMailpit(t *testing.T) {
 		Service: "web",
 		Cmd:     "composer install",
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "stdout='%s' stderr='%s'", stdout, stderr)
 	assert.Contains(stderr, "No composer.lock file present. Updating dependencies", "stdout='%s' stderr='%s'", stdout, stderr)
 
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 
 	expectation := "Testing DDEV Mailpit on default ports"
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     `php send_email.php "` + expectation + `"`,
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "stdout='%s' stderr='%s'", stdout, stderr)
 	assert.Contains(stdout, "Message sent!")
 
 	// See if we got the mail.
@@ -102,11 +102,11 @@ func TestMailpit(t *testing.T) {
 	require.NoError(t, err)
 
 	expectation = fmt.Sprintf("Testing DDEV Mailpit on global ports %v and %v", globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort, globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort)
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     `php send_email.php "` + expectation + `"`,
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "stdout='%s' stderr='%s'", stdout, stderr)
 	assert.Contains(stdout, "Message sent!")
 
 	desc, err = app.Describe(true)
@@ -134,11 +134,11 @@ func TestMailpit(t *testing.T) {
 	require.NoError(t, err)
 
 	expectation = fmt.Sprintf("Testing DDEV Mailpit on project-overridden ports %v and %v", app.MailpitHTTPPort, app.MailpitHTTPSPort)
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     `php send_email.php "` + expectation + `"`,
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "stdout='%s' stderr='%s'", stdout, stderr)
 	assert.Contains(stdout, "Message sent!")
 
 	desc, err = app.Describe(true)

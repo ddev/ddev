@@ -33,6 +33,7 @@ import (
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/distribution/reference"
@@ -99,7 +100,7 @@ type DdevApp struct {
 	DBImage                   string                `yaml:"dbimage,omitempty"`
 	RouterHTTPPort            string                `yaml:"router_http_port,omitempty"`
 	RouterHTTPSPort           string                `yaml:"router_https_port,omitempty"`
-	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
+	XdebugEnabled             bool                  `yaml:"xdebug_enabled,omitempty"`
 	NoProjectMount            bool                  `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
@@ -658,6 +659,11 @@ func (app *DdevApp) GetPublishedPortForPrivatePort(serviceName string, privatePo
 // GetOmittedContainers returns full list of global and local omitted containers
 func (app *DdevApp) GetOmittedContainers() []string {
 	omitted := slices.Concat(app.OmitContainersGlobal, app.OmitContainers)
+	// web can't share a volume with ddev-ssh-agent's VM or reach a socket in it;
+	// it mounts the host's agent instead (AppleContainerSSHAgentSocket).
+	if dockerutil.IsAppleContainer() && !slices.Contains(omitted, SSHAuthName) {
+		omitted = append(omitted, SSHAuthName)
+	}
 	return omitted
 }
 
@@ -2187,6 +2193,14 @@ func (app *DdevApp) start(o StartOptions) error {
 		}
 	}
 
+	// The relayed agent socket belongs to root, with the host socket's mode
+	// (0600 for most agents), so the web user couldn't connect.
+	if AppleContainerSSHAgentSocket() != "" {
+		if _, stderr, err := app.Exec(&ExecOpts{Cmd: "chmod 0666 /home/.ssh-agent/socket", User: "root"}); err != nil {
+			util.Warning("Unable to open the SSH agent socket to the web user: %v %s", err, stderr)
+		}
+	}
+
 	// Wait for web/db containers to become healthy
 	dependers := []string{"web"}
 	if !app.IsDBOmitted() {
@@ -3418,6 +3432,7 @@ func (app *DdevApp) Pause() error {
 		if stopErr != nil {
 			return stopErr
 		}
+		defer dockerutil.CloseComposeService(stopSvc)
 		return stopSvc.Stop(stopCtx, stopProject.Name, api.StopOptions{Project: stopProject})
 	}(); err != nil {
 		return err
@@ -4077,17 +4092,14 @@ func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 		return port, nil
 	}
 
-	// If standard method fails and it's a generic webserver with extra exposed ports
+	// A generic webserver serves the router's HTTP port from WebExtraExposedPorts[0],
+	// see AssignRouterPortsToGenericWebserverPorts. Don't match on its http_port,
+	// because a busy router port replaces it with a substitute port on start.
 	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
-		for _, extraPort := range app.WebExtraExposedPorts {
-			// Check only ports mapped to HTTP (port 80)
-			if extraPort.HTTPPort == 80 {
-				containerPort := uint16(extraPort.WebContainerPort)
-				publishedPort, err := app.GetPublishedPortForPrivatePort("web", containerPort)
-				if err == nil && publishedPort != 0 {
-					return publishedPort, nil
-				}
-			}
+		containerPort := uint16(app.WebExtraExposedPorts[0].WebContainerPort)
+		publishedPort, err := app.GetPublishedPortForPrivatePort("web", containerPort)
+		if err == nil && publishedPort != 0 {
+			return publishedPort, nil
 		}
 	}
 
@@ -4323,22 +4335,26 @@ func GetContainer(app *DdevApp, service string) (*container.Summary, error) {
 	return c, nil
 }
 
-// FormatSiteStatus formats "paused" or "running" with color
+// FormatSiteStatus formats a project or service status for a table, with a
+// symbol and color as in ddev tui, so states differ by shape as well as
+// color. Stopped is normal, so only its symbol is gray, and its text stays
+// readable in themes where gray is not.
 func FormatSiteStatus(status string) string {
-	if status == SiteRunning {
+	if status == SiteRunning || status == string(container.Healthy) {
 		status = "OK"
 	}
-	formattedStatus := status
-
-	switch {
-	case strings.Contains(status, SitePaused):
-		formattedStatus = util.ColorizeText(formattedStatus, "yellow")
-	case slices.Contains([]string{SiteStopped, SiteDirMissing, SiteConfigMissing, SiteUnhealthy, "exited"}, status):
-		formattedStatus = util.ColorizeText(formattedStatus, "red")
-	default:
-		formattedStatus = util.ColorizeText(formattedStatus, "green")
+	if !styles.StylingEnabled() {
+		return status
 	}
-	return formattedStatus
+	switch {
+	case strings.Contains(status, SitePaused), strings.HasPrefix(status, SiteStarting):
+		return styles.Warning().Render("◐ " + status)
+	case status == SiteStopped:
+		return styles.Muted().Render("○") + " " + status
+	case slices.Contains([]string{SiteDirMissing, SiteConfigMissing, SiteUnhealthy, "exited"}, status):
+		return styles.Bad().Render("✗ " + status)
+	}
+	return styles.Good().Render("● " + status)
 }
 
 // HasConfigNameOverride checks if the app name should be different,

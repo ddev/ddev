@@ -1,3 +1,5 @@
+DDEV creates CMS settings files for your projects, and its commands list projects, remove them, and import their databases and files.
+
 ## Configuration Files
 
 The [`ddev config`](../usage/commands.md#config) and `ddev start` commands attempt to create a CMS-specific settings file pre-populated with DDEV credentials. If you don't want DDEV to do this, set the [`disable_settings_management`](../configuration/config.md#disable_settings_management) config option to `true`.
@@ -50,51 +52,48 @@ If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating
 Run [`ddev list`](../usage/commands.md#list) or `ddev list --active-only` current projects.
 
 ```
-➜  ddev list
- NAME            STATUS        LOCATION                    URL                           TYPE
- d10             stopped       ~/workspace/d10                                           drupal10
- drup            running (ok)  ~/workspace/drup            https://drup.ddev.site        drupal
- my-cakephp-app  stopped       ~/workspace/my-cakephp-app                                cakephp
- Router          healthy       ~/.ddev                     http://127.0.0.1:10999        traefik
-```
-
-```
-
-➜  ddev list --active-only
- NAME        STATUS        LOCATION                URL                           TYPE
- drup        running (ok)  ~/workspace/drup        https://drup.ddev.site        drupal
- Router      healthy       ~/.ddev                 http://127.0.0.1:10999        traefik
+$ ddev list
+╭────────────────────────────────────────────────────────────────────╮
+│ NAME    STATUS  LOCATION          URL                     TYPE     │
+├────────────────────────────────────────────────────────────────────┤
+│ drup    ● OK    ~/workspace/drup  https://drup.ddev.site  drupal11 │
+├────────────────────────────────────────────────────────────────────┤
+│ Router  ● OK    ~/.ddev           http://127.0.0.1:10999           │
+╰────────────────────────────────────────────────────────────────────╯
 ```
 
 You can also see more detailed information about a project by running [`ddev describe`](../usage/commands.md#describe) from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
 ```
 $ ddev describe drup
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│ Project: drup ~/workspace/drup https://drup.ddev.site                            │
-│ Docker platform: orbstack                                                        │
-│ Router: traefik                                                                  │
-├──────────┬──────┬───────────────────────────────────────────┬────────────────────┤
-│ SERVICE  │ STAT │ URL/PORT                                  │ INFO               │
-├──────────┼──────┼───────────────────────────────────────────┼────────────────────┤
-│ web      │ OK   │ https://drup.ddev.site                    │ drupal PHP8.4      │
-│          │      │ InDocker: web:8025,443,80                 │ nginx-fpm          │
-│          │      │ Host: 127.0.0.1:33016,33017               │ docroot:'web'      │
-│          │      │                                           │ Perf mode: mutagen │
-│          │      │                                           │ NodeJS:20          │
-├──────────┼──────┼───────────────────────────────────────────┼────────────────────┤
-│ db       │ OK   │ InDocker: db:3306                         │ mariadb:11.8       │
-│          │      │ Host: 127.0.0.1:33018                     │ User/Pass: 'db/db' │
-│          │      │                                           │ or 'root/root'     │
-├──────────┼──────┼───────────────────────────────────────────┼────────────────────┤
-│ Mailpit  │      │ Mailpit: https://drup.ddev.site:8026      │                    │
-│          │      │ `ddev mailpit`                            │                    │
-├──────────┼──────┼───────────────────────────────────────────┼────────────────────┤
-│ All URLs │      │ https://drup.ddev.site,                   │                    │
-│          │      │ https://127.0.0.1:33016,                  │                    │
-│          │      │ http://drup.ddev.site,                    │                    │
-│          │      │ http://127.0.0.1:33017                    │                    │
-└──────────┴──────┴───────────────────────────────────────────┴────────────────────┘
+drup  ~/workspace/drup  https://drup.ddev.site
+Docker platform: linux-docker · Router: traefik · DDEV version: v1.25.5
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ SERVICE       STAT       URL/PORT                        INFO               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ web           ● OK       https://drup.ddev.site          drupal11 PHP 8.4   │
+│                          InDocker -> Host:               Server: nginx-fpm  │
+│                           - web:80 -> 127.0.0.1:26350    Docroot: 'web'     │
+│                           - web:443 -> 127.0.0.1:23548   Perf mode: none    │
+│                           - web:8025 -> 127.0.0.1:27660  Node.js: 24        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ db            ● OK       InDocker -> Host:               mariadb:11.8       │
+│                           - db:3306 -> 127.0.0.1:26183   User/Pass: 'db/db' │
+│                                                          or 'root/root'     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ xhgui         ○ stopped  https://drup.ddev.site:8142                        │
+│                          InDocker:                                          │
+│                           - xhgui:80                                        │
+│                          Launch: ddev xhgui                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Mailpit                  https://drup.ddev.site:8026                        │
+│                          Launch: ddev mailpit                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Project URLs             https://drup.ddev.site                             │
+│                          https://127.0.0.1:23548                            │
+│                          http://drup.ddev.site                              │
+│                          http://127.0.0.1:26350                             │
+╰─────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ## Removing Projects

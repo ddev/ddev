@@ -1,5 +1,7 @@
 # Uninstalling DDEV
 
+You can remove one DDEV project or uninstall DDEV completely.
+
 A DDEV installation consists of:
 
 * The self-contained `ddev` binary.

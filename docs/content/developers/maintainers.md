@@ -1,5 +1,7 @@
 # Maintainer Tasks, Privileges, Resources
 
+Maintainers have extra responsibilities and privileges in the DDEV project.
+
 ## THANK YOU
 
 We so appreciate our amazing maintainers. There are so many things to keep track of, including support, testing, test runners, improvements, and a thousand other things. This section attempts to document some of the things that maintainers need to know and do.
@@ -158,11 +160,31 @@ Include these keywords in your commit message or pull request title to skip CI r
 * `[skip github]` - Skip GitHub Actions tests only
 * `[skip ci]` - Skip all tests
 
+### Running Only Some Buildkite Pipelines
+
+To run only some Buildkite pipelines, put `[only <pipeline> ...]` in the subject line (first line) of the commit you push, naming each pipeline by its Buildkite name, the one in its build URL:
+
+* `[only macos-socktainer]` - Run only the socktainer pipeline
+* `[only macos-socktainer macos-lima]` - Run only those two
+
+Every other test pipeline still starts a job, but the job exits successfully within seconds, before setting up a Docker provider or running tests, so it holds a testbot only briefly. GitHub Actions still run; add `[skip github]` to skip them too. `[skip buildkite]` and `[skip ci]` still skip everything.
+
+* Only the subject line of the pushed commit counts. A later push without the tag runs every pipeline again, and a tag in a commit body is ignored, so squash-merging a pull request doesn't carry it into `main`.
+* A pull request's title doesn't count, though it works for `[skip ci]`.
+* Builds started from the Buildkite UI ignore the tag, so you can still run a skipped pipeline by hand.
+* Any push to a pull request cancels the Buildkite builds still running for it, even a push with `[skip ci]` or `[only ...]`. Wait for a build you care about to finish before pushing again.
+
 ### Skipping Specific Tests via `public-variables` Branch
 
 To skip specific tests globally (including for fork PRs), edit the files directly on the
 [`public-variables` branch](https://github.com/ddev/ddev/tree/public-variables/.github/public-variables) - no PR required.
-Each file holds one value per line, or values separated by `|`.
+Each file holds one value per line. A `#` starts a comment that runs to the end of the line, so you can say why a test is embargoed:
+
+```text
+# Robo 5.2.3 calls addCommand() on Symfony Console 6, fixed upstream but not released yet
+Drupal 10
+OpenMage composer  # https://github.com/OpenMage/magento-lts/issues/5836
+```
 
 #### Go tests
 
@@ -215,5 +237,5 @@ DDEV_EMBARGO_PHP_VERSIONS="7.0|7.1" make testddevapp
 
 * Manually triggered (`workflow_dispatch`) runs **skip loading the `public-variables` branch entirely** so you can verify a fix without first removing it from the embargo list. Scheduled and PR-triggered runs always load it.
 * Include `[skip ci]` in the commit message when updating the embargo to avoid triggering test workflows.
-* To clear an embargo, empty the file on the `public-variables` branch.
+* To clear an embargo, remove its line from the file on the `public-variables` branch.
 * See [`.github/public-variables/README.md`](https://github.com/ddev/ddev/blob/main/.github/public-variables/README.md) for full details.

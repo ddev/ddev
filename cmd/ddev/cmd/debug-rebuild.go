@@ -100,6 +100,7 @@ var DebugRebuildCmd = &cobra.Command{
 		if svcErr != nil {
 			util.Failed("Failed to create compose service: %v", svcErr)
 		}
+		defer dockerutil.CloseComposeService(composeSvc)
 		err = composeSvc.Build(composeCtx, buildProject, api.BuildOptions{
 			Progress: display.ModePlain,
 			NoCache:  withoutCache,

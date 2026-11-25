@@ -1,6 +1,6 @@
 # Blackfire Profiling
 
-DDEV has built-in [Blackfire](https://www.blackfire.io/) integration.
+DDEV has built-in [Blackfire](https://www.blackfire.io/) integration for profiling PHP from the browser or the command line.
 
 ## Basic Blackfire Usage (Using Browser Plugin)
 

@@ -22,12 +22,17 @@ import (
 
 // Section represents a config section.
 type Section struct {
-	f        *File
-	Comment  string
-	name     string
-	keys     map[string]*Key
-	keyList  []string
-	keysHash map[string]string
+	f       *File
+	Comment string
+	// TrailingComment is comments after the last key of this section
+	// (or after a raw section body) through EOF. Comments that sit
+	// immediately before the next [section] still attach to that next
+	// section's Comment, matching existing parse behavior.
+	TrailingComment string
+	name            string
+	keys            map[string]*Key
+	keyList         []string
+	keysHash        map[string]string
 
 	isRawSection bool
 	rawBody      string
@@ -75,7 +80,7 @@ func (s *Section) NewKey(name, val string) (*Key, error) {
 		defer s.f.lock.Unlock()
 	}
 
-	if inSlice(name, s.keyList) {
+	if _, ok := s.keys[name]; ok {
 		if s.f.options.AllowShadows {
 			if err := s.keys[name].addShadow(val); err != nil {
 				return nil, err
@@ -131,7 +136,7 @@ func (s *Section) GetKey(name string) (*Key, error) {
 			}
 			break
 		}
-		return nil, fmt.Errorf("error when getting key of section %q: key %q not exists", s.name, name)
+		return nil, fmt.Errorf("error when getting key of section %q: key %q does not exist", s.name, name)
 	}
 	return key, nil
 }
@@ -163,12 +168,17 @@ func (s *Section) HasValue(value string) bool {
 }
 
 // Key assumes named Key exists in section and returns a zero-value when not.
+// For an empty name, the returned Key is not part of the section, so setting
+// its value changes nothing in the section.
 func (s *Section) Key(name string) *Key {
 	key, err := s.GetKey(name)
 	if err != nil {
-		// It's OK here because the only possible error is empty key name,
-		// but if it's empty, this piece of code won't be executed.
-		key, _ = s.NewKey(name, "")
+		key, err = s.NewKey(name, "")
+		if err != nil {
+			// NewKey rejects empty names. Still honor the zero-value
+			// contract so Key("") is not nil.
+			return newKey(s, name, "")
+		}
 		return key
 	}
 	return key
@@ -226,6 +236,10 @@ func (s *Section) KeysHash() map[string]string {
 
 // DeleteKey deletes a key from section.
 func (s *Section) DeleteKey(name string) {
+	if s.f.options.Insensitive || s.f.options.InsensitiveKeys {
+		name = strings.ToLower(name)
+	}
+
 	if s.f.BlockMode {
 		s.f.lock.Lock()
 		defer s.f.lock.Unlock()

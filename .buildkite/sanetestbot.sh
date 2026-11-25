@@ -11,13 +11,19 @@ set -o nounset
 
 # shellcheck source=lib-disk.sh
 source "$(dirname "$0")/lib-disk.sh"
+# shellcheck source=lib-diag.sh
+source "$(dirname "$0")/lib-diag.sh"
+
+# If test.sh's timeout kills this script, say which step it was in.
+CURRENT_STEP="startup"
+trap 'echo "+++ FAILED: sanetestbot.sh was killed during step: ${CURRENT_STEP}"; exit 143' TERM INT
 
 # thanks to https://stackoverflow.com/a/24067243/215713
 function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
 
 DISK_AVAIL=$(df -k . | awk '/[0-9]%/ { gsub(/%/, ""); print $5}')
 if [ ${DISK_AVAIL} -ge 95 ] ; then
-    echo "Disk usage is ${DISK_AVAIL}% on $(hostname), not usable";
+    echo "+++ FAILED: Disk usage is ${DISK_AVAIL}% on $(hostname), not usable";
     exit 1;
 else
    echo "Disk usage is ${DISK_AVAIL}% on $(hostname), $(free_gb .)GB free.";
@@ -63,7 +69,7 @@ if [ "$(go env GOOS)" = "windows" ] && [ "$USES_HOST_DOCKER" = "true" ]; then
 
     if [ "$dd_frontend_ok" = "false" ]; then
         dd_status=$(docker desktop status 2>&1 || true)
-        echo "ERROR: Docker Desktop frontend is not running (status: $dd_status)."
+        echo "+++ FAILED: Docker Desktop frontend is not running (status: $dd_status)."
         echo "start-docker-desktop.sh should have started it earlier in the pipeline."
         exit 1
     fi
@@ -75,39 +81,41 @@ fi
 # do not use the host's Docker Desktop — running them would only block on an
 # unrelated, possibly-stopped Docker Desktop.
 if [ "$USES_HOST_DOCKER" = "true" ]; then
+    # Each check has its own limit, and together they stay under test.sh's
+    # limit for this script, so a hang names its step and prints diagnostics.
     # Test to make sure docker is installed and working.
-    # If it doesn't become ready then we just keep this testbot occupied :)
-    docker ps >/dev/null
-    while ! docker ps >/dev/null 2>&1 ; do
-        echo "Waiting for docker to be ready $(date)"
-        sleep 60
-    done
+    run_step "docker ps" 2m bash -c 'until docker ps >/dev/null; do echo "Waiting for docker to be ready $(date)"; sleep 10; done'
 
     # Test that docker can pull images and mount volumes, get ddev/ddev-utilities
-    docker pull ddev/ddev-utilities >/dev/null
+    run_step "docker pull ddev/ddev-utilities" 3m docker pull ddev/ddev-utilities
     # Rootless podman and Apple Container cannot bind privileged ports (<1024), so
     # skip the port binding test for them; a plain volume+exec check is sufficient.
     if [ "${DOCKER_TYPE:-}" = "podman-rootless" ]; then
-        docker run --rm -t -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null
+        run_step "docker run with \$HOME mounted" 90s docker run --rm -t -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99
     elif [ "${DOCKER_TYPE:-}" = "socktainer" ]; then
         # Starting a container that mounts all of $HOME hangs on the testbots.
-        docker run --rm -v $HOME/tmp:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null
+        run_step "docker run with ~/tmp mounted" 90s docker run --rm -v $HOME/tmp:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99
     else
         # Try the docker run command twice because of the really annoying mkdir /c: file exists bug
         # Apparently https://github.com/docker/for-win/issues/1560
-        (sleep 1 && (docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null) || (sleep 1 && docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null ))
+        run_step "docker run with ports 80/443 and \$HOME mounted" 3m bash -c '"$@" || { echo "Retrying the docker run"; sleep 1; "$@"; }' _ \
+            docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99
     fi
+    # A port can be published and still not answer from the host, which
+    # fails every HTTP test in the job (macos-socktainer builds 31 and 32).
+    run_step "published port answers from the host" 2m bash "$(dirname "$0")/published-port-check.sh"
 else
     echo "Skipping host Docker Desktop checks for INSTALLER_CASE=${INSTALLER_CASE:-} (uses Docker CE inside WSL2, not the host Docker Desktop)"
 fi
 
 # Check that required commands are available.
+CURRENT_STEP="required commands"
 for command in git go make mysql ngrok; do
-    command -v $command >/dev/null || ( echo "Did not find command installed '$command'" && exit 2 )
+    command -v $command >/dev/null || ( echo "+++ FAILED: Did not find command installed '$command'" && exit 2 )
 done
 
 if [ "$(go env GOOS)" = "windows"  -a "$(git config core.autocrlf)" != "false" ] ; then
- echo "git config core.autocrlf is not set to false on windows"
+ echo "+++ FAILED: git config core.autocrlf is not set to false on windows"
  exit 3
 fi
 

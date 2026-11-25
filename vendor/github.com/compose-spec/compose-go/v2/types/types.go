@@ -19,6 +19,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -672,13 +673,25 @@ func (f *FileMode) DecodeMapstructure(value interface{}) error {
 	switch v := value.(type) {
 	case *FileMode:
 		return nil
+	// the Docker CLI reads a file mode as an unsigned 32 bit number
 	case string:
-		i, err := strconv.ParseInt(v, 8, 64)
+		// A string is an octal number, `440` being 0o440 (the Docker CLI
+		// reads it as decimal, with base 0, so that `mode=440` is 0o670
+		// there). A leading 0 selects the CLI's own syntax, of which the
+		// octal one is a subset: `0440`, `0o440`, `0x1ff` and `0b101`.
+		base := 8
+		if strings.HasPrefix(v, "0") {
+			base = 0
+		}
+		i, err := strconv.ParseUint(v, base, 32)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid file mode %q: must be an octal number, or a number with a 0o, 0x or 0b prefix, that fits in 32 bits", v)
 		}
 		*f = FileMode(i)
 	case int:
+		if v < 0 || int64(v) > math.MaxUint32 {
+			return fmt.Errorf("invalid file mode %d: must be a non-negative number that fits in 32 bits", v)
+		}
 		*f = FileMode(v)
 	default:
 		return fmt.Errorf("unexpected value type %T for mode", value)
@@ -728,11 +741,19 @@ func (u *UlimitsConfig) DecodeMapstructure(value interface{}) error {
 		u.Single = 0
 		soft, ok := v["soft"]
 		if ok {
-			u.Soft = soft.(int)
+			limit, isInt := soft.(int)
+			if !isInt {
+				return fmt.Errorf("invalid type %T for ulimit soft limit", soft)
+			}
+			u.Soft = limit
 		}
 		hard, ok := v["hard"]
 		if ok {
-			u.Hard = hard.(int)
+			limit, isInt := hard.(int)
+			if !isInt {
+				return fmt.Errorf("invalid type %T for ulimit hard limit", hard)
+			}
+			u.Hard = limit
 		}
 	default:
 		return fmt.Errorf("unexpected value type %T for ulimit", value)

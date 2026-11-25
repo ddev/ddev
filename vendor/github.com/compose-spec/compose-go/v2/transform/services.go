@@ -17,6 +17,8 @@
 package transform
 
 import (
+	"fmt"
+
 	"github.com/compose-spec/compose-go/v2/tree"
 )
 
@@ -29,11 +31,15 @@ func transformService(data any, p tree.Path, ignoreParseError bool) (any, error)
 	}
 }
 
-func transformStringSliceToMap(data any, _ tree.Path, _ bool) (any, error) {
+func transformStringSliceToMap(data any, p tree.Path, _ bool) (any, error) {
 	if slice, ok := data.([]any); ok {
 		mapping := make(map[string]any, len(slice))
 		for _, net := range slice {
-			mapping[net.(string)] = nil
+			name, ok := net.(string)
+			if !ok {
+				return nil, fmt.Errorf("%s: invalid type %T, expected a string", p, net)
+			}
+			mapping[name] = nil
 		}
 		return mapping, nil
 	}

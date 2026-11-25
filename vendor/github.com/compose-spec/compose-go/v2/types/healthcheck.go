@@ -43,7 +43,11 @@ func (l *HealthCheckTest) DecodeMapstructure(value interface{}) error {
 	case []interface{}:
 		seq := make([]string, len(v))
 		for i, e := range v {
-			seq[i] = e.(string)
+			str, ok := e.(string)
+			if !ok {
+				return fmt.Errorf("invalid type %T for healthcheck.test entry", e)
+			}
+			seq[i] = str
 		}
 		*l = seq
 	default:

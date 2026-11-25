@@ -7,8 +7,10 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,8 +32,11 @@ func TestProcessHooks(t *testing.T) {
 	app, err := ddevapp.NewApp(site.Dir, true)
 	require.NoError(t, err)
 
-	// We don't get the expected task debug output without DDEV_DEBUG
-	t.Setenv("DDEV_DEBUG", "true")
+	// The "Running task" line is debug output. UserOut reads DDEV_DEBUG only
+	// at package init, so setting the env var here would be too late.
+	origLevel := output.UserOut.GetLevel()
+	output.UserOut.SetLevel(logrus.DebugLevel)
+	t.Cleanup(func() { output.UserOut.SetLevel(origLevel) })
 
 	t.Cleanup(func() {
 		runTime()

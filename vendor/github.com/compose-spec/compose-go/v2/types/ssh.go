@@ -17,7 +17,10 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
+	"slices"
+	"strings"
 )
 
 type SSHKey struct {
@@ -37,20 +40,24 @@ func (s SSHConfig) Get(id string) (string, error) {
 	return "", fmt.Errorf("ID %s not found in SSH keys", id)
 }
 
+// format is the `id=path` form of the key, as the Docker CLI and buildx read
+// `--ssh`, and as it loads back from a list. The path is left out for the
+// default agent (`default`), which is the only id a list accepts alone.
+func (s SSHKey) format() string {
+	if s.Path == "" && s.ID == "default" {
+		return s.ID
+	}
+	return s.ID + "=" + s.Path
+}
+
 // MarshalYAML makes SSHKey implement yaml.Marshaller
 func (s SSHKey) MarshalYAML() (interface{}, error) {
-	if s.Path == "" {
-		return s.ID, nil
-	}
-	return fmt.Sprintf("%s: %s", s.ID, s.Path), nil
+	return s.format(), nil
 }
 
 // MarshalJSON makes SSHKey implement json.Marshaller
 func (s SSHKey) MarshalJSON() ([]byte, error) {
-	if s.Path == "" {
-		return []byte(fmt.Sprintf(`%q`, s.ID)), nil
-	}
-	return []byte(fmt.Sprintf(`%q: %s`, s.ID, s.Path)), nil
+	return json.Marshal(s.format())
 }
 
 func (s *SSHConfig) DecodeMapstructure(value interface{}) error {
@@ -58,16 +65,22 @@ func (s *SSHConfig) DecodeMapstructure(value interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid ssh config type %T", value)
 	}
-	result := make(SSHConfig, len(v))
-	i := 0
+	result := make(SSHConfig, 0, len(v))
 	for id, path := range v {
+		// `id=path` is the way a key is written, and read back: an id that has
+		// a `=` would be cut in two
+		if strings.Contains(id, "=") {
+			return fmt.Errorf("invalid ssh key id %q: must not contain \"=\"", id)
+		}
 		key := SSHKey{ID: id}
 		if path != nil {
 			key.Path = fmt.Sprint(path)
 		}
-		result[i] = key
-		i++
+		result = append(result, key)
 	}
+	// a mapping has no order: keep the keys in a stable one, so that the same
+	// file always loads, and marshals, the same way
+	slices.SortFunc(result, func(a, b SSHKey) int { return strings.Compare(a.ID, b.ID) })
 	*s = result
 	return nil
 }

@@ -22,7 +22,7 @@ import (
 	"net"
 	"path/filepath"
 
-	"github.com/docker/secrets-engine/x/api"
+	clientconfig "github.com/docker/secrets-engine/client/config"
 )
 
 var (
@@ -149,9 +149,9 @@ func classifySocket(path string) engineKind {
 		return engineCustom
 	}
 	switch filepath.Clean(path) {
-	case filepath.Clean(api.DesktopSocketPath()):
+	case filepath.Clean(clientconfig.DesktopSocketPath()):
 		return engineDesktop
-	case filepath.Clean(api.StandaloneSocketPath()):
+	case filepath.Clean(clientconfig.StandaloneSocketPath()):
 		return engineStandalone
 	default:
 		return engineCustom

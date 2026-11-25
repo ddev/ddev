@@ -186,6 +186,7 @@ func StartDdevRouter() (err error) {
 		if svcErr != nil {
 			return fmt.Errorf("failed to start ddev-router: %v", svcErr)
 		}
+		defer dockerutil.CloseComposeService(routerSvc)
 		progress := display.ModeQuiet
 		if globalconfig.DdevVerbose {
 			progress = display.ModePlain
@@ -533,25 +534,19 @@ func RenderRouterStatus() (string, string) {
 		status, logOutput := GetRouterStatus()
 
 		switch status {
-		case SiteStopped:
-			renderedStatus = util.ColorizeText(status, "red")
 		case "exited", string(container.Unhealthy):
-			renderedStatus = util.ColorizeText(status, "red")
 			errorInfo = "The router is not healthy, your projects may not be accessible, " +
 				"if it doesn't become healthy, run 'ddev poweroff && ddev start' on a project to recreate it."
 			if logOutput != "" {
 				errorInfo = errorInfo + "\n" + logOutput
 			}
 		case string(container.Healthy):
-			status = "OK"
 			// If there are router configuration errors, show them
 			if configErrors := GetRouterConfigErrors(); configErrors != "" {
 				errorInfo = fmt.Sprintf("Detected configuration error(s):\n%s", configErrors)
 			}
-			fallthrough
-		default:
-			renderedStatus = util.ColorizeText(status, "green")
 		}
+		renderedStatus = FormatSiteStatus(status)
 	} else {
 		renderedStatus = "disabled"
 	}

@@ -25,10 +25,11 @@ var BuildSource = ""
 
 // unreleasedVersionPattern matches a DdevVersion that isn't a clean release
 // tag: the `git describe --tags --always --dirty` long form left by commits
-// past a tag (v1.2.3-15-gabcdef1), a dirty working tree (-dirty), or the
+// past a tag (v1.2.3-15-gabcdef1), a dirty working tree (-dirty), a bare
+// hash from a clone without tags, such as a fork (abcdef1), or the
 // debug.BuildInfo short-hash fallback used when a build has no embedded git
 // tag info (gabcdef1).
-var unreleasedVersionPattern = regexp.MustCompile(`-\d+-g[0-9a-f]{6,}|-dirty$|^g[0-9a-f]{6,}$`)
+var unreleasedVersionPattern = regexp.MustCompile(`-\d+-g[0-9a-f]{6,}|-dirty$|^g?[0-9a-f]{6,}$`)
 
 // IsUnreleasedDdevVersion returns true if version looks like it was built
 // from an untagged commit (a PR, local branch, or other dev build) rather
@@ -49,46 +50,46 @@ func IsUnreleasedDdevVersion(version string) bool {
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "4e8dd9e74a" // 20261104_rfay_empty_webserver_docroot-4e8dd9e74a
+var WebTag = "b842b83815" // 20261120_stasadev_v1.25.6_images-b842b83815
 
 // WebTagBranch is the branch WebTag's content was built from.
-var WebTagBranch = "20261104_rfay_empty_webserver_docroot"
+var WebTagBranch = "v1.25.6"
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "c36ccfc0cb" // 20261027_rfay_xtrabackup_repack_curl_dev-c36ccfc0cb
+var BaseDBTag = "6741668817" // 20261120_stasadev_v1.25.6_images-6741668817
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
-var BaseDBTagBranch = "20261027_rfay_xtrabackup_repack_curl_dev"
+var BaseDBTagBranch = "v1.25.6"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "ef72c327c5" // 20261014_rfay_router_volume-ef72c327c5
+var TraefikRouterTag = "2926a16252" // 20261120_stasadev_v1.25.6_images-2926a16252
 
 // TraefikRouterTagBranch is the branch TraefikRouterTag's content was built from.
-var TraefikRouterTagBranch = "20261014_rfay_router_volume"
+var TraefikRouterTagBranch = "v1.25.6"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "fa039f46c3" // 20261025_v1.25.5_images-fa039f46c3
+var SSHAuthTag = "6fa4da3a4c" // 20261120_stasadev_v1.25.6_images-6fa4da3a4c
 
 // SSHAuthTagBranch is the branch SSHAuthTag's content was built from.
-var SSHAuthTagBranch = "v1.25.5"
+var SSHAuthTagBranch = "v1.25.6"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "e761d4446a" // 20261113_rfay_xhgui_fpm_loopback-e761d4446a
+var XhguiTag = "a72c2b4e53" // 20261120_stasadev_v1.25.6_images-a72c2b4e53
 
 // XhguiTagBranch is the branch XhguiTag's content was built from.
-var XhguiTagBranch = "20261113_rfay_xhgui_fpm_loopback"
+var XhguiTagBranch = "v1.25.6"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"
@@ -104,7 +105,7 @@ var MutagenVersion = ""
 const RequiredMutagenVersion = "0.18.1"
 
 // DockerBuildxMinVersion defines the minimum required version of buildx.
-// Must match buildxMinVersion in vendor/github.com/docker/compose/v5/pkg/compose/api_versions.go
+// Must match buildxMinVersion in vendor/github.com/docker/compose/v5/internal/build/bake.go
 // Sync enforced by TestBuildxMinVersionInSync.
 // This value is a hard requirement
 const DockerBuildxMinVersion = "0.17.0"
@@ -115,7 +116,7 @@ const DockerBuildxMinVersion = "0.17.0"
 // of docker/compose, so this has no go.mod counterpart to sync against;
 // update it by hand when recommending a new buildx release.
 // This value is a recommendation, not a hard requirement
-const DockerBuildxRecommendedVersion = "0.38.2"
+const DockerBuildxRecommendedVersion = "0.39.0"
 
 // DockerMinVersion defines the recommended minimum version of Docker Engine
 // List of supported Docker versions: https://endoflife.date/docker-engine
@@ -132,6 +133,10 @@ const DockerMinAPIVersion = "1.44"
 // Podman 4.x doesn't run properly on GitHub runners, so we recommend Podman 5.0+
 // This value is a recommendation, not a hard requirement
 const PodmanMinVersion = "5.0"
+
+// SocktainerMinVersion defines the recommended minimum version of socktainer.
+// This value is a recommendation, not a hard requirement
+const SocktainerMinVersion = "1.6.1"
 
 // ---
 // Fallback version derivation for developer builds not using the Makefile

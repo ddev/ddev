@@ -41,10 +41,27 @@ EOF
 # and remove it here
 USER root
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
-RUN mkdir -p /var/lib/apt/lists/partial
 RUN <<EOF
     set -eu -o pipefail
-    apt-get update
+    # Some base images (ddev/mysql:5.7, for example) ship old package lists.
+    # When the mirrors can't be reached, apt-get update only warns and apt
+    # then installs from those old lists, failing later on a .deb that has
+    # since been removed from the mirror. Remove them, so apt can only use
+    # what this update fetches.
+    rm -rf /var/lib/apt/lists/*
+    mkdir -p /var/lib/apt/lists/partial
+    apt-get update 2>&1 | tee /tmp/apt-update.log
+    # apt-get update exits 0 even when every repository failed to download.
+    if grep -E '^(W: Failed to fetch|E: )' /tmp/apt-update.log >/dev/null; then
+        echo "WARNING: apt-get update could not download some package lists:" >&2
+        grep -E '^(W: Failed to fetch|E: )' /tmp/apt-update.log >&2
+    fi
+    if ! find /var/lib/apt/lists -maxdepth 1 -name '*_Packages*' | grep . >/dev/null; then
+        echo "ERROR: apt-get update downloaded no package lists, so no packages can be installed." >&2
+        echo "Check that this build can reach the mirrors in /etc/apt/sources.list*." >&2
+        exit 1
+    fi
+    rm -f /tmp/apt-update.log
     # gzip, passwd, and procps are explicitly listed because the DHI (Docker
     # Hardened Image) base used for mysql 8.0/8.4 does not preinstall them, while
     # the previous (bitnami) base did: the runtime scripts use gunzip, creating
@@ -186,4 +203,4 @@ EXPOSE 3306
 # The following line overrides any cmd entry
 CMD []
 HEALTHCHECK --interval=1s --retries=30 --timeout=120s CMD ["/healthcheck.sh"]
-# ddev-release-marker: v1.25.5
+# ddev-release-marker: v1.25.6

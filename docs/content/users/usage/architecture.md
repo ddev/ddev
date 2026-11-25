@@ -233,7 +233,7 @@ services:
 
 [`ddev delete`](commands.md#delete) removes the project's files in [`ddev-router-traefik`](#the-ddev-router-traefik-volume).
 
-To clear the volume, for example to free Docker provider disk space, remove it. DDEV creates the volume again on the next [`ddev start`](commands.md#start). Versions of DDEV before v1.26.0 also kept package caches and shell history here, so removing it also frees that space:
+To clear the volume, for example to free Docker provider disk space, remove it. DDEV creates the volume again on the next [`ddev start`](commands.md#start). Versions of DDEV before v1.25.6 also kept package caches and shell history here, so removing it also frees that space:
 
 ```bash
 ddev poweroff

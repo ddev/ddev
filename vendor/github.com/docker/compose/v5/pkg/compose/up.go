@@ -37,7 +37,9 @@ import (
 
 	"github.com/docker/compose/v5/internal/concurrency"
 	"github.com/docker/compose/v5/internal/desktop"
+	"github.com/docker/compose/v5/internal/devwatch"
 	"github.com/docker/compose/v5/internal/logstream"
+	"github.com/docker/compose/v5/internal/planning"
 	"github.com/docker/compose/v5/internal/progress"
 	"github.com/docker/compose/v5/internal/tracing"
 	"github.com/docker/compose/v5/pkg/api"
@@ -47,20 +49,32 @@ func (s *composeService) Up(ctx context.Context, project *types.Project, options
 	if err := options.Validate(); err != nil {
 		return err
 	}
+	// A dry run has no session to stream logs from: --wait stays the detached plan.
+	detached := options.Start.Attach == nil || (options.Start.Wait && s.dryRun)
 	var created *createdUp
 	err := Run(ctx, tracing.SpanWrapFunc("project/up", tracing.ProjectOptions(ctx, project), func(ctx context.Context) error {
-		if options.Start.Attach == nil {
-			return s.upDetached(ctx, project, options)
+		if err := s.rejectUnsupportedScheduledJobs(ctx, project); err != nil {
+			return err
 		}
 		var err error
-		created, err = s.upCreatePhase(ctx, project, options)
-		return err
+		if detached {
+			err = s.upDetached(ctx, project, options)
+		} else {
+			created, err = s.upCreatePhase(ctx, project, options)
+		}
+		if err != nil {
+			return err
+		}
+		if err := s.registerScheduledJobs(ctx, project); err != nil {
+			return err
+		}
+		return s.handleOrphanJobs(ctx, project, options.Create.RemoveOrphans, options.Create.IgnoreOrphans)
 	}), "up", s.events)
 	if err != nil {
 		return err
 	}
 
-	if options.Start.Attach == nil {
+	if detached {
 		return err
 	}
 	if s.dryRun {
@@ -103,7 +117,7 @@ func (s *composeService) upCreatePhase(ctx context.Context, project *types.Proje
 // prepareUp prepares the single Create+Start plan of an up, detached or
 // interactive, and the executor that runs it. It returns the plan's own
 // project, the one carrying what preparation resolved (see useAPISocket).
-func (s *composeService) prepareUp(ctx context.Context, project *types.Project, options api.UpOptions) (*types.Project, *planExecutor, *Plan, error) {
+func (s *composeService) prepareUp(ctx context.Context, project *types.Project, options api.UpOptions) (*types.Project, *planExecutor, *planning.Plan, error) {
 	project, observed, plan, err := s.preparePlan(ctx, project, options.Create, ScopeCreateStart)
 	if err != nil {
 		return nil, nil, nil, err
@@ -149,14 +163,20 @@ func (s *composeService) upDetached(ctx context.Context, project *types.Project,
 	if !options.Start.Wait {
 		return nil
 	}
+	return s.awaitProjectReady(ctx, project, options.Start.WaitTimeout)
+}
 
+// awaitProjectReady blocks until every service of the project is running or
+// healthy, within timeout when it is set: the --wait verification, once the
+// plan ran.
+func (s *composeService) awaitProjectReady(ctx context.Context, project *types.Project, timeout time.Duration) error {
 	// The plan may have created or recreated containers: this verification
 	// needs their current IDs, which the pre-execution observed snapshot
-	// above doesn't have for a container that didn't exist yet at
-	// observation time. The listing runs on the caller's context, before the
-	// --wait-timeout window opens, so daemon-listing latency never eats into
-	// the budget the readiness polling is owed (any deadline it hits is the
-	// caller's own, unrelated to --wait-timeout, and is returned as such).
+	// doesn't have for a container that didn't exist yet at observation time.
+	// The listing runs on the caller's context, before the --wait-timeout
+	// window opens, so daemon-listing latency never eats into the budget the
+	// readiness polling is owed (any deadline it hits is the caller's own,
+	// unrelated to --wait-timeout, and is returned as such).
 	containers, err := s.getContainers(ctx, project.Name, oneOffExclude, true)
 	if err != nil {
 		return err
@@ -174,8 +194,8 @@ func (s *composeService) upDetached(ctx context.Context, project *types.Project,
 	// context's Err() report DeadlineExceeded too, inherited from the
 	// parent, even though this window's own timer never fired.
 	origCtx := ctx
-	if options.Start.WaitTimeout > 0 {
-		withTimeout, cancel := context.WithTimeout(ctx, options.Start.WaitTimeout)
+	if timeout > 0 {
+		withTimeout, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 		ctx = withTimeout
 	}
@@ -188,8 +208,8 @@ func (s *composeService) upDetached(ctx context.Context, project *types.Project,
 		}
 	}
 	if err := s.waitDependencies(ctx, project, project.Name, depends, containers); err != nil {
-		if options.Start.WaitTimeout > 0 && origCtx.Err() == nil && errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return fmt.Errorf("application not healthy after %s", options.Start.WaitTimeout)
+		if timeout > 0 && origCtx.Err() == nil && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return fmt.Errorf("application not healthy after %s", timeout)
 		}
 		return err
 	}
@@ -207,7 +227,7 @@ type upSession struct {
 	// logStreams counts the in-flight re-attach log streams so shutdown can
 	// drain them before tearing the context down — see the monitor wrapper.
 	logStreams sync.WaitGroup
-	watcher    *Watcher
+	watcher    *devwatch.Watcher
 	menu       NavigationMenu
 	globalCtx  context.Context
 	cancel     context.CancelFunc
@@ -222,6 +242,14 @@ type upSession struct {
 	mu           sync.Mutex
 	errs         []error
 	exitCode     int
+
+	// eventLoopEnded is set once runEventLoop returned: it no longer reacts to
+	// an interruption. globalCtx being done does not tell that: it is a child of
+	// the caller's ctx, so an interruption cancels it too, before the loop reacts.
+	eventLoopEnded atomic.Bool
+	// startReturned is closed once the Start phase returned, see
+	// awaitStartReturned.
+	startReturned chan struct{}
 }
 
 // runInteractiveUp sets up the attach/printer/monitor session around the
@@ -254,7 +282,7 @@ func (s *composeService) runInteractiveUp(ctx context.Context, created *createdU
 		logConsumer = navigationMenu.Decorate(logConsumer)
 	}
 
-	watcher, err := NewWatcher(project, options, s.watch, logConsumer)
+	watcher, err := devwatch.NewWatcher(project, options, s.watch, logConsumer)
 	if err != nil && options.Start.Watch {
 		return err
 	}
@@ -282,6 +310,7 @@ func (s *composeService) runInteractiveUp(ctx context.Context, created *createdU
 		cancel:         cancel,
 		logOpenLimiter: concurrency.NewLimiter(s.maxConcurrency),
 		signalChan:     signalChan,
+		startReturned:  make(chan struct{}),
 	}
 
 	u.eg.Go(func() error {
@@ -368,6 +397,7 @@ func (s *composeService) runInteractiveUp(ctx context.Context, created *createdU
 		case <-time.After(u.drainTimeout()):
 		case <-globalCtx.Done():
 		}
+		u.awaitStartReturned()
 		// cancel the global context to terminate signal-handler goroutines
 		cancel()
 		u.appendErr(err)
@@ -376,7 +406,15 @@ func (s *composeService) runInteractiveUp(ctx context.Context, created *createdU
 
 	// We use the parent context without cancellation as we manage sigterm to stop the stack
 	err = created.run.runStart(context.WithoutCancel(ctx), u.printer.HandleEvent)
+	close(u.startReturned)
 	err = translateWaitTimeout(err)
+	if err == nil && options.Start.Wait {
+		// --wait streams the logs only until the services are running|healthy,
+		// then ends the session leaving them up. The caller's ctx, not
+		// globalCtx: the monitor cancels the latter once every container is
+		// gone, which must not abort the verification of one-shot services.
+		err = u.endWait(ctx, s.awaitProjectReady(ctx, project, options.Start.WaitTimeout))
+	}
 	if err != nil && !u.isTerminated.Load() { // Ignore error if the process is terminated
 		cancel()
 		_ = u.eg.Wait()
@@ -395,11 +433,46 @@ func (s *composeService) runInteractiveUp(ctx context.Context, created *createdU
 	return err
 }
 
+// awaitStartReturned holds the session open until the Start phase returned,
+// unless the session is canceled meanwhile. The Start phase may still be waiting
+// (a dependency of an unattached service) once every attached container is gone,
+// and it runs on a context that outlives the caller's: the event loop, which
+// ends with the session, is the only one left to handle an interruption, and
+// the stop it triggers is what lets the Start phase give up.
+func (u *upSession) awaitStartReturned() {
+	select {
+	case <-u.startReturned:
+	case <-u.globalCtx.Done():
+	}
+}
+
+// endWait ends the session once the --wait verification returned err. An
+// interruption (Ctrl+C/SIGTERM) says nothing about the services: the event loop
+// stops the stack, unless it ended already (the monitor cancels globalCtx once
+// every attached container is gone), in which case nobody is left to and it is
+// done here.
+func (u *upSession) endWait(ctx context.Context, err error) error {
+	if ctx.Err() == nil {
+		u.cancel()
+		return err
+	}
+	if u.eventLoopEnded.Load() && !u.isTerminated.Load() {
+		// set before stopApplication's listing, as gracefulTeardown does
+		u.isTerminated.Store(true)
+		u.stopApplication()
+	}
+	return nil
+}
+
 // setupNavigationMenu initializes the interactive keyboard menu when enabled.
-// It returns a nil menu when the menu is disabled, when no menu implementation
-// was configured (WithNavigationMenu), or when the keyboard can't be grabbed —
-// then disabling the option.
+// It returns a nil menu when the menu is disabled (or Wait is set), when no
+// menu implementation was configured (WithNavigationMenu), or when the
+// keyboard can't be grabbed — then disabling the option.
 func (s *composeService) setupNavigationMenu(ctx context.Context, options *api.UpOptions, signalChan chan os.Signal) (NavigationMenu, error) {
+	if options.Start.Wait {
+		// the session ends on its own once the services are up: no menu to drive
+		options.Start.NavigationMenu = false
+	}
 	if !options.Start.NavigationMenu {
 		return nil, nil
 	}
@@ -450,6 +523,7 @@ func (u *upSession) appendErr(err error) {
 // the application terminates: a first interruption triggers a graceful stop,
 // a second one kills the services.
 func (u *upSession) runEventLoop(ctx context.Context) error {
+	defer u.eventLoopEnded.Store(true)
 	first := true
 	gracefulTeardown := func() {
 		first = false

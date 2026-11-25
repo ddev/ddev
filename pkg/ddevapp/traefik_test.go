@@ -194,6 +194,9 @@ func TestTraefikUnmatchedHostnameFallback(t *testing.T) {
 // exact SAN over a wildcard-only match) served one "winner" cert for the whole
 // TLD. See https://github.com/ddev/ddev/issues/8562
 func TestTraefikSharedTLDCerts(t *testing.T) {
+	if dockerutil.IsAppleContainer() {
+		t.Skip("Skipping: socktainer doesn't apply new network aliases on reconnect, so a later project's hostname doesn't resolve to the router, https://github.com/socktainer/socktainer/issues/505")
+	}
 	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because mkcert/HTTPS is not available (no CAROOT)")
 	}

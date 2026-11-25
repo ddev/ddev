@@ -54,12 +54,31 @@ leaves `.git/config` alone. While it is set, git skips the repository's own
 `--no-verify` and `core.hooksPath` keep Claude from switching the backstop
 off by accident; they are not a security boundary.
 
+The `ask` rule only helps if the person can judge the command. `AGENTS.md`
+therefore asks for one plain `git push <remote> <branch>` per approval, with
+remote setup and retries kept out of it. Before it, Claude names the
+destination, the commits, and whether the push rewrites the branch. A guarded
+one-liner such as `git remote get-url rfay || git remote add …; git push …`
+hides what is about to happen, and so does a retry loop or a `bash -c`
+wrapper.
+
 ## Permissions
 
 Every rule has a space before its `*`: `Bash(tr *)` matches only `tr`, while
 `Bash(tr*)` would also match `truncate`. Fetching is allowed per
 `WebFetch(domain:...)` rather than by `curl` argument patterns, which a
 reordered flag or a URL in a variable defeats.
+
+## Plugins
+
+`extraKnownMarketplaces` declares the
+[ddev/agent-skills](https://github.com/ddev/agent-skills) marketplace, and
+`enabledPlugins` turns on its `ddev` plugin, which holds the `/ddev:commit`,
+`/ddev:review` and `/ddev:ci-failure` skills. Both keys apply only after
+someone trusts this folder. Claude Code then registers the marketplace and
+shows its plugin trust warning before it installs the plugin. Updates come from
+`claude plugin marketplace update ddev-agent-skills`, then
+`claude plugin update ddev@ddev-agent-skills` and a new session.
 
 ## Instruction loading
 
@@ -69,4 +88,5 @@ under the default instruction setting. Use an `@AGENTS.md` import in a
 
 References: [hooks](https://code.claude.com/docs/en/hooks),
 [file rules](https://code.claude.com/docs/en/permissions#read-and-edit),
+[plugin marketplaces](https://code.claude.com/docs/en/plugin-marketplaces),
 [instruction loading](https://code.claude.com/docs/en/memory#when-claude-code-reads-agentsmd).

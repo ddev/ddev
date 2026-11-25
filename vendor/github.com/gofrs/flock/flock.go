@@ -162,11 +162,11 @@ func (f *Flock) TryRLockContext(ctx context.Context, retryDelay time.Duration) (
 }
 
 func tryCtx(ctx context.Context, fn func() (bool, error), retryDelay time.Duration) (bool, error) {
-	if ctx.Err() != nil {
-		return false, ctx.Err()
-	}
-
 	for {
+		if ctx.Err() != nil {
+			return false, ctx.Err()
+		}
+
 		if ok, err := fn(); ok || err != nil {
 			return ok, err
 		}

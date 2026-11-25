@@ -46,11 +46,15 @@ func (p *parser) parse(src string, out map[string]string, lookupFn LookupFn) err
 		if err != nil {
 			return err
 		}
+		if key == "" {
+			return fmt.Errorf("line %d: key cannot be empty", p.line)
+		}
 		if strings.Contains(key, " ") {
 			return fmt.Errorf("line %d: key cannot contain a space", p.line)
 		}
 
 		if inherited {
+			p.line++
 			value, ok := lookupFn(key)
 			if ok {
 				out[key] = value
@@ -106,6 +110,7 @@ func (p *parser) locateKeyName(src string) (string, string, bool, error) {
 
 	// locate key name end and validate it in single loop
 	offset := 0
+	terminated := false
 loop:
 	for i, rune := range src {
 		if isSpace(rune) {
@@ -118,6 +123,7 @@ loop:
 			key = src[0:i]
 			offset = i + 1
 			inherited = rune == '\n'
+			terminated = true
 			break loop
 		case '_', '.', '-', '[', ']':
 		default:
@@ -136,8 +142,12 @@ loop:
 		return "", "", inherited, errors.New("zero length string")
 	}
 
-	if inherited && strings.IndexByte(key, ' ') == -1 {
-		p.line++
+	if !terminated {
+		// the file ends right after the key, without a line break: the
+		// variable is inherited, as it would be on a line of its own
+		key = src
+		offset = len(src)
+		inherited = true
 	}
 
 	// trim whitespace

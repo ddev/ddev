@@ -10,6 +10,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     * **Docker** (recommended) - The best-tested option. Install OrbStack, Lima, Docker Desktop, Rancher Desktop, or Colima.
     * **Podman rootless** - Rootless by default; a good fit where Docker is forbidden. Can't use the default ports 80/443, so DDEV must be configured to use unprivileged ports.
+    * **Apple Container** (experimental) - Apple's own runtime, through socktainer. Incomplete; for trying it out only.
 
     === "Docker"
 
@@ -148,6 +149,89 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
             podman machine ssh 'sudo fstrim -av'
             ```
 
+    === "Apple Container (experimental)"
+
+        !!!warning "Experimental"
+            Support for Apple Container is experimental and incomplete. Use it to try DDEV on Apple's runtime, not for day-to-day work. Progress is tracked in [ddev/ddev#7372](https://github.com/ddev/ddev/issues/7372).
+
+        [Apple Container](https://github.com/apple/container) is Apple's open-source container runtime, which runs each container in its own lightweight VM. DDEV talks to it through [socktainer](https://github.com/socktainer/socktainer), which provides a Docker-compatible API in front of it. Apple Container requires macOS 26 or later on Apple silicon.
+
+        ### Install Apple Container and socktainer
+
+        socktainer 1.6.1 or later is required. Install both with Homebrew, along with the Docker CLI and the [buildx plugin](#docker-buildx):
+
+        ```bash
+        brew install socktainer docker docker-buildx
+        ```
+
+        Homebrew's `docker-buildx` prints how to link the plugin where the Docker CLI finds it; `docker buildx version` must work before `ddev start` can build images. The Homebrew `socktainer` formula depends on Homebrew's `container`. Don't mix it with Apple Container from Apple's signed installer: socktainer starts whichever `container` binary is first on your `PATH`.
+
+        ### Start Apple Container and socktainer
+
+        ```bash
+        container system start
+        socktainer
+        ```
+
+        The first `container system start` offers to install a Linux kernel; accept it. Leave `socktainer` running in its own terminal tab, or run it in the background with `nohup socktainer >~/socktainer.log 2>&1 &`. socktainer creates the `socktainer` Docker context the first time it runs. Then point the Docker CLI at it:
+
+        ```bash
+        docker context use socktainer
+        docker ps
+        ```
+
+        When your computer restarts, you'll need to run `container system start` and `socktainer` again.
+
+        The first time you start a project, macOS asks whether `container-runtime-linux` may find and connect to devices on your local network. Click **Allow**: it forwards your project's ports from your Mac into the containers. If you clicked **Don't Allow**, every connection to a project is reset ("Connection reset by peer") and DDEV warns that nothing answers on the router's ports; turn `container-runtime-linux` on in System Settings → Privacy & Security → Local Network.
+
+        !!!warning "Run `ddev poweroff` before switching providers"
+            Run `ddev poweroff` before you stop or restart socktainer, and before switching to another Docker context. A router left running keeps its ports bound.
+
+        ### Configure DDEV for Apple Container
+
+        Apple Container can't bind the privileged ports 80/443, so configure DDEV to use unprivileged ports:
+
+        ```bash
+        ddev config global --router-http-port=8080 --router-https-port=8443
+        ```
+
+        Your projects will then be reachable at `https://yourproject.ddev.site:8443`.
+
+        ### SSH keys in the web container
+
+        Each container is its own VM, so the `ddev-ssh-agent` container can't share its socket with the web container, and DDEV doesn't start it on Apple Container. `ddev auth ssh` can't add keys. Instead, let the web container use the SSH agent already running on your Mac:
+
+        ```bash
+        ddev config global --ssh-agent-upstream=host
+        ddev restart
+        ```
+
+        That mounts the socket in `SSH_AUTH_SOCK` into the web container, so `ssh-add -l` on your Mac shows the keys `ddev ssh` and `ddev composer` can use.
+
+        ### Known limitations
+
+        * A named volume can be mounted read-write by only one running container at a time, so add-ons whose services share a volume may fail to start.
+        * `host.docker.internal` resolves to the network gateway, where your Mac answers, so Xdebug and other connections back to the host work only for programs listening on all interfaces, not on `127.0.0.1` alone.
+
+        ### If `container system start` or `ddev start` hangs
+
+        If `container system start`, `container system status`, or a project's "Network Creating" step hangs, check whether macOS refused to create a network:
+
+        ```bash
+        log show --last 5m --predicate 'subsystem == "com.apple.container"' | grep 'rawValue: 1001'
+        ```
+
+        If that prints a line every few seconds, macOS's Internet Sharing service has kept a stale network from an earlier Apple Container session, often after a `brew upgrade` or a crash. Restart that service instead of rebooting:
+
+        ```bash
+        pkill -f container-apiserver; pkill -f container-network-vmnet; pkill -x socktainer
+        sudo killall InternetSharing
+        container system start
+        socktainer
+        ```
+
+        macOS starts a new `InternetSharing` on demand. Run `ddev poweroff` after socktainer is back.
+
 === "Linux"
 
     ## Linux
@@ -198,6 +282,9 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         # Install Docker CE
         sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+        # Ubuntu 26.04+ and Debian sid ship sg (used below) in util-linux-extra
+        sudo apt-get install -y util-linux-extra 2>/dev/null || true
+
         # Add your user to the docker group (create group if it doesn’t exist)
         sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
 
@@ -226,6 +313,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
               "$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")" \
               | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
             sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            sudo apt-get install -y util-linux-extra 2>/dev/null || true
             sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
             sudo systemctl enable --now docker
             SCRIPT
@@ -250,7 +338,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         sudo systemctl enable --now docker
         ```
 
-        Run `sg docker` to open a new subshell with the `docker` group active, or log out and back in to apply the change to your whole session. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/) for more details.
+        Run `sg docker` to open a new subshell with the `docker` group active, or log out and back in to apply the change to your whole session. On Ubuntu 26.04+ and Debian sid, `sg` is in the `util-linux-extra` package. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/) for more details.
 
         !!!warning "Don’t `sudo` with `docker` or `ddev`"
             Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../usage/commands.md#hostname) command.
@@ -459,7 +547,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         bash /tmp/podman-rootless.sh
         ```
 
-        It verifies the Podman and `netavark` version pairing, the socket, `cgroup` manager, `subuid`/`subgid` ranges, privileged ports, the Docker context, and buildx. It then stops inferring and starts testing: it runs a real container, builds an image and loads it back into the engine, and watches a container healthcheck report `healthy`. Those last three are the steps `ddev start` fails at on a machine where everything else looks correct. To perform the whole setup described above instead of just checking it, run the script with `--install`. There's also `--install-brew` for the Homebrew last resort, which is what DDEV's CI uses.
+        It verifies the Podman and `netavark` version pairing, the socket, `cgroup` manager, `subuid`/`subgid` ranges, privileged ports, the Docker context, and buildx. It then stops inferring and starts testing: it starts the buildx builder that `ddev start` builds with, runs a real container, builds an image and loads it back into the engine, and watches a container healthcheck report `healthy`. It also runs `docker exec` in a container, which healthchecks and buildx both need. Those are the steps `ddev start` fails at on a machine where everything else looks correct. To perform the whole setup described above instead of just checking it, run the script with `--install`. There's also `--install-brew` for the Homebrew last resort, which is what DDEV's CI uses.
 
         ### Podman rootless performance optimization
 
@@ -489,6 +577,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         | `unable to upgrade to tcp, received 500` from `docker run`, and containers stuck in `Created` | Your `netavark` major version doesn't match Podman's — they're released as a pair, so Podman 6.x needs `netavark` 2.x and Podman 4.x/5.x need 1.x. The Podman log shows `failed to load network options: invalid type: sequence, expected a map`. The usual cause is a Podman installed outside the distribution's packages while the distribution's older `netavark` is still there. | Remove the distribution's `netavark`/`aardvark-dns` so Podman uses its own, or install a Podman matching them. Don't mix stacks. |
         | `could not find "netavark" in one of [...]` | `engine.helper_binaries_dir` is set somewhere. It *replaces* Podman's helper search path rather than extending it, so if the list omits the `libexec/podman` directory next to your `podman` binary, Podman finds no `netavark` at all — or a wrong-version one. | Remove the `helper_binaries_dir` setting from your `containers.conf` files. |
         | `failed to load image: ... Source image rejected: ... is rejected by policy`, after a build that ran to completion | Your `policy.json` rejects by default and doesn't allow the `docker-archive` and `oci-archive` transports that `buildx --load` uses to hand the built image back. Registry pulls go through a different transport and keep working, so pulling, running and building all look healthy. | In the `policy.json` that applies (`~/.config/containers/policy.json` overrides `/etc/containers/policy.json`), add `"docker-archive"` and `"oci-archive"` entries set to `insecureAcceptAnything` under `transports`. That leaves the rest of the policy intact. |
+        | `crun: write to /proc/self/oom_score_adj: Permission denied` with exit code 126, from `docker exec`, from a healthcheck that never turns `healthy`, or while `booting buildkit` | `crun` 1.31 applies the `oom_score_adj` that Podman requests for an exec process, and Podman 6.2.0 and older request 0 for containers created through the Docker API. `podman.service` runs under the `systemd` user manager, which sets a floor of 100, so every exec fails. See [`crun` issue 2466](https://github.com/containers/crun/issues/2466). | Upgrade to Podman 6.2.1 or later, which has the fix. If you can't upgrade yet, use `crun` 1.30.1: download the [static 1.30.1 release](https://github.com/containers/crun/releases/tag/1.30.1) to `~/.local/lib/ddev-crun/crun`, point `[engine.runtimes]` at it with `crun = ["/home/<you>/.local/lib/ddev-crun/crun"]` in `~/.config/containers/containers.conf.d/zz-crun-pin.conf`, then `systemctl --user restart podman.service`. `linux-podman-rootless.sh` prints the exact commands when it finds this problem. |
         | `Cannot connect to the Docker daemon`, and `systemctl --user is-active podman.socket` says `failed` | Repeated activation failures tripped `systemd`'s start limit. Fixing the underlying config doesn't clear this on its own. | `systemctl --user reset-failed podman.socket podman.service`, then `systemctl --user start podman.socket`. |
         | `crun: create /sys/fs/cgroup/docker: Permission denied` during a build | Podman is using the `cgroupfs` `cgroup` manager, either because there's no lingering user session or because something set `cgroup_manager = "cgroupfs"` system-wide. GitHub Actions' Ubuntu runner image does the latter: it installs Podman from the [`podman-static`](https://github.com/mgoltzsche/podman-static) bundle, which ships that setting in `/etc/containers/containers.conf`. | `sudo loginctl enable-linger $(whoami)`. If `grep -rn cgroup_manager /etc/containers/` finds a setting, override it with `cgroup_manager = "systemd"` under `[engine]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`, which outranks `/etc`. Confirm with `podman info --format '{{.Host.CgroupManager}}'`. |
         | Containers fail to start, or behave oddly, and `podman info` shows an `ociRuntime` path outside your Podman's own prefix | Something pins the runtime with `[engine.runtimes]` in a `containers.conf` under `/etc`. GitHub Actions' runner image pins `crun = ["/usr/local/bin/crun"]`, the statically built `crun` from its Podman 5.x bundle, which then gets used by an unrelated Podman. | Point it back at the `crun` next to your own `podman` — `/usr/bin/crun` for a distribution Podman, `/home/linuxbrew/.linuxbrew/bin/crun` for Homebrew's — with `[engine.runtimes]` and `crun = ["<that path>"]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
@@ -591,7 +680,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
         ```
 
-        Run `sg docker` to open a new subshell with the `docker` group active, or log out and back in to apply the change to your whole session. On WSL2 systems without `systemd`, you may need to start Docker manually with `sudo service docker start`.
+        Open a new WSL2 terminal, which starts with the `docker` group active. On WSL2 systems without `systemd`, you may need to start Docker manually with `sudo service docker start`.
 
         ??? tip "Prefer to run as a script?"
             Create a script file, then run it:
@@ -729,9 +818,11 @@ But this error often indicates that either Docker is not installed or the Docker
 A message like this means that your user is not in the `docker` group:
 
 ```bash
+# Ubuntu 26.04+ and Debian sid ship sg in util-linux-extra
+sudo apt-get install -y util-linux-extra 2>/dev/null || true
 sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
 # sg opens a new subshell with the `docker` group active;
-# log out and back in to apply the change to your full session
+# log out and back in (in WSL2, open a new terminal) to apply it to your full session
 sg docker
 ```
 

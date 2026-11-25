@@ -32,6 +32,8 @@ import (
 // The address is namespaced by the user's UID so daemons run by different
 // users on the same host do not collide (the abstract namespace is shared per
 // network namespace, not per user as a filesystem path would be).
+//
+// Deprecated: Use [github.com/docker/secrets-engine/client/config.StandaloneSocketPath] instead.
 func StandaloneSocketPath() string {
 	return fmt.Sprintf("@docker-secrets-engine/%d/daemon.sock", os.Getuid())
 }
@@ -39,7 +41,7 @@ func StandaloneSocketPath() string {
 // DaemonSocketPath returns the address of the standalone Secrets Engine's
 // listening socket.
 //
-// Deprecated: Use [StandaloneSocketPath] instead.
+// Deprecated: Use [github.com/docker/secrets-engine/client/config.StandaloneSocketPath] instead.
 func DaemonSocketPath() string {
 	return StandaloneSocketPath()
 }

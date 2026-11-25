@@ -5,7 +5,9 @@ search:
 
 # Sharing Your Project
 
-Even though DDEV is intended for local development on a single machine, not as a public server, there are a number of reasons you might want to expose your work in progress more broadly:
+Even though DDEV is intended for local development on a single machine, not as a public server, you might want to expose your work in progress more broadly.
+
+Common reasons include:
 
 * Testing with a mobile device
 * Sharing on a local network so that everybody on the local network can see your project

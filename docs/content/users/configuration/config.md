@@ -5,12 +5,12 @@ search:
 
 # Config Options
 
-DDEV configuration is stored in YAML files that come in two flavors:
+DDEV configuration is stored in YAML files, per project and globally. Most settings take effect when you run [`ddev start`](../usage/commands.md#start).
+
+The files come in two flavors:
 
 1. :octicons-file-directory-16: **Project** `.ddev/config.yaml` settings, with optional [environmental override](#environmental-overrides) variants.
 2. :octicons-globe-16: **Global** `$HOME/.ddev/global_config.yaml` settings that can apply to all projects.
-
-Most of these settings take effect when you run [`ddev start`](../usage/commands.md#start).
 
 ## Managing Configuration
 
@@ -451,6 +451,8 @@ Whether to skip mounting project into web container.
 
 Whether to disable the TUI (terminal user interface) when running the `ddev` command without any arguments.
 
+When disabled, interactive [`ddev config`](../usage/commands.md#config) also asks its questions one line at a time instead of showing a form.
+
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
@@ -577,6 +579,20 @@ The PHP version the project should use.
 | :octicons-file-directory-16: project | `8.4` | Can be `5.6` through `8.6`. New versions are added when released upstream.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
+
+!!!tip "Getting a new PHP patch release before DDEV ships it"
+    New PHP releases, such as security fixes, reach [`deb.sury.org`](https://deb.sury.org/) before the next DDEV release. To install them now, add this file and rebuild:
+
+    ```dockerfile
+    # .ddev/web-build/Dockerfile.php-upgrade
+    # Safe to keep; you can delete it after upgrading DDEV
+    RUN (apt-get update || true) && apt-get install -y --only-upgrade 'php*'
+    ```
+
+    ```bash
+    ddev restart --no-cache
+    ddev php -v
+    ```
 
 ## `project_tld`
 
@@ -854,14 +870,6 @@ Example: `working_dir: { web: "/var/www", db: "/etc" }` sets the working directo
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
 May also be set via `ddev config global --wsl2-no-windows-hosts-mgt` or `ddev config global --wsl2-no-windows-hosts-mgt=false`.
-
-## `xdebug_enabled`
-
-Whether Xdebug should be enabled for [step debugging](../debugging-profiling/step-debugging.md) or [profiling](../debugging-profiling/xdebug-profiling.md).
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project | `false` | Please leave this `false` in most cases. Most people use [`ddev xdebug`](../usage/commands.md#xdebug) and `ddev xdebug off` (or `ddev xdebug toggle`) commands.
 
 ## `xdebug_ide_location`
 

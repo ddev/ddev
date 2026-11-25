@@ -32,13 +32,13 @@
 //	docker/mcp/oauth-dcr/**        – MCP Dynamic Client Registration configs
 //	docker/sandbox/**              – Sandbox-related secrets
 //	docker/sandbox/oauth/**        – Sandbox third-party OAuth tokens
+//	docker/secrets-engine/**       – secrets-engine's own secrets
 //
-// All variables in this package are re-exported from
-// github.com/docker/secrets-engine/x/realms and are provided here as a
-// stable, versioned surface for external consumers.
+// All variables in this package are provided here as a stable, versioned
+// surface for external consumers.
 package realms
 
-import xrealms "github.com/docker/secrets-engine/x/realms"
+import "github.com/docker/secrets-engine/secrets"
 
 // Docker realms all start with `docker/` as the prefix.
 //
@@ -51,36 +51,43 @@ import xrealms "github.com/docker/secrets-engine/x/realms"
 // Docker Registry authentication will be prefixed with
 // `docker/auth/registry/docker/<username>`.
 var (
-	DockerHubAuthentication             = xrealms.DockerHubAuthentication
-	DockerHubStagingAuthentication      = xrealms.DockerHubStagingAuthentication
-	DockerRegistryAuthentication        = xrealms.DockerRegistryAuthentication
-	DockerRegistryStagingAuthentication = xrealms.DockerRegistryStagingAuthentication
+	DockerHubAuthentication             = secrets.MustParsePattern("docker/auth/hub/**")
+	DockerHubStagingAuthentication      = secrets.MustParsePattern("docker/auth/hub-staging/**")
+	DockerRegistryAuthentication        = secrets.MustParsePattern("docker/auth/registry/docker/**")
+	DockerRegistryStagingAuthentication = secrets.MustParsePattern("docker/auth/registry/docker-staging/**")
 )
 
 var (
 	// DockerHubAuthenticationMetadata holds one profile entry per signed-in
 	// Docker Hub account, plus a default entry duplicating the default
 	// account's profile.
-	DockerHubAuthenticationMetadata = xrealms.DockerHubAuthenticationMetadata
+	DockerHubAuthenticationMetadata = secrets.MustParsePattern("docker/auth/metadata/hub/**")
 	// DockerHubStagingAuthenticationMetadata is the staging variant of
 	// [DockerHubAuthenticationMetadata].
-	DockerHubStagingAuthenticationMetadata = xrealms.DockerHubStagingAuthenticationMetadata
+	DockerHubStagingAuthenticationMetadata = secrets.MustParsePattern("docker/auth/metadata/hub-staging/**")
 )
 
 var (
 	// DockerMCPDefault is the default realm used for MCP related secrets
-	DockerMCPDefault = xrealms.DockerMCPDefault
+	DockerMCPDefault = secrets.MustParsePattern("docker/mcp/**")
 	// DockerMCPOAuth is the realm used for all MCP OAuth credentials retrieved by Docker.
-	DockerMCPOAuth = xrealms.DockerMCPOAuth
+	DockerMCPOAuth = secrets.MustParsePattern("docker/mcp/oauth/**")
 	// DockerMCPOAuthDCR is the realm used to hold Dynamic Client Registered (DCR)
 	// OAuth configurations for supported MCP servers.
-	DockerMCPOAuthDCR = xrealms.DockerMCPOAuthDCR
+	DockerMCPOAuthDCR = secrets.MustParsePattern("docker/mcp/oauth-dcr/**")
 )
 
 var (
 	// DockerSandbox is the default realm used for Sandbox related secrets
-	DockerSandbox = xrealms.DockerSandbox
+	DockerSandbox = secrets.MustParsePattern("docker/sandbox/**")
 	// DockerSandboxOAuth is the realm used for all Sandbox OAuth credentials
 	// such as third-party tokens - this does not store the Docker Auth tokens.
-	DockerSandboxOAuth = xrealms.DockerSandboxOAuth
+	DockerSandboxOAuth = secrets.MustParsePattern("docker/sandbox/oauth/**")
+)
+
+var (
+	// SecretsEngine is the default realm used for secrets-engine related secrets.
+	SecretsEngine = secrets.MustParsePattern("docker/secrets-engine/**")
+	// SecretsEnginePlugins is the realm used to store credentials and configuration for secrets-engine plugins.
+	SecretsEnginePlugins = secrets.MustParsePattern("docker/secrets-engine/plugins/**")
 )

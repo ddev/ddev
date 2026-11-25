@@ -4,6 +4,8 @@ search:
 ---
 # Brand Guide
 
+These are the official DDEV logos and colors, along with how to write the DDEV name.
+
 ## Logos
 
 | Logo | Preview |

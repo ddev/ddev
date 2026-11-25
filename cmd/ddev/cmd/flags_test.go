@@ -191,5 +191,5 @@ func TestUnitCmdFlagsAssignToCommand(t *testing.T) {
 	c = getCommand()
 	assert.NoError(subject.LoadFromJSON(`[{"Name":"test-1","Usage":"Usage of test 1","Type":"bool","DefValue":"no-bool-value"},{"Name":"test-2","Usage":"Usage of test 2","Type":"int","DefValue":"no-int-value"}]`))
 	assert.EqualError(subject.AssignToCommand(&c),
-		"the following problems were found while assigning the flags to the command 'command' in 'script':\n - error 'strconv.ParseBool: parsing \"no-bool-value\": invalid syntax' while set value of flag 'test-1'\n - error 'strconv.ParseInt: parsing \"no-int-value\": invalid syntax' while set value of flag 'test-2'")
+		"the following problems were found while assigning the flags to the command 'command' in 'script':\n - error 'must be true or false' while setting value 'no-bool-value' of flag 'test-1'\n - error 'must be an integer' while setting value 'no-int-value' of flag 'test-2'")
 }

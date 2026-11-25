@@ -995,8 +995,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	// On macOS we want to listen on localhost port, to not trigger
 	// a firewall block. On other systems, we listen on all interfaces.
+	// Apple container VMs reach the host at the vmnet gateway, not loopback.
 	listenPort := ":9003"
-	if nodeps.IsMacOS() {
+	if nodeps.IsMacOS() && !dockerutil.IsAppleContainer() {
 		listenPort = "127.0.0.1:9003"
 	}
 
@@ -4051,22 +4052,51 @@ func TestGetWebContainerDirectURLsErrorHandling(t *testing.T) {
 // TestGetWebContainerDirectURLsWithGenericWebserver checks that every URL DDEV reports for a
 // generic webserver project with web_extra_exposed_ports serves the project
 func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
-	if dockerutil.IsPodmanRootlessmacOS() {
-		t.Skip("Skipping: podman rootless on macOS cannot bind privileged ports 80/443")
-	}
+	t.Run("default router ports", func(t *testing.T) {
+		if dockerutil.IsPodmanRootlessmacOS() || dockerutil.IsAppleContainer() {
+			t.Skip("Skipping: podman rootless on macOS and Apple Container cannot bind privileged ports 80/443")
+		}
+		// The name from t.Name() would make ddev-<name>-web too long a DNS label for the router
+		testGenericWebserverDirectURLs(t, "generic-direct-urls", 80, 443, false)
+	})
+	// Another provider's VM, or anything else, can hold the router ports, so
+	// DDEV substitutes them on start. A test can't bind 80/443 without root on
+	// Linux, so hold high ports instead.
+	t.Run("busy router ports", func(t *testing.T) {
+		testGenericWebserverDirectURLs(t, "generic-direct-busy", 29080, 29443, true)
+	})
+}
+
+func testGenericWebserverDirectURLs(t *testing.T, name string, httpPort int, httpsPort int, occupyPorts bool) {
 	assert := asrt.New(t)
 
-	testDir := testcommon.CreateTmpDir(t.Name())
+	testDir := testcommon.CreateTmpDir(name)
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
+	dockerIP, err := dockerutil.GetDockerIP()
+	require.NoError(t, err)
+	if occupyPorts {
+		ddevapp.RouterSubstitutePortsAssigned = make(map[int]bool)
+		for _, p := range []int{httpPort, httpsPort} {
+			listener, err := net.Listen("tcp", net.JoinHostPort(dockerIP, strconv.Itoa(p)))
+			require.NoError(t, err)
+			t.Cleanup(func() {
+				_ = listener.Close()
+			})
+		}
+		// Recreate the router on the configured ports for the tests that follow
+		t.Cleanup(func() {
+			_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
+		})
+	}
+
 	app, err := ddevapp.NewApp(testDir, true)
 	require.NoError(t, err)
-	// The name from t.Name() would make ddev-<name>-web too long a DNS label for the router
-	app.Name = "generic-direct-urls"
+	app.Name = name
 	app.WebserverType = nodeps.WebserverGeneric
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
-		{Name: "svelte", WebContainerPort: 3000, HTTPPort: 80, HTTPSPort: 443},
+		{Name: "svelte", WebContainerPort: 3000, HTTPPort: httpPort, HTTPSPort: httpsPort},
 	}
 	app.WebExtraDaemons = []ddevapp.WebExtraDaemon{
 		{Name: "php-server", Command: "php -S 0.0.0.0:3000", Directory: "/var/www/html"},
@@ -4083,10 +4113,21 @@ func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
+	httpPortErr := func(a *ddevapp.DdevApp) error {
+		_, err := a.GetWebContainerDirectHTTPPort()
+		return err
+	}
+	require.NoError(t, httpPortErr(app), "a generic webserver should have a direct HTTP port through its web_extra_exposed_ports, after start")
 	httpURL := app.GetWebContainerDirectHTTPURL()
-	require.NotEmpty(t, httpURL, "a generic webserver should have a direct HTTP URL through its web_extra_exposed_ports")
-	dockerIP, err := dockerutil.GetDockerIP()
+
+	// A fresh copy reads the ports the way `ddev describe` does
+	app, err = ddevapp.NewApp(app.GetAppRoot(), true)
 	require.NoError(t, err)
+	if occupyPorts {
+		require.NotEqual(t, strconv.Itoa(httpPort), app.GetPrimaryRouterHTTPPort(), "the router should use a substitute for a busy HTTP port")
+	}
+	require.NoError(t, httpPortErr(app), "a generic webserver should have a direct HTTP port through its web_extra_exposed_ports, in a fresh copy")
+	require.Equal(t, httpURL, app.GetWebContainerDirectHTTPURL())
 	require.Contains(t, httpURL, dockerIP)
 
 	httpURLs, _, urls := app.GetAllURLs()

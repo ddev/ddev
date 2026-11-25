@@ -132,6 +132,13 @@ tailnet and tag the device:
 device" means the policy doesn't match anyone yet; it clears once the policy is
 correct.
 
+With `--ssh`, Tailscale answers every SSH connection that arrives over the
+tailnet, and the runner's own OpenSSH never sees it. A device that isn't tagged
+`tag:ddev-runner` matches no `ssh` rule, so plain `ssh` fails along with
+`tailscale ssh`, with "tailnet policy does not permit you to SSH to this node".
+Tag the device, or run `tailscale set --ssh=false` to hand port 22 back to
+OpenSSH.
+
 To join without a browser login, create a reusable, pre-approved auth key with
 `tag:ddev-runner` selected under **Settings** → **Keys** in the admin console,
 then run `tailscale up --auth-key=<key>`, adding `--ssh` on macOS. A device
@@ -143,12 +150,14 @@ as a secret.
 
 * SSH works through Tailscale SSH and through regular Remote Login (step 7 of
   [macOS setup](#macos-docker-desktop-test-agent-setup-apple-silicon)).
-* For screen sharing, run
-  [macos_screen_sharing.sh](scripts/macos_screen_sharing.sh) with `sudo`, then
-  connect to `vnc://<runner-name>` with the built-in Screen Sharing app. It
-  turns off Remote Management, which takes over port 5900 when enabled and
-  rejects users without Remote Management privileges as if the password were
-  wrong.
+* For screen sharing, turn on Remote Management in **System Settings** →
+  **General** → **Sharing**, then run
+  [macos_screen_sharing.sh](scripts/macos_screen_sharing.sh) with `sudo` to give
+  `testbot` every Remote Management privilege. Connect to `vnc://<runner-name>`
+  with the built-in Screen Sharing app. Remote Management owns port 5900 and
+  rejects a user without the Observe and Control privileges as if the password
+  were wrong. `dscl . -read /Users/testbot naprivs` shows `-1073741569` when
+  the user has every privilege.
 * On Linux with KDE, connect with KRDC using `vnc`. It needs its optional
   `libvncserver` dependency; without it KRDC rejects every address with "The
   entered address does not have the required form".
@@ -468,7 +477,7 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 2. Change the name of the machine to something in keeping with current style, perhaps `testbot-macos-arm64-8`. This is done in **Settings** → **General** → **About** → **Name** and in **Sharing** → **Computer Name** and in **Sharing** → **Local Hostname**.
 3. Set up [remote access with Tailscale](#remote-access-with-tailscale), including [Screen Sharing](#macos-runners). When this is done, most other tasks can be done remotely. As a fallback, install Chrome and log the browser into the account used for test runners, which picks up the Chrome Remote Desktop setup, and configure Chrome Remote Desktop to serve.
 4. The machine should be on the correct network and have a static IP handed out by DHCP. IP addresses are listed in /etc/hosts on `pi.ddev.site`, so this one should be added.
-5. Power should be set up as in ![macos power settings](../images/macos_power_settings.png).
+5. Power should be set up as in ![macos power settings](../images/macos_power_settings.png). On a MacBook those settings don't stop it sleeping when the lid closes; `sudo pmset -a disablesleep 1` does, takes effect without a reboot, and persists. `pmset -g | grep SleepDisabled` should show `1`. Use it only on a machine that stays on AC power, since a closed MacBook that never sleeps gets hot.
 6. Auto login should be set up as in ![macos users and groups](../images/macos_users_and_groups.png), see [automatically log in on boot](https://support.apple.com/en-us/HT201476).
 7. Remote login should be enabled as in ![macos remote login](../images/macos_remote_login.png).
 8. Automatic updates should be set to mostly security only as in ![macos automatic_updatees](../images/macos_automatic_updates.png).
@@ -476,7 +485,7 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 10. `sudo mkdir -p /usr/local/bin && sudo chown -R testbot /usr/local/bin`
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
-13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent@4 bats-core composer git golang jq mysql-client@8.0 mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
+13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent@4 bats-core composer docker docker-buildx docker-compose docker-credential-helper git golang jq mysql-client@8.0 mkcert netcat p7zip && brew install --cask docker-desktop iterm2 ngrok && brew link --force mysql-client`. Colima, Lima, and Podman need the Homebrew `docker` CLI even where Docker Desktop isn't installed. The `docker-desktop` cask needs `sudo`, so run it in a terminal on the machine rather than over a non-interactive SSH command.
 14. Run `ngrok authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
@@ -533,7 +542,8 @@ Then the Buildkite agent must be configured with tags `colima_vz=true`.
 
 1. `limactl create --name=lima-vz --vm-type=vz --mount-type=virtiofs --mount-writable --mount="~/:w" --memory=6 --cpus=4 --disk=60 template:docker`
 2. `limactl start lima-vz`
-3. `docker context use lima-lima-vz`
+3. `limactl start` prints the context command but doesn't run it, so create the context: `docker context create lima-lima-vz --docker "host=unix://$(limactl list lima-vz --format '{{.Dir}}')/sock/docker.sock"`
+4. `docker --context lima-lima-vz run --rm alpine echo ok`, then `limactl stop lima-vz`
 
 Then the Buildkite agent must be configured with tags `lima=true`.
 
@@ -585,7 +595,109 @@ The `test.sh` script uses `podman machine start` and `docker context use podman-
 
     `curl` must print `200`. Until someone clicks Allow, every published port resets ("Connection reset by peer") and containers can't reach the host, so nearly every networking test fails. On a testbot nobody sees the prompt: a test job raises it and leaves it waiting on the screen. If it was dismissed, turn `container-runtime-linux` on in System Settings → Privacy & Security → Local Network.
 
+    The prompt comes back after every upgrade of `container`, because macOS treats each new build as a new program. There is no command-line or MDM way to pre-approve it. Run `brew pin container` so `testbot_maintenance.sh`'s `brew upgrade` skips it, and upgrade on purpose while someone is on Screen Sharing: `brew unpin container && brew upgrade container && brew pin container`, then repeat this step.
+
+    Don't do this step, or start Apple Container at all, over SSH. An SSH session can't show the prompt, and `container system start` run from one registers the service in the `user/<uid>` launchd domain, where a later test job reuses it instead of starting its own.
+
+    To tell from the command line whether a prompt is waiting, look for Local Network checks of the forwarder in the system log. Each blocked connection to a container logs one:
+
+    ```bash
+    log show --last 10m --style compact --predicate 'process != "log" AND eventMessage CONTAINS "LocalNetwork: found bundle id com.apple.container.container-runtime-linux"'
+    ```
+
+    Any output means a test job's published ports are being blocked: allow `container-runtime-linux` over Screen Sharing. The same failures appear in the Apple Container log as `backend - connect failed: ... No route to host (errno: 65)`.
+
 Then the Buildkite agent must be configured with tag `socktainer=true`.
+
+### Troubleshooting socktainer Testbots
+
+Start from what the build shows. Most socktainer failures on a testbot come from the machine's state, not from the code under test.
+
+**Dozens of tests fail with `connection reset by peer` or `EOF` on host ports**, often with "ddev-router is running, but nothing answers on host port(s)" from the first project start, while containers answer requests from inside. A Local Network prompt for `container-runtime-linux` is waiting on that testbot's desktop.
+
+1. Over SSH, run the `log show` command from step 5 above. Any output confirms it.
+2. Over Screen Sharing, click Allow on the prompt, or turn `container-runtime-linux` on in System Settings → Privacy & Security → Local Network. Several `container-runtime-linux` entries are normal: each build of `container` gets its own.
+3. Rerun the published-port check from step 5 over Screen Sharing, or rebuild the failed build from the Buildkite UI. Nothing else needs restarting.
+
+This usually follows an upgrade of `container`, and it hits every socktainer testbot at once unless someone answered the prompt on some of them. One testbot passing while the others fail with the same versions points here too: the Local Network setting is stored separately on each machine.
+
+**Apple Container started by hand is gone by the time a job runs.** Expected: a test job for any other provider stops Apple Container and socktainer before it starts its own provider, and a socktainer job starts them again. Don't rely on leaving them running between jobs.
+
+**`launchctl print user/$(id -u)` lists `com.apple.container.apiserver`.** Someone ran `container system start` over SSH, and the next socktainer job reuses that service instead of starting its own. When no job is running on the testbot, stop it with `container system stop`. The next socktainer job starts it in the desktop session's `gui/<uid>` domain.
+
+**Rerunning only socktainer.** Rebuild the failed build from the Buildkite UI. Any push to a pull request starts new builds that cancel the ones still running for it, even a push with `[skip ci]`. Wait for a build you need to finish before pushing to its branch.
+
+## Claude Code Self-Hosted Runner (macOS)
+
+One macOS runner also runs a Claude Code self-hosted runner, so maintainers can start claude.ai sessions on it. It runs as `testbot`, from the LaunchAgent `~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist` with `RunAtLoad` and `KeepAlive`. Its `ProgramArguments` are:
+
+```bash
+/opt/homebrew/bin/claude self-hosted-runner \
+  --environment-secret-file /Users/testbot/.config/claude-runner/environment-secret \
+  --base-dir /Users/testbot/claude-runner --client-label macos-claude \
+  --use-anthropic-git-proxy --configure-git --remove-session-state \
+  --release-idle-session-min 30 --push-outcome-on-release --health-port 0 \
+  --log-file /Users/testbot/Library/Logs/claude-self-hosted-runner.log \
+  --hooks-dir /Users/testbot/.config/claude-runner/hooks
+```
+
+launchd doesn't expand `~`, so the plist uses absolute paths. After changing it, reload the agent while no session is running, because reloading ends the running session:
+
+```bash
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist
+```
+
+Every session runs as `testbot`, whoever started it, and gets anything `testbot` has. So keep `testbot` free of personal identity and setup:
+
+* No SSH key that GitHub accepts, in `~/.ssh`, in the keychain, or behind an agent such as 1Password's. Never connect to the runner with `ssh -A`, because sessions could then sign with your keys. Keep `~/.ssh/config` neutral, so `ssh` ignores any agent:
+
+    ```text
+    Include /Users/testbot/.colima/ssh_config
+
+    Host *
+      IdentityAgent none
+    ```
+
+* No personal dotfiles, commit signing setup such as `~/.ssh/allowed_signers`, or password manager signed in.
+* No `gh auth login`, and no `GH_TOKEN` or `GITHUB_TOKEN` that can write or that belongs to a person.
+* Only generic instructions and skills in `~/.claude`. Every session loads `~/.claude/CLAUDE.md` and `~/.claude/skills`, so personal ones apply to everyone. Instructions to use `gh` fail there, as described below.
+
+Sessions reach GitHub as the person who started them: HTTPS Git through Anthropic's proxy, and the GitHub MCP tools. Each maintainer connects GitHub on claude.ai under **Settings** → **Connectors** → **GitHub**, and picks a repository when starting a session. A session started without a repository gets no clone and no GitHub tools. To push to a fork, the session attaches the fork with push access instead of using SSH.
+
+`gh` in a session is `/opt/homebrew/bin/gh`, which isn't logged in, so it doesn't work. Sessions have no GitHub search either, which Claude Code offers only through `gh api`. On self-hosted runners, Claude Code routes only Git through the session's proxy, and `gh` is the machine's own CLI, although the runner log reports `gh_path_shim=true`. To give sessions `gh` for reading and searching, set `GH_TOKEN` for `testbot` to a fine-grained token of a GitHub machine user, with read-only access to public repositories. Writes still go only through the session's own account.
+
+The runner clones each repository to `~/claude-runner/<owner>/<repo>` and reuses that checkout for the next session, whoever starts it. A post-session hook cleans it with [`claude-runner-sweep`](https://github.com/ddev/coder-ddev/blob/main/modules/claude-self-hosted-runner/files/claude-runner-sweep) from the Coder runner template. The sweep stashes uncommitted changes in the runner's clones, removes worktrees, deletes extra clones that hold nothing unpushed, and moves the others to `~/.local/state/claude-runner-rescue/`. The runner clears the stash list between sessions, so the sweep keeps each stash under a ref. Install it with the hook:
+
+```bash
+mkdir -p ~/.local/bin ~/.config/claude-runner/hooks
+curl -fsSL https://raw.githubusercontent.com/ddev/coder-ddev/main/modules/claude-self-hosted-runner/files/claude-runner-sweep -o ~/.local/bin/claude-runner-sweep
+chmod +x ~/.local/bin/claude-runner-sweep
+printf '#!/bin/bash\nexec "$HOME/.local/bin/claude-runner-sweep" "$HOME/claude-runner"\n' > ~/.config/claude-runner/hooks/post-session
+chmod +x ~/.config/claude-runner/hooks/post-session
+```
+
+To add `--hooks-dir` to the LaunchAgent, append to its arguments, then reload it as above:
+
+```bash
+/usr/libexec/PlistBuddy -c "Add :ProgramArguments: string --hooks-dir" -c "Add :ProgramArguments: string /Users/testbot/.config/claude-runner/hooks" ~/Library/LaunchAgents/com.anthropic.claude-self-hosted-runner.plist
+```
+
+To find work a session left uncommitted, run `git for-each-ref refs/runner-rescue` in the checkout, and `git stash apply <ref>` to restore one. `~/.local/state/claude-runner-rescue/log` lists everything the sweep did. Rescues are kept for 30 days. Every later session can read them, whoever started it, which is fine for maintainers' open-source work. They are local refs, so a plain `git push` doesn't send them.
+
+Check `testbot` over SSH:
+
+```bash
+ssh-keygen -F github.com >/dev/null || curl -fsSL https://api.github.com/meta | jq -r '.ssh_keys[] | "github.com " + .' >> ~/.ssh/known_hosts
+ssh -T git@github.com
+# Expect "Permission denied (publickey)"
+ssh -G github.com | grep -i identityagent
+# Expect "identityagent none"
+gh auth status
+# Expect "You are not logged into any GitHub hosts", unless you set a read-only GH_TOKEN
+```
+
+Then start a session with a repository selected, and ask Claude to run `whoami`, `ssh -T git@github.com`, `git ls-remote origin HEAD` and `git status`, and to call the GitHub MCP tool `get_me`. Expect `testbot`, the same SSH refusal, a commit hash, a clean checkout, and the GitHub login of the person who started the session.
 
 ## macOS Disk Space Cleanup
 
@@ -669,4 +781,4 @@ To test a branch against only selected pipelines (e.g. WSL2 only) or to run a su
 
 5. Click **Create Build**.
 
-Use `[skip ci]` in your commit message to prevent all pipelines from triggering automatically when you push, then manually trigger only the pipelines you need.
+Use `[skip ci]` in your commit message to prevent all pipelines from triggering automatically when you push, then manually trigger only the pipelines you need. To skip that manual step, put `[only <pipeline> ...]` in the commit subject instead, such as `[only macos-socktainer]`, and only the named pipelines run their tests. See [Running Only Some Buildkite Pipelines](maintainers.md#running-only-some-buildkite-pipelines).
