@@ -1,9 +1,11 @@
 # Desktop App (Experimental)
 
-The DDEV desktop app is a graphical interface for DDEV, in a window of its own, with a menu in the system tray or macOS menu bar. From the window or the tray you can start, stop, and restart projects, open their sites and Mailpit, and follow what each action prints. [`ddev gui`](../usage/commands.md#gui) opens it, and `ddev gui --browser` opens the same interface in your browser instead.
+The DDEV desktop app manages DDEV projects in a window of its own, with a menu in the system tray or macOS menu bar. From the window or the tray you can start, stop, and restart projects, open their sites and Mailpit, and follow what each action prints.
 
 !!!warning "Experimental"
     The desktop app is experimental. Its features and behavior may change, and it has no update check of its own; it updates when DDEV does.
+
+[`ddev gui`](../usage/commands.md#gui) opens the app, and `ddev gui --browser` opens the same interface in your browser instead.
 
 The app contains no DDEV code. It runs `ddev gui --desktop` from the `ddev` you already have, so the window, the tray, and your terminal always show the same projects and use the same version of DDEV.
 
