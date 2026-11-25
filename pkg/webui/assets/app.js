@@ -19,6 +19,7 @@ const state = {
   jobSource: null,
   logSource: null,
   desktop: false,
+  error: '',
   // xdebugWanted holds a project's requested Xdebug state until its detail
   // is reloaded, so the switch does not flip back while the job runs.
   xdebugWanted: {},
@@ -119,6 +120,7 @@ function connectEvents() {
     state.jobs = st.jobs || [];
     state.router = st.router || '';
     state.desktop = !!st.desktop;
+    state.error = st.error || '';
     const banner = $('error-banner');
     banner.textContent = st.error || '';
     banner.classList.toggle('hidden', !st.error);
@@ -209,7 +211,9 @@ function renderProjects() {
     h('span', { class: 'type' }, p.type),
     h('span', { class: 'sub' }, busy ? busy.title + '…' : (p.url || p.status)));
   }));
-  $('project-empty').classList.toggle('hidden', state.projects.length > 0);
+  // An error such as Docker being unreachable empties the list; the banner
+  // explains it, and "No projects yet" would not be true.
+  $('project-empty').classList.toggle('hidden', state.projects.length > 0 || !!state.error);
   if (!state.selected && state.projects.length) selectProject(state.projects[0].name);
 }
 

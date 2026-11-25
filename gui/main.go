@@ -231,7 +231,12 @@ func main() {
 		}
 		if st == nil {
 			if ok, _ := notifier.CheckNotificationAuthorization(); !ok {
-				_, _ = notifier.RequestNotificationAuthorization()
+				// macOS refuses an ad-hoc signed app here, such as a PR build.
+				if granted, err := notifier.RequestNotificationAuthorization(); err != nil {
+					log.Printf("Notifications are off: %v", err)
+				} else if !granted {
+					log.Printf("Notifications are off: they are not allowed for DDEV in the system settings")
+				}
 			}
 		}
 		notifyOn.Store(true)
