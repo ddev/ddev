@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -57,7 +58,32 @@ func request(s *Server, method, target string, mod func(*http.Request)) *httptes
 }
 
 func withCookie(s *Server) func(*http.Request) {
-	return func(r *http.Request) { r.AddCookie(&http.Cookie{Name: cookieName, Value: s.token}) }
+	return func(r *http.Request) { r.AddCookie(&http.Cookie{Name: s.cookieName, Value: s.token}) }
+}
+
+// A browser sends a host's cookies to every port, so one shared name let a
+// second `ddev gui --browser` log the first one's tab out.
+func TestCookiePerPort(t *testing.T) {
+	a, b := newTestServer(t), newTestServer(t)
+	require.NotEqual(t, a.cookieName, b.cookieName)
+
+	for _, s := range []*Server{a, b} {
+		_, port, err := net.SplitHostPort(s.host())
+		require.NoError(t, err)
+		require.Equal(t, cookiePrefix+port, s.cookieName)
+		rec := request(s, "GET", "/?token="+s.token, nil)
+		cookies := rec.Result().Cookies()
+		require.Len(t, cookies, 1)
+		require.Equal(t, s.cookieName, cookies[0].Name)
+	}
+
+	both := func(r *http.Request) {
+		r.AddCookie(&http.Cookie{Name: a.cookieName, Value: a.token})
+		r.AddCookie(&http.Cookie{Name: b.cookieName, Value: b.token})
+	}
+	require.Equal(t, http.StatusOK, request(a, "GET", "/", both).Code)
+	require.Equal(t, http.StatusOK, request(b, "GET", "/", both).Code)
+	require.Equal(t, http.StatusUnauthorized, request(a, "GET", "/", withCookie(b)).Code)
 }
 
 func TestSecurity(t *testing.T) {

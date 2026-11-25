@@ -31,13 +31,15 @@ import (
 //go:embed assets
 var assets embed.FS
 
-// cookieName holds the token once the launch URL has been visited, so it
-// does not stay in the address bar or history.
-const cookieName = "ddev_gui_token"
+// cookiePrefix and the port name the cookie that holds the token after the
+// launch URL, so the token leaves the address bar. Cookies ignore the port,
+// so without it two servers would overwrite each other's token.
+const cookiePrefix = "ddev_gui_token_"
 
 // Server is the dashboard's HTTP server.
 type Server struct {
-	token string
+	token      string
+	cookieName string
 	// hosts are the Host header values the server answers to, which stops
 	// DNS rebinding from reaching it through another name.
 	hosts map[string]bool
@@ -90,6 +92,7 @@ func New(port int) (*Server, error) {
 	}
 	s.jobs = newJobs(s.notifyChanged)
 	actual := l.Addr().(*net.TCPAddr).Port
+	s.cookieName = cookiePrefix + strconv.Itoa(actual)
 	s.hosts, s.origins = map[string]bool{}, map[string]bool{}
 	for _, h := range []string{"127.0.0.1", "localhost"} {
 		hp := net.JoinHostPort(h, strconv.Itoa(actual))
@@ -210,7 +213,7 @@ func (s *Server) secure(next http.Handler) http.Handler {
 				http.Error(w, "invalid token", http.StatusForbidden)
 				return
 			}
-			http.SetCookie(w, &http.Cookie{Name: cookieName, Value: s.token, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})
+			http.SetCookie(w, &http.Cookie{Name: s.cookieName, Value: s.token, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
@@ -222,7 +225,7 @@ func (s *Server) secure(next http.Handler) http.Handler {
 				return
 			}
 			bearer = true
-		} else if c, err := r.Cookie(cookieName); err != nil || !s.tokenMatches(c.Value) {
+		} else if c, err := r.Cookie(s.cookieName); err != nil || !s.tokenMatches(c.Value) {
 			http.Error(w, "Open the URL that `ddev gui --browser` printed, which includes the access token.", http.StatusUnauthorized)
 			return
 		}
