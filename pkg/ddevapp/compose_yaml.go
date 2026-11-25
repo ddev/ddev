@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -440,6 +441,21 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 				if vol.Type == composeTypes.VolumeTypeBind && vol.ReadOnly {
 					vol.ReadOnly = false
 					service.Volumes[i] = vol
+				}
+			}
+		}
+
+		// Add-on services often mount the project .ddev directory, which
+		// remote Docker can't see, so give them the copy web and db use
+		if isNoBindMounts {
+			for i, vol := range service.Volumes {
+				if vol.Type == composeTypes.VolumeTypeBind && filepath.Clean(vol.Source) == app.AppConfDir() {
+					service.Volumes[i] = composeTypes.ServiceVolumeConfig{
+						Type:     composeTypes.VolumeTypeVolume,
+						Source:   "ddev-config",
+						Target:   vol.Target,
+						ReadOnly: vol.ReadOnly,
+					}
 				}
 			}
 		}

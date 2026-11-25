@@ -3,12 +3,15 @@ package ddevapp
 import (
 	"net"
 	"net/netip"
+	"path/filepath"
+	"slices"
 	"strconv"
 	"testing"
 	"time"
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/moby/moby/api/types/network"
@@ -87,6 +90,49 @@ func TestFixupComposeYamlAssignsUnspecifiedHostPorts(t *testing.T) {
 	}
 	require.NotEqual(t, ports[0].Published, ports[1].Published)
 	require.Equal(t, "23456", ports[2].Published)
+}
+
+// TestFixupComposeYamlDdevConfigVolume checks that with no_bind_mounts a bind
+// mount of the project .ddev directory becomes the ddev-config volume.
+func TestFixupComposeYamlDdevConfigVolume(t *testing.T) {
+	origNoBindMounts := globalconfig.DdevGlobalConfig.NoBindMounts
+	t.Cleanup(func() { globalconfig.DdevGlobalConfig.NoBindMounts = origNoBindMounts })
+	app, err := NewApp(t.TempDir(), true)
+	require.NoError(t, err)
+
+	binds := []composeTypes.ServiceVolumeConfig{
+		{Type: composeTypes.VolumeTypeBind, Source: app.AppConfDir(), Target: "/mnt/ddev_config", ReadOnly: true},
+		{Type: composeTypes.VolumeTypeBind, Source: app.AppConfDir() + "/", Target: "/mnt/rw"},
+		{Type: composeTypes.VolumeTypeBind, Source: filepath.Join(app.AppConfDir(), "varnish"), Target: "/etc/varnish"},
+	}
+	for _, noBindMounts := range []bool{false, true} {
+		globalconfig.DdevGlobalConfig.NoBindMounts = noBindMounts
+		project := &composeTypes.Project{
+			Networks: composeTypes.Networks{},
+			Services: composeTypes.Services{
+				"addon": {
+					Name:        "addon",
+					Networks:    map[string]*composeTypes.ServiceNetworkConfig{},
+					Environment: composeTypes.MappingWithEquals{},
+					Volumes:     slices.Clone(binds),
+				},
+			},
+		}
+		project, err = fixupComposeYaml(project, app)
+		require.NoError(t, err)
+
+		volumes := project.Services["addon"].Volumes
+		if !noBindMounts {
+			require.Equal(t, binds, volumes)
+			continue
+		}
+		require.Equal(t, []composeTypes.ServiceVolumeConfig{
+			{Type: composeTypes.VolumeTypeVolume, Source: "ddev-config", Target: "/mnt/ddev_config", ReadOnly: true},
+			{Type: composeTypes.VolumeTypeVolume, Source: "ddev-config", Target: "/mnt/rw"},
+			binds[2],
+		}, volumes)
+		require.Equal(t, []string{"addon: " + binds[2].Source + ":/etc/varnish"}, composeBindMounts(project))
+	}
 }
 
 // TestExistingContainerHostPortStopped checks that a stopped container's stored
