@@ -490,7 +490,7 @@ sleep 2
 			t.Run(tc.name, func(t *testing.T) {
 				marker := filepath.Join(site.Dir, "cleanup-marker")
 				mockPath := filepath.Join(site.Dir, ".ddev", "share-providers", "signal-cleanup-test.sh")
-				script := "#!/usr/bin/env bash\nsleep 100 &\nPID=$!\n" + tc.trap + "\necho https://signal-test.example.com\nwait $PID\n"
+				script := "#!/usr/bin/env bash\n" + tc.trap + "\nsleep 100 &\nPID=$!\necho https://signal-test.example.com\nwait $PID\n"
 				require.NoError(t, os.WriteFile(mockPath, []byte(script), 0755))
 				t.Cleanup(func() { _ = os.Remove(mockPath); _ = os.Remove(marker) })
 				cmd := exec.Command(DdevBin, "share", "--provider=signal-cleanup-test")
