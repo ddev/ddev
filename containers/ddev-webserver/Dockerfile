@@ -366,9 +366,11 @@ RUN for v in /usr/sbin/php-fpm[0-9]*; do \
       update-alternatives --install /usr/sbin/php-fpm php-fpm "$v" "$prio"; \
     done
 
+# github.com/OWNER/REPO/releases/latest, unlike api.github.com, is not subject
+# to the API's limit of 60 unauthenticated requests an hour, which CI runners hit.
 RUN <<EOF
     set -eu -o pipefail
-    gh_tag() { curl -L --fail --silent "https://api.github.com/repos/$1/releases/latest" | jq -r .tag_name; }
+    gh_tag() { curl -fsSL --retry 2 -H 'Accept: application/json' "https://github.com/$1/releases/latest" | jq -er .tag_name; }
 
     # Install mkcert
     tag=$(gh_tag FiloSottile/mkcert)
@@ -417,7 +419,7 @@ RUN phpdismod blackfire xdebug xhprof
 
 RUN <<EOF
     set -eu -o pipefail
-    gh_tag() { curl -L --fail --silent "https://api.github.com/repos/$1/releases/latest" | jq -r .tag_name; }
+    gh_tag() { curl -fsSL --retry 2 -H 'Accept: application/json' "https://github.com/$1/releases/latest" | jq -er .tag_name; }
 
     # Install mailpit
     tag=$(gh_tag axllent/mailpit)
