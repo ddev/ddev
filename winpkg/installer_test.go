@@ -335,6 +335,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 				// mid-install. With it gone, /usr/bin/docker is Docker Desktop's own
 				// symlink, which the precondition can reliably detect and restart-repair.
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", "apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce")
+				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", removeDockerCEDataCmd)
 			})
 
 			// Get absolute path to installer
@@ -588,6 +589,8 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 		// test) restarts Docker Desktop to re-inject the symlink that this removal deletes.
 		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce 2>/dev/null)")
 		t.Logf("distro cleanup: err=%v, output: %s", err, out)
+		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", removeDockerCEDataCmd)
+		t.Logf("docker-ce data cleanup: err=%v, output: %s", err, out)
 
 		// Re-run wsl-fix-interop after apt-get remove: docker-ce's post-remove scripts
 		// clear binfmt_misc entries (for QEMU multi-arch support), which also removes
@@ -599,6 +602,11 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 		}
 	}
 }
+
+// removeDockerCEDataCmd removes what apt-get remove of docker-ce leaves behind.
+// containerd.io stays installed and keeps every image a run pulled, which grew
+// to about 110GB per docker-ce test distro.
+const removeDockerCEDataCmd = "if dpkg -s containerd.io >/dev/null 2>&1; then apt-get remove -y containerd.io; fi; rm -rf /var/lib/docker /var/lib/containerd"
 
 // configureTestWSL2Distro verifies that the pre-provisioned test WSL2 distro
 // exists. Test distros are provisioned out-of-band, once per runner (see
