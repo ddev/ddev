@@ -273,6 +273,10 @@ For a runner with a public IP:
     hostAddressLoopback=true
     ```
 
+    A Docker Desktop runner skips the networking settings, but every WSL2 runner
+    should add `sparseVhd=true` under `[experimental]` and make its existing
+    distro sparse, as described in [Sparse WSL2 Disks](#sparse-wsl2-disks).
+
 7. **Before running the setup script**, configure mkcert CAROOT on Windows (PowerShell as the testbot user). This must happen first so that `mkcert -install` in WSL2 installs the Windows CA (not a separate Linux-local one) into the Linux trust store:
 
     ```powershell
@@ -772,7 +776,59 @@ Each provider on a shared macOS testbot keeps its own VM disk, which grows to it
 * `testbot_maintenance.sh`, run around every job, removes dangling images, returns freed blocks to the host with `fstrim`, deletes orphaned Mutagen caches and old `buildx` refs, and prunes all unused images when less than `LOW_DISK_GB` (40) GB is free.
 * `testbot_disk_cleanup.sh`, run weekly by the `testbot-disk-cleanup.yml` pipeline, starts each provider in turn, removes everything it holds, and recreates a Podman or Lima VM whose container storage is still more than 70% full. It also prunes Apple Container's own storage with the `container` CLI.
 
-To target one machine, the scheduled pipeline needs a `testbot=<hostname>` tag on each agent, for example `tags="...,testbot=tb-macos-arm64-5"`. The nightly `perf-*.yml` pipelines use the same tag to run each leg on one machine. `wsl2-test-runner-setup.sh` adds it on WSL2 testbots; add it by hand on macOS and Windows. Configure the pipeline in the Buildkite dashboard pointed at `.buildkite/testbot-disk-cleanup.yml`, with a weekly Scheduled Build.
+To target one machine, the scheduled pipeline needs a `testbot=<hostname>` tag on each agent, for example `tags="...,testbot=tb-macos-arm64-5"`. The nightly `perf-*.yml` pipelines use the same tag to run each leg on one machine. `wsl2-test-runner-setup.sh` adds it on WSL2 testbots; add it by hand on macOS and Windows. The Buildkite pipeline `testbot-disk-cleanup` runs `.buildkite/testbot-disk-cleanup.yml` every Sunday at 09:00 UTC. It has no push or pull request trigger.
+
+## Windows and WSL2 Disk Space Cleanup
+
+WSL2 distros and Docker Desktop keep their disks in `.vhdx` files on `C:`. A `.vhdx` file grows as data is written and doesn't shrink when data is deleted, so `C:` can fill up while the distros inside have plenty of free space. The Icinga `disk` check of `C:` warns at 80% (see [Icinga2 Monitoring for macOS and Windows Runners](#icinga2-monitoring-for-macos-and-windows-runners)).
+
+To compare each disk file with the space used inside it, in PowerShell:
+
+```powershell
+Get-ChildItem HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss | ForEach-Object { Get-ItemProperty $_.PSPath } |
+  Where-Object { $_.PSObject.Properties['BasePath'] } | ForEach-Object {
+    $vhdx = Join-Path ($_.BasePath -replace '^\\\\\?\\', '') 'ext4.vhdx'
+    if (Test-Path $vhdx) { '{0,7:N1} GB  {1}' -f ((Get-Item $vhdx).Length / 1GB), $_.DistributionName }
+  }
+'{0,7:N1} GB  Docker Desktop data' -f ((Get-Item "$env:LOCALAPPDATA\Docker\wsl\disk\docker_data.vhdx").Length / 1GB)
+wsl -d Ubuntu -e df -h /
+```
+
+### Sparse WSL2 Disks
+
+A sparse disk file gives space back to Windows soon after Linux deletes data, so it never needs compacting. Microsoft still calls sparse disks experimental. To make new distros sparse, add this to `~/.wslconfig` on Windows (see [`.wslconfig` experimental settings](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#experimental-settings)):
+
+```ini
+[experimental]
+sparseVhd=true
+```
+
+That setting only affects disks created after it. Convert an existing distro with `wsl --manage <distro> --set-sparse true` (see `wsl --help`). It fails with `ERROR_SHARING_VIOLATION` while WSL still has the disk open, even after `wsl --terminate`, so stop Docker Desktop and run `wsl --shutdown` first. On `tb-win11-10`, with WSL 3.0.5, `ddev-test-ubuntu2404-ce` became sparse this way. Writing 2 GB grew the file by 1.9 GB, and deleting it gave the space back within 30 seconds, without `fstrim`. Docker Desktop's `docker_data.vhdx` isn't a WSL distro, so compact it as below. Microsoft's [WSL disk space guide](https://learn.microsoft.com/en-us/windows/wsl/disk-space) covers checking and resizing disks.
+
+### Compacting Disks
+
+To shrink the files, pause the agent in Buildkite and wait for its job to finish, then in an elevated PowerShell:
+
+1. Delete what isn't needed. Run `docker system prune -af` for Docker Desktop, or for Docker CE inside a distro. Then return the freed blocks of each distro to its disk file. `fstrim` is in `/usr/sbin`, which isn't on the `PATH` that `wsl -e` uses:
+
+    ```powershell
+    wsl -d Ubuntu -u root -e /bin/sh -c 'PATH=/usr/sbin:/sbin:$PATH fstrim -av'
+    ```
+
+2. Stop Docker Desktop, then shut down WSL with `wsl --shutdown`. `start-docker-desktop.sh` never runs `docker desktop stop`, because it has broken WSL2 integration in the past, so check integration after the restart below.
+3. Compact each large file with `diskpart /s compact.txt`, where `compact.txt` holds:
+
+    ```text
+    select vdisk file="C:\Users\testbot\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc\LocalState\ext4.vhdx"
+    attach vdisk readonly
+    compact vdisk
+    detach vdisk
+    ```
+
+4. Start Docker Desktop. It is a GUI app, so from an SSH session start it through a scheduled task with an interactive logon, such as `DDEVStartDockerDesktopDetached`. On a Docker Desktop WSL2 runner, Docker Desktop's integration starts the Ubuntu distro, and systemd starts `buildkite-agent` in it, which reconnects to Buildkite unpaused.
+5. Check that `docker run --rm busybox echo ok` works inside each distro that uses Docker Desktop.
+
+On 2026-11-25 this freed 81 GB on `tb-wsl-16` and 230 GB on `tb-win11-10`.
 
 ## Performance Benchmark Harness Prerequisites
 
