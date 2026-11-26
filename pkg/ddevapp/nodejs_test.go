@@ -176,9 +176,13 @@ func TestCorepackEnable(t *testing.T) {
 		// Simulates a base image built with Node.js >=25, which has no
 		// corepack; otherwise the one Node.js 24 left behind survives `n install`
 		removeBaseCorepack bool
+		// Node.js 16.0-16.8 has no bundled corepack and can't run the npm
+		// release, so DDEV skips corepack there and yarn 1 must keep working
+		noCorepack bool
 	}{
 		{nodeJSVersion: "24"},
 		{nodeJSVersion: "26", removeBaseCorepack: true},
+		{nodeJSVersion: "16.8", removeBaseCorepack: true, noCorepack: true},
 	} {
 		t.Run("node"+tc.nodeJSVersion, func(t *testing.T) {
 			_ = os.Remove(preDockerfile)
@@ -219,6 +223,15 @@ func TestCorepackEnable(t *testing.T) {
 			})
 			require.NoError(t, err, "stdout=%s stderr=%s", out, stderr)
 			require.Contains(t, out, "/usr/local/n/bin/yarn")
+			if tc.noCorepack {
+				require.NotContains(t, out, "corepack")
+				out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+					Cmd: `yarn --version`,
+				})
+				require.NoError(t, err, "stdout=%s stderr=%s", out, stderr)
+				require.True(t, strings.HasPrefix(out, "1."), "Expected yarn 1.x, but got %s", out)
+				return
+			}
 			require.Contains(t, out, "corepack")
 
 			// Outside the project, so the packageManager field yarn writes

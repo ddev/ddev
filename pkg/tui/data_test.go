@@ -15,7 +15,7 @@ const describeOutput = `{"level":"info","msg":"table","raw":{
  "approot": "/home/user/apps/site", "database_type": "mysql", "database_version": "8.0",
  "dbinfo": {"host": "db", "dbPort": "3306", "published_port": 27685},
  "docroot": "", "mailpit_https_url": "https://site.ddev.site:8026", "mailpit_url": "http://site.ddev.site:8025",
- "mutagen_enabled": false, "name": "site", "nodejs_version": "24", "performance_mode": "none",
+ "mutagen_enabled": false, "name": "site", "nodejs_version": "26", "performance_mode": "none",
  "php_version": "8.5", "primary_url": "https://site.ddev.site", "router": "traefik", "router_disabled": false,
  "status": "running", "type": "php", "urls": ["https://site.ddev.site", "https://127.0.0.1:26873"],
  "webserver_type": "nginx-fpm", "xhgui_https_url": "https://site.ddev.site:8142", "xhgui_status": "disabled",

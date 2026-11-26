@@ -1107,7 +1107,12 @@ EOF
 `, app.NodeJSVersion)
 	}
 	if app.CorepackEnable {
-		extraWebContent = extraWebContent + "\nRUN (command -v corepack >/dev/null 2>&1 || log-stderr.sh npm install -g corepack -f || true) && log-stderr.sh corepack enable || true"
+		// Node.js 25+ dropped the bundled corepack. Older Node.js without it can't run
+		// the npm release, which would still take over the yarn and pnpm commands.
+		// Skip those silently: logging with log-stderr.sh would rebuild the web
+		// image without cache on every start.
+		extraWebContent = extraWebContent + `
+RUN if ! command -v corepack >/dev/null 2>&1 && [ "$(node -p 'parseInt(process.versions.node)')" -ge 25 ]; then log-stderr.sh npm install -g corepack -f || true; fi; command -v corepack >/dev/null 2>&1 && log-stderr.sh corepack enable || true`
 	}
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string

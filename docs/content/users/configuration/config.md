@@ -477,9 +477,9 @@ What DDEV does depends on the value:
 
 | Value | Result
 | -- | --
-| `24` | Default version preinstalled in DDEV.
+| `26` | Default version preinstalled in DDEV.
 | `""` (empty) | Uses the version already included in the image, with no download step (fastest for CI). Follows DDEV default behavior over time.
-| `v24` | Installs the newest `24.x` release when the image is built. Use the `v` prefix only to get the latest of the current default major.
+| `v26` | Installs the newest `26.x` release when the image is built. Use the `v` prefix only to get the latest of the current default major.
 | any other version (`22`, `20.2`, `18.19.2`, etc.) | Installs that version when the image is built. A bare major like `22` already installs the newest `22.x`.
 | `auto`, `engine` | Reads the version from a file in your project (see below).
 
