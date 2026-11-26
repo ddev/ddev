@@ -34,8 +34,7 @@ func jobOutput(t *testing.T, s *Server, rec *httptest.ResponseRecorder) string {
 	require.NotNil(t, j)
 	require.Eventually(t, func() bool { return j.summary().Done }, 10*time.Second, 50*time.Millisecond)
 	require.Empty(t, j.summary().Err)
-	lines, _, _, _, _ := j.since(0)
-	return strings.Join(lines, "\n")
+	return strings.Join(j.since(0).lines, "\n")
 }
 
 func TestAddProjectValidation(t *testing.T) {

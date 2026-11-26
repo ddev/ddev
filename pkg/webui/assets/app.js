@@ -7,7 +7,7 @@ const state = {
   projects: [],
   jobs: [],
   router: '',
-  selected: localStorage.getItem('ddev.selected') || '',
+  selected: '',
   filter: '',
   // show is which projects the list shows: all, up, or down.
   show: localStorage.getItem('ddev.show') || 'all',
@@ -27,6 +27,17 @@ const state = {
   registry: null,
   types: null,
   seenJobs: new Set(),
+  // shownJobs are the jobs the panel has shown, so a finished one doesn't
+  // take it again.
+  shownJobs: new Set(),
+  // view is home, project, or shared: what the detail area shows.
+  view: 'home',
+  // messages are DDEV's tips and notices, from /api/messages.
+  messages: null,
+  // shared holds the router's and SSH agent's status, from /api/shared.
+  shared: null,
+  sharedLog: 'ddev-router',
+  tipIndex: Math.floor(Math.random() * 1000),
 };
 
 // h builds an element. Attributes starting with "on" are listeners.
@@ -48,8 +59,12 @@ function h(tag, attrs, ...children) {
 
 const $ = (id) => document.getElementById(id);
 
+function closeButton(label, onclick) {
+  return h('button', { class: 'close-btn', type: 'button', title: label, 'aria-label': label, onclick });
+}
+
 function toast(text, isError) {
-  const t = h('div', { class: 'toast' + (isError ? ' error' : '') }, text);
+  const t = h('div', { class: 'toast' + (isError ? ' error' : '') }, h('span', {}, text), closeButton('Dismiss', () => t.remove()));
   $('toasts').append(t);
   setTimeout(() => t.remove(), isError ? 9000 : 4000);
 }
@@ -94,11 +109,32 @@ function link(url, text) {
   return h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, text || url);
 }
 
+const DOCS = 'https://docs.ddev.com/en/stable/';
+
+function docLink(page, label = 'Docs', title) {
+  return h('a', { class: 'doc-link', href: DOCS + page, target: '_blank', rel: 'noopener noreferrer', title: title || 'Read more on docs.ddev.com' }, label + ' ↗');
+}
+
+// richText shows the remote config's markup: `code`, *emphasis*, and URLs.
+function richText(s) {
+  const out = [];
+  const re = /`([^`]+)`|\*([^*]+)\*|(https?:\/\/[^\s<>"]*[^\s<>".,;:!?)'’])/g;
+  let last = 0;
+  let m;
+  while ((m = re.exec(s))) {
+    out.push(s.slice(last, m.index));
+    out.push(m[1] ? h('code', {}, m[1]) : m[2] ? h('em', {}, m[2]) : link(m[3]));
+    last = re.lastIndex;
+  }
+  out.push(s.slice(last));
+  return out;
+}
+
 // Status classes: running, paused/starting (amber), stopped (grey), the
 // rest red.
 function statusClass(status) {
   if (!status) return '';
-  if (status === 'running') return 'running';
+  if (status === 'running' || status === 'healthy') return 'running';
   if (status === 'stopped') return '';
   if (status === 'paused' || status.startsWith('starting')) return 'paused';
   return 'bad';
@@ -112,32 +148,38 @@ function runningJobFor(name) {
 
 function connectEvents() {
   const es = new EventSource('/api/events');
-  es.addEventListener('open', () => setConn('connected', 'ok'));
+  es.addEventListener('open', () => setConn(state.error ? 'Docker unreachable' : 'connected', state.error ? 'bad' : 'ok'));
   es.addEventListener('error', () => setConn('disconnected, retrying…', 'bad'));
   es.addEventListener('status', (ev) => {
     const st = JSON.parse(ev.data);
     state.projects = st.projects || [];
     state.jobs = st.jobs || [];
     state.router = st.router || '';
+    state.sshAgent = st.ssh_agent || '';
     state.desktop = !!st.desktop;
     state.error = st.error || '';
+    // The server is reachable, but without Docker it knows nothing.
+    setConn(st.error ? (st.error.startsWith('Docker is not reachable') ? 'Docker unreachable' : 'error') : 'connected', st.error ? 'bad' : 'ok');
     const banner = $('error-banner');
     banner.textContent = st.error || '';
     banner.classList.toggle('hidden', !st.error);
     renderRouter();
     renderProjects();
     renderJobs();
-    const p = selectedProject();
+    if (state.view === 'shared' && st.router + st.ssh_agent !== lastShared) loadShared();
+    lastShared = st.router + st.ssh_agent;
+    const p = state.view === 'project' ? selectedProject() : null;
     if (p && (p.name !== state.detailFor || p.status !== state.detailStatus)) {
       loadDetail();
-    } else if (p) {
+    } else {
       renderDetail();
     }
-    if (!p && state.selected && state.projects.length && !st.error) {
-      selectProject(state.projects[0].name);
-    }
+    // A deleted project leaves the start page in its place.
+    if (state.view === 'project' && !p && state.selected && state.projects.length && !st.error) goHome();
   });
 }
+
+let lastShared = '';
 
 function setConn(text, cls) {
   const el = $('conn-status');
@@ -146,9 +188,12 @@ function setConn(text, cls) {
 }
 
 function renderRouter() {
-  const el = $('router-status');
-  el.textContent = 'router: ' + (state.router || 'unknown');
-  el.className = 'pill ' + (state.router === 'healthy' ? 'ok' : state.router === 'disabled' || !state.router ? '' : 'warn');
+  for (const [id, label, value] of [['router-status', 'router', state.router], ['ssh-agent-status', 'SSH agent', state.sshAgent]]) {
+    const el = $(id);
+    el.title = 'Show the router and SSH agent';
+    el.textContent = `${label}: ${value || 'unknown'}`;
+    el.className = 'pill ' + (value === 'healthy' ? 'ok' : value === 'disabled' || !value ? '' : 'warn');
+  }
 }
 
 // ---------- project list ----------
@@ -157,10 +202,29 @@ function selectedProject() {
   return state.projects.find((p) => p.name === state.selected);
 }
 
+function setView(view) {
+  if (state.view === 'shared' && view !== 'shared') stopLogs();
+  state.view = view;
+  $('nav-home').classList.toggle('selected', view === 'home');
+  $('nav-shared').classList.toggle('selected', view === 'shared');
+}
+
+function goHome() {
+  stopLogs();
+  setView('home');
+  state.selected = '';
+  renderProjects();
+  renderDetail();
+}
+
 function selectProject(name) {
-  if (state.selected === name) return;
+  const wasProject = state.view === 'project';
+  setView('project');
+  if (state.selected === name) {
+    if (!wasProject) { renderProjects(); renderDetail(); }
+    return;
+  }
   state.selected = name;
-  localStorage.setItem('ddev.selected', name);
   state.detail = null;
   state.detailFor = '';
   stopLogs();
@@ -191,6 +255,7 @@ function shownProjects() {
 // the list. Status updates do not call it, so a project stopped under the
 // Running chip stays selected.
 function selectShown() {
+  if (state.view !== 'project') return;
   const shown = shownProjects();
   if (shown.length && !shown.some((p) => p.name === state.selected)) selectProject(shown[0].name);
 }
@@ -199,22 +264,30 @@ function renderProjects() {
   renderChips();
   const list = $('project-list');
   const shown = shownProjects();
-  list.replaceChildren(...shown.map((p) => {
+  const focused = list.contains(document.activeElement);
+  list.replaceChildren(...shown.map((p, i) => {
     const busy = runningJobFor(p.name);
+    const selected = p.name === state.selected && state.view === 'project';
     return h('li', {
-      class: p.name === state.selected ? 'selected' : '',
+      class: selected ? 'selected' : '',
+      role: 'option',
+      'aria-selected': String(selected),
+      // One item takes Tab; the arrow keys move between them.
+      tabindex: selected || (i === 0 && state.view !== 'project') ? '0' : '-1',
+      'data-name': p.name,
       onclick: () => selectProject(p.name),
-      title: p.approot,
+      oncontextmenu: (e) => { e.preventDefault(); projectMenu(p, e.clientX, e.clientY); },
     },
     h('span', { class: 'dot ' + (busy ? 'busy' : statusClass(p.status)) }),
     h('span', { class: 'name' }, p.name),
     h('span', { class: 'type' }, p.type),
     h('span', { class: 'sub' }, busy ? busy.title + '…' : (p.url || p.status)));
   }));
+  // A rebuilt list keeps the keyboard focus on its selected item.
+  if (focused) (list.querySelector('li.selected') || list.querySelector('li'))?.focus();
   // An error such as Docker being unreachable empties the list; the banner
   // explains it, and "No projects yet" would not be true.
   $('project-empty').classList.toggle('hidden', state.projects.length > 0 || !!state.error);
-  if (!state.selected && state.projects.length) selectProject(state.projects[0].name);
 }
 
 // ---------- project detail ----------
@@ -247,9 +320,23 @@ let detailKey = '';
 function renderDetail() {
   const root = $('detail');
   const p = selectedProject();
-  const key = JSON.stringify([p, state.tab, state.detail, state.xdebugWanted, state.jobs.filter((j) => !j.done).map((j) => [j.id, j.project])]);
+  const running = state.jobs.filter((j) => !j.done).map((j) => [j.id, j.project]);
+  const key = JSON.stringify(state.view === 'home' ? ['home', state.messages, state.tipIndex, state.projects.map((x) => x.status), state.error]
+    : state.view === 'shared' ? ['shared', state.shared, state.sharedLog]
+      : [p, state.tab, state.detail, state.xdebugWanted, running]);
   if (key === detailKey && root.childElementCount) return;
   detailKey = key;
+  if (state.view !== 'project') {
+    // The shared view keeps its log stream while its status refreshes.
+    if (state.view === 'shared' && root.querySelector('.logs-output')) {
+      root.querySelector('.shared-cards').replaceWith(sharedCards());
+      return;
+    }
+    stopLogs();
+    root.dataset.project = '';
+    root.replaceChildren(state.view === 'shared' ? sharedView() : homeView());
+    return;
+  }
   if (!p) {
     root.replaceChildren(h('div', { class: 'placeholder muted' }, state.projects.length ? 'Select a project.' : ''));
     return;
@@ -263,8 +350,12 @@ function renderDetail() {
   root.dataset.project = p.name;
   const tabs = [['overview', 'Overview'], ['services', 'Services'], ['database', 'Database'],
     ['addons', 'Add-ons'], ['snapshots', 'Snapshots'], ['logs', 'Logs']];
+  const docs = { overview: 'users/configuration/config/', services: 'users/usage/architecture/',
+    database: 'users/usage/database-management/', addons: 'users/extend/using-add-ons/',
+    snapshots: 'users/usage/database-management/#snapshots', logs: 'users/usage/commands/#logs' };
   const tabBar = h('nav', { class: 'tabs' }, tabs.map(([id, label]) =>
-    h('button', { class: state.tab === id ? 'active' : '', type: 'button', onclick: () => setTab(id) }, label)));
+    h('button', { class: state.tab === id ? 'active' : '', type: 'button', onclick: () => setTab(id) }, label)),
+  h('span', { class: 'tab-docs' }, docLink(docs[state.tab], 'Docs', `About ${tabs.find(([id]) => id === state.tab)[1]} on docs.ddev.com`)));
   let body;
   const d = state.detail;
   if (state.tab === 'logs') {
@@ -287,14 +378,63 @@ function setTab(id) {
   renderDetail();
 }
 
+// quickstarts maps project types to their section of the quickstart page.
+const quickstarts = {
+  asterios: 'asterios', backdrop: 'backdrop', cakephp: 'cakephp', codeigniter: 'codeigniter', craftcms: 'craft-cms',
+  generic: 'generic', joomla: 'joomla', laravel: 'laravel', magento: 'openmage', magento2: 'magento-2', maho: 'maho',
+  modx: 'modx-revolution', shopware6: 'shopware', silverstripe: 'silverstripe-cms', symfony: 'symfony', typo3: 'typo3',
+  wordpress: 'wordpress', 'wp-bedrock': 'wordpress',
+};
+
+function quickstartPage(type) {
+  const anchor = type.startsWith('drupal') ? 'drupal' : quickstarts[type];
+  return 'users/quickstart/' + (anchor ? '#' + anchor : '');
+}
+
 function detailHead(p) {
   const busy = runningJobFor(p.name);
   return h('div', { class: 'detail-head' },
     h('div', {},
       h('h1', {}, p.name,
         h('span', { class: 'pill ' + (p.status === 'running' ? 'ok' : statusClass(p.status) === 'bad' ? 'bad' : '') }, busy ? busy.title + '…' : p.status),
-        h('span', { class: 'badge' }, p.type)),
-      h('div', { class: 'path' }, copyable(p.approot))));
+        h('a', {
+          class: 'badge type-link', href: DOCS + quickstartPage(p.type), target: '_blank', rel: 'noopener noreferrer',
+          title: `The ${p.type} quickstart on docs.ddev.com`,
+        }, p.type)),
+      h('div', { class: 'path' }, copyable(p.approot))),
+    closeButton('Back to the start page', goHome));
+}
+
+function projectAction(p, a, params) {
+  return runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/' + a, params);
+}
+
+async function openIn(p, target) {
+  try { await post('/api/projects/' + encodeURIComponent(p.name) + '/open/' + target); } catch (e) { toast(e.message, true); }
+}
+
+function openURL(url) {
+  if (state.desktop) post('/api/open-url', { url }).catch((err) => toast(err.message, true));
+  else window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+function projectMenu(p, x, y) {
+  const busy = !!runningJobFor(p.name);
+  const running = isUp(p.status);
+  openMenu({ x, y }, [
+    running
+      ? { label: 'Stop', disabled: busy, run: () => projectAction(p, 'stop') }
+      : { label: 'Start', disabled: busy, run: () => projectAction(p, 'start') },
+    { label: 'Restart', disabled: busy || !running, run: () => projectAction(p, 'restart') },
+    null,
+    { label: 'Open site ↗', disabled: !running || !p.url, run: () => openURL(p.url) },
+    { label: 'Open folder', run: () => openIn(p, 'folder') },
+    { label: 'Open in VS Code', run: () => openIn(p, 'vscode') },
+    { label: 'Open in PhpStorm', run: () => openIn(p, 'phpstorm') },
+    { label: 'Copy path', run: () => copy(p.approot) },
+    null,
+    { label: 'Delete…', danger: true, disabled: busy, run: () => confirmDelete(p) },
+  ]);
 }
 
 function toolbar(p) {
@@ -302,27 +442,24 @@ function toolbar(p) {
   const busy = !!runningJobFor(p.name);
   // A project that is starting or unhealthy is up too, and needs Stop.
   const running = isUp(p.status);
-  const act = (a, params) => () => runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/' + a, params);
-  const open = (t) => async () => {
-    try { await post('/api/projects/' + encodeURIComponent(p.name) + '/open/' + t); } catch (e) { toast(e.message, true); }
-  };
+  const act = (a, params) => () => projectAction(p, a, params);
+  const open = (t) => () => openIn(p, t);
   const mailpit = d && (d.mailpit_https_url || d.mailpit_url);
   const xhgui = d && d.xhgui_status === 'enabled' && (d.xhgui_https_url || d.xhgui_url);
-  return h('div', { class: 'toolbar' },
-    running
+  const groups = [
+    [running
       ? h('button', { class: 'btn', disabled: busy, onclick: act('stop') }, 'Stop')
       : h('button', { class: 'btn primary', disabled: busy, onclick: act('start') }, 'Start'),
-    h('button', { class: 'btn', disabled: busy || !running, onclick: act('restart') }, 'Restart'),
-    h('span', { class: 'sep' }),
-    h('a', { class: 'btn', href: p.url || '#', target: '_blank', rel: 'noopener noreferrer', hidden: !p.url }, 'Open site ↗'),
-    mailpit && running ? h('a', { class: 'btn', href: mailpit, target: '_blank', rel: 'noopener noreferrer' }, 'Mailpit ↗') : null,
-    xhgui && running ? h('a', { class: 'btn', href: xhgui, target: '_blank', rel: 'noopener noreferrer' }, 'XHGui ↗') : null,
-    h('span', { class: 'sep' }),
-    h('button', { class: 'btn', onclick: open('folder') }, 'Folder'),
-    h('button', { class: 'btn', onclick: open('vscode') }, 'VS Code'),
-    h('button', { class: 'btn', onclick: open('phpstorm') }, 'PhpStorm'),
-    h('span', { class: 'sep' }),
-    h('button', { class: 'btn danger', disabled: busy, onclick: () => confirmDelete(p) }, 'Delete'));
+    h('button', { class: 'btn', disabled: busy || !running, onclick: act('restart') }, 'Restart')],
+    [p.url ? h('a', { class: 'btn', href: p.url, target: '_blank', rel: 'noopener noreferrer' }, 'Open site ↗') : null,
+      mailpit && running ? h('a', { class: 'btn', href: mailpit, target: '_blank', rel: 'noopener noreferrer' }, 'Mailpit ↗') : null,
+      xhgui && running ? h('a', { class: 'btn', href: xhgui, target: '_blank', rel: 'noopener noreferrer' }, 'XHGui ↗') : null],
+    [h('button', { class: 'btn', onclick: open('folder') }, 'Folder'),
+      h('button', { class: 'btn', onclick: open('vscode') }, 'VS Code'),
+      h('button', { class: 'btn', onclick: open('phpstorm') }, 'PhpStorm')],
+    [h('button', { class: 'btn danger', disabled: busy, onclick: () => confirmDelete(p) }, 'Delete')],
+  ].map((g) => g.filter(Boolean)).filter((g) => g.length);
+  return h('div', { class: 'toolbar' }, groups.flatMap((g, i) => (i ? [h('span', { class: 'sep' }), ...g] : g)));
 }
 
 function kv(rows) {
@@ -372,7 +509,8 @@ function overviewTab(p, d) {
           },
         }),
         'Xdebug ', h('span', { class: 'muted' }, !running ? '(project stopped)'
-          : wanted !== undefined ? (wanted ? 'enabling…' : 'disabling…') : (xdebugOn ? 'enabled' : 'disabled')))),
+          : wanted !== undefined ? (wanted ? 'enabling…' : 'disabling…') : (xdebugOn ? 'enabled' : 'disabled'))),
+      h('p', {}, docLink('users/debugging-profiling/step-debugging/', 'Setting up step debugging'))),
     h('div', { class: 'card' }, h('h3', {}, 'Terminal'),
       h('p', { class: 'muted' }, 'To open a shell, paste this into a terminal:'),
       copyable(shell)));
@@ -499,10 +637,8 @@ function logsTab(p) {
   const services = Object.keys(state.detail?.describe?.services || { web: {}, db: {} });
   if (!services.includes(state.logService)) state.logService = 'web';
   const out = h('pre', { class: 'output logs-output' });
-  const select = h('select', {
-    onchange: (e) => { state.logService = e.target.value; startLogs(p, out); },
-    'aria-label': 'Service',
-  }, services.map((s) => h('option', { value: s, selected: s === state.logService }, s)));
+  const select = dropdown(services.map((s) => [s, s]), state.logService,
+    (v) => { state.logService = v; startLogs(p, out); }, { 'aria-label': 'Service' });
   const view = h('div', {},
     h('div', { class: 'row' }, 'Service', select,
       h('button', { class: 'btn', onclick: () => startLogs(p, out) }, 'Reconnect'),
@@ -536,30 +672,209 @@ function stopLogs() {
 }
 
 // appendOutput adds lines, following the end only if the view was there.
-function appendOutput(el, lines) {
+// appendOutput adds lines to el, before the node `before` when given, which
+// holds a line still being written.
+function appendOutput(el, lines, before = null) {
   const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
-  el.append(document.createTextNode(lines.join('\n') + '\n'));
+  el.insertBefore(document.createTextNode(lines.join('\n') + '\n'), before);
   // Long streams are trimmed so the page stays responsive.
-  if (el.textContent.length > 400000) el.textContent = el.textContent.slice(-200000);
+  if (el.textContent.length > 400000) {
+    el.textContent = el.textContent.slice(-200000);
+    if (before) el.append(before);
+  }
   if (atBottom) el.scrollTop = el.scrollHeight;
+}
+
+// ---------- start page ----------
+
+async function loadMessages() {
+  try {
+    const res = await fetch('/api/messages');
+    if (!res.ok) throw new Error((await res.text()).trim());
+    state.messages = await res.json();
+  } catch {
+    state.messages = { tips: [], infos: [], warnings: [] };
+  }
+  renderNotices();
+  renderDetail();
+}
+
+function dismissedNotices() {
+  try { return new Set(JSON.parse(localStorage.getItem('ddev.dismissed') || '[]')); } catch { return new Set(); }
+}
+
+// renderNotices shows DDEV's info and warning notices until dismissed.
+function renderNotices() {
+  const m = state.messages || {};
+  const dismissed = dismissedNotices();
+  const notices = [...(m.warnings || []).map((n) => ['warn', n]), ...(m.infos || []).map((n) => ['info', n])]
+    .filter(([, n]) => !dismissed.has(n.message));
+  $('notices').replaceChildren(...notices.map(([kind, n]) => h('div', { class: 'notice ' + kind, role: kind === 'warn' ? 'alert' : 'status' },
+    h('div', {}, h('strong', {}, n.title || (kind === 'warn' ? 'Important warning' : 'Important message')), ' ', richText(n.message)),
+    closeButton('Dismiss', () => {
+      dismissed.add(n.message);
+      localStorage.setItem('ddev.dismissed', JSON.stringify([...dismissed]));
+      renderNotices();
+    }))));
+}
+
+function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 5) return 'Working late?';
+  return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+}
+
+function homeView() {
+  const up = state.projects.filter((p) => isUp(p.status)).length;
+  const tips = state.messages ? state.messages.tips : [];
+  const n = tips.length;
+  const i = n ? ((state.tipIndex % n) + n) % n : 0;
+  const tip = n ? tips[i] : null;
+  const step = (d) => () => { state.tipIndex = i + d; renderDetail(); };
+  const count = state.projects.length;
+  return h('div', { class: 'home' },
+    h('div', { class: 'detail-head' }, h('div', {},
+      h('h1', {}, greeting()),
+      h('p', { class: 'muted' }, count
+        ? `${count} ${count === 1 ? 'project' : 'projects'}, ${up} running. Select a project, or right-click it for its actions.`
+        : state.error ? '' : 'Add a project to get started.'))),
+    h('div', { class: 'cards' },
+      h('div', { class: 'card tip' },
+        h('div', { class: 'card-head' }, h('h3', {}, tip && tip.title ? tip.title : 'Tip of the day'),
+          n > 1 ? h('div', { class: 'tip-nav' },
+            h('button', { class: 'btn small', type: 'button', title: 'Previous tip', 'aria-label': 'Previous tip', onclick: step(-1) }, '‹'),
+            h('span', { class: 'muted' }, `${i + 1} of ${n}`),
+            h('button', { class: 'btn small', type: 'button', title: 'Next tip', 'aria-label': 'Next tip', onclick: step(1) }, '›')) : null),
+        tip ? h('p', { class: 'tip-text' }, richText(tip.message))
+          : h('p', { class: 'muted' }, state.messages ? 'No tips right now.' : 'Loading…')),
+      h('div', { class: 'card' }, h('h3', {}, 'Get started'),
+        h('div', { class: 'row' },
+          h('button', { class: 'btn primary', type: 'button', onclick: addProject }, 'Add project')),
+        h('ul', { class: 'link-list' },
+          h('li', {}, docLink('users/project/', 'Starting a project')),
+          h('li', {}, docLink('users/quickstart/', 'CMS quickstarts')),
+          h('li', {}, docLink('users/usage/commands/', 'Commands')),
+          h('li', {}, docLink('users/usage/faq/', 'FAQ')),
+          h('li', {}, docLink('users/usage/troubleshooting/', 'Troubleshooting')),
+          h('li', {}, h('a', { class: 'doc-link', href: 'https://ddev.com/s/discord', target: '_blank', rel: 'noopener noreferrer' }, 'Ask on Discord ↗'))))));
+}
+
+// ---------- shared services ----------
+
+function showShared() {
+  setView('shared');
+  state.selected = '';
+  renderProjects();
+  renderDetail();
+  loadShared();
+}
+
+async function loadShared() {
+  try {
+    const res = await fetch('/api/shared');
+    if (!res.ok) throw new Error((await res.text()).trim());
+    state.shared = await res.json();
+  } catch (e) {
+    state.shared = { error: e.message };
+  }
+  renderDetail();
+}
+
+function sharedCards() {
+  const st = state.shared;
+  if (!st) return h('div', { class: 'shared-cards' }, h('p', { class: 'muted' }, 'Loading…'));
+  if (st.error) return h('div', { class: 'shared-cards' }, h('p', { class: 'muted' }, st.error));
+  return h('div', { class: 'cards shared-cards' }, st.map((svc) => h('div', { class: 'card' },
+    h('div', { class: 'card-head' }, h('h3', {}, svc.label), docLink(svc.docs, 'Docs', `About the ${svc.label.toLowerCase()} on docs.ddev.com`)),
+    h('p', {}, h('span', { class: 'dot ' + statusClass(svc.status) }), ' ', svc.status,
+      svc.image ? h('span', { class: 'muted' }, ' · ' + svc.image) : null),
+    svc.dashboard ? h('p', {}, link(svc.dashboard, 'Open the Traefik dashboard ↗')) : null,
+    svc.status === 'stopped' ? h('p', { class: 'muted' }, svc.name === 'ddev-router'
+      ? 'It starts with the first project that uses it.'
+      : 'It starts with the first project, unless global settings leave it out.') : null,
+    svc.health && svc.status !== 'healthy' ? h('pre', { class: 'output small-output' }, svc.health) : null,
+    svc.errors ? [h('p', { class: 'warn-text' }, 'Router configuration problems:'), h('pre', { class: 'output small-output' }, svc.errors)] : null)));
+}
+
+function sharedView() {
+  const head = h('div', { class: 'detail-head' },
+    h('div', {},
+      h('h1', {}, 'Shared services'),
+      h('p', { class: 'muted' }, 'Containers that all projects use. “ddev poweroff” stops them.')),
+    closeButton('Back to the start page', goHome));
+  const st = Array.isArray(state.shared) ? state.shared : [];
+  const out = h('pre', { class: 'output logs-output' });
+  const running = st.filter((svc) => svc.status !== 'stopped').map((svc) => [svc.name, svc.label]);
+  if (!running.some(([n]) => n === state.sharedLog) && running.length) state.sharedLog = running[0][0];
+  const view = h('div', {}, head, sharedCards());
+  if (running.length) {
+    const pick = dropdown(running, state.sharedLog, (v) => { state.sharedLog = v; startSharedLogs(out); }, { 'aria-label': 'Logs of' });
+    view.append(h('h2', { class: 'section-title' }, 'Logs'),
+      h('div', { class: 'row' }, pick,
+        h('button', { class: 'btn', type: 'button', onclick: () => startSharedLogs(out) }, 'Reconnect'),
+        h('button', { class: 'btn', type: 'button', onclick: () => { out.textContent = ''; } }, 'Clear')),
+      out);
+    startSharedLogs(out);
+  }
+  return view;
+}
+
+function startSharedLogs(out) {
+  stopLogs();
+  out.textContent = '';
+  const es = new EventSource(`/api/shared/${encodeURIComponent(state.sharedLog)}/logs`);
+  state.logSource = es;
+  es.addEventListener('lines', (ev) => appendOutput(out, JSON.parse(ev.data)));
+  es.addEventListener('end', (ev) => {
+    const { err } = JSON.parse(ev.data);
+    appendOutput(out, [err ? `[log stream failed: ${err}]` : '[log stream ended]']);
+    es.close();
+  });
+  es.addEventListener('error', () => es.close());
 }
 
 // ---------- activity ----------
 
+function setActivityOpen(open) {
+  $('activity').classList.toggle('collapsed', !open);
+  $('activity-toggle').setAttribute('aria-expanded', String(open));
+}
+
 function renderJobs() {
   const running = state.jobs.filter((j) => !j.done).length;
   $('activity-count').textContent = running ? String(running) : '';
+  $('activity-clear').disabled = !state.jobs.some((j) => j.done);
+  // A new job, even one started from the tray or another window, takes the
+  // panel unless the job shown is still running.
+  const current = state.jobs.find((j) => j.id === state.jobId);
+  const latest = state.jobs.at(-1);
+  if (latest && latest.id > state.jobId && (!current || current.done) && !state.seenJobs.has(latest.id) && !state.shownJobs.has(latest.id)) {
+    showJob(latest.id, false);
+    return;
+  }
   const jobs = [...state.jobs].reverse();
-  $('job-list').replaceChildren(...jobs.map((j) => h('li', {
+  if (!jobs.length) {
+    $('job-list').replaceChildren(h('li', { class: 'empty' }, 'Actions you run, such as Start, show their output here.'));
+  } else $('job-list').replaceChildren(...jobs.map((j) => h('li', {
     class: j.id === state.jobId ? 'selected' : '',
     onclick: () => showJob(j.id, false),
     title: j.err || '',
   },
   h('span', { class: 'dot ' + (!j.done ? 'busy' : j.err ? 'bad' : 'running') }),
-  h('span', {}, j.title),
-  h('span', { class: 'when' }, new Date(j.started).toLocaleTimeString()))));
-  const current = state.jobs.find((j) => j.id === state.jobId);
-  if (current) $('activity-title').textContent = current.title;
+  h('span', { class: 'job-name' }, j.title),
+  h('span', { class: 'when' }, new Date(j.started).toLocaleTimeString()),
+  // A running action has nothing to remove yet, but keeps the space.
+  h('button', {
+    class: 'close-btn small',
+    'aria-label': `Remove ${j.title} from the list`,
+    title: 'Remove from the list',
+    disabled: !j.done,
+    onclick: (e) => {
+      e.stopPropagation();
+      removeJob(j.id);
+    },
+  }))));
+  if (current) renderJobTitle(current);
   for (const j of state.jobs) {
     if (j.done && !state.seenJobs.has(j.id)) {
       state.seenJobs.add(j.id);
@@ -570,20 +885,54 @@ function renderJobs() {
   }
 }
 
+async function removeJob(id) {
+  try {
+    await post(`/api/jobs/${id}/remove`);
+    if (state.jobId === id) clearJobView();
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+function renderJobTitle(j) {
+  const [label, cls] = !j.done ? ['running', 'warn'] : j.err ? ['failed', 'bad'] : ['done', 'ok'];
+  $('activity-title').replaceChildren(h('span', { class: 'job-title' }, j.title), ' ', h('span', { class: 'pill ' + cls }, label));
+}
+
+function clearJobView() {
+  if (state.jobSource) state.jobSource.close();
+  state.jobId = 0;
+  $('activity-title').replaceChildren();
+  $('job-output').textContent = '';
+}
+
 function showJob(id, open) {
   state.jobId = id;
-  if (open) $('activity').classList.remove('collapsed');
+  state.shownJobs.add(id);
+  if (open) setActivityOpen(true);
   if (state.jobSource) state.jobSource.close();
   const out = $('job-output');
   out.textContent = '';
   const job = state.jobs.find((j) => j.id === id);
-  $('activity-title').textContent = job ? job.title : '';
+  if (job) renderJobTitle(job); else $('activity-title').replaceChildren();
   const es = new EventSource('/api/jobs/' + id);
   state.jobSource = es;
-  es.addEventListener('lines', (ev) => appendOutput(out, JSON.parse(ev.data)));
+  // ddev writes some lines a piece at a time, such as the dots while it waits.
+  const partial = document.createTextNode('');
+  out.append(partial);
+  es.addEventListener('lines', (ev) => {
+    partial.data = '';
+    appendOutput(out, JSON.parse(ev.data), partial);
+  });
+  es.addEventListener('partial', (ev) => {
+    const atBottom = out.scrollHeight - out.scrollTop - out.clientHeight < 30;
+    partial.data = JSON.parse(ev.data);
+    if (atBottom) out.scrollTop = out.scrollHeight;
+  });
   es.addEventListener('end', (ev) => {
     const { err } = JSON.parse(ev.data);
-    appendOutput(out, [err ? `\n✗ Failed: ${err}` : '\n✓ Done']);
+    partial.data = '';
+    appendOutput(out, [err ? `\n✗ Failed: ${err}` : '\n✓ Done'], partial);
     es.close();
   });
   es.addEventListener('error', () => es.close());
@@ -595,8 +944,97 @@ function isUp(status) {
   return status === 'running' || status === 'unhealthy' || status.startsWith('starting');
 }
 
+// ---------- menus ----------
+
+let menuClose = null;
+// menuAnchor is the element whose menu is open, which closes it again.
+let menuAnchor = null;
+
+// openMenu shows items below an anchor element, or at a point {x, y}. An
+// item is {label, run, disabled, danger, checked}; null is a separator.
+function openMenu(at, items) {
+  if (menuClose) menuClose();
+  const opener = document.activeElement;
+  const radio = items.some((it) => it && it.checked !== undefined);
+  const menu = h('div', { class: 'menu', role: radio ? 'listbox' : 'menu' }, items.map((it) => (it === null
+    ? h('div', { class: 'menu-sep', role: 'separator' })
+    : h('button', {
+      type: 'button',
+      class: 'menu-item' + (it.danger ? ' danger' : '') + (it.checked ? ' checked' : ''),
+      role: radio ? 'option' : 'menuitem',
+      'aria-selected': radio ? String(!!it.checked) : null,
+      disabled: it.disabled,
+      onclick: () => { close(); it.run(); },
+    }, it.label))));
+  // A modal dialog is drawn above everything outside it.
+  ((at instanceof Element && at.closest('dialog')) || document.body).append(menu);
+  const box = at instanceof Element ? at.getBoundingClientRect() : null;
+  if (box) menu.style.minWidth = box.width + 'px';
+  const x = box ? box.left : at.x;
+  const y = box ? box.bottom + 2 : at.y;
+  const hgt = menu.offsetHeight;
+  menu.style.left = Math.max(4, Math.min(x, innerWidth - menu.offsetWidth - 4)) + 'px';
+  // Below, unless it doesn't fit there and there's more room above.
+  const top = box ? box.top - 2 : y;
+  const below = innerHeight - y - 4;
+  const above = top - 4;
+  const up = hgt > below && above > below;
+  menu.style.maxHeight = Math.min(up ? above : below, 420) + 'px';
+  menu.style.top = (up ? top - Math.min(hgt, above) : y) + 'px';
+  const buttons = [...menu.querySelectorAll('button:not(:disabled)')];
+  (menu.querySelector('.checked:not(:disabled)') || buttons[0])?.focus();
+  const onKey = (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); close(); opener?.focus(); return; }
+    if (e.key === 'Tab') { close(); return; }
+    const step = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const i = buttons.indexOf(document.activeElement);
+    buttons[(i + step + buttons.length) % buttons.length]?.focus();
+  };
+  const onDown = (e) => { if (!menu.contains(e.target) && !(menuAnchor && menuAnchor.contains(e.target))) close(); };
+  function close() {
+    menu.remove();
+    document.removeEventListener('keydown', onKey, true);
+    document.removeEventListener('mousedown', onDown, true);
+    removeEventListener('blur', close);
+    removeEventListener('resize', close);
+    menuClose = null;
+    menuAnchor = null;
+  }
+  document.addEventListener('keydown', onKey, true);
+  document.addEventListener('mousedown', onDown, true);
+  addEventListener('blur', close);
+  addEventListener('resize', close);
+  menuClose = close;
+  menuAnchor = at instanceof Element ? at : null;
+}
+
+// dropdown replaces <select>, whose list WebKitGTK draws in the GTK theme
+// instead of the page's. options are [value, label] pairs; the button's
+// value is the chosen one.
+function dropdown(options, value, onchange, attrs) {
+  const label = h('span');
+  const btn = h('button', { type: 'button', class: 'dropdown', 'aria-haspopup': 'listbox', ...attrs }, label);
+  const set = (v) => {
+    btn.value = v;
+    label.textContent = (options.find(([o]) => o === v) || options[0] || ['', ''])[1];
+  };
+  set(value);
+  btn.addEventListener('click', () => (menuAnchor === btn ? menuClose() : openMenu(btn, options.map(([v, l]) => ({
+    label: l,
+    checked: v === btn.value,
+    run: () => { set(v); btn.focus(); if (onchange) onchange(v); },
+  })))));
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); btn.click(); }
+  });
+  return btn;
+}
+
 // ---------- dialogs ----------
 
+// openDialog shows a modal dialog and resolves to whether OK was chosen.
 function openDialog(title, body, okLabel, danger) {
   const dlg = $('dialog');
   $('dialog-title').textContent = title;
@@ -640,11 +1078,12 @@ async function addProject() {
     state.types = await fetch('/api/project-types').then((r) => r.json()).catch(() => []);
   }
   const dir = h('input', { type: 'text', id: 'f-dir', placeholder: 'Full path to the project directory', required: true });
-  const type = h('select', { id: 'f-type' }, h('option', { value: '' }, 'detect automatically'),
-    state.types.map((t) => h('option', { value: t }, t)));
+  const type = dropdown([['', 'detect automatically'], ...state.types.map((t) => [t, t])], '', null, { id: 'f-type', 'aria-labelledby': 'f-type-label' });
   const name = h('input', { type: 'text', id: 'f-name', placeholder: 'defaults to the directory name' });
   const docroot = h('input', { type: 'text', id: 'f-docroot', placeholder: 'e.g. web or public' });
-  const field = (label, input, hint) => h('div', { class: 'field' }, h('label', { for: input.id }, label), input, hint ? h('span', { class: 'hint' }, hint) : null);
+  const field = (label, input, hint) => h('div', { class: 'field' },
+    h('label', input.classList.contains('dropdown') ? { id: input.id + '-label' } : { for: input.id }, label),
+    input, hint ? h('span', { class: 'hint' }, hint) : null);
   const ok = await openDialog('Add project', [
     field('Project directory', dir, 'An existing directory. This runs “ddev config” there.'),
     field('Project type', type),
@@ -655,17 +1094,96 @@ async function addProject() {
   await runJob('/api/projects', { dir: dir.value, type: type.value, name: name.value, docroot: docroot.value });
 }
 
+// ---------- keyboard ----------
+
+// sidebarItems are what the arrow keys move between: the start page, the
+// shared services, and the listed projects.
+function sidebarItems() {
+  return [
+    { el: $('nav-home'), go: goHome, current: state.view === 'home' },
+    { el: $('nav-shared'), go: showShared, current: state.view === 'shared' },
+    ...shownProjects().map((p) => ({
+      el: () => $('project-list').querySelector(`li[data-name="${CSS.escape(p.name)}"]`),
+      go: () => selectProject(p.name),
+      current: state.view === 'project' && state.selected === p.name,
+      project: p,
+    })),
+  ];
+}
+
+function focusSidebarItem() {
+  const item = sidebarItems().find((it) => it.current);
+  const el = item && (typeof item.el === 'function' ? item.el() : item.el);
+  if (el) el.focus();
+}
+
+function onKeyDown(e) {
+  if (e.defaultPrevented || menuClose || $('dialog').open) return;
+  const el = document.activeElement;
+  const typing = el && el.closest && el.closest('input, textarea, [contenteditable]');
+  if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+  const inSidebar = el === document.body || (el && el.closest && el.closest('.sidebar'));
+  if (e.key === '/') {
+    e.preventDefault();
+    $('filter').focus();
+  } else if (e.key === 'Escape' && state.view === 'shared') {
+    e.preventDefault();
+    goHome();
+  } else if (inSidebar && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
+    e.preventDefault();
+    const items = sidebarItems();
+    const i = items.findIndex((it) => it.current);
+    const next = { ArrowDown: Math.min(i + 1, items.length - 1), ArrowUp: Math.max(i - 1, 0), Home: 0, End: items.length - 1 }[e.key];
+    if (next !== i && items[next]) items[next].go();
+    focusSidebarItem();
+  } else if (inSidebar && (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) && state.view === 'project') {
+    const p = selectedProject();
+    const li = p && $('project-list').querySelector('li.selected');
+    if (!li) return;
+    e.preventDefault();
+    const box = li.getBoundingClientRect();
+    projectMenu(p, box.left + 24, box.bottom);
+  }
+}
+
 // ---------- startup ----------
 
 function init() {
   $('filter').addEventListener('input', (e) => { state.filter = e.target.value; renderProjects(); selectShown(); });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && !$('dialog').open) {
+  document.addEventListener('keydown', onKeyDown);
+  $('filter').addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
       e.preventDefault();
-      $('filter').focus();
+      e.target.value = '';
+      state.filter = '';
+      renderProjects();
+      e.target.blur();
+    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+      e.preventDefault();
+      const first = shownProjects()[0];
+      if (first) { selectProject(first.name); focusSidebarItem(); }
     }
   });
-  $('activity-toggle').addEventListener('click', () => $('activity').classList.toggle('collapsed'));
+  // The whole header opens and closes the panel, except its other buttons.
+  $('activity-head').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (b && b.id !== 'activity-toggle') return;
+    setActivityOpen($('activity').classList.contains('collapsed'));
+  });
+  $('activity-clear').addEventListener('click', async () => {
+    try {
+      const shown = state.jobs.find((j) => j.id === state.jobId);
+      await post('/api/jobs/clear');
+      if (!shown || shown.done) clearJobView();
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
+  $('brand').addEventListener('click', goHome);
+  $('nav-home').addEventListener('click', goHome);
+  $('nav-shared').addEventListener('click', showShared);
+  $('router-status').addEventListener('click', showShared);
+  $('ssh-agent-status').addEventListener('click', () => { state.sharedLog = 'ddev-ssh-agent'; showShared(); });
   $('btn-add').addEventListener('click', addProject);
   $('btn-start-all').addEventListener('click', () => runJob('/api/actions/start-all'));
   $('btn-stop-all').addEventListener('click', async () => {
@@ -679,7 +1197,23 @@ function init() {
     const a = e.target.closest && e.target.closest('a[target="_blank"]');
     if (!state.desktop || !a || !/^https?:/.test(a.href)) return;
     e.preventDefault();
-    post('/api/open-url', { url: a.href }).catch((err) => toast(err.message, true));
+    openURL(a.href);
+  });
+  // A browser shows where a link goes; the app's window doesn't, so the page
+  // does, at the bottom left.
+  const preview = h('div', { id: 'link-preview', class: 'link-preview', hidden: true });
+  document.body.append(preview);
+  document.addEventListener('mouseover', (e) => {
+    const a = state.desktop && e.target.closest && e.target.closest('a[href^="http"]');
+    preview.hidden = !a;
+    if (a) preview.textContent = a.href;
+  });
+  // The app keeps WebKit's own menu for text, where it can copy and paste.
+  // Elsewhere it would offer Back and Reload.
+  document.addEventListener('contextmenu', (e) => {
+    if (!state.desktop || e.defaultPrevented) return;
+    const editable = e.target.closest && e.target.closest('input, textarea, [contenteditable]');
+    if (!editable && String(getSelection()).trim() === '') e.preventDefault();
   });
   // A link such as #project=d11 selects that project; the GUI app's
   // tray uses it.
@@ -696,6 +1230,8 @@ function init() {
   window.addEventListener('hashchange', fromHash);
   fromHash();
   connectEvents();
+  loadMessages();
+  renderJobs();
 }
 
 init();

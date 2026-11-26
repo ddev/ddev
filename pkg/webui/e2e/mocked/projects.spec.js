@@ -63,7 +63,7 @@ test('shows a stopped project', async ({ page }) => {
 });
 
 test('shows services and database details', async ({ page }) => {
-  await page.getByRole('button', { name: 'Services' }).click();
+  await page.getByRole('button', { name: 'Services', exact: true }).click();
   const rows = page.locator('table.grid tr');
   await expect(rows).toHaveCount(4);
   await expect(rows.nth(1)).toContainText('web');
@@ -99,9 +99,11 @@ test('shows an error banner while Docker is unreachable', async ({ page, backend
   backend.error = 'Docker is not reachable: connection refused';
   backend.pushStatus();
   await expect(banner).toHaveText('Docker is not reachable: connection refused');
+  await expect(page.locator('#conn-status')).toHaveText('Docker unreachable');
   backend.error = '';
   backend.pushStatus();
   await expect(banner).toBeHidden();
+  await expect(page.locator('#conn-status')).toHaveText('connected');
 });
 
 test('shows the empty state', async ({ page, backend }) => {
@@ -130,7 +132,7 @@ test('renders names and output as text, not HTML', async ({ page, backend }) => 
   const p = { ...stopped, name, approot: '/tmp/x' };
   backend.details[name] = detail(p);
   backend.setProjects([p]);
-  await expect(page.locator('#project-list li')).toContainText(name);
+  await page.locator('#project-list li', { hasText: name }).click();
   await expect(page.locator('.detail-head h1')).toContainText(name);
   const job = backend.addJob(name, name);
   backend.jobLines(job.id, ['<script>window.pwned=1</script>']);

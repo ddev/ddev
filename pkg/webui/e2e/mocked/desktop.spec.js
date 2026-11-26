@@ -2,7 +2,7 @@
 
 // The GUI app shows this page in a webview that opens no new windows,
 // so links that would open a tab go to the server instead.
-const { test, expect, nthPost } = require('./fixtures');
+const { test, expect, nthPost, reload } = require('./fixtures');
 
 test('sends every state change with the dashboard header', async ({ page, backend }) => {
   await page.locator('.toolbar').getByRole('button', { name: 'Restart', exact: true }).click();
@@ -12,7 +12,7 @@ test('sends every state change with the dashboard header', async ({ page, backen
 
 test('opens links through the server in the GUI app', async ({ page, backend }) => {
   backend.desktop = true;
-  await page.reload();
+  await reload(page);
   const opened = page.waitForEvent('popup', { timeout: 1000 }).then(() => true, () => false);
   await page.locator('.toolbar').getByRole('link', { name: 'Open site ↗' }).click();
   const post = await nthPost(backend, 1);

@@ -92,6 +92,18 @@ When an action ends while the window is in the background, the app shows a notif
 
     If a closed window does not come back, as has happened on Ubuntu on arm64, quit the app from the tray and start it again.
 
+## Using the Window
+
+The window opens on a start page with DDEV's tip of the day and links to these docs, unless `ddev gui` selected a project. **Start page** at the top of the project list returns to it. Important notices from DDEV show under the top bar until you dismiss them.
+
+Right-click a project in the list for a menu with the actions of the buttons above its details, such as **Start**, **Open folder**, and **Copy path**. Each tab links to the docs about it, and the project type links to its [quickstart](../quickstart.md).
+
+The arrow keys move between the start page, the shared services, and the projects in the list, and `/` goes to the filter.
+
+**Shared services**, or a click on the router's or SSH agent's status, shows the router and the SSH agent that all projects share: their health, the router's configuration problems, a link to the Traefik dashboard, and their logs.
+
+The **Activity** panel at the bottom shows what each action prints, as it prints it. Click its bar to open or close it. The × next to a finished action removes it from the list, and **Clear history** removes every finished action. A running action stays until it ends.
+
 ## Using DDEV in WSL2
 
 When DDEV runs in WSL2, the GUI app runs on Windows and uses `ddev` inside your WSL2 distro:

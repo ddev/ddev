@@ -70,23 +70,29 @@ const test = base.test.extend({
   },
   // The page opens the dashboard, and the test fails on any script error
   // or Content-Security-Policy violation.
-  page: async ({ page, backend, browserName }, use) => {
+  page: async ({ page, backend }, use) => {
     const problems = [];
     page.on('pageerror', (e) => problems.push('page error: ' + e.message));
     page.on('console', (m) => {
       const t = m.text();
       if (m.type() !== 'error' || t.startsWith('Failed to load resource')) return;
-      // WebKit reports its own styles for <select> against any policy
-      // without 'unsafe-inline'; the page itself inlines none.
-      if (browserName === 'webkit' && t.startsWith('Refused to apply a stylesheet')) return;
       problems.push('console: ' + t);
     });
     await page.addInitScript(() => localStorage.clear());
-    await page.goto(backend.url);
+    // As `ddev gui` does in a project's directory; without it, the page
+    // opens on its start page.
+    await page.goto(backend.url + '#project=d11');
     await use(page);
     base.expect(problems).toEqual([]);
   },
 });
+
+// reload reloads the page, which opens on the start page, and selects d11
+// again.
+async function reload(page) {
+  await page.reload();
+  await page.locator('#project-list li', { hasText: 'd11' }).click();
+}
 
 // nthPost waits for the dashboard's nth POST and returns it.
 async function nthPost(backend, n) {
@@ -94,4 +100,4 @@ async function nthPost(backend, n) {
   return backend.posts[n - 1];
 }
 
-module.exports = { test, expect: base.expect, running, stopped, detail, nthPost };
+module.exports = { test, expect: base.expect, running, stopped, detail, nthPost, reload };

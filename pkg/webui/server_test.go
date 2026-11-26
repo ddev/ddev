@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -255,6 +256,28 @@ func TestCleanLine(t *testing.T) {
 	require.Equal(t, "done", cleanLine("50%\rdone\r\n"))
 	require.Equal(t, "red text", cleanLine("\x1b[31mred\x1b[0m text"))
 	require.Equal(t, "plain", cleanLine("plain"))
+}
+
+func TestReadOutput(t *testing.T) {
+	pr, pw := io.Pipe()
+	var lines []string
+	partials := make(chan string)
+	go readOutput(pr, func(l string) { lines = append(lines, l) }, func(p string) { partials <- p })
+
+	write := func(s string) {
+		go func() { _, _ = pw.Write([]byte(s)) }()
+	}
+	write("Building project images...")
+	require.Equal(t, "Building project images...", <-partials)
+	write("..")
+	require.Equal(t, "Building project images.....", <-partials)
+	write(" built\nStarting \xc3")
+	require.Equal(t, "Starting ", <-partials, "half a rune waits for the rest")
+	write("\xa9\r\x1b[1m50%")
+	require.Equal(t, "50%", <-partials)
+	_ = pw.Close()
+	require.Equal(t, "", <-partials)
+	require.Equal(t, []string{"Building project images..... built", "50%"}, lines)
 }
 
 func TestEditorURL(t *testing.T) {

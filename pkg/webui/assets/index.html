@@ -11,12 +11,12 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <img src="favicon.svg" alt="" class="logo">
-      <span>DDEV</span>
+      <button id="brand" class="brand-home" type="button" title="Start page"><img src="favicon.svg" alt="" class="logo"><span>DDEV</span></button>
       <span class="badge experimental" title="ddev gui is experimental and may change">experimental</span>
     </div>
     <div class="global-status">
-      <span id="router-status" class="pill">router: …</span>
+      <button id="router-status" class="pill" type="button">router: …</button>
+      <button id="ssh-agent-status" class="pill" type="button">SSH agent: …</button>
       <span id="conn-status" class="pill">connecting…</span>
     </div>
     <div class="global-actions">
@@ -28,26 +28,29 @@
   </header>
 
   <div id="error-banner" class="banner hidden"></div>
+  <div id="notices" class="notices"></div>
 
   <main class="layout">
     <aside class="sidebar">
+      <button id="nav-home" class="nav-home selected" type="button">Start page</button>
+      <button id="nav-shared" class="nav-home nav-shared" type="button">Shared services</button>
       <input id="filter" class="filter" type="search" placeholder="Filter projects (/)" autocomplete="off">
       <div id="status-chips" class="chips" role="group" aria-label="Show projects"></div>
-      <ul id="project-list" class="project-list" aria-label="Projects"></ul>
+      <ul id="project-list" class="project-list" role="listbox" aria-label="Projects"></ul>
       <p id="project-empty" class="muted hidden">No projects yet. Use “Add project” to configure one.</p>
     </aside>
 
-    <section id="detail" class="detail">
-      <div class="placeholder muted">Select a project.</div>
-    </section>
+    <section id="detail" class="detail"></section>
   </main>
 
   <section id="activity" class="activity collapsed">
-    <header class="activity-head">
-      <button id="activity-toggle" class="linkish">Activity <span id="activity-count" class="count"></span></button>
+    <header id="activity-head" class="activity-head">
+      <button id="activity-toggle" class="linkish" type="button" aria-expanded="false" aria-controls="activity-body">Activity <span id="activity-count" class="count"></span></button>
       <span id="activity-title" class="muted"></span>
+      <button id="activity-clear" class="btn small" type="button" title="Remove the finished actions from the list. Running ones stay." disabled>Clear history</button>
+      <span class="chevron" aria-hidden="true"></span>
     </header>
-    <div class="activity-body">
+    <div id="activity-body" class="activity-body">
       <ul id="job-list" class="job-list"></ul>
       <pre id="job-output" class="output"></pre>
     </div>

@@ -18,6 +18,7 @@ class MockBackend {
     this.projects = [];
     this.details = {};
     this.router = 'healthy';
+    this.sshAgent = 'healthy';
     this.error = '';
     // desktop marks the status as shown in the GUI app's webview.
     this.desktop = false;
@@ -30,6 +31,15 @@ class MockBackend {
       { repo: 'ddev/ddev-solr', title: 'ddev-solr', description: 'Solr', type: 'official' },
     ];
     this.projectTypes = ['drupal11', 'laravel', 'php', 'wordpress'];
+    this.messages = {
+      tips: [{ message: 'Use `ddev describe` to see a summary. https://docs.ddev.com/' }, { message: 'Try *ddev share*.' }],
+      infos: [],
+      warnings: [{ message: 'Upgrade Docker soon.' }],
+    };
+    this.shared = [
+      { name: 'ddev-router', label: 'Router', status: 'healthy', image: 'ddev/ddev-traefik-router:v1', dashboard: 'http://127.0.0.1:10999', docs: 'users/extend/traefik-router/' },
+      { name: 'ddev-ssh-agent', label: 'SSH agent', status: 'stopped', docs: 'users/usage/commands/#auth-ssh' },
+    ];
     // postReply lets a test answer a POST itself, returning {status, body}.
     this.postReply = null;
     this.statusClients = new Set();
@@ -64,7 +74,7 @@ class MockBackend {
   }
 
   pushStatus() {
-    const status = { projects: this.projects, router: this.router, jobs: this.jobs.map(summary), error: this.error || undefined, desktop: this.desktop || undefined };
+    const status = { projects: this.projects, router: this.router, ssh_agent: this.sshAgent, jobs: this.jobs.map(summary), error: this.error || undefined, desktop: this.desktop || undefined };
     for (const res of this.statusClients) send(res, 'status', status);
   }
 
@@ -79,6 +89,11 @@ class MockBackend {
     const job = this.job(id);
     job.lines.push(...lines);
     for (const res of this.jobClients.get(id) || []) send(res, 'lines', lines);
+  }
+
+  // jobPartial sends the line a job is still writing.
+  jobPartial(id, text) {
+    for (const res of this.jobClients.get(id) || []) send(res, 'partial', text);
   }
 
   endJob(id, err = '') {
@@ -140,6 +155,15 @@ class MockBackend {
       json(res, 200, d);
     } else if (p === '/api/project-types') {
       json(res, 200, this.projectTypes);
+    } else if (p === '/api/shared') {
+      json(res, 200, this.shared);
+    } else if ((m = p.match(/^\/api\/shared\/([^/]+)\/logs$/))) {
+      this.logRequests.push({ shared: decodeURIComponent(m[1]) });
+      sse(res);
+      this.logClients.add(res);
+      req.on('close', () => this.logClients.delete(res));
+    } else if (p === '/api/messages') {
+      json(res, 200, this.messages);
     } else if (p === '/api/addons/registry') {
       json(res, 200, this.registry);
     } else {
@@ -156,6 +180,19 @@ class MockBackend {
     const reply = this.postReply && this.postReply(post);
     if (reply) {
       return typeof reply.body === 'string' ? text(res, reply.status, reply.body) : json(res, reply.status, reply.body ?? {});
+    }
+    const rm = url.pathname.match(/^\/api\/jobs\/(\d+)\/remove$/);
+    if (rm) {
+      this.jobs = this.jobs.filter((j) => j.id !== Number(rm[1]) || !j.done);
+      this.pushStatus();
+      res.writeHead(204);
+      return res.end();
+    }
+    if (url.pathname === '/api/jobs/clear') {
+      this.jobs = this.jobs.filter((j) => !j.done);
+      this.pushStatus();
+      res.writeHead(204);
+      return res.end();
     }
     if (url.pathname.includes('/open/') || url.pathname === '/api/open-url') {
       res.writeHead(204);

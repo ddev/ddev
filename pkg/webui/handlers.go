@@ -3,6 +3,7 @@ package webui
 import (
 	"cmp"
 	"context"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -67,18 +68,18 @@ func (s *Server) handleProjectAction(w http.ResponseWriter, r *http.Request) {
 	bad := func(msg string) { http.Error(w, msg, http.StatusBadRequest) }
 	switch action := r.PathValue("action"); action {
 	case "start", "stop", "restart":
-		verb := map[string]string{"start": "Starting", "stop": "Stopping", "restart": "Restarting"}[action]
+		verb := map[string]string{"start": "Start", "stop": "Stop", "restart": "Restart"}[action]
 		s.startJob(w, verb+" "+name, name, "", action, name)
 	case "delete":
 		args := []string{"delete", "-y"}
-		title := "Deleting " + name
+		title := "Delete " + name
 		if r.FormValue("omit_snapshot") == "true" {
 			args = append(args, "--omit-snapshot")
 			title += " without a snapshot"
 		}
 		s.startJob(w, title, name, "", append(args, name)...)
 	case "snapshot":
-		s.startJob(w, "Making a snapshot of "+name, name, root, "snapshot")
+		s.startJob(w, "Make a snapshot of "+name, name, root, "snapshot")
 	case "restore":
 		snap, ok := formArg(r, "snapshot")
 		if !ok {
@@ -86,29 +87,29 @@ func (s *Server) handleProjectAction(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if snap == "" {
-			s.startJob(w, "Restoring the latest snapshot of "+name, name, root, "snapshot", "restore", "--latest")
+			s.startJob(w, "Restore the latest snapshot of "+name, name, root, "snapshot", "restore", "--latest")
 			return
 		}
-		s.startJob(w, "Restoring snapshot "+filepath.Base(snap)+" of "+name, name, root, "snapshot", "restore", snap)
+		s.startJob(w, "Restore snapshot "+filepath.Base(snap)+" of "+name, name, root, "snapshot", "restore", snap)
 	case "addon-get":
 		repo, ok := formArg(r, "repo")
 		if !ok || repo == "" {
 			bad("an add-on repository such as ddev/ddev-redis is required")
 			return
 		}
-		s.startJob(w, "Installing "+repo+" in "+name, name, root, "add-on", "get", repo)
+		s.startJob(w, "Install "+repo+" in "+name, name, root, "add-on", "get", repo)
 	case "addon-remove":
 		addon, ok := formArg(r, "addon")
 		if !ok || addon == "" {
 			bad("an add-on name is required")
 			return
 		}
-		s.startJob(w, "Removing "+addon+" from "+name, name, root, "add-on", "remove", addon)
+		s.startJob(w, "Remove "+addon+" from "+name, name, root, "add-on", "remove", addon)
 	case "addon-update":
-		s.startJob(w, "Updating the add-ons of "+name, name, root, "add-on", "update", "--yes")
+		s.startJob(w, "Update the add-ons of "+name, name, root, "add-on", "update", "--yes")
 	case "xdebug-on", "xdebug-off":
 		state := strings.TrimPrefix(action, "xdebug-")
-		s.startJob(w, "Turning Xdebug "+state+" in "+name, name, root, "xdebug", state)
+		s.startJob(w, "Turn Xdebug "+state+" in "+name, name, root, "xdebug", state)
 	default:
 		http.NotFound(w, r)
 	}
@@ -117,11 +118,11 @@ func (s *Server) handleProjectAction(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleGlobalAction(w http.ResponseWriter, r *http.Request) {
 	switch r.PathValue("action") {
 	case "start-all":
-		s.startJob(w, "Starting all projects", "", "", "start", "--all")
+		s.startJob(w, "Start all projects", "", "", "start", "--all")
 	case "stop-all":
-		s.startJob(w, "Stopping all projects", "", "", "stop", "--all")
+		s.startJob(w, "Stop all projects", "", "", "stop", "--all")
 	case "poweroff":
-		s.startJob(w, "Powering off DDEV", "", "", "poweroff")
+		s.startJob(w, "Power off DDEV", "", "", "poweroff")
 	default:
 		http.NotFound(w, r)
 	}
@@ -157,7 +158,7 @@ func (s *Server) handleAddProject(w http.ResponseWriter, r *http.Request) {
 	if d := strings.TrimSpace(r.FormValue("docroot")); d != "" {
 		args = append(args, "--docroot="+d)
 	}
-	s.startJob(w, "Configuring "+dir, filepath.Base(dir), dir, args...)
+	s.startJob(w, "Configure "+dir, filepath.Base(dir), dir, args...)
 }
 
 func (s *Server) handleOpen(w http.ResponseWriter, r *http.Request) {
@@ -233,6 +234,12 @@ func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
 		_ = pr.Close()
 		return
 	}
+	streamLines(ctx, sse, pr, c.Wait)
+}
+
+// streamLines sends what pr reads as `lines` events until it ends, then an
+// `end` event with wait's error. When ctx ends first, it closes pr and waits.
+func streamLines(ctx context.Context, sse *sse, pr io.ReadCloser, wait func() error) {
 	lines := make(chan string, 100)
 	go func() {
 		scanLines(pr, func(l string) {
@@ -248,7 +255,7 @@ func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
 		select {
 		case l, ok := <-lines:
 			if !ok {
-				err := c.Wait()
+				err := wait()
 				errText := ""
 				if err != nil && ctx.Err() == nil {
 					errText = err.Error()
@@ -272,7 +279,7 @@ func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
 			sse.send("lines", batch)
 		case <-ctx.Done():
 			_ = pr.Close()
-			_ = c.Wait()
+			_ = wait()
 			return
 		}
 	}

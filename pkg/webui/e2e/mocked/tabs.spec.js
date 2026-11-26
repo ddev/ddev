@@ -1,6 +1,6 @@
 'use strict';
 
-const { test, expect, nthPost } = require('./fixtures');
+const { test, expect, nthPost, reload } = require('./fixtures');
 
 test('toggles Xdebug', async ({ page, backend }) => {
   const toggle = page.getByRole('checkbox');
@@ -66,7 +66,7 @@ test('installs, updates and removes add-ons', async ({ page, backend, browserNam
 
 test('shows when no add-ons are installed', async ({ page, backend }) => {
   backend.details.d11.addons = [];
-  await page.reload();
+  await reload(page);
   await page.getByRole('button', { name: 'Add-ons' }).click();
   await expect(page.locator('#detail')).toContainText('No add-ons installed.');
   await expect(page.getByRole('button', { name: 'Update all' })).toBeDisabled();
@@ -97,7 +97,7 @@ test('creates and restores snapshots', async ({ page, backend }) => {
 test('snapshots need a database', async ({ page, backend }) => {
   backend.details.d11.describe.dbinfo = undefined;
   backend.details.d11.snapshots = [];
-  await page.reload();
+  await reload(page);
   await page.getByRole('button', { name: 'Snapshots' }).click();
   await expect(page.getByRole('button', { name: 'Create snapshot' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Restore latest' })).toBeDisabled();
@@ -119,7 +119,8 @@ test('follows logs and stops when leaving the tab', async ({ page, backend }) =>
   await expect(out).toContainText('after status');
   expect(backend.logRequests).toHaveLength(1);
 
-  await page.getByLabel('Service').selectOption('db');
+  await page.getByLabel('Service').click();
+  await page.getByRole('option', { name: 'db', exact: true }).click();
   await expect.poll(() => backend.logRequests.at(-1)).toEqual({ project: 'd11', service: 'db' });
   await expect(out).not.toContainText('nginx started');
 
@@ -138,7 +139,9 @@ test('adds a project', async ({ page, backend }) => {
   const dialog = page.locator('#dialog');
   await page.getByRole('button', { name: 'Add project' }).click();
   await expect(dialog.locator('h2')).toHaveText('Add project');
-  await expect(dialog.getByLabel('Project type').locator('option')).toHaveCount(5);
+  await dialog.getByLabel('Project type').click();
+  await expect(dialog.getByRole('option')).toHaveCount(5);
+  await dialog.getByLabel('Project type').click();
 
   // The directory is required.
   await dialog.getByRole('button', { name: 'Configure' }).click();
@@ -146,7 +149,8 @@ test('adds a project', async ({ page, backend }) => {
   expect(backend.posts).toHaveLength(0);
 
   await dialog.getByLabel('Project directory').fill('/home/me/projects/new');
-  await dialog.getByLabel('Project type').selectOption('laravel');
+  await dialog.getByLabel('Project type').click();
+  await dialog.getByRole('option', { name: 'laravel', exact: true }).click();
   await dialog.getByLabel('Project name').fill('newsite');
   await dialog.getByLabel('Docroot').fill('public');
   await dialog.getByRole('button', { name: 'Configure' }).click();

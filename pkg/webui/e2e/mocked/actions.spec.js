@@ -9,7 +9,8 @@ test('streams a job into the activity panel', async ({ page, backend }) => {
 
   const activity = page.locator('#activity');
   await expect(activity).not.toHaveClass(/collapsed/);
-  await expect(page.locator('#activity-title')).toHaveText('stop d11');
+  await expect(page.locator('#activity-title .job-title')).toHaveText('stop d11');
+  await expect(page.locator('#activity-title .pill')).toHaveText('running');
   await expect(page.locator('#activity-count')).toHaveText('1');
 
   // While the job runs, the project's actions are off and its row says so.
@@ -22,6 +23,7 @@ test('streams a job into the activity panel', async ({ page, backend }) => {
   await expect(page.locator('#job-output')).toContainText('Stopping d11...');
   backend.endJob(job.id);
   await expect(page.locator('#job-output')).toContainText('✓ Done');
+  await expect(page.locator('#activity-title .pill')).toHaveText('done');
   await expect(page.locator('#activity-count')).toBeEmpty();
   await expect(page.locator('.toolbar').getByRole('button', { name: 'Restart' })).toBeEnabled();
 });
@@ -33,6 +35,7 @@ test('reports a failed job', async ({ page, backend }) => {
   await expect(page.locator('#job-output')).toContainText('✗ Failed: exit status 1');
   await expect(page.locator('#toasts .toast.error')).toContainText('restart d11 failed: exit status 1');
   await expect(page.locator('#job-list li .dot')).toHaveClass(/bad/);
+  await expect(page.locator('#activity-title .pill')).toHaveText('failed');
 });
 
 test('shows a refused action', async ({ page, backend }) => {

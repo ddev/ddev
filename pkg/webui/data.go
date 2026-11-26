@@ -40,6 +40,7 @@ func IsUp(status string) bool {
 type status struct {
 	Projects []projectSummary `json:"projects"`
 	Router   string           `json:"router"`
+	SSHAgent string           `json:"ssh_agent"`
 	Jobs     []jobSummary     `json:"jobs"`
 	// Error is set when Docker cannot be reached or the list cannot be read.
 	Error string `json:"error,omitempty"`
@@ -85,6 +86,10 @@ func loadStatus() status {
 	st.Router = "disabled"
 	if routerUsed {
 		st.Router, _ = ddevapp.GetRouterStatus()
+	}
+	st.SSHAgent = "disabled"
+	if !slices.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, ddevapp.SSHAuthName) {
+		st.SSHAgent, _ = ddevapp.GetSSHAuthStatus()
 	}
 	return st
 }

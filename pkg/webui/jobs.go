@@ -2,6 +2,7 @@ package webui
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/x/ansi"
 )
@@ -33,6 +35,9 @@ type job struct {
 	mu      sync.Mutex
 	lines   []string
 	dropped int
+	// partial is the last line while it has no newline yet, such as
+	// "Building project images...." while the dots arrive.
+	partial string
 	done    bool
 	err     string
 	cmd     *exec.Cmd
@@ -69,6 +74,17 @@ func (j *job) addLine(line string) {
 	j.changed = make(chan struct{})
 }
 
+func (j *job) setPartial(text string) {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+	if text == j.partial {
+		return
+	}
+	j.partial = text
+	close(j.changed)
+	j.changed = make(chan struct{})
+}
+
 func (j *job) finish(err error) {
 	j.mu.Lock()
 	defer j.mu.Unlock()
@@ -80,16 +96,25 @@ func (j *job) finish(err error) {
 	j.changed = make(chan struct{})
 }
 
-// since returns the lines after the first `from` the job ever had, the index
-// to continue from, and whether the job is done.
-func (j *job) since(from int) (lines []string, next int, done bool, errText string, changed <-chan struct{}) {
+// jobView is a job's output after a given line.
+type jobView struct {
+	lines   []string
+	next    int // the index to continue from
+	partial string
+	done    bool
+	err     string
+	changed <-chan struct{}
+}
+
+// since returns the output after the first `from` lines the job ever had.
+func (j *job) since(from int) jobView {
 	j.mu.Lock()
 	defer j.mu.Unlock()
-	start := max(from-j.dropped, 0)
-	if start < len(j.lines) {
-		lines = slices.Clone(j.lines[start:])
+	v := jobView{next: j.dropped + len(j.lines), partial: j.partial, done: j.done, err: j.err, changed: j.changed}
+	if start := max(from-j.dropped, 0); start < len(j.lines) {
+		v.lines = slices.Clone(j.lines[start:])
 	}
-	return lines, j.dropped + len(j.lines), j.done, j.err, j.changed
+	return v
 }
 
 // jobs tracks running and recent jobs, one running job per project at most.
@@ -137,7 +162,7 @@ func (js *jobs) start(title, project string, cmd *exec.Cmd) (*job, error) {
 	scanned := make(chan struct{})
 	go func() {
 		defer close(scanned)
-		scanLines(pr, j.addLine)
+		readOutput(pr, j.addLine, j.setPartial)
 	}()
 	go func() {
 		err := cmd.Wait()
@@ -148,6 +173,27 @@ func (js *jobs) start(title, project string, cmd *exec.Cmd) (*job, error) {
 	}()
 	js.onChange()
 	return j, nil
+}
+
+// remove drops a finished job, and reports whether it did.
+func (js *jobs) remove(id int) bool {
+	js.mu.Lock()
+	n := len(js.all)
+	js.all = slices.DeleteFunc(js.all, func(j *job) bool { return j.ID == id && j.summary().Done })
+	removed := len(js.all) < n
+	js.mu.Unlock()
+	if removed {
+		js.onChange()
+	}
+	return removed
+}
+
+// clearFinished drops every finished job.
+func (js *jobs) clearFinished() {
+	js.mu.Lock()
+	js.all = slices.DeleteFunc(js.all, func(j *job) bool { return j.summary().Done })
+	js.mu.Unlock()
+	js.onChange()
 }
 
 // prune drops the oldest finished jobs. The caller holds js.mu.
@@ -209,6 +255,59 @@ func scanLines(r io.Reader, add func(string)) {
 	_, _ = io.Copy(io.Discard, r)
 }
 
+// maxPartial bounds an unfinished line, such as a progress bar that only
+// ever returns the cursor.
+const maxPartial = 64 * 1024
+
+// readOutput is scanLines that also reports the last line as it grows,
+// so output that arrives without a newline shows at once.
+func readOutput(r io.Reader, add func(string), partial func(string)) {
+	buf := make([]byte, 32*1024)
+	var pending []byte
+	for {
+		n, err := r.Read(buf)
+		pending = append(pending, buf[:n]...)
+		for {
+			i := bytes.IndexByte(pending, '\n')
+			if i < 0 {
+				break
+			}
+			add(cleanLine(string(pending[:i])))
+			pending = pending[i+1:]
+		}
+		if len(pending) > maxPartial {
+			if i := bytes.LastIndexByte(pending, '\r'); i >= 0 {
+				pending = pending[i+1:]
+			}
+			if len(pending) > maxPartial {
+				add(cleanLine(string(pending)))
+				pending = nil
+			}
+		}
+		if err != nil {
+			if len(pending) > 0 {
+				add(cleanLine(string(pending)))
+			}
+			partial("")
+			return
+		}
+		partial(cleanLine(string(trimIncompleteRune(pending))))
+	}
+}
+
+// trimIncompleteRune cuts a UTF-8 sequence that the next read completes.
+func trimIncompleteRune(b []byte) []byte {
+	for i := len(b) - 1; i >= 0 && i >= len(b)-utf8.UTFMax; i-- {
+		if utf8.RuneStart(b[i]) {
+			if !utf8.FullRune(b[i:]) {
+				return b[:i]
+			}
+			break
+		}
+	}
+	return b
+}
+
 // cleanLine keeps what a terminal would show of a line: the text after its
 // last carriage return, without colors or cursor movement.
 func cleanLine(line string) string {
@@ -243,8 +342,23 @@ func (s *Server) startJob(w http.ResponseWriter, title, project, dir string, arg
 	writeJSON(w, http.StatusAccepted, j.summary())
 }
 
-// handleJobStream streams a job's output as `line` events, then an `end`
-// event with its error, if any.
+func (s *Server) handleRemoveJob(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(r.PathValue("id"))
+	if !s.jobs.remove(id) {
+		http.Error(w, "no finished job with that id", http.StatusConflict)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleClearJobs(w http.ResponseWriter, _ *http.Request) {
+	s.jobs.clearFinished()
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// handleJobStream streams a job's output as `lines` events, its unfinished
+// last line as `partial` events, then an `end` event with its error, if any.
+// A `lines` event ends the partial line the client shows.
 func (s *Server) handleJobStream(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.PathValue("id"))
 	j := s.jobs.get(id)
@@ -256,19 +370,24 @@ func (s *Server) handleJobStream(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	next := 0
+	next, shown := 0, ""
 	for {
-		lines, n, done, errText, changed := j.since(next)
-		next = n
-		if len(lines) > 0 {
-			sse.send("lines", lines)
+		v := j.since(next)
+		next = v.next
+		if len(v.lines) > 0 {
+			sse.send("lines", v.lines)
+			shown = ""
 		}
-		if done {
-			sse.send("end", map[string]string{"err": errText})
+		if v.partial != shown {
+			sse.send("partial", v.partial)
+			shown = v.partial
+		}
+		if v.done {
+			sse.send("end", map[string]string{"err": v.err})
 			return
 		}
 		select {
-		case <-changed:
+		case <-v.changed:
 		case <-r.Context().Done():
 			return
 		}

@@ -183,6 +183,11 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/jobs/{id}", s.handleJobStream)
 	mux.HandleFunc("GET /api/project-types", s.handleProjectTypes)
 	mux.HandleFunc("GET /api/addons/registry", s.handleAddonRegistry)
+	mux.HandleFunc("GET /api/messages", s.handleMessages)
+	mux.HandleFunc("GET /api/shared", s.handleShared)
+	mux.HandleFunc("GET /api/shared/{name}/logs", s.handleSharedLogs)
+	mux.HandleFunc("POST /api/jobs/clear", s.handleClearJobs)
+	mux.HandleFunc("POST /api/jobs/{id}/remove", s.handleRemoveJob)
 	if s.desktop {
 		mux.HandleFunc("POST /api/open-url", s.handleOpenURL)
 	}

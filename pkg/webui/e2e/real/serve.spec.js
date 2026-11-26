@@ -67,7 +67,7 @@ test.afterAll(async () => {
 // with its output when the job fails.
 async function runAndWait(page, title, click, timeout = 10 * 60 * 1000) {
   await click();
-  await expect(page.locator('#activity-title')).toHaveText(title);
+  await expect(page.locator('#activity-title .job-title')).toHaveText(title);
   const out = page.locator('#job-output');
   await expect(out).toContainText(/✓ Done|✗ Failed/, { timeout });
   const text = await out.textContent();
@@ -80,11 +80,12 @@ test('manages a project from the dashboard', async ({ page, request }) => {
   await expect(page.locator('#conn-status')).toHaveText('connected');
 
   await test.step('add the project', async () => {
-    await runAndWait(page, `Configuring ${projectDir}`, async () => {
+    await runAndWait(page, `Configure ${projectDir}`, async () => {
       await page.getByRole('button', { name: 'Add project' }).click();
       const dialog = page.locator('#dialog');
       await dialog.getByLabel('Project directory').fill(projectDir);
-      await dialog.getByLabel('Project type').selectOption('php');
+      await dialog.getByLabel('Project type').click();
+      await dialog.getByRole('option', { name: 'php', exact: true }).click();
       await dialog.getByLabel('Docroot').fill('web');
       await dialog.getByRole('button', { name: 'Configure' }).click();
     });
@@ -95,7 +96,7 @@ test('manages a project from the dashboard', async ({ page, request }) => {
 
   const toolbar = page.locator('.toolbar');
   await test.step('start it and open the site', async () => {
-    await runAndWait(page, `Starting ${name}`, () => toolbar.getByRole('button', { name: 'Start', exact: true }).click());
+    await runAndWait(page, `Start ${name}`, () => toolbar.getByRole('button', { name: 'Start', exact: true }).click());
     await expect(page.locator('.detail-head')).toContainText('running');
     const site = toolbar.getByRole('link', { name: 'Open site ↗' });
     await expect(site).toBeVisible();
@@ -111,25 +112,25 @@ test('manages a project from the dashboard', async ({ page, request }) => {
   });
 
   await test.step('toggle Xdebug', async () => {
-    await runAndWait(page, `Turning Xdebug on in ${name}`, () => page.getByRole('checkbox').check());
+    await runAndWait(page, `Turn Xdebug on in ${name}`, () => page.getByRole('checkbox').check());
     await expect(page.locator('.switch')).toContainText('enabled');
-    await runAndWait(page, `Turning Xdebug off in ${name}`, () => page.getByRole('checkbox').uncheck());
+    await runAndWait(page, `Turn Xdebug off in ${name}`, () => page.getByRole('checkbox').uncheck());
     await expect(page.locator('.switch')).toContainText('disabled');
   });
 
   await test.step('snapshot and restore the database', async () => {
     await page.getByRole('button', { name: 'Snapshots' }).click();
-    await runAndWait(page, `Making a snapshot of ${name}`, () => page.getByRole('button', { name: 'Create snapshot' }).click());
+    await runAndWait(page, `Make a snapshot of ${name}`, () => page.getByRole('button', { name: 'Create snapshot' }).click());
     const row = page.locator('table.grid tr', { hasText: name });
     await expect(row).toHaveCount(1);
-    await runAndWait(page, /^Restoring snapshot /, async () => {
+    await runAndWait(page, /^Restore snapshot /, async () => {
       await row.getByRole('button', { name: 'Restore' }).click();
       await page.locator('#dialog').getByRole('button', { name: 'Restore' }).click();
     });
   });
 
   await test.step('delete it', async () => {
-    await runAndWait(page, `Deleting ${name} without a snapshot`, async () => {
+    await runAndWait(page, `Delete ${name} without a snapshot`, async () => {
       await toolbar.getByRole('button', { name: 'Delete' }).click();
       await page.locator('#dialog').getByText('Skip the database snapshot').click();
       await page.locator('#dialog').getByRole('button', { name: 'Delete' }).click();
