@@ -495,13 +495,15 @@ The scripts report:
 
 ### Icinga Configuration on `monitor.ddev.com`
 
-Each runner needs a host in Icinga Director that imports the
-`ddev-macos-runner` or `ddev-windows-runner` template, named with the
-runner's Tailscale short name, and an Icinga API user that can submit results
-only for that host. Pull request code runs on the runner and can read the
-password, so the user can't touch any other host. Maintainers create both; the
-steps are in the private `ddev/maintainer-info` repository, under
-"Pushed Checks for macOS and Windows Runners" in `topics/monitoring.md`.
+Each runner needs a host in Icinga Director and an Icinga API user that can
+submit results only for that host. Pull request code runs on the runner and can
+read the password, so the user can't touch any other host. The host imports
+`ddev-macos-runner` or `ddev-windows-runner`, and is named with the runner's
+Tailscale short name. The Windows side of a WSL2 testbot imports
+`ddev-windows-host` and is named `<runner>-windows`. Maintainers create the
+hosts and users; the steps are in the private `ddev/maintainer-info`
+repository, under "Pushed Checks for macOS and Windows Runners" in
+`topics/monitoring.md`.
 
 ### Runner Setup
 
@@ -514,6 +516,9 @@ steps are in the private `ddev/maintainer-info` repository, under
     ICINGA_API_USER=push-tb-macos-arm64-7
     ICINGA_API_PASSWORD=<the API user's password>
     ```
+
+    On the Windows side of a WSL2 testbot, whose Buildkite agent runs inside
+    WSL, add `ICINGA_CHECKS=host,disk` so only the host and `C:` are checked.
 
 2. Copy the Icinga CA certificate, `/var/lib/icinga2/certs/ca.crt` on
    `monitor.ddev.com`, to `~/.config/ddev-icinga/ca.crt`.

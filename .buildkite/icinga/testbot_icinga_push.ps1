@@ -5,6 +5,8 @@
 #
 # Reads ICINGA_URL, ICINGA_HOST, ICINGA_API_USER and ICINGA_API_PASSWORD from
 # ~/.config/ddev-icinga/env, and the Icinga CA from ~/.config/ddev-icinga/ca.crt.
+# ICINGA_CHECKS in that file limits the checks, for example to "host,disk" on a
+# WSL2 testbot, whose Buildkite agent runs inside WSL.
 # With -DryRun it prints the results instead of sending them.
 
 param([switch]$DryRun)
@@ -211,7 +213,17 @@ if (-not $Docker) {
   ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 }
 
-foreach ($check in 'Test-Host', 'Test-Disk', 'Test-BuildkiteAgent', 'Test-DockerProviders', 'Test-LeftoverContainers') {
+$Checks = [ordered]@{
+  'host' = 'Test-Host'; 'disk' = 'Test-Disk'; 'buildkite-agent' = 'Test-BuildkiteAgent'
+  'docker-providers' = 'Test-DockerProviders'; 'leftover-containers' = 'Test-LeftoverContainers'
+}
+$Enabled = if ($Config['ICINGA_CHECKS']) { @($Config['ICINGA_CHECKS'] -split '[,\s]+' | Where-Object { $_ }) } else { @($Checks.Keys) }
+foreach ($name in $Enabled) {
+  if (-not $Checks.Contains($name)) {
+    Write-Log "Unknown check '$name' in ICINGA_CHECKS"
+    continue
+  }
+  $check = $Checks[$name]
   try {
     & $check
   } catch {
