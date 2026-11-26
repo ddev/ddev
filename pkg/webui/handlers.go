@@ -123,6 +123,23 @@ func (s *Server) handleGlobalAction(w http.ResponseWriter, r *http.Request) {
 		s.startJob(w, "Stop all projects", "", "", "stop", "--all")
 	case "poweroff":
 		s.startJob(w, "Power off DDEV", "", "", "poweroff")
+	case "start", "stop", "restart":
+		// Several projects in one ddev command, which conflicts with every
+		// project's jobs, as start-all does.
+		_ = r.ParseForm()
+		names := slices.Compact(slices.Sorted(slices.Values(r.PostForm["project"])))
+		if len(names) == 0 {
+			http.Error(w, "no projects given", http.StatusBadRequest)
+			return
+		}
+		for _, name := range names {
+			if _, err := appRoot(name); err != nil {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
+		}
+		verb := map[string]string{"start": "Start", "stop": "Stop", "restart": "Restart"}[r.PathValue("action")]
+		s.startJob(w, verb+" "+strings.Join(names, ", "), "", "", append([]string{r.PathValue("action")}, names...)...)
 	default:
 		http.NotFound(w, r)
 	}

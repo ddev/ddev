@@ -123,6 +123,13 @@ func TestUnknownProjectAndAction(t *testing.T) {
 
 	rec = postForm(s, "/api/actions/nothing", nil)
 	require.Equal(t, http.StatusNotFound, rec.Code)
+
+	rec = postForm(s, "/api/actions/start", nil)
+	require.Equal(t, http.StatusBadRequest, rec.Code, "several projects need at least one")
+	rec = postForm(s, "/api/actions/stop", url.Values{"project": {"no-such-project-webui-test"}})
+	require.Equal(t, http.StatusNotFound, rec.Code)
+	require.Contains(t, rec.Body.String(), "no project named")
+	require.Empty(t, s.jobs.summaries())
 	require.Empty(t, s.jobs.summaries())
 }
 

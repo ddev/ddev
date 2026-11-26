@@ -77,11 +77,11 @@ async function runAndWait(page, title, click, timeout = 10 * 60 * 1000) {
 test('manages a project from the dashboard', async ({ page, request }) => {
   await page.goto(dashboardURL);
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.locator('#conn-status')).toHaveText('connected');
+  await expect(page.locator('#status-text')).not.toHaveText(/Connecting|Disconnected|Docker|Error/);
 
   await test.step('add the project', async () => {
     await runAndWait(page, `Configure ${projectDir}`, async () => {
-      await page.getByRole('button', { name: 'Add project' }).click();
+      await page.locator('#btn-add').click();
       const dialog = page.locator('#dialog');
       await dialog.getByLabel('Project directory').fill(projectDir);
       await dialog.getByLabel('Project type').click();
@@ -98,7 +98,7 @@ test('manages a project from the dashboard', async ({ page, request }) => {
   await test.step('start it and open the site', async () => {
     await runAndWait(page, `Start ${name}`, () => toolbar.getByRole('button', { name: 'Start', exact: true }).click());
     await expect(page.locator('.detail-head')).toContainText('running');
-    const site = toolbar.getByRole('link', { name: 'Open site ↗' });
+    const site = toolbar.getByRole('link', { name: 'Open site' });
     await expect(site).toBeVisible();
     const res = await request.get(await site.getAttribute('href'));
     expect(await res.text()).toContain(`hello from ${name}`);
@@ -112,10 +112,10 @@ test('manages a project from the dashboard', async ({ page, request }) => {
   });
 
   await test.step('toggle Xdebug', async () => {
-    await runAndWait(page, `Turn Xdebug on in ${name}`, () => page.getByRole('checkbox').check());
-    await expect(page.locator('.switch')).toContainText('enabled');
-    await runAndWait(page, `Turn Xdebug off in ${name}`, () => page.getByRole('checkbox').uncheck());
-    await expect(page.locator('.switch')).toContainText('disabled');
+    await runAndWait(page, `Turn Xdebug on in ${name}`, () => page.getByRole('switch').check());
+    await expect(page.locator('.xdebug-switch')).toHaveText(/Xdebug on$/);
+    await runAndWait(page, `Turn Xdebug off in ${name}`, () => page.getByRole('switch').uncheck());
+    await expect(page.locator('.xdebug-switch')).toHaveText(/Xdebug off$/);
   });
 
   await test.step('snapshot and restore the database', async () => {
@@ -131,7 +131,8 @@ test('manages a project from the dashboard', async ({ page, request }) => {
 
   await test.step('delete it', async () => {
     await runAndWait(page, `Delete ${name} without a snapshot`, async () => {
-      await toolbar.getByRole('button', { name: 'Delete' }).click();
+      await toolbar.getByRole('button', { name: 'More actions' }).click();
+      await page.getByRole('menuitem', { name: 'Delete…' }).click();
       await page.locator('#dialog').getByText('Skip the database snapshot').click();
       await page.locator('#dialog').getByRole('button', { name: 'Delete' }).click();
     });

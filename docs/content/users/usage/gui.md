@@ -64,7 +64,7 @@ When an action ends while the window is in the background, the app shows a notif
     osascript -e 'quit app "DDEV"'
     ```
 
-    **Folder** opens the project in Finder. The app finds `ddev` on your login shell's `PATH`, so a Homebrew `ddev` works even though apps started from the Finder get a minimal `PATH`.
+    **Open folder** opens the project in Finder. The app finds `ddev` on your login shell's `PATH`, so a Homebrew `ddev` works even though apps started from the Finder get a minimal `PATH`.
 
 === "Windows"
 
@@ -76,7 +76,7 @@ When an action ends while the window is in the background, the app shows a notif
     Stop-Process -Name ddev-gui
     ```
 
-    **Folder** opens the project in File Explorer. With DDEV in WSL2, see [Using DDEV in WSL2](#using-ddev-in-wsl2).
+    **Open folder** opens the project in File Explorer. With DDEV in WSL2, see [Using DDEV in WSL2](#using-ddev-in-wsl2).
 
 === "Linux"
 
@@ -88,19 +88,21 @@ When an action ends while the window is in the background, the app shows a notif
     pkill -x ddev-gui
     ```
 
-    **Folder** opens the project with `xdg-open`, which needs `xdg-utils`. The tray icon needs a StatusNotifierItem host, and notifications need a desktop session bus.
+    **Open folder** opens the project with `xdg-open`, which needs `xdg-utils`. The tray icon needs a StatusNotifierItem host, and notifications need a desktop session bus.
 
     If a closed window does not come back, as has happened on Ubuntu on arm64, quit the app from the tray and start it again.
 
 ## Using the Window
 
-The window opens on a start page with DDEV's tip of the day and links to these docs, unless `ddev gui` selected a project. **Start page** at the top of the project list returns to it. Important notices from DDEV show under the top bar until you dismiss them.
+The window opens on a start page with DDEV's tip of the day, the latest posts of the [DDEV blog](https://ddev.com/blog/), and links to these docs, unless `ddev gui` selected a project. The app reads the blog's feed from ddev.com, and leaves the posts out when it can't reach it. **Start page** at the top of the project list returns to it. Important notices from DDEV show under the top bar until you dismiss them.
 
-Right-click a project in the list for a menu with the actions of the buttons above its details, such as **Start**, **Open folder**, and **Copy path**. Each tab links to the docs about it, and the project type links to its [quickstart](../quickstart.md).
+Above a project's tabs, **Open site**, **Mailpit**, and **Open folder** open what they name. The editor button opens the project in VS Code, and its arrow switches it to PhpStorm, which the button then remembers. The **⋯** button holds the rarer actions: snapshots, updating add-ons, and **Delete**. Right-click a project in the list for a menu with the same actions. A **?** next to a heading links to the docs about it, and the project type links to its [quickstart](../quickstart.md).
+
+To start or stop several projects at once, Ctrl+click or Shift+click them in the list, or tick the box that shows when you point at one. The page then offers **Start**, **Stop**, and **Restart** for all of them. **Start all**, **Stop all**, and **Power off** at the top act on every project.
 
 The arrow keys move between the start page, the shared services, and the projects in the list, and `/` goes to the filter.
 
-**Shared services**, or a click on the router's or SSH agent's status, shows the router and the SSH agent that all projects share: their health, the router's configuration problems, a link to the Traefik dashboard, and their logs.
+**Shared services**, or a click on the status at the top, shows the router and the SSH agent that all projects share: their health, the router's configuration problems, a link to the Traefik dashboard, and their logs.
 
 The **Activity** panel at the bottom shows what each action prints, as it prints it. Click its bar to open or close it. The × next to a finished action removes it from the list, and **Clear history** removes every finished action. A running action stays until it ends.
 
@@ -110,7 +112,7 @@ When DDEV runs in WSL2, the GUI app runs on Windows and uses `ddev` inside your 
 
 * Start it from the Start Menu: **DDEV** → **DDEV GUI (experimental)**. The installer's shortcut names the distro you chose during installation, which need not be your default distro. You can also run `ddev gui` inside WSL2. It opens the Windows app with that distro's projects, and the app runs the `ddev` on the distro's login `PATH`. It finds the app on the Windows `PATH` or in `%LOCALAPPDATA%\Programs\DDEV`, and otherwise opens your Windows browser.
 * Your projects stay in WSL2, and the window shows their Linux paths, such as `/home/you/my-site`. To add a project, enter its Linux path.
-* **Open site** and **Mailpit** open your Windows browser. **Folder** opens File Explorer at the project's `\\wsl.localhost\` path, and **VS Code** opens the project in a VS Code window connected to WSL.
+* **Open site** and **Mailpit** open your Windows browser. **Open folder** opens File Explorer at the project's `\\wsl.localhost\` path, and **Open in VS Code** opens the project in a VS Code window connected to WSL.
 * The window reaches `ddev gui --desktop` in WSL2 through localhost forwarding, which is on by default.
 * Quitting the app also stops `ddev gui --desktop` inside WSL2.
 

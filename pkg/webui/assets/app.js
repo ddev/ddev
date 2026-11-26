@@ -30,7 +30,7 @@ const state = {
   // shownJobs are the jobs the panel has shown, so a finished one doesn't
   // take it again.
   shownJobs: new Set(),
-  // view is home, project, or shared: what the detail area shows.
+  // view is home, project, shared, or multi: what the detail area shows.
   view: 'home',
   // messages are DDEV's tips and notices, from /api/messages.
   messages: null,
@@ -38,6 +38,15 @@ const state = {
   shared: null,
   sharedLog: 'ddev-router',
   tipIndex: Math.floor(Math.random() * 1000),
+  // picked are the projects chosen with Ctrl+click or Shift+click, for an
+  // action on several at once; pickFrom is where a Shift+click range starts.
+  picked: [],
+  pickFrom: '',
+  pickReturn: '',
+  // news are the latest posts of the DDEV blog, from /api/news.
+  news: null,
+  // conn is the status stream: connecting, ok, or lost.
+  conn: 'connecting',
 };
 
 // h builds an element. Attributes starting with "on" are listeners.
@@ -60,7 +69,11 @@ function h(tag, attrs, ...children) {
 const $ = (id) => document.getElementById(id);
 
 function closeButton(label, onclick) {
-  return h('button', { class: 'close-btn', type: 'button', title: label, 'aria-label': label, onclick });
+  return h('button', { class: 'close-btn i-x', type: 'button', title: label, 'aria-label': label, onclick });
+}
+
+function icon(name, cls = '') {
+  return h('i', { class: `i i-${name} ${cls}`, 'aria-hidden': 'true' });
 }
 
 function toast(text, isError) {
@@ -100,9 +113,12 @@ function copy(text) {
   );
 }
 
-function copyable(text, display) {
-  return h('span', { class: 'copyable' }, display || text,
-    h('button', { class: 'copy-btn', title: 'Copy', 'aria-label': 'Copy', type: 'button', onclick: () => copy(text) }));
+function copyButton(text) {
+  return h('button', { class: 'copy-btn i-copy', title: 'Copy', 'aria-label': 'Copy', type: 'button', onclick: () => copy(text) });
+}
+
+function copyable(text, display, cls = '') {
+  return h('span', { class: 'copyable ' + cls }, display || text, copyButton(text));
 }
 
 function link(url, text) {
@@ -112,7 +128,13 @@ function link(url, text) {
 const DOCS = 'https://docs.ddev.com/en/stable/';
 
 function docLink(page, label = 'Docs', title) {
-  return h('a', { class: 'doc-link', href: DOCS + page, target: '_blank', rel: 'noopener noreferrer', title: title || 'Read more on docs.ddev.com' }, label + ' ↗');
+  return h('a', { class: 'doc-link', href: DOCS + page, target: '_blank', rel: 'noopener noreferrer', title: title || 'Read more on docs.ddev.com' }, label, icon('ext', 'ext'));
+}
+
+// helpLink is a "?" to a docs page about the thing next to it.
+function helpLink(page, about) {
+  const label = `About ${about} on docs.ddev.com`;
+  return h('a', { class: 'help-link', href: DOCS + page, target: '_blank', rel: 'noopener noreferrer', title: label, 'aria-label': label }, '?');
 }
 
 // richText shows the remote config's markup: `code`, *emphasis*, and URLs.
@@ -148,8 +170,8 @@ function runningJobFor(name) {
 
 function connectEvents() {
   const es = new EventSource('/api/events');
-  es.addEventListener('open', () => setConn(state.error ? 'Docker unreachable' : 'connected', state.error ? 'bad' : 'ok'));
-  es.addEventListener('error', () => setConn('disconnected, retrying…', 'bad'));
+  es.addEventListener('open', () => { state.conn = 'ok'; renderStatus(); });
+  es.addEventListener('error', () => { state.conn = 'lost'; renderStatus(); });
   es.addEventListener('status', (ev) => {
     const st = JSON.parse(ev.data);
     state.projects = st.projects || [];
@@ -158,12 +180,11 @@ function connectEvents() {
     state.sshAgent = st.ssh_agent || '';
     state.desktop = !!st.desktop;
     state.error = st.error || '';
-    // The server is reachable, but without Docker it knows nothing.
-    setConn(st.error ? (st.error.startsWith('Docker is not reachable') ? 'Docker unreachable' : 'error') : 'connected', st.error ? 'bad' : 'ok');
+    state.conn = 'ok';
     const banner = $('error-banner');
     banner.textContent = st.error || '';
     banner.classList.toggle('hidden', !st.error);
-    renderRouter();
+    renderStatus();
     renderProjects();
     renderJobs();
     if (state.view === 'shared' && st.router + st.ssh_agent !== lastShared) loadShared();
@@ -181,19 +202,32 @@ function connectEvents() {
 
 let lastShared = '';
 
-function setConn(text, cls) {
-  const el = $('conn-status');
-  el.textContent = text;
-  el.className = 'pill ' + cls;
-}
-
-function renderRouter() {
-  for (const [id, label, value] of [['router-status', 'router', state.router], ['ssh-agent-status', 'SSH agent', state.sshAgent]]) {
-    const el = $(id);
-    el.title = 'Show the router and SSH agent';
-    el.textContent = `${label}: ${value || 'unknown'}`;
-    el.className = 'pill ' + (value === 'healthy' ? 'ok' : value === 'disabled' || !value ? '' : 'warn');
+// renderStatus sums up the server connection, Docker, the router and the
+// SSH agent in one pill, which names the first problem.
+function renderStatus() {
+  const services = [['Router', state.router], ['SSH agent', state.sshAgent]];
+  const docker = state.error.startsWith('Docker is not reachable') ? 'unreachable' : state.error ? 'error' : 'connected';
+  let text = 'Connecting…';
+  let cls = '';
+  if (state.conn === 'lost') {
+    [text, cls] = ['Disconnected, retrying…', 'bad'];
+  } else if (state.error) {
+    [text, cls] = [docker === 'unreachable' ? 'Docker unreachable' : 'Error', 'bad'];
+  } else if (state.conn === 'ok') {
+    const active = services.filter(([, v]) => v && v !== 'disabled');
+    const problem = active.find(([, v]) => !['healthy', 'stopped'].includes(v));
+    // A stopped service is no problem: it starts with the next project.
+    const stopped = active.filter(([, v]) => v === 'stopped');
+    if (problem) [text, cls] = [`${problem[0]} ${problem[1]}`, statusClass(problem[1]) === 'bad' ? 'bad' : 'warn'];
+    else if (!stopped.length) [text, cls] = ['All services running', 'ok'];
+    else if (stopped.length === active.length) [text, cls] = ['Services stopped', ''];
+    else [text, cls] = [`${stopped[0][0]} stopped`, ''];
   }
+  const el = $('status');
+  el.className = 'status-button ' + (cls === 'ok' ? '' : cls);
+  el.querySelector('.dot').className = 'dot ' + (cls === 'ok' ? 'running' : cls === 'warn' ? 'paused' : cls);
+  $('status-text').textContent = text;
+  el.title = services.map(([l, v]) => `${l}: ${v || 'unknown'}`).join(' · ') + ` · Docker: ${docker}. Click for the shared services.`;
 }
 
 // ---------- project list ----------
@@ -205,6 +239,7 @@ function selectedProject() {
 function setView(view) {
   if (state.view === 'shared' && view !== 'shared') stopLogs();
   state.view = view;
+  if (view !== 'multi') state.picked = [];
   $('nav-home').classList.toggle('selected', view === 'home');
   $('nav-shared').classList.toggle('selected', view === 'shared');
 }
@@ -219,6 +254,7 @@ function goHome() {
 
 function selectProject(name) {
   const wasProject = state.view === 'project';
+  state.pickFrom = name;
   setView('project');
   if (state.selected === name) {
     if (!wasProject) { renderProjects(); renderDetail(); }
@@ -231,6 +267,41 @@ function selectProject(name) {
   renderProjects();
   renderDetail();
   loadDetail();
+}
+
+// pick adds or removes a project from the selection, or with range adds the
+// listed projects from pickFrom to it. Ctrl+click starts from the project
+// shown, as in a file manager; a checkbox (fresh) starts from none. The
+// selection stays until it is empty or cleared.
+function pick(name, { range = false, fresh = false } = {}) {
+  const shown = state.view === 'project' ? state.selected : '';
+  if (state.view !== 'multi') state.pickReturn = shown;
+  let picked = state.view === 'multi' ? [...state.picked] : shown && !fresh ? [shown] : [];
+  if (range && state.pickFrom) {
+    const names = shownProjects().map((p) => p.name);
+    const [a, b] = [names.indexOf(state.pickFrom), names.indexOf(name)].sort((x, y) => x - y);
+    if (a >= 0) picked = [...new Set([...picked, ...names.slice(a, b + 1)])];
+  } else if (state.view === 'multi' || name !== shown) {
+    picked = picked.includes(name) ? picked.filter((n) => n !== name) : [...picked, name];
+    state.pickFrom = name;
+  }
+  if (!picked.length) {
+    clearPicks();
+    return;
+  }
+  setView('multi');
+  state.picked = picked;
+  state.selected = '';
+  stopLogs();
+  renderProjects();
+  renderDetail();
+}
+
+// clearPicks goes back to the project shown before the selection began.
+function clearPicks() {
+  const back = state.pickReturn;
+  state.pickReturn = '';
+  if (back && state.projects.some((p) => p.name === back)) selectProject(back); else goHome();
 }
 
 // Chips that narrow the list to running or stopped projects, with counts.
@@ -265,9 +336,12 @@ function renderProjects() {
   const list = $('project-list');
   const shown = shownProjects();
   const focused = list.contains(document.activeElement);
+  const picking = state.view === 'multi';
+  list.classList.toggle('picking', picking);
+  list.setAttribute('aria-multiselectable', String(picking));
   list.replaceChildren(...shown.map((p, i) => {
     const busy = runningJobFor(p.name);
-    const selected = p.name === state.selected && state.view === 'project';
+    const selected = picking ? state.picked.includes(p.name) : p.name === state.selected && state.view === 'project';
     return h('li', {
       class: selected ? 'selected' : '',
       role: 'option',
@@ -275,10 +349,23 @@ function renderProjects() {
       // One item takes Tab; the arrow keys move between them.
       tabindex: selected || (i === 0 && state.view !== 'project') ? '0' : '-1',
       'data-name': p.name,
-      onclick: () => selectProject(p.name),
+      onclick: (e) => {
+        if (e.ctrlKey || e.metaKey || e.shiftKey) {
+          e.preventDefault();
+          pick(p.name, { range: e.shiftKey });
+        } else {
+          selectProject(p.name);
+        }
+      },
       oncontextmenu: (e) => { e.preventDefault(); projectMenu(p, e.clientX, e.clientY); },
     },
-    h('span', { class: 'dot ' + (busy ? 'busy' : statusClass(p.status)) }),
+    h('span', {
+      class: 'lead',
+      title: 'Select several projects, also with Ctrl+click or Shift+click',
+      onclick: (e) => { e.stopPropagation(); e.preventDefault(); pick(p.name, { range: e.shiftKey, fresh: true }); },
+    },
+    h('input', { type: 'checkbox', class: 'pick', tabindex: '-1', checked: picking && selected, 'aria-label': `Select ${p.name}` }),
+      h('span', { class: 'dot ' + (busy ? 'busy' : statusClass(p.status)) })),
     h('span', { class: 'name' }, p.name),
     h('span', { class: 'type' }, p.type),
     h('span', { class: 'sub' }, busy ? busy.title + '…' : (p.url || p.status)));
@@ -321,9 +408,10 @@ function renderDetail() {
   const root = $('detail');
   const p = selectedProject();
   const running = state.jobs.filter((j) => !j.done).map((j) => [j.id, j.project]);
-  const key = JSON.stringify(state.view === 'home' ? ['home', state.messages, state.tipIndex, state.projects.map((x) => x.status), state.error]
-    : state.view === 'shared' ? ['shared', state.shared, state.sharedLog]
-      : [p, state.tab, state.detail, state.xdebugWanted, running]);
+  const key = JSON.stringify(state.view === 'home' ? ['home', state.messages, state.news, state.tipIndex, state.projects.map((x) => x.status), state.error]
+      : state.view === 'shared' ? ['shared', state.shared, state.sharedLog]
+        : state.view === 'multi' ? ['multi', state.picked, state.projects, running]
+          : [p, state.tab, state.detail, state.xdebugWanted, running]);
   if (key === detailKey && root.childElementCount) return;
   detailKey = key;
   if (state.view !== 'project') {
@@ -334,7 +422,7 @@ function renderDetail() {
     }
     stopLogs();
     root.dataset.project = '';
-    root.replaceChildren(state.view === 'shared' ? sharedView() : homeView());
+    root.replaceChildren(({ shared: sharedView, multi: multiView })[state.view]?.() || homeView());
     return;
   }
   if (!p) {
@@ -350,12 +438,8 @@ function renderDetail() {
   root.dataset.project = p.name;
   const tabs = [['overview', 'Overview'], ['services', 'Services'], ['database', 'Database'],
     ['addons', 'Add-ons'], ['snapshots', 'Snapshots'], ['logs', 'Logs']];
-  const docs = { overview: 'users/configuration/config/', services: 'users/usage/architecture/',
-    database: 'users/usage/database-management/', addons: 'users/extend/using-add-ons/',
-    snapshots: 'users/usage/database-management/#snapshots', logs: 'users/usage/commands/#logs' };
   const tabBar = h('nav', { class: 'tabs' }, tabs.map(([id, label]) =>
-    h('button', { class: state.tab === id ? 'active' : '', type: 'button', onclick: () => setTab(id) }, label)),
-  h('span', { class: 'tab-docs' }, docLink(docs[state.tab], 'Docs', `About ${tabs.find(([id]) => id === state.tab)[1]} on docs.ddev.com`)));
+    h('button', { class: state.tab === id ? 'active' : '', type: 'button', onclick: () => setTab(id) }, label)));
   let body;
   const d = state.detail;
   if (state.tab === 'logs') {
@@ -401,7 +485,9 @@ function detailHead(p) {
           class: 'badge type-link', href: DOCS + quickstartPage(p.type), target: '_blank', rel: 'noopener noreferrer',
           title: `The ${p.type} quickstart on docs.ddev.com`,
         }, p.type)),
-      h('div', { class: 'path' }, copyable(p.approot))),
+      h('div', { class: 'sub-line' },
+        p.url && isUp(p.status) ? copyable(p.url, link(p.url), 'url') : null,
+        h('div', { class: 'path' }, copyable(p.approot)))),
     closeButton('Back to the start page', goHome));
 }
 
@@ -427,14 +513,30 @@ function projectMenu(p, x, y) {
       : { label: 'Start', disabled: busy, run: () => projectAction(p, 'start') },
     { label: 'Restart', disabled: busy || !running, run: () => projectAction(p, 'restart') },
     null,
-    { label: 'Open site ↗', disabled: !running || !p.url, run: () => openURL(p.url) },
-    { label: 'Open folder', run: () => openIn(p, 'folder') },
-    { label: 'Open in VS Code', run: () => openIn(p, 'vscode') },
-    { label: 'Open in PhpStorm', run: () => openIn(p, 'phpstorm') },
+    { label: 'Open site', disabled: !running || !p.url, run: () => openURL(p.url) },
+    ...editors.map(([t, label]) => ({ label, run: () => openIn(p, t) })),
     { label: 'Copy path', run: () => copy(p.approot) },
     null,
     { label: 'Delete…', danger: true, disabled: busy, run: () => confirmDelete(p) },
   ]);
+}
+
+// editors are where "Open in" opens a project. The toolbar shows the folder
+// on its own, and a button for the editor last chosen.
+const editors = [['folder', 'Open folder'], ['vscode', 'Open in VS Code'], ['phpstorm', 'Open in PhpStorm']];
+const codeEditors = editors.slice(1);
+
+function lastEditor() {
+  const t = localStorage.getItem('ddev.openIn');
+  return codeEditors.find(([id]) => id === t) || codeEditors[0];
+}
+
+// splitButton is a main button with an arrow beside it for a menu of
+// related actions.
+function splitButton(main, label, items) {
+  const caret = h('button', { class: 'btn caret i-chevron', type: 'button', title: label, 'aria-label': label, 'aria-haspopup': 'menu' });
+  caret.addEventListener('click', () => (menuAnchor === caret ? menuClose() : openMenu(caret, items())));
+  return h('span', { class: 'split' }, main, caret);
 }
 
 function toolbar(p) {
@@ -446,18 +548,32 @@ function toolbar(p) {
   const open = (t) => () => openIn(p, t);
   const mailpit = d && (d.mailpit_https_url || d.mailpit_url);
   const xhgui = d && d.xhgui_status === 'enabled' && (d.xhgui_https_url || d.xhgui_url);
+  const [editor, editorLabel] = lastEditor();
+  const more = h('button', { class: 'btn icon-btn', type: 'button', title: 'More actions', 'aria-label': 'More actions', 'aria-haspopup': 'menu' }, icon('more'));
+  const detail = state.detail && !state.detail.error ? state.detail : null;
+  more.addEventListener('click', () => (menuAnchor === more ? menuClose() : openMenu(more, [
+    { label: 'Create snapshot', disabled: busy || !(d && d.dbinfo), run: act('snapshot') },
+    { label: 'Restore the latest snapshot…', disabled: busy || !(detail && detail.snapshots.length), run: () => restoreLatest(p) },
+    { label: 'Update add-ons', disabled: busy || !(detail && detail.addons.length), run: act('addon-update') },
+    null,
+    { label: 'Copy site URL', disabled: !p.url, run: () => copy(p.url) },
+    { label: 'Copy path', run: () => copy(p.approot) },
+    { label: 'Copy the command that opens a shell', run: () => copy(`cd ${shellQuote(p.approot)} && ddev ssh`) },
+    null,
+    { label: 'Delete…', danger: true, disabled: busy, run: () => confirmDelete(p) },
+  ])));
   const groups = [
     [running
       ? h('button', { class: 'btn', disabled: busy, onclick: act('stop') }, 'Stop')
       : h('button', { class: 'btn primary', disabled: busy, onclick: act('start') }, 'Start'),
     h('button', { class: 'btn', disabled: busy || !running, onclick: act('restart') }, 'Restart')],
-    [p.url ? h('a', { class: 'btn', href: p.url, target: '_blank', rel: 'noopener noreferrer' }, 'Open site ↗') : null,
-      mailpit && running ? h('a', { class: 'btn', href: mailpit, target: '_blank', rel: 'noopener noreferrer' }, 'Mailpit ↗') : null,
-      xhgui && running ? h('a', { class: 'btn', href: xhgui, target: '_blank', rel: 'noopener noreferrer' }, 'XHGui ↗') : null],
-    [h('button', { class: 'btn', onclick: open('folder') }, 'Folder'),
-      h('button', { class: 'btn', onclick: open('vscode') }, 'VS Code'),
-      h('button', { class: 'btn', onclick: open('phpstorm') }, 'PhpStorm')],
-    [h('button', { class: 'btn danger', disabled: busy, onclick: () => confirmDelete(p) }, 'Delete')],
+    [p.url && running ? h('a', { class: 'btn', href: p.url, target: '_blank', rel: 'noopener noreferrer' }, 'Open site', icon('ext', 'ext')) : null,
+      mailpit && running ? h('a', { class: 'btn', href: mailpit, target: '_blank', rel: 'noopener noreferrer' }, 'Mailpit', icon('ext', 'ext')) : null,
+      xhgui && running ? h('a', { class: 'btn', href: xhgui, target: '_blank', rel: 'noopener noreferrer' }, 'XHGui', icon('ext', 'ext')) : null],
+    [h('button', { class: 'btn', type: 'button', onclick: open('folder') }, 'Open folder'),
+      splitButton(h('button', { class: 'btn', type: 'button', onclick: open(editor) }, editorLabel), 'Open in…', () => codeEditors.map(([t, label]) => ({
+        label, run: () => { localStorage.setItem('ddev.openIn', t); openIn(p, t); detailKey = ''; renderDetail(); },
+      }))), more],
   ].map((g) => g.filter(Boolean)).filter((g) => g.length);
   return h('div', { class: 'toolbar' }, groups.flatMap((g, i) => (i ? [h('span', { class: 'sep' }), ...g] : g)));
 }
@@ -470,50 +586,57 @@ function kv(rows) {
 function overviewTab(p, d) {
   const desc = d.describe;
   const running = p.status === 'running';
+  const busy = !!runningJobFor(p.name);
   const urls = desc.urls || [];
   const shell = `cd ${shellQuote(p.approot)} && ddev ssh`;
   const xdebugOn = d.xdebug === 'on';
   const wanted = state.xdebugWanted[p.name];
-  return h('div', { class: 'cards' },
-    h('div', { class: 'card' }, h('h3', {}, 'URLs'),
-      running && urls.length
-        ? h('ul', { class: 'url-list' }, urls.map((u) => h('li', {}, link(u), ' ', h('button', { class: 'copy-btn', title: 'Copy', 'aria-label': 'Copy', type: 'button', onclick: () => copy(u) }))))
-        : h('p', { class: 'muted' }, 'Start the project to get its URLs.')),
-    h('div', { class: 'card' }, h('h3', {}, 'Configuration'), kv([
-      ['PHP', desc.php_version],
-      ['Web server', desc.webserver_type],
-      ['Node.js', desc.nodejs_version],
-      ['Docroot', desc.docroot || '(project root)'],
-      ['Database', desc.database_type ? `${desc.database_type} ${desc.database_version}` : 'none'],
-      ['Performance', desc.performance_mode],
-      ['Mutagen', running ? desc.mutagen_status : undefined],
-      ['XHProf mode', desc.xhprof_mode],
-      ['Router', desc.router_disabled ? 'disabled' : desc.router],
-    ])),
-    h('div', { class: 'card' }, h('h3', {}, 'Debugging'),
-      h('label', { class: 'switch' },
-        h('input', {
-          type: 'checkbox',
-          checked: wanted ?? xdebugOn,
-          disabled: !running || !!runningJobFor(p.name),
-          onchange: async (e) => {
-            state.xdebugWanted[p.name] = e.target.checked;
-            // The switch's label shows progress, and the Activity panel
-            // would cover it. A failure still shows as a toast.
-            if (!await runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/xdebug-' + (e.target.checked ? 'on' : 'off'), undefined, false)) {
-              // The panel may not rebuild, since its key can match the last one.
-              delete state.xdebugWanted[p.name];
-              e.target.checked = !e.target.checked;
-              renderDetail();
-            }
-          },
-        }),
-        'Xdebug ', h('span', { class: 'muted' }, !running ? '(project stopped)'
-          : wanted !== undefined ? (wanted ? 'enabling…' : 'disabling…') : (xdebugOn ? 'enabled' : 'disabled'))),
-      h('p', {}, docLink('users/debugging-profiling/step-debugging/', 'Setting up step debugging'))),
-    h('div', { class: 'card' }, h('h3', {}, 'Terminal'),
-      h('p', { class: 'muted' }, 'To open a shell, paste this into a terminal:'),
-      copyable(shell)));
+  const config = h('div', { class: 'card' }, h('h3', {}, 'Configuration', helpLink('users/configuration/config/', 'the project configuration')), kv([
+    ['PHP', desc.php_version],
+    ['Web server', desc.webserver_type],
+    ['Node.js', desc.nodejs_version],
+    ['Docroot', desc.docroot || '(project root)'],
+    ['Database', desc.database_type ? `${desc.database_type} ${desc.database_version}` : 'none'],
+    ['Performance', desc.performance_mode],
+    ['Mutagen', running ? desc.mutagen_status : undefined],
+    ['XHProf mode', desc.xhprof_mode],
+    ['Router', desc.router_disabled ? 'disabled' : desc.router],
+  ]));
+  const terminal = h('div', { class: 'card' }, h('h3', {}, 'Terminal', helpLink('users/usage/commands/#ssh', 'ddev ssh')),
+    h('p', { class: 'muted' }, 'To open a shell, paste this into a terminal:'),
+    copyable(shell));
+  const urlCard = running ? h('div', { class: 'card' }, h('h3', {}, 'URLs', helpLink('users/usage/networking/', 'URLs and ports')),
+    urls.length
+      ? h('ul', { class: 'url-list' }, urls.map((u) => h('li', {}, copyable(u, link(u)))))
+      : h('p', { class: 'muted' }, 'No URLs.')) : null;
+  const debugging = h('div', { class: 'card' }, h('h3', {}, 'Debugging', helpLink('users/debugging-profiling/step-debugging/', 'step debugging')),
+    h('label', { class: 'row-line xdebug-switch' },
+      h('span', {}, 'Xdebug ', h('span', { class: 'muted' }, !running ? '(project stopped)'
+        : wanted !== undefined ? (wanted ? 'turning on…' : 'turning off…') : (xdebugOn ? 'on' : 'off'))),
+      h('input', {
+        type: 'checkbox',
+        class: 'toggle',
+        role: 'switch',
+        checked: wanted ?? xdebugOn,
+        disabled: !running || busy,
+        onchange: async (e) => {
+          state.xdebugWanted[p.name] = e.target.checked;
+          // The switch's label shows progress, and the Activity panel
+          // would cover it. A failure still shows as a toast.
+          if (!await runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/xdebug-' + (e.target.checked ? 'on' : 'off'), undefined, false)) {
+            // The panel may not rebuild, since its key can match the last one.
+            delete state.xdebugWanted[p.name];
+            e.target.checked = !e.target.checked;
+            renderDetail();
+          }
+        },
+      })));
+  // A stopped project has no URLs; this says why, where they would be.
+  const stopped = p.status === 'stopped' ? h('div', { class: 'callout' },
+    h('div', {}, h('strong', {}, `${p.name} is stopped.`), h('p', {}, 'Starting it builds its containers and gives it URLs.')),
+    h('button', { class: 'btn primary', type: 'button', disabled: busy, onclick: () => projectAction(p, 'start') }, icon('play', 'lead'), 'Start')) : null;
+  return h('div', {}, stopped,
+    h('div', { class: 'columns' }, h('div', {}, config, terminal), h('div', {}, urlCard, debugging)));
 }
 
 function shellQuote(s) {
@@ -524,7 +647,7 @@ function servicesTab(p, d) {
   const services = Object.entries(d.describe.services || {});
   services.sort(([a], [b]) => (a === 'web' ? -1 : b === 'web' ? 1 : a === 'db' ? -1 : b === 'db' ? 1 : a.localeCompare(b)));
   if (!services.length) return h('p', { class: 'muted' }, 'No services.');
-  return h('table', { class: 'grid' },
+  return h('div', {}, h('p', { class: 'muted tab-intro' }, 'The containers of this project. ', helpLink('users/usage/architecture/', 'the containers')), h('table', { class: 'grid' },
     h('tr', {}, h('th', {}, 'Service'), h('th', {}, 'Status'), h('th', {}, 'URL'), h('th', {}, 'Ports'), h('th', {}, 'Image')),
     services.map(([name, s]) => {
       const url = s.https_url || s.http_url || s.host_https_url || s.host_http_url;
@@ -535,7 +658,7 @@ function servicesTab(p, d) {
         h('td', {}, url && s.status === 'running' ? link(url) : ''),
         h('td', {}, ports),
         h('td', { class: 'muted' }, s.image || ''));
-    }));
+    })));
 }
 
 function databaseTab(p, d) {
@@ -544,7 +667,7 @@ function databaseTab(p, d) {
   const host = (d.describe.services?.web?.host_https_url || d.describe.services?.web?.host_http_url || '').replace(/^https?:\/\/([^:/]+).*$/, '$1') || '127.0.0.1';
   const cli = (db.database_type || d.describe.database_type) === 'postgres' ? 'ddev psql' : 'ddev mysql';
   return h('div', { class: 'cards' },
-    h('div', { class: 'card' }, h('h3', {}, 'Connection'), kv([
+    h('div', { class: 'card' }, h('h3', {}, 'Connection', helpLink('users/usage/database-management/', 'database management')), kv([
       ['Type', `${db.database_type || d.describe.database_type} ${db.database_version || d.describe.database_version}`],
       ['Database', db.dbname && copyable(db.dbname)],
       ['User', db.username && copyable(db.username)],
@@ -563,11 +686,21 @@ function databaseTab(p, d) {
 function addonsTab(p, d) {
   const busy = !!runningJobFor(p.name);
   const act = (a, params) => runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/' + a, params);
-  const input = h('input', { type: 'text', list: 'addon-registry', placeholder: 'ddev/ddev-redis', 'aria-label': 'Add-on repository' });
-  const datalist = h('datalist', { id: 'addon-registry' });
-  loadRegistry().then((addons) => {
-    datalist.replaceChildren(...addons.map((a) => h('option', { value: a.repo }, `${a.title || a.repo}${a.type === 'official' ? ' (official)' : ''}`)));
-  });
+  const input = h('input', { type: 'text', placeholder: 'ddev/ddev-redis', 'aria-label': 'Add-on repository', autocomplete: 'off', role: 'combobox', 'aria-autocomplete': 'list' });
+  // WebKitGTK draws a <datalist> in the GTK theme, so the page draws the
+  // suggestions, as it does for dropdowns.
+  const suggest = async () => {
+    const q = input.value.trim().toLowerCase();
+    const addons = (await loadRegistry()).filter((a) => !q || a.repo.toLowerCase().includes(q) || (a.title || '').toLowerCase().includes(q));
+    if (document.activeElement !== input) return;
+    if (!addons.length) { if (menuAnchor === input) menuClose(); return; }
+    openMenu(input, addons.map((a) => ({
+      label: a.repo,
+      run: () => { input.value = a.repo; input.focus(); },
+    })), { keepFocus: true });
+  };
+  input.addEventListener('input', suggest);
+  input.addEventListener('focus', suggest);
   return h('div', {},
     h('form', {
       class: 'row',
@@ -575,10 +708,11 @@ function addonsTab(p, d) {
         e.preventDefault();
         if (input.value.trim()) act('addon-get', { repo: input.value.trim() });
       },
-    }, input, datalist,
+    }, input,
     h('button', { class: 'btn primary', disabled: busy }, 'Install'),
     h('button', { class: 'btn', type: 'button', disabled: busy || !d.addons.length, onclick: () => act('addon-update') }, 'Update all'),
-    h('a', { href: 'https://addons.ddev.com', target: '_blank', rel: 'noopener noreferrer' }, 'Browse add-ons ↗')),
+    h('a', { href: 'https://addons.ddev.com', target: '_blank', rel: 'noopener noreferrer' }, 'Browse add-ons', icon('ext', 'ext')),
+    helpLink('users/extend/using-add-ons/', 'add-ons')),
     d.addons.length
       ? h('table', { class: 'grid' },
         h('tr', {}, h('th', {}, 'Add-on'), h('th', {}, 'Version'), h('th', {}, 'Repository'), h('th', {}, '')),
@@ -611,7 +745,8 @@ function snapshotsTab(p, d) {
   return h('div', {},
     h('div', { class: 'row' },
       h('button', { class: 'btn primary', disabled: busy || !d.describe.dbinfo, onclick: () => act('snapshot') }, 'Create snapshot'),
-      h('button', { class: 'btn', disabled: busy || !d.snapshots.length, onclick: () => restore(null) }, 'Restore latest')),
+      h('button', { class: 'btn', disabled: busy || !d.snapshots.length, onclick: () => restore(null) }, 'Restore latest'),
+      helpLink('users/usage/database-management/#snapshots', 'snapshots')),
     d.snapshots.length
       ? h('table', { class: 'grid' },
         h('tr', {}, h('th', {}, 'Snapshot'), h('th', {}, 'Created'), h('th', {}, 'Size'), h('th', {}, '')),
@@ -642,7 +777,8 @@ function logsTab(p) {
   const view = h('div', {},
     h('div', { class: 'row' }, 'Service', select,
       h('button', { class: 'btn', onclick: () => startLogs(p, out) }, 'Reconnect'),
-      h('button', { class: 'btn', onclick: () => { out.textContent = ''; } }, 'Clear')),
+      h('button', { class: 'btn', onclick: () => { out.textContent = ''; } }, 'Clear'),
+      helpLink('users/usage/commands/#logs', 'ddev logs')),
     out);
   startLogs(p, out);
   return view;
@@ -732,31 +868,72 @@ function homeView() {
   const tip = n ? tips[i] : null;
   const step = (d) => () => { state.tipIndex = i + d; renderDetail(); };
   const count = state.projects.length;
+  const posts = state.news || [];
+  const arrow = (label, d, cls) => h('button', { class: 'btn small icon-btn', type: 'button', title: label, 'aria-label': label, onclick: step(d) }, icon('chevron', cls));
+  const ext = (href, label) => h('a', { class: 'doc-link', href, target: '_blank', rel: 'noopener noreferrer' }, label, icon('ext', 'ext'));
   return h('div', { class: 'home' },
     h('div', { class: 'detail-head' }, h('div', {},
       h('h1', {}, greeting()),
       h('p', { class: 'muted' }, count
         ? `${count} ${count === 1 ? 'project' : 'projects'}, ${up} running. Select a project, or right-click it for its actions.`
         : state.error ? '' : 'Add a project to get started.'))),
-    h('div', { class: 'cards' },
-      h('div', { class: 'card tip' },
-        h('div', { class: 'card-head' }, h('h3', {}, tip && tip.title ? tip.title : 'Tip of the day'),
-          n > 1 ? h('div', { class: 'tip-nav' },
-            h('button', { class: 'btn small', type: 'button', title: 'Previous tip', 'aria-label': 'Previous tip', onclick: step(-1) }, '‹'),
-            h('span', { class: 'muted' }, `${i + 1} of ${n}`),
-            h('button', { class: 'btn small', type: 'button', title: 'Next tip', 'aria-label': 'Next tip', onclick: step(1) }, '›')) : null),
-        tip ? h('p', { class: 'tip-text' }, richText(tip.message))
-          : h('p', { class: 'muted' }, state.messages ? 'No tips right now.' : 'Loading…')),
-      h('div', { class: 'card' }, h('h3', {}, 'Get started'),
-        h('div', { class: 'row' },
-          h('button', { class: 'btn primary', type: 'button', onclick: addProject }, 'Add project')),
-        h('ul', { class: 'link-list' },
-          h('li', {}, docLink('users/project/', 'Starting a project')),
-          h('li', {}, docLink('users/quickstart/', 'CMS quickstarts')),
-          h('li', {}, docLink('users/usage/commands/', 'Commands')),
-          h('li', {}, docLink('users/usage/faq/', 'FAQ')),
-          h('li', {}, docLink('users/usage/troubleshooting/', 'Troubleshooting')),
-          h('li', {}, h('a', { class: 'doc-link', href: 'https://ddev.com/s/discord', target: '_blank', rel: 'noopener noreferrer' }, 'Ask on Discord ↗'))))));
+    count || state.error ? null : h('p', {}, h('button', { class: 'btn primary', type: 'button', onclick: addProject }, icon('plus', 'lead'), 'Add project')),
+    h('div', { class: 'card tip' },
+      h('div', { class: 'card-head' }, h('h3', {}, tip && tip.title ? tip.title : 'Tip of the day'),
+        n > 1 ? h('div', { class: 'tip-nav' },
+          arrow('Previous tip', -1, 'left'),
+          h('span', { class: 'muted' }, `${i + 1} of ${n}`),
+          arrow('Next tip', 1, 'right')) : null),
+      tip ? h('p', { class: 'tip-text' }, richText(tip.message))
+        : h('p', { class: 'muted' }, state.messages ? 'No tips right now.' : 'Loading…')),
+    posts.length ? h('div', { class: 'card' },
+      h('div', { class: 'card-head' }, h('h3', {}, 'From the DDEV blog'), ext('https://ddev.com/blog/', 'All posts')),
+      h('ul', { class: 'news' }, posts.map((post) => h('li', {},
+        link(post.link, post.title),
+        h('span', { class: 'meta' }, h('span', { class: 'muted' }, post.date), post.category ? h('span', { class: 'badge' }, post.category) : null))))) : null,
+    h('p', { class: 'home-links muted' },
+      docLink('users/quickstart/', 'Quickstarts'), docLink('users/usage/faq/', 'FAQ'),
+      docLink('users/usage/troubleshooting/', 'Troubleshooting'), ext('https://ddev.com/s/discord', 'Discord')));
+}
+
+async function loadNews() {
+  try {
+    const res = await fetch('/api/news');
+    state.news = res.ok ? (await res.json()).posts : [];
+  } catch {
+    state.news = [];
+  }
+  renderDetail();
+}
+
+// ---------- several projects ----------
+
+// multiView acts on the picked projects at once, as `ddev start a b`.
+function multiView() {
+  const ps = state.picked.map((n) => state.projects.find((p) => p.name === n)).filter(Boolean);
+  const up = ps.filter((p) => isUp(p.status));
+  const down = ps.filter((p) => !isUp(p.status));
+  const busy = state.jobs.some((j) => !j.done && (j.project === '' || state.picked.includes(j.project)));
+  const run = (action, list) => runJob('/api/actions/' + action, list.map((p) => ['project', p.name]));
+  return h('div', {},
+    h('div', { class: 'detail-head' },
+      h('div', {},
+        h('h1', {}, `${ps.length} ${ps.length === 1 ? 'project' : 'projects'} selected`),
+        h('p', { class: 'muted' }, 'Ctrl+click or Shift+click in the list to change the selection. Esc clears it.')),
+      closeButton('Clear the selection', clearPicks)),
+    h('div', { class: 'toolbar' },
+      h('button', { class: 'btn primary', type: 'button', disabled: busy || !down.length, onclick: () => run('start', down) }, icon('play', 'lead'), `Start ${down.length}`),
+      h('button', { class: 'btn', type: 'button', disabled: busy || !up.length, onclick: () => run('stop', up) }, icon('stop', 'lead'), `Stop ${up.length}`),
+      h('button', { class: 'btn', type: 'button', disabled: busy || !up.length, onclick: () => run('restart', up) }, `Restart ${up.length}`),
+      h('span', { class: 'sep' }),
+      h('button', { class: 'btn', type: 'button', onclick: clearPicks }, 'Clear selection')),
+    h('table', { class: 'grid' },
+      h('tr', {}, h('th', {}, 'Project'), h('th', {}, 'Status'), h('th', {}, 'Type'), h('th', {}, 'URL')),
+      ps.map((p) => h('tr', {},
+        h('td', {}, h('button', { class: 'linkish', type: 'button', onclick: () => selectProject(p.name) }, p.name)),
+        h('td', {}, h('span', { class: 'dot ' + statusClass(p.status) }), ' ', p.status),
+        h('td', {}, p.type),
+        h('td', {}, p.url && isUp(p.status) ? link(p.url) : '')))));
 }
 
 // ---------- shared services ----------
@@ -785,10 +962,10 @@ function sharedCards() {
   if (!st) return h('div', { class: 'shared-cards' }, h('p', { class: 'muted' }, 'Loading…'));
   if (st.error) return h('div', { class: 'shared-cards' }, h('p', { class: 'muted' }, st.error));
   return h('div', { class: 'cards shared-cards' }, st.map((svc) => h('div', { class: 'card' },
-    h('div', { class: 'card-head' }, h('h3', {}, svc.label), docLink(svc.docs, 'Docs', `About the ${svc.label.toLowerCase()} on docs.ddev.com`)),
+    h('h3', {}, svc.label, helpLink(svc.docs, `the ${svc.label.toLowerCase()}`)),
     h('p', {}, h('span', { class: 'dot ' + statusClass(svc.status) }), ' ', svc.status,
       svc.image ? h('span', { class: 'muted' }, ' · ' + svc.image) : null),
-    svc.dashboard ? h('p', {}, link(svc.dashboard, 'Open the Traefik dashboard ↗')) : null,
+    svc.dashboard ? h('p', {}, link(svc.dashboard, ['Open the Traefik dashboard', icon('ext', 'ext')])) : null,
     svc.status === 'stopped' ? h('p', { class: 'muted' }, svc.name === 'ddev-router'
       ? 'It starts with the first project that uses it.'
       : 'It starts with the first project, unless global settings leave it out.') : null,
@@ -865,7 +1042,7 @@ function renderJobs() {
   h('span', { class: 'when' }, new Date(j.started).toLocaleTimeString()),
   // A running action has nothing to remove yet, but keeps the space.
   h('button', {
-    class: 'close-btn small',
+    class: 'close-btn small i-x',
     'aria-label': `Remove ${j.title} from the list`,
     title: 'Remove from the list',
     disabled: !j.done,
@@ -952,7 +1129,9 @@ let menuAnchor = null;
 
 // openMenu shows items below an anchor element, or at a point {x, y}. An
 // item is {label, run, disabled, danger, checked}; null is a separator.
-function openMenu(at, items) {
+// With keepFocus the anchor, such as a text field, keeps the focus until
+// the arrow keys move into the menu.
+function openMenu(at, items, { keepFocus } = {}) {
   if (menuClose) menuClose();
   const opener = document.activeElement;
   const radio = items.some((it) => it && it.checked !== undefined);
@@ -982,10 +1161,10 @@ function openMenu(at, items) {
   menu.style.maxHeight = Math.min(up ? above : below, 420) + 'px';
   menu.style.top = (up ? top - Math.min(hgt, above) : y) + 'px';
   const buttons = [...menu.querySelectorAll('button:not(:disabled)')];
-  (menu.querySelector('.checked:not(:disabled)') || buttons[0])?.focus();
+  if (!keepFocus) (menu.querySelector('.checked:not(:disabled)') || buttons[0])?.focus();
   const onKey = (e) => {
     if (e.key === 'Escape') { e.preventDefault(); close(); opener?.focus(); return; }
-    if (e.key === 'Tab') { close(); return; }
+    if (e.key === 'Tab' || (keepFocus && e.key === 'Enter' && document.activeElement === opener)) { close(); return; }
     const step = { ArrowDown: 1, ArrowUp: -1 }[e.key];
     if (!step) return;
     e.preventDefault();
@@ -1015,7 +1194,7 @@ function openMenu(at, items) {
 // value is the chosen one.
 function dropdown(options, value, onchange, attrs) {
   const label = h('span');
-  const btn = h('button', { type: 'button', class: 'dropdown', 'aria-haspopup': 'listbox', ...attrs }, label);
+  const btn = h('button', { type: 'button', class: 'dropdown i-chevron', 'aria-haspopup': 'listbox', ...attrs }, label);
   const set = (v) => {
     btn.value = v;
     label.textContent = (options.find(([o]) => o === v) || options[0] || ['', ''])[1];
@@ -1117,6 +1296,16 @@ function focusSidebarItem() {
   if (el) el.focus();
 }
 
+function restoreLatest(p) {
+  confirmDialog('Restore the latest snapshot?', `This replaces the current database of ${p.name}.`, 'Restore')
+    .then((ok) => ok && projectAction(p, 'restore', { snapshot: '' }));
+}
+
+function refresh() {
+  loadDetail();
+  if (state.view === 'shared') loadShared();
+}
+
 function onKeyDown(e) {
   if (e.defaultPrevented || menuClose || $('dialog').open) return;
   const el = document.activeElement;
@@ -1126,9 +1315,9 @@ function onKeyDown(e) {
   if (e.key === '/') {
     e.preventDefault();
     $('filter').focus();
-  } else if (e.key === 'Escape' && state.view === 'shared') {
+  } else if (e.key === 'Escape' && ['shared', 'multi'].includes(state.view)) {
     e.preventDefault();
-    goHome();
+    (state.view === 'shared' ? goHome : clearPicks)();
   } else if (inSidebar && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
     e.preventDefault();
     const items = sidebarItems();
@@ -1182,9 +1371,17 @@ function init() {
   $('brand').addEventListener('click', goHome);
   $('nav-home').addEventListener('click', goHome);
   $('nav-shared').addEventListener('click', showShared);
-  $('router-status').addEventListener('click', showShared);
-  $('ssh-agent-status').addEventListener('click', () => { state.sharedLog = 'ddev-ssh-agent'; showShared(); });
+  $('status').addEventListener('click', () => {
+    // The pill names a failing SSH agent; its logs say why.
+    if (state.sshAgent && !['healthy', 'stopped', 'disabled'].includes(state.sshAgent) && state.router === 'healthy') state.sharedLog = 'ddev-ssh-agent';
+    showShared();
+  });
   $('btn-add').addEventListener('click', addProject);
+  const more = $('btn-more');
+  more.addEventListener('click', () => (menuAnchor === more ? menuClose() : openMenu(more, [
+    { label: 'Refresh', run: refresh },
+    { label: 'DDEV documentation', run: () => openURL(DOCS) },
+  ])));
   $('btn-start-all').addEventListener('click', () => runJob('/api/actions/start-all'));
   $('btn-stop-all').addEventListener('click', async () => {
     if (await confirmDialog('Stop all projects?', 'Every running DDEV project will be stopped.', 'Stop all')) runJob('/api/actions/stop-all');
@@ -1231,6 +1428,7 @@ function init() {
   fromHash();
   connectEvents();
   loadMessages();
+  loadNews();
   renderJobs();
 }
 

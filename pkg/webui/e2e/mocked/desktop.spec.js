@@ -14,7 +14,7 @@ test('opens links through the server in the GUI app', async ({ page, backend }) 
   backend.desktop = true;
   await reload(page);
   const opened = page.waitForEvent('popup', { timeout: 1000 }).then(() => true, () => false);
-  await page.locator('.toolbar').getByRole('link', { name: 'Open site ↗' }).click();
+  await page.locator('.toolbar').getByRole('link', { name: 'Open site' }).click();
   const post = await nthPost(backend, 1);
   expect(post).toMatchObject({ path: '/api/open-url', form: { url: 'https://d11.ddev.site/' } });
   expect(await opened).toBe(false);
@@ -22,7 +22,7 @@ test('opens links through the server in the GUI app', async ({ page, backend }) 
 
 test('lets the browser open links outside the GUI app', async ({ page, backend }) => {
   const popup = page.waitForEvent('popup');
-  await page.locator('.toolbar').getByRole('link', { name: 'Open site ↗' }).click();
+  await page.locator('.toolbar').getByRole('link', { name: 'Open site' }).click();
   await popup;
   expect(backend.posts).toHaveLength(0);
 });

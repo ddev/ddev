@@ -73,25 +73,29 @@ test('shows earlier jobs in the activity list', async ({ page, backend }) => {
 test('delete asks first, and can skip the snapshot', async ({ page, backend }) => {
   const toolbar = page.locator('.toolbar');
   const dialog = page.locator('#dialog');
+  const del = async () => {
+    await toolbar.getByRole('button', { name: 'More actions' }).click();
+    await page.getByRole('menuitem', { name: 'Delete…' }).click();
+  };
 
-  await toolbar.getByRole('button', { name: 'Delete' }).click();
+  await del();
   await expect(dialog.locator('h2')).toHaveText('Delete d11?');
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toBeHidden();
 
-  await toolbar.getByRole('button', { name: 'Delete' }).click();
+  await del();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   expect(backend.posts).toHaveLength(0);
 
-  await toolbar.getByRole('button', { name: 'Delete' }).click();
+  await del();
   await dialog.getByText('Skip the database snapshot').click();
   await dialog.getByRole('button', { name: 'Delete' }).click();
   const post = await nthPost(backend, 1);
   expect(post).toEqual({ path: '/api/projects/d11/actions/delete', form: { omit_snapshot: 'true' } });
 
   backend.endJob(backend.jobs[0].id);
-  await toolbar.getByRole('button', { name: 'Delete' }).click();
+  await del();
   await dialog.getByRole('button', { name: 'Delete' }).click();
   expect((await nthPost(backend, 2)).form).toEqual({ omit_snapshot: 'false' });
 });
@@ -117,9 +121,11 @@ test('global actions', async ({ page, backend }) => {
 
 test('opens the folder and editors on the host', async ({ page, backend }) => {
   const toolbar = page.locator('.toolbar');
-  await toolbar.getByRole('button', { name: 'Folder' }).click();
-  await toolbar.getByRole('button', { name: 'VS Code' }).click();
-  await toolbar.getByRole('button', { name: 'PhpStorm' }).click();
+  await toolbar.getByRole('button', { name: 'Open folder' }).click();
+  // The editor button starts on VS Code; its arrow picks another.
+  await toolbar.getByRole('button', { name: 'Open in VS Code' }).click();
+  await toolbar.getByRole('button', { name: 'Open in…' }).click();
+  await page.getByRole('menuitem', { name: 'Open in PhpStorm' }).click();
   await expect.poll(() => backend.posts.map((p) => p.path)).toEqual([
     '/api/projects/d11/open/folder',
     '/api/projects/d11/open/vscode',
@@ -128,14 +134,15 @@ test('opens the folder and editors on the host', async ({ page, backend }) => {
   expect(backend.jobs).toHaveLength(0);
 
   backend.postReply = () => ({ status: 500, body: 'no opener found (install xdg-utils)' });
-  await toolbar.getByRole('button', { name: 'Folder' }).click();
+  // The main button opens the last choice.
+  await toolbar.getByRole('button', { name: 'Open in PhpStorm' }).click();
   await expect(page.locator('#toasts .toast.error')).toHaveText('no opener found (install xdg-utils)');
 });
 
 test('copies commands', async ({ page, context, browserName }) => {
   // WebKit grants clipboard writes to a click without a permission.
   if (browserName === 'chromium') await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await page.locator('.detail-head .copy-btn').click();
+  await page.locator('.detail-head .path .copy-btn').click();
   await expect(page.locator('#toasts .toast')).toHaveText('Copied: /home/me/projects/d11');
   if (browserName === 'chromium') {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('/home/me/projects/d11');

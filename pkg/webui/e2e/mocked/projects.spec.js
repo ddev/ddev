@@ -11,8 +11,7 @@ test('lists projects and selects the first', async ({ page }) => {
   await expect(items.nth(1)).toContainText('stopped');
   await expect(items.nth(0)).toHaveClass(/selected/);
   await expect(page.locator('.detail-head h1')).toContainText('d11');
-  await expect(page.locator('#router-status')).toHaveText('router: healthy');
-  await expect(page.locator('#conn-status')).toHaveText('connected');
+  await expect(page.locator('#status-text')).toHaveText('All services running');
 });
 
 test('filters by name, type and status', async ({ page }) => {
@@ -32,9 +31,10 @@ test('filters by name, type and status', async ({ page }) => {
 test('shows a running project', async ({ page }) => {
   const toolbar = page.locator('.toolbar');
   await expect(toolbar.getByRole('button', { name: 'Stop', exact: true })).toBeEnabled();
-  await expect(toolbar.getByRole('link', { name: 'Open site ↗' })).toHaveAttribute('href', 'https://d11.ddev.site');
-  await expect(toolbar.getByRole('link', { name: 'Mailpit ↗' })).toHaveAttribute('href', 'https://d11.ddev.site:8026');
-  await expect(toolbar.getByRole('link', { name: 'XHGui ↗' })).toHaveCount(0);
+  await expect(toolbar.getByRole('link', { name: 'Open site' })).toHaveAttribute('href', 'https://d11.ddev.site');
+  await expect(toolbar.getByRole('link', { name: 'Mailpit' })).toHaveAttribute('href', 'https://d11.ddev.site:8026');
+  await expect(toolbar.getByRole('link', { name: 'XHGui' })).toHaveCount(0);
+  await expect(page.locator('.detail-head .url')).toContainText('https://d11.ddev.site');
   for (const link of await toolbar.getByRole('link').all()) {
     await expect(link).toHaveAttribute('target', '_blank');
     await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
@@ -51,11 +51,11 @@ test('shows a stopped project', async ({ page }) => {
   await expect(page.locator('.detail-head h1')).toContainText('wp');
   const toolbar = page.locator('.toolbar');
   await expect(toolbar.getByRole('button', { name: 'Start', exact: true })).toBeEnabled();
-  await expect(toolbar.getByRole('link', { name: 'Open site ↗' })).toBeHidden();
-  await expect(toolbar.getByRole('link', { name: 'Mailpit ↗' })).toHaveCount(0);
-  await expect(page.locator('#detail')).toContainText('Start the project to get its URLs.');
+  await expect(toolbar.getByRole('link', { name: 'Open site' })).toHaveCount(0);
+  await expect(toolbar.getByRole('link', { name: 'Mailpit' })).toHaveCount(0);
+  await expect(page.locator('.callout')).toContainText('wp is stopped.');
   await expect(page.locator('#detail')).not.toContainText('Mutagen');
-  await expect(page.getByRole('checkbox')).toBeDisabled();
+  await expect(page.getByRole('switch')).toBeDisabled();
   // A path with a space is quoted for the shell.
   await expect(page.getByText("cd '/home/me/projects/my wp' && ddev ssh")).toBeVisible();
   await page.getByRole('button', { name: 'Database' }).click();
@@ -99,11 +99,11 @@ test('shows an error banner while Docker is unreachable', async ({ page, backend
   backend.error = 'Docker is not reachable: connection refused';
   backend.pushStatus();
   await expect(banner).toHaveText('Docker is not reachable: connection refused');
-  await expect(page.locator('#conn-status')).toHaveText('Docker unreachable');
+  await expect(page.locator('#status-text')).toHaveText('Docker unreachable');
   backend.error = '';
   backend.pushStatus();
   await expect(banner).toBeHidden();
-  await expect(page.locator('#conn-status')).toHaveText('connected');
+  await expect(page.locator('#status-text')).toHaveText('All services running');
 });
 
 test('shows the empty state', async ({ page, backend }) => {

@@ -3,18 +3,18 @@
 const { test, expect, nthPost, reload } = require('./fixtures');
 
 test('toggles Xdebug', async ({ page, backend }) => {
-  const toggle = page.getByRole('checkbox');
+  const toggle = page.getByRole('switch');
   await expect(toggle).not.toBeChecked();
   await toggle.check();
   expect((await nthPost(backend, 1)).path).toBe('/api/projects/d11/actions/xdebug-on');
   // While the job runs, the switch keeps the requested state.
-  await expect(page.locator('.switch')).toContainText('enabling…');
+  await expect(page.locator('.xdebug-switch')).toContainText('turning on…');
   await expect(page.locator('#activity')).toHaveClass(/collapsed/);
   await expect(toggle).toBeChecked();
   await expect(toggle).toBeDisabled();
   backend.details.d11.xdebug = 'on';
   backend.endJob(backend.jobs[0].id);
-  await expect(page.locator('.switch')).toContainText('enabled');
+  await expect(page.locator('.xdebug-switch')).toHaveText(/Xdebug on$/);
   // The job's end and the status event each rebuild the panel; the enabled
   // Stop button shows both have arrived.
   await expect(page.locator('.toolbar').getByRole('button', { name: 'Stop', exact: true })).toBeEnabled();
@@ -25,32 +25,33 @@ test('toggles Xdebug', async ({ page, backend }) => {
 
 test('resets the Xdebug switch when its job is refused', async ({ page, backend }) => {
   backend.postReply = () => ({ status: 409, body: 'already running: Stopping all projects' });
-  const toggle = page.getByRole('checkbox');
+  const toggle = page.getByRole('switch');
   // check() would fail when the switch flips back before it looks.
   await toggle.click();
   await expect(page.locator('#toasts .toast.error')).toHaveText('already running: Stopping all projects');
-  await expect(page.locator('.switch')).toContainText('disabled');
+  await expect(page.locator('.xdebug-switch')).toHaveText(/Xdebug off$/);
   await expect(toggle).not.toBeChecked();
 });
 
-test('installs, updates and removes add-ons', async ({ page, backend, browserName }) => {
+test('installs, updates and removes add-ons', async ({ page, backend }) => {
   await page.getByRole('button', { name: 'Add-ons' }).click();
-  await expect(page.locator('#addon-registry option')).toHaveCount(2);
-  await expect(page.locator('#addon-registry option').first()).toHaveAttribute('value', 'ddev/ddev-redis');
   const rows = page.locator('table.grid tr');
   await expect(rows.nth(1)).toContainText('redis');
   await expect(rows.nth(1).getByRole('link')).toHaveAttribute('href', 'https://github.com/ddev/ddev-redis');
 
   // An empty name sends nothing.
   await page.getByRole('button', { name: 'Install' }).click();
-  await page.getByLabel('Add-on repository').fill('ddev/ddev-solr');
-  // What Enter does in a field with suggestions differs between WebKit
-  // builds, so WebKit submits with the button.
-  if (browserName === 'webkit') {
-    await page.getByRole('button', { name: 'Install' }).click();
-  } else {
-    await page.getByLabel('Add-on repository').press('Enter');
-  }
+  // The registry's add-ons are suggested as the name is typed.
+  const repo = page.getByLabel('Add-on repository');
+  await repo.click();
+  await expect(page.locator('.menu').getByRole('menuitem')).toHaveCount(2);
+  await repo.fill('sol');
+  await expect(page.locator('.menu').getByRole('menuitem')).toHaveText(['ddev/ddev-solr']);
+  await expect(repo).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await expect(repo).toHaveValue('ddev/ddev-solr');
+  await repo.press('Enter');
   expect(await nthPost(backend, 1)).toEqual({ path: '/api/projects/d11/actions/addon-get', form: { repo: 'ddev/ddev-solr' } });
   backend.endJob(backend.jobs[0].id);
 
@@ -137,7 +138,7 @@ test('logs of a stopped project', async ({ page, backend }) => {
 
 test('adds a project', async ({ page, backend }) => {
   const dialog = page.locator('#dialog');
-  await page.getByRole('button', { name: 'Add project' }).click();
+  await page.locator('#btn-add').click();
   await expect(dialog.locator('h2')).toHaveText('Add project');
   await dialog.getByLabel('Project type').click();
   await expect(dialog.getByRole('option')).toHaveCount(5);
@@ -163,7 +164,7 @@ test('adds a project', async ({ page, backend }) => {
 
 test('reports a refused project directory', async ({ page, backend }) => {
   backend.postReply = () => ({ status: 400, body: 'no such directory: /nope' });
-  await page.getByRole('button', { name: 'Add project' }).click();
+  await page.locator('#btn-add').click();
   await page.getByLabel('Project directory').fill('/nope');
   await page.getByLabel('Project directory').press('Enter');
   await expect(page.locator('#toasts .toast.error')).toHaveText('no such directory: /nope');

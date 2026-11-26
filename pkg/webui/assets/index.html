@@ -14,16 +14,13 @@
       <button id="brand" class="brand-home" type="button" title="Start page"><img src="favicon.svg" alt="" class="logo"><span>DDEV</span></button>
       <span class="badge experimental" title="ddev gui is experimental and may change">experimental</span>
     </div>
-    <div class="global-status">
-      <button id="router-status" class="pill" type="button">router: …</button>
-      <button id="ssh-agent-status" class="pill" type="button">SSH agent: …</button>
-      <span id="conn-status" class="pill">connecting…</span>
-    </div>
+    <div class="spacer"></div>
+    <button id="status" class="status-button" type="button"><span class="dot"></span><span id="status-text">Connecting…</span></button>
     <div class="global-actions">
-      <button id="btn-add" class="btn">Add project</button>
-      <button id="btn-start-all" class="btn">Start all</button>
-      <button id="btn-stop-all" class="btn">Stop all</button>
-      <button id="btn-poweroff" class="btn danger">Power off</button>
+      <button id="btn-start-all" class="btn" type="button" title="Start all projects"><i class="i lead i-play"></i>Start all</button>
+      <button id="btn-stop-all" class="btn" type="button" title="Stop all projects"><i class="i lead i-stop"></i>Stop all</button>
+      <button id="btn-poweroff" class="btn danger" type="button" title="Stop all projects and DDEV’s shared containers"><i class="i lead i-power"></i>Power off</button>
+      <button id="btn-more" class="btn icon-btn" type="button" title="More" aria-label="More" aria-haspopup="menu"><i class="i i-more"></i></button>
     </div>
   </header>
 
@@ -32,12 +29,15 @@
 
   <main class="layout">
     <aside class="sidebar">
-      <button id="nav-home" class="nav-home selected" type="button">Start page</button>
-      <button id="nav-shared" class="nav-home nav-shared" type="button">Shared services</button>
+      <nav class="nav" aria-label="Pages">
+        <button id="nav-home" class="nav-home i-home selected" type="button">Start page</button>
+        <button id="nav-shared" class="nav-home i-shared" type="button">Shared services</button>
+      </nav>
+      <div class="list-head"><span>Projects <span id="project-count" class="count-muted"></span></span><button id="btn-add" class="btn small" type="button" title="Add project"><i class="i lead i-plus"></i>Add</button></div>
       <input id="filter" class="filter" type="search" placeholder="Filter projects (/)" autocomplete="off">
       <div id="status-chips" class="chips" role="group" aria-label="Show projects"></div>
       <ul id="project-list" class="project-list" role="listbox" aria-label="Projects"></ul>
-      <p id="project-empty" class="muted hidden">No projects yet. Use “Add project” to configure one.</p>
+      <p id="project-empty" class="muted hidden">No projects yet. Use “Add” to configure one.</p>
     </aside>
 
     <section id="detail" class="detail"></section>

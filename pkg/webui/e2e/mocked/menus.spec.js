@@ -7,7 +7,7 @@ test('a right-click on a project opens its menu', async ({ page, backend }) => {
   const menu = page.getByRole('menu');
   await expect(menu.getByRole('menuitem', { name: 'Start', exact: true })).toBeEnabled();
   await expect(menu.getByRole('menuitem', { name: 'Restart' })).toBeDisabled();
-  await expect(menu.getByRole('menuitem', { name: 'Open site ↗' })).toBeDisabled();
+  await expect(menu.getByRole('menuitem', { name: 'Open site' })).toBeDisabled();
   await page.keyboard.press('Escape');
   await expect(menu).toHaveCount(0);
 
@@ -53,6 +53,8 @@ test('opens on the start page, with a tip and notices', async ({ page }) => {
   await expect(tip).toHaveText(first);
   await expect(page.locator('.tip-text code').or(page.locator('.tip-text em')).first()).toBeVisible();
 
+  await expect(page.locator('.news')).toContainText('DDEV v1.25.6 is out');
+  await expect(page.locator('.news').getByRole('link')).toHaveAttribute('href', 'https://ddev.com/blog/release-v1-25-6');
   await expect(page.locator('#notices')).toContainText('Upgrade Docker soon.');
   await page.locator('#notices').getByRole('button', { name: 'Dismiss' }).click();
   await expect(page.locator('#notices')).toBeEmpty();
@@ -106,13 +108,14 @@ test('the activity header opens the panel, and finished jobs clear', async ({ pa
 });
 
 test('shows the shared services and follows their logs', async ({ page, backend }) => {
-  await expect(page.locator('#ssh-agent-status')).toHaveText('SSH agent: healthy');
-  await page.locator('#router-status').click();
+  await expect(page.locator('#status-text')).toHaveText('All services running');
+  await expect(page.locator('#status')).toHaveAttribute('title', /SSH agent: healthy/);
+  await page.locator('#status').click();
   await expect(page.locator('#detail h1')).toHaveText('Shared services');
   const cards = page.locator('.shared-cards .card');
   await expect(cards.first()).toContainText('healthy');
   await expect(cards.first().locator('.dot')).toHaveClass(/running/);
-  await expect(cards.first().getByRole('link', { name: 'Open the Traefik dashboard ↗' })).toHaveAttribute('href', 'http://127.0.0.1:10999');
+  await expect(cards.first().getByRole('link', { name: 'Open the Traefik dashboard' })).toHaveAttribute('href', 'http://127.0.0.1:10999');
   await expect(cards.nth(1)).toContainText('stopped');
   // Only a running container has logs to follow.
   await expect(page.getByLabel('Logs of')).toHaveText('Router');
@@ -144,4 +147,43 @@ test('moves through the sidebar with the keyboard', async ({ page }) => {
   await page.keyboard.press('Shift+F10');
   await expect(page.getByRole('menuitem', { name: 'Start', exact: true })).toBeFocused();
   await page.keyboard.press('Escape');
+});
+
+test('acts on several projects at once', async ({ page, backend }) => {
+  await page.locator('#project-list li', { hasText: 'wp' }).click({ modifiers: ['ControlOrMeta'] });
+  await expect(page.locator('#detail h1')).toHaveText('2 projects selected');
+  await expect(page.locator('#project-list li.selected')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'Stop 1' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Start 1', exact: true }).click();
+  expect(await nthPost(backend, 1)).toEqual({ path: '/api/actions/start', form: { project: 'wp' } });
+  // Esc goes back to the project shown before.
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#detail h1')).toContainText('d11');
+  await expect(page.locator('#project-list li.selected')).toHaveCount(1);
+
+  // Ctrl+click on the project shown selects it.
+  await page.locator('#project-list li', { hasText: 'd11' }).click({ modifiers: ['ControlOrMeta'] });
+  await expect(page.locator('#detail h1')).toHaveText('1 project selected');
+  await page.keyboard.press('Escape');
+
+  // A checkbox starts a selection of its own, without the project shown.
+  const wp = page.locator('#project-list li', { hasText: 'wp' });
+  await wp.hover();
+  await wp.locator('.lead').click();
+  await expect(page.locator('#detail h1')).toHaveText('1 project selected');
+  await expect(page.locator('#project-list li.selected')).toHaveCount(1);
+  await expect(wp.getByRole('checkbox')).toBeChecked();
+});
+
+test('the status names a stopped or failing service', async ({ page, backend }) => {
+  backend.router = 'stopped';
+  backend.pushStatus();
+  await expect(page.locator('#status-text')).toHaveText('Router stopped');
+  backend.sshAgent = 'stopped';
+  backend.pushStatus();
+  await expect(page.locator('#status-text')).toHaveText('Services stopped');
+  backend.router = 'unhealthy';
+  backend.pushStatus();
+  await expect(page.locator('#status-text')).toHaveText('Router unhealthy');
+  await expect(page.locator('#status')).toHaveClass(/bad/);
 });

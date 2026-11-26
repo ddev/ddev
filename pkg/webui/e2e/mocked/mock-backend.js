@@ -36,6 +36,7 @@ class MockBackend {
       infos: [],
       warnings: [{ message: 'Upgrade Docker soon.' }],
     };
+    this.news = [{ title: 'DDEV v1.25.6 is out', link: 'https://ddev.com/blog/release-v1-25-6', date: '2026-11-20', category: 'Announcements' }];
     this.shared = [
       { name: 'ddev-router', label: 'Router', status: 'healthy', image: 'ddev/ddev-traefik-router:v1', dashboard: 'http://127.0.0.1:10999', docs: 'users/extend/traefik-router/' },
       { name: 'ddev-ssh-agent', label: 'SSH agent', status: 'stopped', docs: 'users/usage/commands/#auth-ssh' },
@@ -162,6 +163,8 @@ class MockBackend {
       sse(res);
       this.logClients.add(res);
       req.on('close', () => this.logClients.delete(res));
+    } else if (p === '/api/news') {
+      json(res, 200, { posts: this.news });
     } else if (p === '/api/messages') {
       json(res, 200, this.messages);
     } else if (p === '/api/addons/registry') {
