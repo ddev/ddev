@@ -471,22 +471,24 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 4. Restart `sudo systemctl restart icinga2`
 5. On `monitor.ddev.com` edit `/usr/local/bin/check_buildkite_agents.sh` to include the hostname of the new instance.
 
-## Icinga2 Monitoring for macOS Runners
+## Icinga2 Monitoring for macOS and Windows Runners
 
-Icinga publishes no macOS agent, so macOS runners push their own results.
-A launchd agent runs `.buildkite/icinga/testbot_icinga_push.sh` from this
-repository every 5 minutes, and it posts each result to the Icinga API on
-`monitor.ddev.com` as a passive check result. Each check is also active,
-running the `dummy` command every 10 minutes; a pushed result postpones it, so
-the check only fires, and alerts, when a runner stops pushing.
+Icinga publishes no macOS agent, so macOS and native Windows runners push their
+own results. Every 5 minutes, a launchd agent on macOS runs
+`.buildkite/icinga/testbot_icinga_push.sh` from this repository, and a
+Scheduled Task on Windows runs `.buildkite/icinga/testbot_icinga_push.ps1`.
+Each posts its results to the Icinga API on `monitor.ddev.com` as passive
+check results. Each check is also active, running the `dummy` command every
+10 minutes; a pushed result postpones it, so the check only fires, and alerts,
+when a runner stops pushing.
 
-The script reports:
+The scripts report:
 
 | Service | Problem state |
 | --- | --- |
 | Host check | DOWN after 10 minutes without a result |
-| `disk` | `/System/Volumes/Data` 80% (WARNING) or 90% (CRITICAL) used |
-| `load-average` | 15-minute load average 7 (WARNING) or 10 (CRITICAL) |
+| `disk` | `/System/Volumes/Data` on macOS or `C:` on Windows 80% (WARNING) or 90% (CRITICAL) used |
+| `load-average` | macOS only: 15-minute load average 7 (WARNING) or 10 (CRITICAL) |
 | `buildkite-agent` | Not running (CRITICAL), or a job running 4 hours (WARNING) or 8 hours (CRITICAL) |
 | `docker-providers` | A Docker context whose daemon doesn't answer within 20 seconds (CRITICAL); a stopped provider is normal |
 | `leftover-containers` | Containers in any running provider while no job runs (WARNING) |
@@ -494,16 +496,17 @@ The script reports:
 ### Icinga Configuration on `monitor.ddev.com`
 
 Each runner needs a host in Icinga Director that imports the
-`ddev-macos-runner` template, named with the runner's Tailscale short name,
-and an Icinga API user that can submit results only for that host. Pull request
-code runs on the runner and can read the password, so the user can't touch any
-other host. Maintainers create both; the steps are in the private
-`ddev/maintainer-info` repository, under "macOS Runners: Pushed Checks" in
-`topics/monitoring.md`.
+`ddev-macos-runner` or `ddev-windows-runner` template, named with the
+runner's Tailscale short name, and an Icinga API user that can submit results
+only for that host. Pull request code runs on the runner and can read the
+password, so the user can't touch any other host. Maintainers create both; the
+steps are in the private `ddev/maintainer-info` repository, under
+"Pushed Checks for macOS and Windows Runners" in `topics/monitoring.md`.
 
 ### Runner Setup
 
-1. Create `~/.config/ddev-icinga/env` with mode `0600`:
+1. Create `~/.config/ddev-icinga/env`, readable only by the `testbot` user.
+   On Windows, `~` is `%USERPROFILE%`.
 
     ```bash
     ICINGA_URL=https://monitor.ddev.com:5665
@@ -514,12 +517,19 @@ other host. Maintainers create both; the steps are in the private
 
 2. Copy the Icinga CA certificate, `/var/lib/icinga2/certs/ca.crt` on
    `monitor.ddev.com`, to `~/.config/ddev-icinga/ca.crt`.
-3. From a checkout of this repository, run
-   `.buildkite/icinga/testbot_icinga_push.sh --dry-run` to see the results
-   without sending them, then `.buildkite/icinga/install_icinga_push.sh`.
-   After that, `testbot_maintenance.sh` reinstalls the script on every build
-   of `main`, so runners pick up changes once they are merged. Builds of other
-   branches and pull requests don't install; try changes there with `--dry-run`.
+3. From a checkout of this repository, see the results without sending them,
+   then install:
+    * macOS: `.buildkite/icinga/testbot_icinga_push.sh --dry-run`, then
+      `.buildkite/icinga/install_icinga_push.sh`.
+    * Windows, in an elevated PowerShell:
+      `powershell -ExecutionPolicy Bypass -File .buildkite\icinga\testbot_icinga_push.ps1 -DryRun`,
+      then the same with `install_icinga_push.ps1`. The Scheduled Task runs
+      as `testbot` without a window, whether or not `testbot` is logged in.
+
+    After that, `testbot_maintenance.sh` reinstalls the script on every build
+    of `main`, so runners pick up changes once they are merged. Builds of
+    other branches and pull requests don't install; try changes there with the
+    dry run.
 4. Push failures go to `~/.config/ddev-icinga/push.log`.
 
 ## macOS Docker Desktop Test Agent Setup (Apple Silicon)

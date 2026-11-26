@@ -1,7 +1,7 @@
 #!/bin/bash
 # Runs health checks on a macOS testbot and pushes each result to Icinga as a
 # passive check result. launchd runs it every 5 minutes; the setup is in
-# "Icinga2 Monitoring for macOS Runners" in buildkite-testmachine-setup.md.
+# "Icinga2 Monitoring for macOS and Windows Runners" in buildkite-testmachine-setup.md.
 #
 # Reads ICINGA_URL, ICINGA_HOST, ICINGA_API_USER and ICINGA_API_PASSWORD from
 # ~/.config/ddev-icinga/env, and the Icinga CA from ~/.config/ddev-icinga/ca.crt.
