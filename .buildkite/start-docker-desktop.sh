@@ -48,8 +48,9 @@ echo "$(date -u +%H:%M:%S) start-docker-desktop: Docker Desktop not running — 
 # Job Object so it survives after the job ends. Never use 'docker desktop stop'
 # here — stopping truncates Docker Desktop's per-distro proxy binary and breaks
 # WSL2 integration (see git history). This script only ever STARTS.
+# A per-user install, as on tb-win11-10, lives under %LOCALAPPDATA%.
 powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \
-    'Start-Process -FilePath "$env:PROGRAMFILES\Docker\Docker\Docker Desktop.exe" -PassThru | Out-Null' 2>/dev/null \
+    '$exe = "$env:PROGRAMFILES\Docker\Docker\Docker Desktop.exe"; if (-not (Test-Path $exe)) { $exe = "$env:LOCALAPPDATA\Programs\DockerDesktop\Docker Desktop.exe" }; Start-Process -FilePath $exe -PassThru | Out-Null' 2>/dev/null \
     || docker desktop start || true
 
 elapsed=0
