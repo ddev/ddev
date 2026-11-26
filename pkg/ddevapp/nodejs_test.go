@@ -182,7 +182,7 @@ func TestCorepackEnable(t *testing.T) {
 	}{
 		{nodeJSVersion: "24"},
 		{nodeJSVersion: "26", removeBaseCorepack: true},
-		{nodeJSVersion: "16.8.0", removeBaseCorepack: true, noCorepack: true},
+		{nodeJSVersion: "16.8", removeBaseCorepack: true, noCorepack: true},
 	} {
 		t.Run("node"+tc.nodeJSVersion, func(t *testing.T) {
 			_ = os.Remove(preDockerfile)
