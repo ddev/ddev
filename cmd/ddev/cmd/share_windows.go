@@ -3,8 +3,10 @@
 package cmd
 
 import (
+	"os"
 	"os/exec"
 	"strconv"
+	"time"
 )
 
 // setProcessGroupAttr is a no-op on Windows. taskkill with /T traverses the
@@ -22,4 +24,9 @@ func killProcessTree(cmd *exec.Cmd) {
 			_ = cmd.Process.Kill()
 		}
 	}
+}
+
+func stopShareProvider(cmd *exec.Cmd, done <-chan error, _ time.Duration, _ <-chan os.Signal) error {
+	killProcessTree(cmd)
+	return <-done
 }

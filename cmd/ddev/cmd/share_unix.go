@@ -3,8 +3,10 @@
 package cmd
 
 import (
+	"os"
 	"os/exec"
 	"syscall"
+	"time"
 )
 
 // setProcessGroupAttr places the child process in its own process group so that
@@ -20,4 +22,24 @@ func killProcessTree(cmd *exec.Cmd) {
 	if cmd.Process != nil {
 		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	}
+}
+
+// stopShareProvider gives the provider time to release any remote state.
+func stopShareProvider(cmd *exec.Cmd, done <-chan error, grace time.Duration, signals <-chan os.Signal) error {
+	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM); err != nil {
+		killProcessTree(cmd)
+		return <-done
+	}
+
+	timer := time.NewTimer(grace)
+	defer timer.Stop()
+	select {
+	case err := <-done:
+		killProcessTree(cmd)
+		return err
+	case <-signals:
+	case <-timer.C:
+	}
+	killProcessTree(cmd)
+	return <-done
 }

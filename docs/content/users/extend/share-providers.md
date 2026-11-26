@@ -83,7 +83,10 @@ All standard DDEV environment variables are also available.
 
 ### Signal Handling
 
-Providers must handle `SIGINT` (Ctrl+C) and `SIGTERM` gracefully. Use `trap` to cleanup background processes:
+On Unix, when DDEV receives Ctrl+C or `SIGTERM`, it sends `SIGTERM` to the provider process group.
+The provider has up to 15 seconds to clean up before DDEV sends `SIGKILL`.
+A second Ctrl+C forces termination immediately. Windows uses forced process-tree termination.
+Use `trap` to clean up background processes:
 
 ```bash
 cleanup() {
