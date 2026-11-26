@@ -72,6 +72,20 @@ darwin)
     ;;
 esac
 
+# Only main builds install the Icinga push checks, so a PR or stale branch
+# can't leave its copy behind.
+if [ -f ~/.config/ddev-icinga/env ] && [ "${BUILDKITE_BRANCH:-}" = "main" ] && [ "${BUILDKITE_PULL_REQUEST:-false}" = "false" ]; then
+    case $os in
+    darwin)
+        "$(dirname "$0")/icinga/install_icinga_push.sh" || true
+        ;;
+    windows)
+        powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass \
+            -File "$(cygpath -w "$(dirname "$0")/icinga/install_icinga_push.ps1")" || true
+        ;;
+    esac
+fi
+
 echo "Deleting unused images with ddev delete images"
 ddev delete images -y || true
 
