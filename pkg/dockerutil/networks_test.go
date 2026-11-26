@@ -140,6 +140,16 @@ func TestNetworkAmbiguity(t *testing.T) {
 			require.Len(t, ips, expectation)
 		}
 	}
+
+	// With a project's own "test" stopped, "test" must not resolve to the other
+	// project's container through ddev_default (#8390).
+	stoppedName := t.Name() + "-app2"
+	_, err := exec.RunCommand("docker", []string{"stop", "ddev-" + stoppedName + "-test"})
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp(stoppedName)
+	require.NoError(t, err)
+	out, _, _ := app.Exec(&ddevapp.ExecOpts{Cmd: "getent hosts test"})
+	require.Empty(t, strings.Trim(out, "\r\n "), "test resolved to another project's container")
 }
 
 // TestNetworkAliases tests inter-project connectivity using ddev_default network aliases

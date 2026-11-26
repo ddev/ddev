@@ -298,7 +298,14 @@ func TestFixupComposeYaml(t *testing.T) {
 	require.Equal(t, "custom-hostname", app.ComposeYaml.Services["dummy4"].Hostname)
 
 	webService := app.ComposeYaml.Services["web"]
-	require.Nil(t, webService.Networks["ddev_default"])
+	// Short service names stay on the project network; dummy1 asks for its alias on ddev_default.
+	for _, serviceName := range []string{"web", "db", "dummy2", "dummy3", "dummy4"} {
+		ddevNet := app.ComposeYaml.Services[serviceName].Networks["ddev_default"]
+		require.NotNil(t, ddevNet, "service %s ddev_default", serviceName)
+		require.False(t, ddevNet.ServiceNameAliasEnabled(), "service %s should have no service-name alias on ddev_default", serviceName)
+	}
+	require.True(t, app.ComposeYaml.Services["dummy1"].Networks["ddev_default"].ServiceNameAliasEnabled())
+	require.Empty(t, app.ComposeYaml.Services["dummy5"].Networks, "dummy5 uses network_mode, so it has no networks")
 	require.NotNil(t, webService.Networks["default"])
 	assert.Equal(1, webService.Networks["default"].Priority)
 	require.NotNil(t, webService.Networks["dummy"])

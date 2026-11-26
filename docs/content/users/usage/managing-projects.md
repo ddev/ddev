@@ -222,7 +222,7 @@ ddev exec curl https://ddev-backend-web
 
 ### Access another service in the same or different project
 
-- **Same project**: containers reach each other by service name. No project name prefix is required.
+- **Same project**: containers reach each other by service name. No project name prefix is required. A service name such as `db` only reaches the project's own service, never another project's, even when that service is stopped.
 - **Different project**: containers reach each other with `ddev-<projectname>-<service>`.
 
 Example in a single project with `web` and `opensearch` services:
