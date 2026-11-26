@@ -28,7 +28,7 @@ var (
 	updateInterval     = time.Hour * 4 // Four-hour interval between updates
 	serviceType        string
 	serviceUser        string
-	updateDocURL       = "https://docs.ddev.com/en/stable/users/install/ddev-upgrade/"
+	updateDocURL       = versionconstants.DocsURL("users/install/ddev-upgrade/")
 	instrumentationApp *ddevapp.DdevApp
 	// skipConfirmation is the value of the running command's `-y` flag, if it has one.
 	skipConfirmation bool
@@ -40,7 +40,7 @@ var RootCmd = &cobra.Command{
 	Short: "DDEV local development environment",
 	Long: `Create and maintain a local web development environment.
 Docs: https://docs.ddev.com
-Support: https://docs.ddev.com/en/stable/users/support/`,
+Support: ` + versionconstants.DocsURL("users/support/"),
 	Version: versionconstants.DdevVersion,
 	Run: func(cmd *cobra.Command, _ []string) {
 		// Launch TUI if: stdin is a TTY, not JSON output, not opted out, and DDEV_NO_TUI not set
@@ -59,7 +59,7 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !canRunWithoutDocker(cmd) {
 			if _, err := dockerutil.GetDockerVersion(); err != nil {
-				util.Failed("Docker error: %v\nFor help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker", err)
+				util.Failed("Docker error: %v\n\n%s", err, dockerutil.DockerConnectionHelp(err))
 			}
 		}
 
@@ -265,7 +265,7 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 
 	if !skipConfirmation {
 		if !output.JSONOutput && semver.Compare(versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) != 0 && !globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation {
-			allowStats = util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://docs.ddev.com/en/stable/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
+			allowStats = util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\n" + versionconstants.DocsURL("users/usage/diagnostics/#opt-in-usage-information") + "\nPermission to beam up?")
 		}
 
 		// If they have a new version (but not first-timer) then prompt to poweroff

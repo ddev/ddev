@@ -92,7 +92,7 @@ func CheckAvailableSpace() error {
 	}
 	if spaceAvail < nodeps.MinimumDockerSpaceWarning {
 		spacePercent := int((spaceTotal - spaceAvail) * 100 / spaceTotal)
-		return fmt.Errorf("your Docker install has only %s available disk space, less than %s warning level (%d%% used). Please increase disk image size. More info at %s", util.FormatBytes(spaceAvail), util.FormatBytes(nodeps.MinimumDockerSpaceWarning), spacePercent, "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#out-of-disk-space")
+		return fmt.Errorf("your Docker install has only %s available disk space, less than %s warning level (%d%% used). Please increase disk image size. More info at %s", util.FormatBytes(spaceAvail), util.FormatBytes(nodeps.MinimumDockerSpaceWarning), spacePercent, versionconstants.DocsURL("users/usage/troubleshooting/#out-of-disk-space"))
 	}
 	return nil
 }

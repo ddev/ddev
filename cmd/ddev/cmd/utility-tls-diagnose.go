@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"math/big"
 	"os"
 	"os/exec"
@@ -650,7 +651,7 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 				} else {
 					output.UserOut.Printf("      CA file: %s/rootCA.pem\n", winCARootDisplay)
 				}
-				output.UserOut.Println("    → See: https://docs.ddev.com/en/stable/users/install/configuring-browsers/")
+				output.UserOut.Println("    → See: " + versionconstants.DocsURL("users/install/configuring-browsers/"))
 				hasWarnings = true
 			} else {
 				output.UserOut.Println("  ✓ Firefox not detected on Windows")
@@ -687,7 +688,7 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 					output.UserOut.Printf("      CA file: %s\\rootCA.pem\n", caRoot)
 				}
 				output.UserOut.Println("    → Firefox Nightly, Developer Edition, and ESR each have separate trust stores")
-				output.UserOut.Println("    → See: https://docs.ddev.com/en/stable/users/install/configuring-browsers/")
+				output.UserOut.Println("    → See: " + versionconstants.DocsURL("users/install/configuring-browsers/"))
 				hasWarnings = true
 			}
 		} else {
@@ -708,7 +709,7 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 				} else {
 					output.UserOut.Printf("  ⚠ %s detected — has a separate NSS trust store, needs separate CA import\n", appName)
 				}
-				output.UserOut.Println("    → See: https://docs.ddev.com/en/stable/users/install/configuring-browsers/")
+				output.UserOut.Println("    → See: " + versionconstants.DocsURL("users/install/configuring-browsers/"))
 				hasWarnings = true
 			}
 		}

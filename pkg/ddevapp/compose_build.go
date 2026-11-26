@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"maps"
 	"reflect"
 	"slices"
@@ -114,7 +115,7 @@ func (app *DdevApp) buildProjectImages(project *composeTypes.Project, opts api.B
 	}
 	util.Warning(`Unable to build project images while offline, using the ones from the last successful build.
 Dockerfile changes take effect on the next online 'ddev start'.
-See https://docs.ddev.com/en/stable/users/usage/offline/ for info.`)
+See %s for info.`, versionconstants.DocsURL("users/usage/offline/"))
 	return false, nil
 }
 

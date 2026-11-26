@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -662,7 +663,7 @@ func ValidateNodeJSRootAndVersion(appRoot string, nodeJSRoot string, nodeJSVersi
 			return nil
 		}
 	}
-	return fmt.Errorf("nodejs_version ('%s') requires a Node.js version file (%s) in '%s', see https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version", nodeJSVersion, strings.Join(versionFiles, ", "), versionFilesDir)
+	return fmt.Errorf("nodejs_version ('%s') requires a Node.js version file (%s) in '%s', see %s", nodeJSVersion, strings.Join(versionFiles, ", "), versionFilesDir, versionconstants.DocsURL("users/configuration/config/#nodejs_version"))
 }
 
 // DockerComposeYAMLPath returns the absolute path to where the

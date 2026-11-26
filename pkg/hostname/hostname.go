@@ -2,6 +2,7 @@ package hostname
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	exec2 "os/exec"
 	"strings"
 
@@ -57,7 +58,7 @@ func elevateHostsManipulation(args []string) (out string, err error) {
 	}
 
 	if !isDdevHostnameAvailable() {
-		return "Binary not found", fmt.Errorf("%s is not installed, please install it, see https://docs.ddev.com/en/stable/users/usage/commands/#hostname", ddevHostnameBinary)
+		return "Binary not found", fmt.Errorf("%s is not installed, please install it, see %s", ddevHostnameBinary, versionconstants.DocsURL("users/usage/commands/#hostname"))
 	}
 
 	c := args

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,7 +34,7 @@ var (
 	gaveUpOnPID int
 )
 
-const globalLockDocsURL = "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#waiting-for-another-ddev-process"
+var globalLockDocsURL = versionconstants.DocsURL("users/usage/troubleshooting/#waiting-for-another-ddev-process")
 
 // globalLockHolder describes the process holding the global lock. It lives
 // in a separate file because on Windows the locked file can't be read.

@@ -38,6 +38,18 @@ func IsUnreleasedDdevVersion(version string) bool {
 	return unreleasedVersionPattern.MatchString(version)
 }
 
+// DocsURL returns the docs.ddev.com URL of page, a path such as
+// "users/usage/troubleshooting/#unable-listen". Read the Docs builds only
+// "stable" (the latest release) and "latest" (main), not one version per
+// release, so a dev build links to "latest", the closer match to its code.
+func DocsURL(page string) string {
+	docsVersion := "stable"
+	if IsUnreleasedDdevVersion(DdevVersion) {
+		docsVersion = "latest"
+	}
+	return "https://docs.ddev.com/en/" + docsVersion + "/" + strings.TrimPrefix(page, "/")
+}
+
 // Image tags are bare content hashes (see containers/hash-paths.sh), so the
 // same image resolves to the same tag no matter which branch or repository
 // published it. Each has a companion <Name>Branch naming the branch its

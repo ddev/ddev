@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,7 @@ Use the 'nodejs_version' configuration in .ddev/config.yaml instead:
 After changing nodejs_version, restart your project with 'ddev restart'.
 
 For more information, see:
-https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version
+` + versionconstants.DocsURL("users/configuration/config/#nodejs_version") + `
 
 If you still want to use nvm, there is an add-on available:
 https://github.com/ddev/ddev-nvm
