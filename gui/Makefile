@@ -80,15 +80,17 @@ zip:
 
 # Developer ID signing, with the variables main-build.yml sets for ddev.
 sign:
-	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] || [ -z "$(DDEV_MACOS_CERT_FILE)" ]; then \
+	@if [ -z "$${DDEV_MACOS_SIGNING_PASSWORD}" ] || [ -z "$(DDEV_MACOS_CERT_FILE)" ]; then \
 		echo "DDEV_MACOS_SIGNING_PASSWORD and DDEV_MACOS_CERT_FILE are required"; exit 1; fi
-	curl -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f $(SIGNING_TOOLS_RAW_URL)/macos_sign.sh | \
-		bash -s - --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file="$(DDEV_MACOS_CERT_FILE)" --cert-name="$(DDEV_MACOS_CERT_NAME)" --target-binary="$(APP)"
+	@echo "Signing $(APP)"
+	@curl -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f $(SIGNING_TOOLS_RAW_URL)/macos_sign.sh | \
+		bash -s - --signing-password="$${DDEV_MACOS_SIGNING_PASSWORD}" --cert-file="$(DDEV_MACOS_CERT_FILE)" --cert-name="$(DDEV_MACOS_CERT_NAME)" --target-binary="$(APP)"
 	codesign --verify --deep --strict "$(APP)"
 
 notarize:
-	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "DDEV_MACOS_APP_PASSWORD is required"; exit 1; fi
-	curl -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f $(SIGNING_TOOLS_RAW_URL)/macos_notarize.sh | \
-		bash -s - --app-specific-password="$(DDEV_MACOS_APP_PASSWORD)" --apple-id=$(DDEV_MACOS_APPLE_ID) --team-id=$(DDEV_MACOS_TEAM_ID) --primary-bundle-id=com.ddev.gui --target-binary="$(APP)"
+	@if [ -z "$${DDEV_MACOS_APP_PASSWORD}" ]; then echo "DDEV_MACOS_APP_PASSWORD is required"; exit 1; fi
+	@echo "Notarizing $(APP)"
+	@curl -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f $(SIGNING_TOOLS_RAW_URL)/macos_notarize.sh | \
+		bash -s - --app-specific-password="$${DDEV_MACOS_APP_PASSWORD}" --apple-id=$(DDEV_MACOS_APPLE_ID) --team-id=$(DDEV_MACOS_TEAM_ID) --primary-bundle-id=com.ddev.gui --target-binary="$(APP)"
 	xcrun stapler staple "$(APP)"
 	$(MAKE) zip
