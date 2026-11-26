@@ -44,6 +44,9 @@ var trayIcon []byte
 //go:embed icons/tray-light.png
 var trayIconLight []byte
 
+//go:embed icons/tray-color.png
+var trayIconColor []byte
+
 // version is set by the Makefile.
 var version = "dev"
 
@@ -180,6 +183,9 @@ func main() {
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
+		// The Wayland app ID, which must name the launcher,
+		// com.ddev.gui.desktop, for the desktop to show its icon.
+		Linux:          application.LinuxOptions{ApplicationID: "com.ddev.gui"},
 		SingleInstance: singleInstance,
 		// Wails clears WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS, so a debugging
 		// port for the window's DevTools must come through here.
@@ -243,9 +249,17 @@ func main() {
 	})
 
 	tray := app.SystemTray.New()
-	tray.SetTemplateIcon(trayIcon)
-	tray.SetDarkModeIcon(trayIconLight)
-	tray.SetTooltip("DDEV")
+	if runtime.GOOS == "linux" {
+		// Wails gives a Linux tray only the first icon, not the dark one.
+		tray.SetIcon(trayIconColor)
+		// Without a label, Wails names the item "Wails". The hover text shows
+		// the label, so a tooltip would repeat it. macOS shows a label as text.
+		tray.SetLabel("DDEV")
+	} else {
+		tray.SetTemplateIcon(trayIcon)
+		tray.SetDarkModeIcon(trayIconLight)
+		tray.SetTooltip("DDEV")
+	}
 	// pageURL is the dashboard page once loaded, without the launch token.
 	pageURL := "/"
 	if u, err := url.Parse(windowURL); err == nil && u.Host != "" {
@@ -424,7 +438,7 @@ func (t *trayMenu) build(projects []project, errText, ver string) *application.M
 	if errText != "" {
 		// A menu item shows one line.
 		errText, _, _ = strings.Cut(errText, "\n")
-		m.Add(errText).SetEnabled(false)
+		m.Add(trayText(errText)).SetEnabled(false)
 	} else if len(projects) == 0 {
 		m.Add("No projects").SetEnabled(false)
 	}
@@ -458,14 +472,25 @@ func (t *trayMenu) build(projects []project, errText, ver string) *application.M
 	m.Add("Power off").OnClick(t.confirm("Power off DDEV?", "This stops all projects and DDEV’s shared containers.", "Power off", t.global("poweroff")))
 	m.AddSeparator()
 	if t.srv != nil {
-		about := t.srv.target.String()
+		// The version and the path to ddev would make the whole menu as wide
+		// as themselves.
+		about := m.AddSubmenu("About DDEV")
 		if ver != "" {
-			about = "DDEV " + ver + " · " + about
+			about.Add("DDEV " + ver).SetEnabled(false)
 		}
-		m.Add(about).SetEnabled(false)
+		about.Add(trayText(t.srv.target.String())).SetEnabled(false)
 	}
 	m.Add("Quit DDEV app").OnClick(func(*application.Context) { t.app.Quit() })
 	return m
+}
+
+// trayText keeps the underscores of a Linux tray label, where a single one
+// marks the next letter as a shortcut key and is not shown.
+func trayText(s string) string {
+	if runtime.GOOS != "linux" {
+		return s
+	}
+	return strings.ReplaceAll(s, "_", "__")
 }
 
 func (t *trayMenu) action(project, action string) func(*application.Context) {

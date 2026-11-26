@@ -8,7 +8,8 @@ app shows that web UI in a native window, and adds what a browser tab cannot:
 - A tray menu, also called a menu bar extra on macOS. It lists each project
   with its status, starts, stops, or restarts it, and opens its site. It also
   has Start all, Stop all, and Power off; the last two ask first, as the
-  page does. Its last line names the DDEV version and the `ddev` it runs.
+  page does. Its About DDEV submenu names the DDEV version and the `ddev`
+  it runs.
 - A question before quitting while an action runs, since quitting stops the
   action and could leave a project half started. Ctrl+C or SIGTERM quits
   without asking.
@@ -152,6 +153,19 @@ own debug messages, such as a tray menu that failed to open.
 On Windows, `DDEV_GUI_WEBVIEW2_ARGS` passes arguments to WebView2. With
 `--remote-debugging-port=9222`, `http://127.0.0.1:9222/json` lists the
 window's page, which Edge's DevTools can then inspect.
+
+The icons use DDEV's brand mark from
+`docs/content/developers/logos/SVG/Logo.svg`. After a change to
+`icons/appicon.svg`, `icons/tray.svg`, or `pkg/webui/assets/favicon.svg`,
+render the PNGs again:
+
+```bash
+cd gui/icons
+rsvg-convert -w 1024 -h 1024 appicon.svg -o appicon.png
+rsvg-convert -w 44 -h 44 tray.svg -o tray.png
+sed 's/fill="#000"/fill="#fff"/' tray.svg | rsvg-convert -w 44 -h 44 -o tray-light.png
+rsvg-convert -w 64 -h 64 ../../pkg/webui/assets/favicon.svg -o tray-color.png
+```
 
 ## Tests
 

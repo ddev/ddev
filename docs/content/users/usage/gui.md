@@ -117,7 +117,7 @@ Run `wsl --list` to see your distros' names.
 
 ## Which `ddev` the App Uses
 
-The last line of the tray menu shows the DDEV version and the `ddev` the app runs. When `ddev gui` starts the app outside WSL2, the app runs that same `ddev`. Otherwise, outside WSL2, the app looks for `ddev` in this order:
+**About DDEV** in the tray menu shows the DDEV version and the `ddev` the app runs. When `ddev gui` starts the app outside WSL2, the app runs that same `ddev`. Otherwise, outside WSL2, the app looks for `ddev` in this order:
 
 1. The `DDEV_BINARY` environment variable, when it is set.
 2. On Windows, the `ddev.exe` next to the app, or `ddev` in WSL2, as described in [Using DDEV in WSL2](#using-ddev-in-wsl2).

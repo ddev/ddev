@@ -451,12 +451,12 @@ nfpms:
   - deb
   - rpm
   contents:
-  - src: gui/packaging/ddev-gui.desktop
-    dst: /usr/share/applications/ddev-gui.desktop
+  - src: gui/packaging/com.ddev.gui.desktop
+    dst: /usr/share/applications/com.ddev.gui.desktop
     file_info:
       mode: 0644
   - src: gui/icons/appicon.png
-    dst: /usr/share/pixmaps/ddev-gui.png
+    dst: /usr/share/pixmaps/com.ddev.gui.png
     file_info:
       mode: 0644
   # The first release with `ddev gui --desktop`; GoReleaser cannot template
