@@ -26,6 +26,7 @@ ddev push acquia --skip-db -y
 ddev push upsun --environment="PLATFORM_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdeyourtoken"
 ddev push pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev,TERMINUS_MACHINE_TOKEN=abcdeyourtoken"
 ddev push lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
+ddev push drupito --environment="DRUPITO_SITE=yoursite"
 `,
 	Args: cobra.ExactArgs(1),
 	PreRun: func(_ *cobra.Command, _ []string) {

@@ -7,4 +7,4 @@ Teams almost universally use Git to manage their code and some Git provider like
 * [Sharing your project](sharing.md)
 * [Hosting with DDEV](hosting.md)
 * [Remote Docker environments](remote-docker.md)
-* [Hosting integrations](../providers/index.md) including Acquia, Lagoon, Pantheon, Upsun, rsync-based solutions, Git-based solutions, local files (like Dropbox), etc.
+* [Hosting integrations](../providers/index.md) including Acquia, Drupito, Lagoon, Pantheon, Upsun, rsync-based solutions, Git-based solutions, local files (like Dropbox), etc.

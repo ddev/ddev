@@ -5,11 +5,11 @@ Providers README
 
 ## Introduction to Hosting Provider Integration
 
-DDEV offers hosting provider integrations for Pantheon, Upsun and Acquia hosting, along with a number of examples.
+DDEV offers hosting provider integrations for Pantheon, Upsun, Acquia and Drupito hosting, along with a number of examples.
 
 Hosting provider integration allows connecting with your upstream hosting. `ddev pull <provider>` downloads and `ddev push <provider>` uploads the **database** and the **user-generated files** to an upstream provider. It does *not* push (deploy) or pull your code. Your code should be under version control in for example Git.
 
-DDEV provides ready-to-go integrations for Upsun, Acquia, and Lagoon in every project, see the .ddev/providers directory. These can be used as is, or they can be modified as you see fit (but remove the `#ddev-generated` line so DDEV doesn't replace them with the defaults).
+DDEV provides ready-to-go integrations for Upsun, Acquia, Lagoon, and Drupito in every project, see the .ddev/providers directory. These can be used as is, or they can be modified as you see fit (but remove the `#ddev-generated` line so DDEV doesn't replace them with the defaults).
 
 In addition, each project includes example recipes https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/providers for Git, local files, and `rsync` in its `.ddev/providers` directory, which you can use and adapt however you’d like.
 
@@ -21,6 +21,7 @@ Each provider recipe is a YAML file that can have whatever name you want. The ex
 
 Recipes are provided for:
 - Acquia .ddev/providers/acquia.yaml
+- Drupito .ddev/providers/drupito.yaml
 - Git .ddev/providers/git.yaml.example
 - Lagoon .ddev/providers/lagoon.yaml
 - Local files .ddev/providers/localfile.yaml.example (like Dropbox, for example)
