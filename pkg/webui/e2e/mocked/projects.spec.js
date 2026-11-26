@@ -12,6 +12,8 @@ test('lists projects and selects the first', async ({ page }) => {
   await expect(items.nth(0)).toHaveClass(/selected/);
   await expect(page.locator('.detail-head h1')).toContainText('d11');
   await expect(page.locator('#status-text')).toHaveText('All services running');
+  await expect(page.getByRole('img', { name: 'DDEV' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'experimental' })).toHaveAttribute('href', 'https://docs.ddev.com/en/stable/users/usage/gui/');
 });
 
 test('filters by name, type and status', async ({ page }) => {
@@ -26,6 +28,20 @@ test('filters by name, type and status', async ({ page }) => {
   await expect(items).toContainText('d11');
   await page.locator('#filter').fill('nothing-matches');
   await expect(items).toHaveCount(0);
+  // As in `ddev tui`, the letters may be apart, and the matched ones stand out.
+  await page.locator('#filter').fill('wrdprs');
+  await expect(items).toHaveCount(1);
+  await expect(items).toContainText('wp');
+  await page.locator('#filter').fill('wp');
+  await expect(items.locator('.name mark')).toHaveText(['w', 'p']);
+  // Letters spread over the name, type and status match nothing: d of d11,
+  // r of drupal11, n of running.
+  await page.locator('#filter').fill('drn');
+  await expect(items).toHaveCount(0);
+  // A typo still finds the project.
+  await page.locator('#filter').fill('d111');
+  await expect(items).toHaveCount(1);
+  await expect(items).toContainText('d11');
 });
 
 test('shows a running project', async ({ page }) => {

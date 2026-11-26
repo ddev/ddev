@@ -93,7 +93,8 @@ func serveGUI(port int, noOpen bool, desktop bool, project string) {
 		util.Failed("Unable to start the DDEV web UI: %v", err)
 	}
 	if desktop {
-		srv.SetDesktop()
+		// The app passes its version, which the About dialog shows.
+		srv.SetDesktop(os.Getenv("DDEV_GUI_APP_VERSION"))
 		srv.StopWithStdin()
 	}
 	unregister := interrupt.OnInterrupt(func(ctx context.Context) {

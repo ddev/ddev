@@ -15,6 +15,12 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/cs
 
 class MockBackend {
   constructor() {
+    // holdStatus keeps a new page waiting for its first status, which a test
+    // then sends with pushStatus.
+    this.holdStatus = false;
+    // newsGate, when set, is a promise the blog posts wait for.
+    this.newsGate = null;
+    this.newsRequests = 0;
     this.projects = [];
     this.details = {};
     this.router = 'healthy';
@@ -29,14 +35,20 @@ class MockBackend {
     this.registry = [
       { repo: 'ddev/ddev-redis', title: 'ddev-redis', description: 'Redis', type: 'official' },
       { repo: 'ddev/ddev-solr', title: 'ddev-solr', description: 'Solr', type: 'official' },
+      // It holds the letters of "rediss" in order, which once hid ddev-redis.
+      { repo: 'ddev/ddev-redis-insight', title: 'ddev-redis-insight', description: 'Redis Insight', type: 'official' },
     ];
     this.projectTypes = ['drupal11', 'laravel', 'php', 'wordpress'];
     this.messages = {
       tips: [{ message: 'Use `ddev describe` to see a summary. https://docs.ddev.com/' }, { message: 'Try *ddev share*.' }],
       infos: [],
       warnings: [{ message: 'Upgrade Docker soon.' }],
+      sponsorship: {
+        message: "Thanks for your ongoing support! We're up to 86.4% of our $12,000/month goal ($10,368). Join all the wonderful sponsors at https://ddev.com/sponsor",
+        monthly: 10368, goal: 12000, percent: 86.4,
+      },
     };
-    this.news = [{ title: 'DDEV v1.25.6 is out', link: 'https://ddev.com/blog/release-v1-25-6', date: '2026-11-20', category: 'Announcements' }];
+    this.news = [{ title: 'DDEV v1.25.6 is out', link: 'https://ddev.com/blog/release-v1-25-6', date: '2026-11-20', category: 'Announcements', description: 'PHP 8.6.0 and security fixes.' }];
     this.shared = [
       { name: 'ddev-router', label: 'Router', status: 'healthy', image: 'ddev/ddev-traefik-router:v1', dashboard: 'http://127.0.0.1:10999', docs: 'users/extend/traefik-router/' },
       { name: 'ddev-ssh-agent', label: 'SSH agent', status: 'stopped', docs: 'users/usage/commands/#auth-ssh' },
@@ -77,6 +89,11 @@ class MockBackend {
   pushStatus() {
     const status = { projects: this.projects, router: this.router, ssh_agent: this.sshAgent, jobs: this.jobs.map(summary), error: this.error || undefined, desktop: this.desktop || undefined };
     for (const res of this.statusClients) send(res, 'status', status);
+  }
+
+  // show asks the page to show a target, as the GUI app's tray does.
+  show(target) {
+    for (const res of this.statusClients) send(res, 'show', target);
   }
 
   addJob(title, project) {
@@ -132,7 +149,7 @@ class MockBackend {
       sse(res);
       this.statusClients.add(res);
       req.on('close', () => this.statusClients.delete(res));
-      this.pushStatus();
+      if (!this.holdStatus) this.pushStatus();
     } else if ((m = p.match(/^\/api\/jobs\/(\d+)$/))) {
       const job = this.jobs.find((j) => j.id === Number(m[1]));
       if (!job) return text(res, 404, 'not found');
@@ -164,9 +181,13 @@ class MockBackend {
       this.logClients.add(res);
       req.on('close', () => this.logClients.delete(res));
     } else if (p === '/api/news') {
+      this.newsRequests++;
+      if (this.newsGate) await this.newsGate;
       json(res, 200, { posts: this.news });
     } else if (p === '/api/messages') {
       json(res, 200, this.messages);
+    } else if (p === '/api/version') {
+      json(res, 200, { app: this.desktop ? 'v1.0.0' : undefined, binary: '/usr/local/bin/ddev', version: { 'DDEV version': 'v1.25.6', docker: '28.0.1', os: 'linux' } });
     } else if (p === '/api/addons/registry') {
       json(res, 200, this.registry);
     } else {

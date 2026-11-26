@@ -1,6 +1,7 @@
 package webui
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,11 +24,48 @@ func TestOpenURLOnlyDesktop(t *testing.T) {
 	require.Equal(t, http.StatusMethodNotAllowed, rec.Code, "a browser opens links itself, so no POST route exists")
 
 	d := newTestServer(t)
-	d.SetDesktop()
+	d.SetDesktop("v1.2.3")
 	for _, u := range []string{"", "file:///etc/passwd", "javascript:alert(1)", "vscode://file/tmp", "https://"} {
 		rec = postForm(d, "/api/open-url", url.Values{"url": {u}})
 		require.Equal(t, http.StatusBadRequest, rec.Code, u)
 	}
+}
+
+// TestShow checks the route the GUI app's tray uses to show About DDEV or
+// a project in the window.
+func TestShow(t *testing.T) {
+	s := newTestServer(t)
+	rec := postForm(s, "/api/show", url.Values{"target": {"about"}})
+	require.Equal(t, http.StatusMethodNotAllowed, rec.Code, "a browser has no tray")
+
+	d := newTestServer(t)
+	d.SetDesktop("v1.2.3")
+	shown := d.showCh()
+	rec = postForm(d, "/api/show", url.Values{"target": {"project=d11"}})
+	require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+	select {
+	case <-shown:
+	default:
+		t.Fatal("the status streams were not woken")
+	}
+	require.Equal(t, "project=d11", d.shownTarget())
+	rec = postForm(d, "/api/show", url.Values{"target": {"javascript:alert(1)"}})
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+// TestVersion checks what the About dialog reads.
+func TestVersion(t *testing.T) {
+	d := newTestServer(t)
+	d.SetDesktop("v1.2.3")
+	rec := request(d, "GET", "/api/version", func(r *http.Request) {
+		r.Header.Set("Authorization", "Bearer "+d.token)
+	})
+	require.Equal(t, http.StatusOK, rec.Code)
+	var got about
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &got))
+	require.Equal(t, "v1.2.3", got.App)
+	require.Equal(t, d.ddevBinary, got.Binary)
+	require.Equal(t, versionconstants.DdevVersion, got.Version["DDEV version"])
 }
 
 // TestIsUp checks which projects the tray and the page offer Stop for.

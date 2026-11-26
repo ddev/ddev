@@ -35,14 +35,15 @@ import (
 //go:embed icons/appicon.png
 var appIcon []byte
 
+// appIconWindows is the mark without the macOS tile, at each size that
+// Windows shows, since Windows shrinks a PNG without smoothing. GTK 4
+// takes the window icon from the desktop file instead.
+//
+//go:embed icons/appicon.ico
+var appIconWindows []byte
+
 //go:embed icons/tray.png
 var trayIcon []byte
-
-// trayIconLight is for a dark Windows taskbar, which does not recolor
-// macOS-style template icons.
-//
-//go:embed icons/tray-light.png
-var trayIconLight []byte
 
 //go:embed icons/tray-color.png
 var trayIconColor []byte
@@ -144,8 +145,31 @@ func main() {
 	}
 
 	showWindow := func() {
+		if window.IsMinimised() {
+			window.UnMinimise()
+		}
 		window.Show()
 		window.Focus()
+	}
+	// lostFocus is when the window last lost the focus, and clickShown when
+	// a tray click last showed it, both in Unix nanoseconds.
+	var lostFocus, clickShown atomic.Int64
+	// toggleWindow hides the window when it is in front, and else shows it.
+	// Where the system can't say, the focus stands in: a click on the tray
+	// may take it, and on Wayland a window a click showed may get none.
+	toggleWindow := func() {
+		front, known := inFront(window)
+		if !known {
+			lost := lostFocus.Load()
+			front = window.IsFocused() || time.Since(time.Unix(0, lost)) < 500*time.Millisecond || clickShown.Load() > lost
+		}
+		if window.IsVisible() && !window.IsMinimised() && front {
+			clickShown.Store(0)
+			window.Hide()
+			return
+		}
+		clickShown.Store(time.Now().UnixNano())
+		showWindow()
 	}
 	// reveal shows the window with a project selected.
 	var reveal func(name string)
@@ -171,11 +195,15 @@ func main() {
 
 	// quitter asks before a quit would kill running jobs.
 	q := &quitter{srv: srv}
+	icon := appIcon
+	if runtime.GOOS == "windows" {
+		icon = appIconWindows
+	}
 	app := application.New(application.Options{
 		Name:        "DDEV",
 		Description: "Experimental DDEV GUI app " + version,
 		LogLevel:    logLevel,
-		Icon:        appIcon,
+		Icon:        icon,
 		Assets: application.AssetOptions{
 			Handler:        handler,
 			DisableLogging: true,
@@ -209,6 +237,9 @@ func main() {
 		URL:       windowURL,
 	})
 	q.window = window
+	window.OnWindowEvent(events.Common.WindowLostFocus, func(*application.WindowEvent) {
+		lostFocus.Store(time.Now().UnixNano())
+	})
 	// Closing the window keeps the app in the tray, as Docker Desktop does.
 	window.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		window.Hide()
@@ -249,15 +280,12 @@ func main() {
 	})
 
 	tray := app.SystemTray.New()
+	icons := newTrayIcons(tray, runtime.GOOS)
 	if runtime.GOOS == "linux" {
-		// Wails gives a Linux tray only the first icon, not the dark one.
-		tray.SetIcon(trayIconColor)
 		// Without a label, Wails names the item "Wails". The hover text shows
 		// the label, so a tooltip would repeat it. macOS shows a label as text.
 		tray.SetLabel("DDEV")
 	} else {
-		tray.SetTemplateIcon(trayIcon)
-		tray.SetDarkModeIcon(trayIconLight)
 		tray.SetTooltip("DDEV")
 	}
 	// pageURL is the dashboard page once loaded, without the launch token.
@@ -265,24 +293,38 @@ func main() {
 	if u, err := url.Parse(windowURL); err == nil && u.Host != "" {
 		pageURL = u.Scheme + "://" + u.Host + "/"
 	}
-	reveal = func(name string) {
-		// The page selects the project that its location's hash names.
-		// A change to the hash alone does not reload the page. ExecJS would
-		// wait for the Wails runtime, which the page does not load.
-		window.SetURL(pageURL + "#project=" + url.QueryEscape(name))
+	// navigate shows the window and target, such as "about", which ddev gui
+	// passes to the page: a new URL leaves WebView2 black on the next show.
+	// A ddev without that route falls back to the URL's hash.
+	navigate := func(target string) {
 		showWindow()
+		if srv != nil && srv.Post("/api/show?target="+url.QueryEscape(target)) == nil {
+			return
+		}
+		window.SetURL(pageURL + "#" + target)
 	}
-	t := &trayMenu{app: app, tray: tray, window: window, srv: srv, startErr: startErr, show: showWindow, reveal: reveal}
+	reveal = func(name string) { navigate("project=" + url.QueryEscape(name)) }
+	showAbout := func() { navigate("about") }
+	if runtime.GOOS == "darwin" && srv != nil {
+		// The app menu's About shows the page's, with the versions of both.
+		menu := application.DefaultApplicationMenu()
+		if about := menu.FindByRole(application.About); about != nil {
+			about.OnClick(func(*application.Context) { showAbout() })
+		}
+		app.Menu.Set(menu)
+	}
+	t := &trayMenu{app: app, tray: tray, icons: icons, window: window, srv: srv, startErr: startErr, show: showWindow, reveal: reveal, about: showAbout}
 	// Wails opens the menu on a right-click only if the tray has a menu when
 	// the app starts, and follow's first menu arrives later.
 	firstErr := "Connecting to ddev gui…"
 	if startErr != nil {
 		firstErr = startErr.Error()
 	}
-	tray.SetMenu(t.build(nil, firstErr, ""))
-	if runtime.GOOS == "windows" {
-		// As other Windows tray apps do, a click shows the window.
-		tray.OnClick(showWindow)
+	tray.SetMenu(t.build(nil, firstErr))
+	if runtime.GOOS != "darwin" {
+		// As other Windows and Linux tray apps do, a click shows or hides the
+		// window. A macOS menu bar extra opens its menu.
+		tray.OnClick(toggleWindow)
 	}
 	go t.follow()
 
@@ -393,11 +435,13 @@ type trayMenu struct {
 	srv      *serveClient
 	startErr error
 	show     func()
-	// reveal shows the window with a project selected.
-	reveal  func(name string)
-	last    []project
-	err     string
-	version string
+	icons    *trayIcons
+	// reveal shows the window with a project selected, and about with
+	// About DDEV.
+	reveal func(name string)
+	about  func()
+	last   []project
+	err    string
 }
 
 func (t *trayMenu) follow() {
@@ -407,11 +451,9 @@ func (t *trayMenu) follow() {
 		var changed <-chan struct{}
 		var projects []project
 		var err error
-		ver := ""
 		if t.srv != nil {
 			changed = t.srv.Changed()
 			projects, err = t.srv.Projects()
-			ver = t.srv.Version()
 		} else {
 			err = t.startErr
 		}
@@ -419,11 +461,16 @@ func (t *trayMenu) follow() {
 		if err != nil {
 			errText = err.Error()
 		}
-		if first || errText != t.err || ver != t.version || !slices.Equal(projects, t.last) {
-			first, t.last, t.err, t.version = false, projects, errText, ver
-			menu := t.build(projects, errText, ver)
+		if first || errText != t.err || !slices.Equal(projects, t.last) {
+			first, t.last, t.err = false, projects, errText
+			menu := t.build(projects, errText)
 			application.InvokeAsync(func() { t.tray.SetMenu(menu) })
 		}
+		running := 0
+		if t.srv != nil {
+			running = len(t.srv.RunningJobs())
+		}
+		t.icons.set(stateOf(projects, running))
 		select {
 		case <-changed:
 		case <-time.After(5 * time.Second):
@@ -431,7 +478,7 @@ func (t *trayMenu) follow() {
 	}
 }
 
-func (t *trayMenu) build(projects []project, errText, ver string) *application.Menu {
+func (t *trayMenu) build(projects []project, errText string) *application.Menu {
 	m := t.app.NewMenu()
 	m.Add("Open DDEV").OnClick(func(*application.Context) { t.show() })
 	m.AddSeparator()
@@ -472,13 +519,7 @@ func (t *trayMenu) build(projects []project, errText, ver string) *application.M
 	m.Add("Power off").OnClick(t.confirm("Power off DDEV?", "This stops all projects and DDEV’s shared containers.", "Power off", t.global("poweroff")))
 	m.AddSeparator()
 	if t.srv != nil {
-		// The version and the path to ddev would make the whole menu as wide
-		// as themselves.
-		about := m.AddSubmenu("About DDEV")
-		if ver != "" {
-			about.Add("DDEV " + ver).SetEnabled(false)
-		}
-		about.Add(trayText(t.srv.target.String())).SetEnabled(false)
+		m.Add("About DDEV").OnClick(func(*application.Context) { t.about() })
 	}
 	m.Add("Quit DDEV app").OnClick(func(*application.Context) { t.app.Quit() })
 	return m

@@ -455,8 +455,9 @@ nfpms:
     dst: /usr/share/applications/com.ddev.gui.desktop
     file_info:
       mode: 0644
-  - src: gui/icons/appicon.png
-    dst: /usr/share/pixmaps/com.ddev.gui.png
+  # The mark without the macOS tile, which desktops draw sharp at any size.
+  - src: pkg/webui/assets/favicon.svg
+    dst: /usr/share/icons/hicolor/scalable/apps/com.ddev.gui.svg
     file_info:
       mode: 0644
   # The first release with `ddev gui --desktop`; GoReleaser cannot template

@@ -25,6 +25,13 @@ var (
 	procGetMenuItemCount   = user32.NewProc("GetMenuItemCount")
 	procGetMenuStringW     = user32.NewProc("GetMenuStringW")
 	procGetMenuItemID      = user32.NewProc("GetMenuItemID")
+	procGetTopWindow       = user32.NewProc("GetTopWindow")
+	procGetSystemMetrics   = user32.NewProc("GetSystemMetrics")
+	procGetWindow          = user32.NewProc("GetWindow")
+	procGetWindowLongPtrW  = user32.NewProc("GetWindowLongPtrW")
+	procIsIconic           = user32.NewProc("IsIconic")
+	procGetWindowRect      = user32.NewProc("GetWindowRect")
+	procDwmGetWindowAttr   = syscall.NewLazyDLL("dwmapi.dll").NewProc("DwmGetWindowAttribute")
 	enumMenuCallback       = syscall.NewCallback(enumMenuWindow)
 )
 
@@ -45,7 +52,54 @@ const (
 	menuClassName  = "#32768"
 	trayClassName  = "WailsWebviewWindow"
 	trayWaitPeriod = 10 * time.Second
+	gwHwndNext     = 2
+	gwlExStyle     = ^uintptr(19) // GWL_EXSTYLE, -20
+	wsExTopmost    = 0x8
+	wsExToolWindow = 0x80
+	dwmwaCloaked   = 14
+	smCxSmIcon     = 49
 )
+
+// traySize is the size, in pixels, of an icon in the notification area.
+func traySize() int {
+	n, _, _ := procGetSystemMetrics.Call(smCxSmIcon)
+	return int(n)
+}
+
+// inFront is whether the window is the top one on screen. Always-on-top
+// windows don't count, so neither do the taskbar and its overflow flyout,
+// which take the focus before a click on the tray icon arrives.
+func inFront(window *application.WebviewWindow) (front, known bool) {
+	own := uintptr(window.NativeWindow())
+	w, _, _ := procGetTopWindow.Call(0)
+	for ; w != 0; w, _, _ = procGetWindow.Call(w, gwHwndNext) {
+		if w == own {
+			return true, true
+		}
+		if visible, _, _ := procIsWindowVisible.Call(w); visible == 0 {
+			continue
+		}
+		if iconic, _, _ := procIsIconic.Call(w); iconic != 0 {
+			continue
+		}
+		ex, _, _ := procGetWindowLongPtrW.Call(w, gwlExStyle)
+		if ex&(wsExTopmost|wsExToolWindow) != 0 {
+			continue
+		}
+		// Windows keeps some windows of Store apps visible but cloaked.
+		var cloaked uint32
+		if r, _, _ := procDwmGetWindowAttr.Call(w, dwmwaCloaked, uintptr(unsafe.Pointer(&cloaked)), 4); r == 0 && cloaked != 0 {
+			continue
+		}
+		var rect struct{ left, top, right, bottom int32 }
+		_, _, _ = procGetWindowRect.Call(w, uintptr(unsafe.Pointer(&rect)))
+		if rect.right <= rect.left || rect.bottom <= rect.top {
+			continue
+		}
+		return false, true
+	}
+	return false, true
+}
 
 // waitForTrayWindow returns once Wails has created the tray's window. A
 // SetMenu that runs earlier builds the popup menu with no owner window, and

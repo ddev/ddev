@@ -48,7 +48,9 @@ Run `ddev gui` in a terminal, or start the app as you start any other: from the 
 DDEV_GUI_APP=~/Downloads/DDEV.app ddev gui
 ```
 
-Closing the window keeps the app running in the tray. To show the window again, choose **Open DDEV** in the tray menu, or on Windows click the tray icon. Launching the app again, or running `ddev gui`, also shows its window.
+Closing the window keeps the app running in the tray. To show the window again, choose **Open DDEV** in the tray menu, or on Windows and Linux click the tray icon, which also hides the window again. Launching the app again, or running `ddev gui`, also shows its window.
+
+A dot on the tray icon shows what DDEV is doing: yellow while an action runs or a project starts, green while a project runs, and none when all projects are stopped. On macOS the dot is next to the icon in the menu bar.
 
 To quit, choose **Quit DDEV app** in the tray menu. If an action such as a project start is still running, the app asks first, since quitting stops that action.
 
@@ -68,7 +70,7 @@ When an action ends while the window is in the background, the app shows a notif
 
 === "Windows"
 
-    The tray icon is in the notification area of the taskbar, possibly under the **^** overflow. Click it to show the window, or right-click it for the menu. From PowerShell:
+    The tray icon is in the notification area of the taskbar, possibly under the **^** overflow. Click it to show or hide the window, or right-click it for the menu. From PowerShell:
 
     ```powershell
     & "$env:LOCALAPPDATA\Programs\DDEV\ddev-gui.exe"
@@ -94,15 +96,15 @@ When an action ends while the window is in the background, the app shows a notif
 
 ## Using the Window
 
-The window opens on a start page with DDEV's tip of the day, the latest posts of the [DDEV blog](https://ddev.com/blog/), and links to these docs, unless `ddev gui` selected a project. The app reads the blog's feed from ddev.com, and leaves the posts out when it can't reach it. **Start page** at the top of the project list returns to it. Important notices from DDEV show under the top bar until you dismiss them.
+The window opens on a start page, unless `ddev gui` selected a project. It names the running projects, and shows DDEV's tip of the day, the latest posts of the [DDEV blog](https://ddev.com/blog/), how close DDEV's [sponsors](https://ddev.com/sponsor) are to the monthly goal, and links to these docs. The app reads the blog's feed from ddev.com, and leaves the posts out when it can't reach it. **Start page** at the top of the project list returns to it. Important notices from DDEV, the ones `ddev start` shows, appear under the top bar on every page. A notice you dismiss comes back after 20 hours, and new notices appear within an hour while the app is open.
 
-Above a project's tabs, **Open site**, **Mailpit**, and **Open folder** open what they name. The editor button opens the project in VS Code, and its arrow switches it to PhpStorm, which the button then remembers. The **⋯** button holds the rarer actions: snapshots, updating add-ons, and **Delete**. Right-click a project in the list for a menu with the same actions. A **?** next to a heading links to the docs about it, and the project type links to its [quickstart](../quickstart.md).
+Above a project's tabs, **Open site**, **Mailpit**, and **Open folder** open what they name. The editor button opens the project in VS Code, and its arrow switches it to PhpStorm, which the button then remembers. The **⋯** button holds the rarer actions: snapshots, updating add-ons, and **Delete**. In the project list, a project shows buttons to open its site and stop it, or to start it, when you point at it. Right-click it for a menu with the same actions as above. A **?** next to a heading links to the docs about it, and the project type links to its [quickstart](../quickstart.md).
 
 To start or stop several projects at once, Ctrl+click or Shift+click them in the list, or tick the box that shows when you point at one. The page then offers **Start**, **Stop**, and **Restart** for all of them. **Start all**, **Stop all**, and **Power off** at the top act on every project.
 
-The arrow keys move between the start page, the shared services, and the projects in the list, and `/` goes to the filter.
+The arrow keys move between the start page, the shared services, and the projects in the list, and `/` goes to the filter. The filter, like the add-on name on the **Add-ons** tab, matches letters in order, as `ddev tui` does, so `dr11` finds `drupal11`, and it allows for a typo, so `rediss` finds `ddev/ddev-redis`.
 
-**Shared services**, or a click on the status at the top, shows the router and the SSH agent that all projects share: their health, the router's configuration problems, a link to the Traefik dashboard, and their logs.
+**Shared services**, or a click on the status at the top, shows the router and the SSH agent that all projects share: their health, the router's configuration problems, a link to the Traefik dashboard, the `docker exec` command that opens a shell in each, and their logs.
 
 The **Activity** panel at the bottom shows what each action prints, as it prints it. Click its bar to open or close it. The × next to a finished action removes it from the list, and **Clear history** removes every finished action. A running action stays until it ends.
 
@@ -131,7 +133,7 @@ Run `wsl --list` to see your distros' names.
 
 ## Which `ddev` the App Uses
 
-**About DDEV** in the tray menu shows the DDEV version and the `ddev` the app runs. When `ddev gui` starts the app outside WSL2, the app runs that same `ddev`. Otherwise, outside WSL2, the app looks for `ddev` in this order:
+**About DDEV**, in the tray menu or the **⋯** menu at the top of the window, shows the versions of the app and of DDEV, the `ddev` the app runs, and the output of `ddev version`, which you can copy for a bug report. When `ddev gui` starts the app outside WSL2, the app runs that same `ddev`. Otherwise, outside WSL2, the app looks for `ddev` in this order:
 
 1. The `DDEV_BINARY` environment variable, when it is set.
 2. On Windows, the `ddev.exe` next to the app, or `ddev` in WSL2, as described in [Using DDEV in WSL2](#using-ddev-in-wsl2).

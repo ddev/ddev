@@ -8,16 +8,19 @@ app shows that web UI in a native window, and adds what a browser tab cannot:
 - A tray menu, also called a menu bar extra on macOS. It lists each project
   with its status, starts, stops, or restarts it, and opens its site. It also
   has Start all, Stop all, and Power off; the last two ask first, as the
-  page does. Its About DDEV submenu names the DDEV version and the `ddev`
-  it runs.
+  page does. Its About DDEV shows the versions of the app and of `ddev`,
+  the `ddev` it runs, and `ddev version`, as the page's own About does.
+- A dot on the tray icon: yellow while an action runs or a project starts,
+  green while a project runs, and none when all are stopped. macOS draws a
+  menu bar icon in one color, so there the dot is beside the icon.
 - A question before quitting while an action runs, since quitting stops the
   action and could leave a project half started. Ctrl+C or SIGTERM quits
   without asking.
 - A Dock or taskbar icon. Closing the window keeps the app in the tray.
   Launching the app again shows the window, which is the way back on a
   desktop without a tray, such as GNOME without the AppIndicator extension.
-  On Windows, a click on the tray icon shows the window, and a right-click
-  opens the menu. A white icon replaces the black one on a dark taskbar.
+  On Windows and Linux, a click on the tray icon shows or hides the window,
+  and a right-click opens the menu. On macOS, a click opens the menu.
 - A native notification when an action ends while the window is in the
   background. Notifications need the app bundle on macOS and a session bus on
   Linux; without them the app runs without notifications.
@@ -157,15 +160,37 @@ window's page, which Edge's DevTools can then inspect.
 The icons use DDEV's brand mark from
 `docs/content/developers/logos/SVG/Logo.svg`. After a change to
 `icons/appicon.svg`, `icons/tray.svg`, or `pkg/webui/assets/favicon.svg`,
-render the PNGs again:
+render the PNGs and the ICO again:
 
 ```bash
 cd gui/icons
 rsvg-convert -w 1024 -h 1024 appicon.svg -o appicon.png
 rsvg-convert -w 44 -h 44 tray.svg -o tray.png
-sed 's/fill="#000"/fill="#fff"/' tray.svg | rsvg-convert -w 44 -h 44 -o tray-light.png
 rsvg-convert -w 64 -h 64 ../../pkg/webui/assets/favicon.svg -o tray-color.png
+mkdir -p "$HOME"/tmp/ico
+for s in 16 20 24 32 40 48 64 256; do
+  rsvg-convert -w $s -h $s ../../pkg/webui/assets/favicon.svg -o "$HOME"/tmp/ico/$s.png
+done
+# Below 32 pixels the mark's lines fade, so they get more opaque.
+for s in 16 20 24; do
+  magick "$HOME"/tmp/ico/$s.png -channel A -fx "min(1,u*32/$s)" +channel PNG32:"$HOME"/tmp/ico/$s.png
+done
+# ImageMagick stores an ICO's images uncompressed; this stores the PNGs.
+python3 - "$HOME"/tmp/ico/{16,20,24,32,40,48,64,256}.png <<'PY'
+import struct, sys
+datas = [open(p, "rb").read() for p in sys.argv[1:]]
+offset, entries = 6 + 16 * len(datas), b""
+for d in datas:
+    w, h = struct.unpack(">II", d[16:24])
+    entries += struct.pack("<BBBBHHII", w % 256, h % 256, 0, 0, 1, 32, len(d), offset)
+    offset += len(d)
+open("appicon.ico", "wb").write(struct.pack("<HHH", 0, 1, len(datas)) + entries + b"".join(datas))
+PY
 ```
+
+`appicon.png` has the macOS tile. Windows uses `appicon.ico` and Linux
+packages install `favicon.svg`, both the mark alone, as icons there have no
+tile.
 
 ## Tests
 

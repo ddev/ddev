@@ -5,6 +5,9 @@
 
 const state = {
   projects: [],
+  // loaded is whether the first status came, before which no projects does
+  // not mean there are none.
+  loaded: false,
   jobs: [],
   router: '',
   selected: '',
@@ -126,6 +129,7 @@ function link(url, text) {
 }
 
 const DOCS = 'https://docs.ddev.com/en/stable/';
+const SPONSOR = 'https://ddev.com/sponsor';
 
 function docLink(page, label = 'Docs', title) {
   return h('a', { class: 'doc-link', href: DOCS + page, target: '_blank', rel: 'noopener noreferrer', title: title || 'Read more on docs.ddev.com' }, label, icon('ext', 'ext'));
@@ -172,8 +176,10 @@ function connectEvents() {
   const es = new EventSource('/api/events');
   es.addEventListener('open', () => { state.conn = 'ok'; renderStatus(); });
   es.addEventListener('error', () => { state.conn = 'lost'; renderStatus(); });
+  es.addEventListener('show', (ev) => showTarget(JSON.parse(ev.data)));
   es.addEventListener('status', (ev) => {
     const st = JSON.parse(ev.data);
+    state.loaded = true;
     state.projects = st.projects || [];
     state.jobs = st.jobs || [];
     state.router = st.router || '';
@@ -281,7 +287,7 @@ function pick(name, { range = false, fresh = false } = {}) {
     const names = shownProjects().map((p) => p.name);
     const [a, b] = [names.indexOf(state.pickFrom), names.indexOf(name)].sort((x, y) => x - y);
     if (a >= 0) picked = [...new Set([...picked, ...names.slice(a, b + 1)])];
-  } else if (state.view === 'multi' || name !== shown) {
+  } else if (state.view === 'multi' || fresh || name !== shown) {
     picked = picked.includes(name) ? picked.filter((n) => n !== name) : [...picked, name];
     state.pickFrom = name;
   }
@@ -315,11 +321,16 @@ function renderChips() {
   }, label + ' ', h('span', { class: 'chip-count' }, String(n)))));
 }
 
+// filteredProjects are the listed projects, best match first, each with the
+// indexes of the letters of its name that the filter matched.
+function filteredProjects() {
+  const listed = state.projects.filter((p) => state.show === 'all' || (state.show === 'up') === isUp(p.status));
+  return fuzzyFilter(state.filter, listed, (p) => p.name,
+    { fields: (p) => [p.type, p.status, (p.approot || '').split(/[\\/]/).pop()] });
+}
+
 function shownProjects() {
-  const f = state.filter.toLowerCase();
-  return state.projects.filter((p) =>
-    (state.show === 'all' || (state.show === 'up') === isUp(p.status)) &&
-    (!f || p.name.toLowerCase().includes(f) || p.type.toLowerCase().includes(f) || p.status.toLowerCase().includes(f)));
+  return filteredProjects().map((m) => m.item);
 }
 
 // selectShown keeps the detail on a listed project after the user narrows
@@ -334,12 +345,12 @@ function selectShown() {
 function renderProjects() {
   renderChips();
   const list = $('project-list');
-  const shown = shownProjects();
+  const shown = filteredProjects();
   const focused = list.contains(document.activeElement);
   const picking = state.view === 'multi';
   list.classList.toggle('picking', picking);
   list.setAttribute('aria-multiselectable', String(picking));
-  list.replaceChildren(...shown.map((p, i) => {
+  list.replaceChildren(...shown.map(({ item: p, idx }, i) => {
     const busy = runningJobFor(p.name);
     const selected = picking ? state.picked.includes(p.name) : p.name === state.selected && state.view === 'project';
     return h('li', {
@@ -350,6 +361,9 @@ function renderProjects() {
       tabindex: selected || (i === 0 && state.view !== 'project') ? '0' : '-1',
       'data-name': p.name,
       onclick: (e) => {
+        // The row's buttons act on their own; the page still sees their
+        // clicks, which opens links in the GUI app.
+        if (e.target.closest('.row-actions')) return;
         if (e.ctrlKey || e.metaKey || e.shiftKey) {
           e.preventDefault();
           pick(p.name, { range: e.shiftKey });
@@ -366,8 +380,8 @@ function renderProjects() {
     },
     h('input', { type: 'checkbox', class: 'pick', tabindex: '-1', checked: picking && selected, 'aria-label': `Select ${p.name}` }),
       h('span', { class: 'dot ' + (busy ? 'busy' : statusClass(p.status)) })),
-    h('span', { class: 'name' }, p.name),
-    h('span', { class: 'type' }, p.type),
+    h('span', { class: 'name' }, highlight(p.name, idx)),
+    h('span', { class: 'end' }, h('span', { class: 'type' }, p.type), rowActions(p, busy)),
     h('span', { class: 'sub' }, busy ? busy.title + '…' : (p.url || p.status)));
   }));
   // A rebuilt list keeps the keyboard focus on its selected item.
@@ -408,7 +422,8 @@ function renderDetail() {
   const root = $('detail');
   const p = selectedProject();
   const running = state.jobs.filter((j) => !j.done).map((j) => [j.id, j.project]);
-  const key = JSON.stringify(state.view === 'home' ? ['home', state.messages, state.news, state.tipIndex, state.projects.map((x) => x.status), state.error]
+  if (state.view === 'home' && !newsRequested) loadNews();
+  const key = JSON.stringify(state.view === 'home' ? ['home', state.loaded, state.messages, state.news, state.tipIndex, state.projects.map((x) => [x.name, x.status, x.type, x.url]), state.error, running]
       : state.view === 'shared' ? ['shared', state.shared, state.sharedLog]
         : state.view === 'multi' ? ['multi', state.picked, state.projects, running]
           : [p, state.tab, state.detail, state.xdebugWanted, running]);
@@ -653,8 +668,8 @@ function servicesTab(p, d) {
       const url = s.https_url || s.http_url || s.host_https_url || s.host_http_url;
       const ports = (s.host_ports_mapping || []).map((m) => `${m.exposed_port}→${m.host_port}`).join(', ') || s.exposed_ports || '';
       return h('tr', {},
-        h('td', {}, h('strong', {}, name), s['describe-info'] ? h('div', { class: 'muted' }, s['describe-info']) : null),
-        h('td', {}, h('span', { class: 'dot ' + statusClass(s.status) }), ' ', s.status),
+        h('td', { class: 'lines' }, h('strong', {}, name), s['describe-info'] ? h('div', { class: 'muted' }, s['describe-info']) : null),
+        h('td', {}, h('span', { class: 'dot before ' + statusClass(s.status) }), s.status),
         h('td', {}, url && s.status === 'running' ? link(url) : ''),
         h('td', {}, ports),
         h('td', { class: 'muted' }, s.image || ''));
@@ -686,21 +701,27 @@ function databaseTab(p, d) {
 function addonsTab(p, d) {
   const busy = !!runningJobFor(p.name);
   const act = (a, params) => runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/' + a, params);
-  const input = h('input', { type: 'text', placeholder: 'ddev/ddev-redis', 'aria-label': 'Add-on repository', autocomplete: 'off', role: 'combobox', 'aria-autocomplete': 'list' });
+  const input = h('input', { type: 'text', placeholder: 'Search add-ons or type owner/repo', 'aria-label': 'Add-on repository', autocomplete: 'off', role: 'combobox', 'aria-autocomplete': 'list' });
   // WebKitGTK draws a <datalist> in the GTK theme, so the page draws the
   // suggestions, as it does for dropdowns.
+  // chosen is the add-on just picked from the list, which stays closed
+  // until the text changes.
+  let chosen = '';
   const suggest = async () => {
-    const q = input.value.trim().toLowerCase();
-    const addons = (await loadRegistry()).filter((a) => !q || a.repo.toLowerCase().includes(q) || (a.title || '').toLowerCase().includes(q));
+    if (chosen && input.value === chosen) return;
+    chosen = '';
+    const addons = fuzzyFilter(input.value, await loadRegistry(), (a) => a.repo.split('/').pop(), { label: (a) => a.repo, fields: (a) => [a.repo] });
     if (document.activeElement !== input) return;
     if (!addons.length) { if (menuAnchor === input) menuClose(); return; }
-    openMenu(input, addons.map((a) => ({
-      label: a.repo,
-      run: () => { input.value = a.repo; input.focus(); },
+    openMenu(input, addons.map(({ item: a, idx }) => ({
+      label: highlight(a.repo, idx),
+      title: a.description || a.title,
+      run: () => { chosen = input.value = a.repo; input.focus(); },
     })), { keepFocus: true });
   };
   input.addEventListener('input', suggest);
   input.addEventListener('focus', suggest);
+  input.addEventListener('click', () => { if (menuAnchor !== input) { chosen = ''; suggest(); } });
   return h('div', {},
     h('form', {
       class: 'row',
@@ -777,7 +798,7 @@ function logsTab(p) {
   const view = h('div', {},
     h('div', { class: 'row' }, 'Service', select,
       h('button', { class: 'btn', onclick: () => startLogs(p, out) }, 'Reconnect'),
-      h('button', { class: 'btn', onclick: () => { out.textContent = ''; } }, 'Clear'),
+      h('button', { class: 'btn', onclick: () => clearOutput(out) }, 'Clear'),
       helpLink('users/usage/commands/#logs', 'ddev logs')),
     out);
   startLogs(p, out);
@@ -786,7 +807,7 @@ function logsTab(p) {
 
 function startLogs(p, out) {
   stopLogs();
-  out.textContent = '';
+  clearOutput(out);
   if (p.status !== 'running') {
     out.textContent = 'The project is not running.';
     return;
@@ -807,18 +828,103 @@ function stopLogs() {
   state.logSource = null;
 }
 
-// appendOutput adds lines, following the end only if the view was there.
 // appendOutput adds lines to el, before the node `before` when given, which
-// holds a line still being written.
+// holds a line still being written, and follows the end only if the view
+// was there. The lines may hold the color codes a terminal shows.
 function appendOutput(el, lines, before = null) {
   const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
-  el.insertBefore(document.createTextNode(lines.join('\n') + '\n'), before);
+  el.sgr ||= {};
+  const frag = document.createDocumentFragment();
+  frag.append(...ansiNodes(lines.join('\n') + '\n', el.sgr));
+  el.insertBefore(frag, before);
   // Long streams are trimmed so the page stays responsive.
-  if (el.textContent.length > 400000) {
-    el.textContent = el.textContent.slice(-200000);
-    if (before) el.append(before);
+  let excess = el.textContent.length - 200000;
+  if (excess > 200000) {
+    while (excess > 0 && el.firstChild && el.firstChild !== before) {
+      excess -= el.firstChild.textContent.length;
+      el.firstChild.remove();
+    }
   }
   if (atBottom) el.scrollTop = el.scrollHeight;
+}
+
+function clearOutput(el) {
+  el.textContent = '';
+  el.sgr = {};
+}
+
+// ansiNodes turns text with SGR color codes into text nodes and styled
+// spans. style is the style the text starts in, which it updates, so that
+// a color can go on in the next lines, as in a terminal.
+function ansiNodes(text, style) {
+  const nodes = [];
+  const add = (t) => {
+    if (!t) return;
+    const cls = [];
+    if (style.fg !== undefined) cls.push('ansi-fg-' + style.fg);
+    if (style.bg !== undefined) cls.push('ansi-bg-' + style.bg);
+    for (const k of ['bold', 'dim', 'italic', 'underline']) if (style[k]) cls.push('ansi-' + k);
+    if (!cls.length && !style.rgb) { nodes.push(document.createTextNode(t)); return; }
+    const span = h('span', { class: cls.join(' ') }, t);
+    // A 256-color or true color code has no theme color to follow.
+    if (style.rgb) span.style.color = style.rgb;
+    nodes.push(span);
+  };
+  const re = /\x1b\[([0-9;]*)m/g;
+  let last = 0;
+  let m;
+  while ((m = re.exec(text))) {
+    add(text.slice(last, m.index));
+    sgrApply(style, m[1]);
+    last = re.lastIndex;
+  }
+  add(text.slice(last));
+  return nodes;
+}
+
+// sgrApply changes style by the parameters of one SGR code, such as "1;32".
+function sgrApply(style, params) {
+  const p = params === '' ? [0] : params.split(';').map(Number);
+  for (let i = 0; i < p.length; i++) {
+    const n = p[i];
+    if (n === 0) {
+      for (const k of Object.keys(style)) delete style[k];
+    } else if (n === 1) style.bold = true;
+    else if (n === 2) style.dim = true;
+    else if (n === 3) style.italic = true;
+    else if (n === 4) style.underline = true;
+    else if (n === 22) style.bold = style.dim = false;
+    else if (n === 23) style.italic = false;
+    else if (n === 24) style.underline = false;
+    else if (n >= 30 && n <= 37) [style.fg, style.rgb] = [n - 30, undefined];
+    else if (n >= 90 && n <= 97) [style.fg, style.rgb] = [n - 82, undefined];
+    else if (n === 39) [style.fg, style.rgb] = [undefined, undefined];
+    else if (n >= 40 && n <= 47) style.bg = n - 40;
+    else if (n >= 100 && n <= 107) style.bg = n - 92;
+    else if (n === 49) style.bg = undefined;
+    else if (n === 38 && p[i + 1] === 5) {
+      const c = p[i + 2];
+      [style.fg, style.rgb] = c < 16 ? [c, undefined] : [undefined, xterm256(c)];
+      i += 2;
+    } else if (n === 38 && p[i + 1] === 2) {
+      [style.fg, style.rgb] = [undefined, `rgb(${p[i + 2]}, ${p[i + 3]}, ${p[i + 4]})`];
+      i += 4;
+    } else if (n === 48) {
+      // Background colors beyond the 16 are rare in ddev's output.
+      i += p[i + 1] === 5 ? 2 : p[i + 1] === 2 ? 4 : 0;
+    }
+  }
+}
+
+// xterm256 is the color of one of the 6x6x6 cube or the grays of the 256.
+function xterm256(c) {
+  if (c >= 232) {
+    const v = 8 + (c - 232) * 10;
+    return `rgb(${v}, ${v}, ${v})`;
+  }
+  c -= 16;
+  const v = (x) => (x ? 55 + x * 40 : 0);
+  return `rgb(${v(Math.floor(c / 36))}, ${v(Math.floor(c / 6) % 6)}, ${v(c % 6)})`;
 }
 
 // ---------- start page ----------
@@ -829,27 +935,37 @@ async function loadMessages() {
     if (!res.ok) throw new Error((await res.text()).trim());
     state.messages = await res.json();
   } catch {
-    state.messages = { tips: [], infos: [], warnings: [] };
+    // An hourly reload that fails keeps what the page has.
+    state.messages = state.messages || { tips: [], infos: [], warnings: [] };
   }
   renderNotices();
   renderDetail();
 }
 
+// A dismissed notice comes back after 20 hours, the interval at which
+// `ddev start` shows notices again.
+const NOTICE_SNOOZE = 20 * 3600e3;
+
+// dismissedNotices maps each notice dismissed in the last 20 hours to when.
 function dismissedNotices() {
-  try { return new Set(JSON.parse(localStorage.getItem('ddev.dismissed') || '[]')); } catch { return new Set(); }
+  let all = {};
+  try { all = JSON.parse(localStorage.getItem('ddev.dismissed-notices') || '{}'); } catch { /* none */ }
+  const now = Date.now();
+  return Object.fromEntries(Object.entries(all && typeof all === 'object' ? all : {})
+    .filter(([, at]) => now - at < NOTICE_SNOOZE));
 }
 
-// renderNotices shows DDEV's info and warning notices until dismissed.
+// renderNotices shows DDEV's info and warning notices on every page.
 function renderNotices() {
   const m = state.messages || {};
   const dismissed = dismissedNotices();
   const notices = [...(m.warnings || []).map((n) => ['warn', n]), ...(m.infos || []).map((n) => ['info', n])]
-    .filter(([, n]) => !dismissed.has(n.message));
+    .filter(([, n]) => !(n.message in dismissed));
   $('notices').replaceChildren(...notices.map(([kind, n]) => h('div', { class: 'notice ' + kind, role: kind === 'warn' ? 'alert' : 'status' },
     h('div', {}, h('strong', {}, n.title || (kind === 'warn' ? 'Important warning' : 'Important message')), ' ', richText(n.message)),
     closeButton('Dismiss', () => {
-      dismissed.add(n.message);
-      localStorage.setItem('ddev.dismissed', JSON.stringify([...dismissed]));
+      dismissed[n.message] = Date.now();
+      try { localStorage.setItem('ddev.dismissed-notices', JSON.stringify(dismissed)); } catch { /* not kept */ }
       renderNotices();
     }))));
 }
@@ -860,8 +976,49 @@ function greeting() {
   return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 }
 
+// rowActions are the buttons a sidebar row shows on hover in place of the
+// project type. The keyboard has the project's toolbar and its context menu.
+function rowActions(p, busy) {
+  const up = isUp(p.status);
+  const btn = (label, name, attrs) => h(attrs.href ? 'a' : 'button', {
+    class: 'btn small icon-btn', title: label, 'aria-label': `${label} ${p.name}`, tabindex: '-1', ...attrs,
+  }, icon(name));
+  const act = (a) => () => projectAction(p, a);
+  return h('span', { class: 'row-actions' },
+    up && p.url ? btn('Open site', 'ext', { href: p.url, target: '_blank', rel: 'noopener noreferrer' }) : null,
+    up ? btn('Stop', 'stop', { type: 'button', disabled: !!busy, onclick: act('stop') })
+      : btn('Start', 'play', { type: 'button', disabled: !!busy, onclick: act('start') }));
+}
+
+// runningSummary names the running projects, each a link to it.
+function runningSummary() {
+  const up = state.projects.filter((p) => isUp(p.status));
+  const count = state.projects.length;
+  const head = `${count} ${count === 1 ? 'project' : 'projects'}, ${up.length} running`;
+  if (!up.length) return head + '.';
+  const max = 6;
+  const names = up.slice(0, up.length > max ? max - 1 : max)
+    .map((p) => h('button', { class: 'linkish', type: 'button', title: 'Show ' + p.name, onclick: () => selectProject(p.name) }, p.name));
+  const rest = up.length - names.length;
+  return [head + ': ', ...names.flatMap((n, i) => (i ? [', ', n] : [n])), rest ? ` and ${rest} more.` : '.'];
+}
+
+// sponsorLine says how far DDEV's sponsors are from the monthly goal, in the
+// words `ddev start` uses once a day, which the sponsorship data sets.
+function sponsorLine() {
+  if (!state.messages) return h('p', { class: 'sponsor-line' }, '\u00a0');
+  const s = state.messages.sponsorship;
+  if (!s) return null;
+  if (s.message) return h('p', { class: 'sponsor-line muted' }, richText(s.message));
+  const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
+  const pct = s.goal ? Math.min(100, s.percent || (s.monthly / s.goal) * 100) : 0;
+  const shown = pct.toLocaleString('en-US', { maximumFractionDigits: 1 });
+  return h('p', { class: 'sponsor-line muted' },
+    s.goal ? `DDEV has reached ${shown}% of its ${money(s.goal)} monthly sponsorship goal. ` : `DDEV's sponsors give ${money(s.monthly)} a month. `,
+    h('a', { class: 'doc-link', href: SPONSOR, target: '_blank', rel: 'noopener noreferrer' }, 'Become a sponsor', icon('ext', 'ext')));
+}
+
 function homeView() {
-  const up = state.projects.filter((p) => isUp(p.status)).length;
   const tips = state.messages ? state.messages.tips : [];
   const n = tips.length;
   const i = n ? ((state.tipIndex % n) + n) % n : 0;
@@ -874,10 +1031,9 @@ function homeView() {
   return h('div', { class: 'home' },
     h('div', { class: 'detail-head' }, h('div', {},
       h('h1', {}, greeting()),
-      h('p', { class: 'muted' }, count
-        ? `${count} ${count === 1 ? 'project' : 'projects'}, ${up} running. Select a project, or right-click it for its actions.`
-        : state.error ? '' : 'Add a project to get started.'))),
-    count || state.error ? null : h('p', {}, h('button', { class: 'btn primary', type: 'button', onclick: addProject }, icon('plus', 'lead'), 'Add project')),
+      // Lines that wait for data hold a blank line, so nothing below moves.
+      h('p', { class: 'muted summary' }, count ? runningSummary() : !state.loaded ? '\u00a0' : state.error ? '' : 'Add a project to get started.'))),
+    count || state.error || !state.loaded ? null : h('p', {}, h('button', { class: 'btn primary', type: 'button', onclick: addProject }, icon('plus', 'lead'), 'Add project')),
     h('div', { class: 'card tip' },
       h('div', { class: 'card-head' }, h('h3', {}, tip && tip.title ? tip.title : 'Tip of the day'),
         n > 1 ? h('div', { class: 'tip-nav' },
@@ -886,17 +1042,28 @@ function homeView() {
           arrow('Next tip', 1, 'right')) : null),
       tip ? h('p', { class: 'tip-text' }, richText(tip.message))
         : h('p', { class: 'muted' }, state.messages ? 'No tips right now.' : 'Loading…')),
-    posts.length ? h('div', { class: 'card' },
+    posts.length || state.news === null ? h('div', { class: 'card' },
       h('div', { class: 'card-head' }, h('h3', {}, 'From the DDEV blog'), ext('https://ddev.com/blog/', 'All posts')),
-      h('ul', { class: 'news' }, posts.map((post) => h('li', {},
-        link(post.link, post.title),
+      state.news === null ? h('ul', { class: 'news', 'aria-busy': 'true' }, Array.from({ length: maxNewsPosts }, () => h('li', {}, h('span', { class: 'meta news-pending' }, h('span', { class: 'badge' }, '\u00a0')))))
+        : h('ul', { class: 'news' }, posts.map((post) => h('li', {},
+        h('a', { href: post.link, target: '_blank', rel: 'noopener noreferrer', title: post.description || null }, post.title),
         h('span', { class: 'meta' }, h('span', { class: 'muted' }, post.date), post.category ? h('span', { class: 'badge' }, post.category) : null))))) : null,
+    sponsorLine(),
     h('p', { class: 'home-links muted' },
       docLink('users/quickstart/', 'Quickstarts'), docLink('users/usage/faq/', 'FAQ'),
       docLink('users/usage/troubleshooting/', 'Troubleshooting'), ext('https://ddev.com/s/discord', 'Discord')));
 }
 
+// maxNewsPosts is how many posts the server sends, and so how many rows the
+// blog card holds while it waits for them.
+const maxNewsPosts = 5;
+
+// newsRequested is whether the start page has shown, which is when the posts
+// are first loaded: an app opened on a project needs none.
+let newsRequested = false;
+
 async function loadNews() {
+  newsRequested = true;
   try {
     const res = await fetch('/api/news');
     state.news = res.ok ? (await res.json()).posts : [];
@@ -931,7 +1098,7 @@ function multiView() {
       h('tr', {}, h('th', {}, 'Project'), h('th', {}, 'Status'), h('th', {}, 'Type'), h('th', {}, 'URL')),
       ps.map((p) => h('tr', {},
         h('td', {}, h('button', { class: 'linkish', type: 'button', onclick: () => selectProject(p.name) }, p.name)),
-        h('td', {}, h('span', { class: 'dot ' + statusClass(p.status) }), ' ', p.status),
+        h('td', {}, h('span', { class: 'dot before ' + statusClass(p.status) }), p.status),
         h('td', {}, p.type),
         h('td', {}, p.url && isUp(p.status) ? link(p.url) : '')))));
 }
@@ -963,9 +1130,13 @@ function sharedCards() {
   if (st.error) return h('div', { class: 'shared-cards' }, h('p', { class: 'muted' }, st.error));
   return h('div', { class: 'cards shared-cards' }, st.map((svc) => h('div', { class: 'card' },
     h('h3', {}, svc.label, helpLink(svc.docs, `the ${svc.label.toLowerCase()}`)),
-    h('p', {}, h('span', { class: 'dot ' + statusClass(svc.status) }), ' ', svc.status,
-      svc.image ? h('span', { class: 'muted' }, ' · ' + svc.image) : null),
-    svc.dashboard ? h('p', {}, link(svc.dashboard, ['Open the Traefik dashboard', icon('ext', 'ext')])) : null,
+    kv([
+      ['Status', [h('span', { class: 'dot before ' + statusClass(svc.status) }), svc.status]],
+      ['Image', svc.image],
+      // `ddev ssh` reaches only a project's own containers.
+      ['Shell', svc.status !== 'stopped' ? copyable(`docker exec -it ${svc.name} bash`) : undefined],
+      ['Dashboard', svc.dashboard ? link(svc.dashboard, ['Open the Traefik dashboard', icon('ext', 'ext')]) : undefined],
+    ]),
     svc.status === 'stopped' ? h('p', { class: 'muted' }, svc.name === 'ddev-router'
       ? 'It starts with the first project that uses it.'
       : 'It starts with the first project, unless global settings leave it out.') : null,
@@ -983,13 +1154,13 @@ function sharedView() {
   const out = h('pre', { class: 'output logs-output' });
   const running = st.filter((svc) => svc.status !== 'stopped').map((svc) => [svc.name, svc.label]);
   if (!running.some(([n]) => n === state.sharedLog) && running.length) state.sharedLog = running[0][0];
-  const view = h('div', {}, head, sharedCards());
+  const view = h('div', { class: 'shared-view' }, head, sharedCards());
   if (running.length) {
     const pick = dropdown(running, state.sharedLog, (v) => { state.sharedLog = v; startSharedLogs(out); }, { 'aria-label': 'Logs of' });
-    view.append(h('h2', { class: 'section-title' }, 'Logs'),
-      h('div', { class: 'row' }, pick,
+    view.append(
+      h('div', { class: 'row logs-head' }, h('h2', { class: 'section-title' }, 'Logs'), pick,
         h('button', { class: 'btn', type: 'button', onclick: () => startSharedLogs(out) }, 'Reconnect'),
-        h('button', { class: 'btn', type: 'button', onclick: () => { out.textContent = ''; } }, 'Clear')),
+        h('button', { class: 'btn', type: 'button', onclick: () => clearOutput(out) }, 'Clear')),
       out);
     startSharedLogs(out);
   }
@@ -998,7 +1169,7 @@ function sharedView() {
 
 function startSharedLogs(out) {
   stopLogs();
-  out.textContent = '';
+  clearOutput(out);
   const es = new EventSource(`/api/shared/${encodeURIComponent(state.sharedLog)}/logs`);
   state.logSource = es;
   es.addEventListener('lines', (ev) => appendOutput(out, JSON.parse(ev.data)));
@@ -1080,7 +1251,7 @@ function clearJobView() {
   if (state.jobSource) state.jobSource.close();
   state.jobId = 0;
   $('activity-title').replaceChildren();
-  $('job-output').textContent = '';
+  clearOutput($('job-output'));
 }
 
 function showJob(id, open) {
@@ -1089,27 +1260,29 @@ function showJob(id, open) {
   if (open) setActivityOpen(true);
   if (state.jobSource) state.jobSource.close();
   const out = $('job-output');
-  out.textContent = '';
+  clearOutput(out);
   const job = state.jobs.find((j) => j.id === id);
   if (job) renderJobTitle(job); else $('activity-title').replaceChildren();
   const es = new EventSource('/api/jobs/' + id);
   state.jobSource = es;
   // ddev writes some lines a piece at a time, such as the dots while it waits.
-  const partial = document.createTextNode('');
+  // The line keeps a copy of the style, which the full line then changes.
+  const partial = h('span');
   out.append(partial);
   es.addEventListener('lines', (ev) => {
-    partial.data = '';
+    partial.replaceChildren();
     appendOutput(out, JSON.parse(ev.data), partial);
   });
   es.addEventListener('partial', (ev) => {
     const atBottom = out.scrollHeight - out.scrollTop - out.clientHeight < 30;
-    partial.data = JSON.parse(ev.data);
+    partial.replaceChildren(...ansiNodes(JSON.parse(ev.data), { ...out.sgr }));
     if (atBottom) out.scrollTop = out.scrollHeight;
   });
   es.addEventListener('end', (ev) => {
     const { err } = JSON.parse(ev.data);
-    partial.data = '';
-    appendOutput(out, [err ? `\n✗ Failed: ${err}` : '\n✓ Done'], partial);
+    partial.replaceChildren();
+    out.sgr = {};
+    appendOutput(out, [err ? `\n\x1b[31m✗ Failed: ${err}\x1b[0m` : '\n\x1b[32m✓ Done\x1b[0m'], partial);
     es.close();
   });
   es.addEventListener('error', () => es.close());
@@ -1119,6 +1292,128 @@ function showJob(id, open) {
 // isUp is whether a project's containers run, healthy or not.
 function isUp(status) {
   return status === 'running' || status === 'unhealthy' || status.startsWith('starting');
+}
+
+// ---------- fuzzy filter ----------
+
+// fuzzyMatch scores pattern against str as `ddev tui`'s filter does
+// (github.com/sahilm/fuzzy): the pattern's letters in order, with bonuses at
+// the start, after a separator, at a camelCase hump, and next to the last
+// match. It returns null when str lacks a letter, else the score and the
+// code point index of each matched letter.
+function fuzzyMatch(pattern, str) {
+  const p = [...pattern];
+  const s = [...str];
+  const eq = (a, b) => a !== undefined && b !== undefined && a.toLowerCase() === b.toLowerCase();
+  const isLower = (c) => c !== undefined && c !== c.toUpperCase();
+  const isUpper = (c) => c !== c.toLowerCase();
+  const idx = [];
+  let total = 0, best = -1, bestAt = -1, adjacent = 0, last;
+  for (let j = 0; j < s.length && idx.length < p.length; j++) {
+    const c = s[j];
+    if (eq(c, p[idx.length])) {
+      let score = j === 0 ? 10 : 0;
+      if (isLower(last) && isUpper(c)) score += 20;
+      if (j > 0 && '/-_ .\\'.includes(last)) score += 20;
+      if (idx.length && idx[idx.length - 1] === j - 1) {
+        const bonus = adjacent * 2 + 5;
+        score += bonus;
+        adjacent += bonus;
+      }
+      if (score > best) [best, bestAt] = [score, j];
+    }
+    // The best place for this letter is settled once the next letter of
+    // the pattern comes up, or the string ends.
+    if (bestAt >= 0 && (j === s.length - 1 || eq(p[idx.length + 1], s[j + 1]))) {
+      if (!idx.length) best += Math.max(bestAt * -5, -15);
+      total += best;
+      idx.push(bestAt);
+      [best, bestAt] = [-1, -1];
+    }
+    last = c;
+  }
+  return idx.length === p.length ? { score: total + idx.length - s.length, idx } : null;
+}
+
+// fuzzyFilter returns the items that match term as [{item, idx}], best
+// first, with idx the matched letters of the label, which holds the key. As
+// in `ddev tui`, items whose key starts with or contains term come first;
+// then those with a field that contains it; then those whose key holds term
+// with a typo or two, the shorter first; then the other matches.
+function fuzzyFilter(term, items, key, { label = key, fields = () => [] } = {}) {
+  term = term.trim();
+  if (!term) return items.map((item) => ({ item, idx: [] }));
+  const t = term.toLowerCase();
+  const typos = Math.floor([...t].length / 4);
+  return items.map((item) => {
+    const k = key(item);
+    const shown = label(item);
+    const lk = k.toLowerCase();
+    const d = typoDistance(t, lk);
+    const near = d <= typos ? d : Infinity;
+    const at = [...shown.slice(0, Math.max(0, shown.indexOf(k)))].length;
+    let m = fuzzyMatch(term, k) || (near < Infinity && typoMatch(term, k));
+    const onKey = !!m;
+    if (m) {
+      m = { score: m.score, idx: m.idx.map((i) => i + at) };
+    } else {
+      // Each field matches on its own: letters from several, such as the
+      // r of "laravel" and the s of "stopped", match nearly anything.
+      for (const f of fields(item)) {
+        const fm = f && fuzzyMatch(term, f);
+        if (fm && (!m || fm.score > m.score)) m = { score: fm.score, idx: f === shown ? fm.idx : [] };
+      }
+    }
+    if (!m) return null;
+    const inField = fields(item).some((f) => f && f.toLowerCase().includes(t));
+    const rank = lk.startsWith(t) ? 3 : lk.includes(t) ? 2 : inField ? 1 : 0;
+    return { item, idx: m.idx, rank, near, onKey, len: lk.length, score: m.score };
+  }).filter(Boolean).sort((a, b) => b.rank - a.rank || a.near - b.near ||
+    (a.near < Infinity ? a.len - b.len : 0) || b.onKey - a.onKey || b.score - a.score);
+}
+
+// typoDistance is how many edits, a swap of two neighbors counting as
+// one, make pattern a part of str.
+function typoDistance(pattern, str) {
+  const p = [...pattern];
+  const s = [...str];
+  // rows[i][j] is the distance of p[:i] to a part of s that ends at j.
+  const rows = [new Array(s.length + 1).fill(0)];
+  for (let i = 1; i <= p.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= s.length; j++) {
+      row[j] = Math.min(rows[i - 1][j] + 1, row[j - 1] + 1, rows[i - 1][j - 1] + (p[i - 1] === s[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && p[i - 1] === s[j - 2] && p[i - 2] === s[j - 1]) row[j] = Math.min(row[j], rows[i - 2][j - 2] + 1);
+    }
+    rows.push(row);
+  }
+  return Math.min(...rows[p.length]);
+}
+
+// typoMatch finds the letters of str that pattern matches in order, for a
+// match that typoDistance found. The score is their number.
+function typoMatch(pattern, str) {
+  const p = [...pattern.toLowerCase()];
+  const s = [...str.toLowerCase()];
+  // lcs[i][j] is the longest common subsequence of p[i:] and s[j:].
+  const lcs = Array.from({ length: p.length + 1 }, () => new Array(s.length + 1).fill(0));
+  for (let i = p.length - 1; i >= 0; i--) {
+    for (let j = s.length - 1; j >= 0; j--) {
+      lcs[i][j] = p[i] === s[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+    }
+  }
+  const idx = [];
+  for (let i = 0, j = 0; i < p.length && j < s.length;) {
+    if (p[i] === s[j]) { idx.push(j); i++; j++; } else if (lcs[i + 1][j] >= lcs[i][j + 1]) i++; else j++;
+  }
+  return { score: lcs[0][0], idx };
+}
+
+// highlight marks the letters of text at the code point indexes idx.
+function highlight(text, idx) {
+  if (!idx.length) return text;
+  const marked = new Set(idx);
+  return h('span', {}, [...text].map((c, i) => (marked.has(i) ? h('mark', {}, c) : c)));
 }
 
 // ---------- menus ----------
@@ -1142,6 +1437,7 @@ function openMenu(at, items, { keepFocus } = {}) {
       class: 'menu-item' + (it.danger ? ' danger' : '') + (it.checked ? ' checked' : ''),
       role: radio ? 'option' : 'menuitem',
       'aria-selected': radio ? String(!!it.checked) : null,
+      title: it.title,
       disabled: it.disabled,
       onclick: () => { close(); it.run(); },
     }, it.label))));
@@ -1214,13 +1510,16 @@ function dropdown(options, value, onchange, attrs) {
 // ---------- dialogs ----------
 
 // openDialog shows a modal dialog and resolves to whether OK was chosen.
-function openDialog(title, body, okLabel, danger) {
+// With info it has only the OK button, and is wider.
+function openDialog(title, body, okLabel, danger, info = false) {
   const dlg = $('dialog');
   $('dialog-title').textContent = title;
   $('dialog-body').replaceChildren(...[].concat(body));
   const ok = $('dialog-ok');
   ok.textContent = okLabel || 'OK';
   ok.className = 'btn ' + (danger ? 'danger' : 'primary');
+  $('dialog-cancel').hidden = info;
+  dlg.classList.toggle('info', info);
   dlg.showModal();
   // Resolved from the form's own events: the dialog's close event comes
   // late or not at all in some embedded browsers.
@@ -1236,6 +1535,46 @@ function openDialog(title, body, okLabel, danger) {
     $('dialog-cancel').onclick = () => finish(false);
     dlg.oncancel = (e) => { e.preventDefault(); finish(false); };
   });
+}
+
+// showAbout shows the versions and the license, and `ddev version -j`,
+// which a bug report asks for.
+async function showAbout() {
+  if ($('dialog').open) return;
+  const details = h('div', {}, h('p', { class: 'muted' }, 'Loading…'));
+  const closed = openDialog('About DDEV', [
+    h('div', { class: 'about-head' }, h('img', { src: 'favicon.svg', alt: '', class: 'about-logo' }),
+      h('div', { class: 'lines' }, h('strong', {}, 'DDEV'), h('div', { class: 'muted' }, state.desktop ? 'Experimental GUI app' : 'Experimental web UI'))),
+    details,
+  ], 'Close', false, true);
+  try {
+    const res = await fetch('/api/version');
+    if (!res.ok) throw new Error((await res.text()).trim() || res.statusText);
+    const a = await res.json();
+    const v = a.version || {};
+    const json = JSON.stringify(v, null, 2);
+    details.replaceChildren(...[
+      kv([
+        ['GUI app', a.app],
+        ['DDEV', v['DDEV version']],
+        ['ddev', a.binary && copyable(a.binary)],
+        ['License', link('https://github.com/ddev/ddev/blob/main/LICENSE', 'Apache License 2.0')],
+        ['Website', link('https://ddev.com', 'ddev.com')],
+        ['Sponsor', link(SPONSOR, 'ddev.com/sponsor')],
+      ]),
+      h('div', { class: 'section-head' }, h('h3', {}, 'ddev version'),
+        h('button', {
+          class: 'btn small',
+          type: 'button',
+          onclick: () => navigator.clipboard.writeText(json).then(() => toast('Copied ddev version'), () => toast('Copy failed', true)),
+        }, 'Copy as JSON')),
+      a.error ? h('p', { class: 'muted' }, a.error) : null,
+      kv(Object.keys(v).sort().map((k) => [k, v[k]])),
+    ].filter(Boolean));
+  } catch (e) {
+    details.replaceChildren(h('p', { class: 'muted' }, 'Unable to read the version: ' + e.message));
+  }
+  await closed;
 }
 
 function confirmDialog(title, text, okLabel) {
@@ -1337,6 +1676,21 @@ function onKeyDown(e) {
 
 // ---------- startup ----------
 
+// showTarget shows what target names, as a link such as #project=d11 or
+// #about does, or the GUI app's tray through the status stream. It returns
+// whether it named anything.
+function showTarget(target) {
+  const about = /(?:^|&)about(?:&|$)/.test(target);
+  const m = /(?:^|&)project=([^&]+)/.exec(target);
+  if (m) {
+    if (state.show !== 'all') { state.show = 'all'; localStorage.setItem('ddev.show', 'all'); }
+    selectProject(decodeURIComponent(m[1].replace(/\+/g, ' ')));
+    renderProjects();
+  }
+  if (about) showAbout();
+  return about || !!m;
+}
+
 function init() {
   $('filter').addEventListener('input', (e) => { state.filter = e.target.value; renderProjects(); selectShown(); });
   document.addEventListener('keydown', onKeyDown);
@@ -1380,7 +1734,10 @@ function init() {
   const more = $('btn-more');
   more.addEventListener('click', () => (menuAnchor === more ? menuClose() : openMenu(more, [
     { label: 'Refresh', run: refresh },
-    { label: 'DDEV documentation', run: () => openURL(DOCS) },
+    { label: 'DDEV docs', run: () => openURL(DOCS) },
+    { label: 'Sponsor DDEV', run: () => openURL(SPONSOR) },
+    null,
+    { label: 'About DDEV', run: showAbout },
   ])));
   $('btn-start-all').addEventListener('click', () => runJob('/api/actions/start-all'));
   $('btn-stop-all').addEventListener('click', async () => {
@@ -1405,30 +1762,32 @@ function init() {
     preview.hidden = !a;
     if (a) preview.textContent = a.href;
   });
-  // The app keeps WebKit's own menu for text, where it can copy and paste.
-  // Elsewhere it would offer Back and Reload.
+  // The app shows the page's menu for links and selected text. WebKit's own
+  // would offer Back and Reload, and look different. Text fields keep it,
+  // since a page cannot paste.
   document.addEventListener('contextmenu', (e) => {
     if (!state.desktop || e.defaultPrevented) return;
-    const editable = e.target.closest && e.target.closest('input, textarea, [contenteditable]');
-    if (!editable && String(getSelection()).trim() === '') e.preventDefault();
+    if (e.target.closest && e.target.closest('input, textarea, [contenteditable]')) return;
+    e.preventDefault();
+    const a = e.target.closest && e.target.closest('a[href^="http"]');
+    const selected = String(getSelection()).trim();
+    const items = [];
+    if (selected) items.push({ label: 'Copy', run: () => navigator.clipboard.writeText(selected).catch(() => toast('Copy failed', true)) });
+    if (a) items.push({ label: 'Open link', run: () => openURL(a.href) }, { label: 'Copy link address', run: () => copy(a.href) });
+    if (items.length) openMenu({ x: e.clientX, y: e.clientY }, items);
   });
-  // A link such as #project=d11 selects that project; the GUI app's
-  // tray uses it.
   const fromHash = () => {
-    const m = /(?:^#|&)project=([^&]+)/.exec(location.hash);
-    if (!m) return;
-    const name = decodeURIComponent(m[1].replace(/\+/g, ' '));
-    // Clear the hash, so that the same link selects the project again later.
-    history.replaceState(null, '', location.pathname + location.search);
-    if (state.show !== 'all') { state.show = 'all'; localStorage.setItem('ddev.show', 'all'); }
-    selectProject(name);
-    renderProjects();
+    // Clear the hash, so that the same link works again later.
+    if (showTarget(location.hash.slice(1))) history.replaceState(null, '', location.pathname + location.search);
   };
   window.addEventListener('hashchange', fromHash);
   fromHash();
   connectEvents();
   loadMessages();
-  loadNews();
+  setInterval(() => {
+    loadMessages();
+    if (newsRequested) loadNews();
+  }, 3600e3);
   renderJobs();
 }
 

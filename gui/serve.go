@@ -86,6 +86,11 @@ func wslArgs(distro string, script string) []string {
 	return append(args, "-e", "bash", "-lc", script)
 }
 
+// shellQuote quotes s for bash.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 func wslHasDdev(distro string) bool {
 	if _, err := exec.LookPath("wsl.exe"); err != nil {
 		return false
@@ -151,9 +156,13 @@ var serveURL = regexp.MustCompile(`http://127\.0\.0\.1:\d+/\?token=[0-9a-f]+`)
 // startServe starts `ddev gui --desktop` and waits for the URL it prints.
 func startServe(t target) (*serveClient, error) {
 	args := []string{"gui", "--desktop"}
+	// The About dialog shows the app's version.
 	cmd := exec.Command(t.ddev, args...)
+	cmd.Env = append(os.Environ(), "DDEV_GUI_APP_VERSION="+version)
 	if t.wsl {
-		cmd = exec.Command("wsl.exe", wslArgs(t.distro, "ddev "+strings.Join(args, " "))...)
+		// WSL passes no Windows variables to the distro, so it goes in the script.
+		script := "DDEV_GUI_APP_VERSION=" + shellQuote(version) + " ddev " + strings.Join(args, " ")
+		cmd = exec.Command("wsl.exe", wslArgs(t.distro, script)...)
 	}
 	// ddev gui --desktop stops when its stdin closes, so it does not
 	// outlive this app, inside WSL2 or not.

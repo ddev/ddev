@@ -44,13 +44,25 @@ test('installs, updates and removes add-ons', async ({ page, backend }) => {
   // The registry's add-ons are suggested as the name is typed.
   const repo = page.getByLabel('Add-on repository');
   await repo.click();
-  await expect(page.locator('.menu').getByRole('menuitem')).toHaveCount(2);
+  await expect(page.locator('.menu').getByRole('menuitem')).toHaveCount(3);
   await repo.fill('sol');
   await expect(page.locator('.menu').getByRole('menuitem')).toHaveText(['ddev/ddev-solr']);
   await expect(repo).toBeFocused();
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   await expect(repo).toHaveValue('ddev/ddev-solr');
+  // The picked add-on's list stays closed.
+  await expect(page.locator('.menu')).toHaveCount(0);
+  // The list matches fuzzily, and allows for a typo, best match first.
+  for (const q of ['rds', 'rediss', 'reids']) {
+    await repo.fill(q);
+    await expect(page.locator('.menu').getByRole('menuitem')).toHaveText(['ddev/ddev-redis', 'ddev/ddev-redis-insight']);
+  }
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.menu')).toHaveCount(0);
+  await repo.fill('ddev/ddev-solr');
+  await page.keyboard.press('Escape');
   await repo.press('Enter');
   expect(await nthPost(backend, 1)).toEqual({ path: '/api/projects/d11/actions/addon-get', form: { repo: 'ddev/ddev-solr' } });
   backend.endJob(backend.jobs[0].id);

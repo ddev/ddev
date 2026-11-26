@@ -60,11 +60,19 @@ type Server struct {
 	ddevBinary string
 	// desktop is set when a desktop window, not a browser, shows the page.
 	desktop bool
+	// appVersion is the GUI app's version, when it shows the page.
+	appVersion string
 
 	// changed is closed and replaced whenever a job starts or ends, so the
 	// status streams reload at once instead of on their next tick.
 	changedMu sync.Mutex
 	changed   chan struct{}
+
+	// shown is closed and replaced when the GUI app asks its window to
+	// show showTarget, such as "about".
+	showMu     sync.Mutex
+	shown      chan struct{}
+	showTarget string
 }
 
 // New listens on 127.0.0.1:port, or a free port when port is 0.
@@ -89,6 +97,7 @@ func New(port int) (*Server, error) {
 		baseEnv:    os.Environ(),
 		ddevBinary: bin,
 		changed:    make(chan struct{}),
+		shown:      make(chan struct{}),
 	}
 	s.jobs = newJobs(s.notifyChanged)
 	actual := l.Addr().(*net.TCPAddr).Port
@@ -106,10 +115,12 @@ func New(port int) (*Server, error) {
 }
 
 // SetDesktop prepares the server for the GUI app's window, which opens
-// no new windows: the page asks the server to open links instead. Call it
-// before Serve.
-func (s *Server) SetDesktop() {
+// no new windows: the page asks the server to open links instead. The
+// About dialog shows appVersion, the app's own version. Call it before
+// Serve.
+func (s *Server) SetDesktop(appVersion string) {
 	s.desktop = true
+	s.appVersion = appVersion
 }
 
 // StopWithStdin shuts the server down when standard input closes. The
@@ -167,6 +178,27 @@ func (s *Server) changedCh() <-chan struct{} {
 	return s.changed
 }
 
+func (s *Server) requestShow(target string) {
+	s.showMu.Lock()
+	defer s.showMu.Unlock()
+	s.showTarget = target
+	close(s.shown)
+	s.shown = make(chan struct{})
+}
+
+// showCh is closed when the window is next asked to show something.
+func (s *Server) showCh() <-chan struct{} {
+	s.showMu.Lock()
+	defer s.showMu.Unlock()
+	return s.shown
+}
+
+func (s *Server) shownTarget() string {
+	s.showMu.Lock()
+	defer s.showMu.Unlock()
+	return s.showTarget
+}
+
 // Handler returns the routes wrapped in the security checks.
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -185,12 +217,14 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/addons/registry", s.handleAddonRegistry)
 	mux.HandleFunc("GET /api/messages", s.handleMessages)
 	mux.HandleFunc("GET /api/news", s.handleNews)
+	mux.HandleFunc("GET /api/version", s.handleVersion)
 	mux.HandleFunc("GET /api/shared", s.handleShared)
 	mux.HandleFunc("GET /api/shared/{name}/logs", s.handleSharedLogs)
 	mux.HandleFunc("POST /api/jobs/clear", s.handleClearJobs)
 	mux.HandleFunc("POST /api/jobs/{id}/remove", s.handleRemoveJob)
 	if s.desktop {
 		mux.HandleFunc("POST /api/open-url", s.handleOpenURL)
+		mux.HandleFunc("POST /api/show", s.handleShow)
 	}
 	return s.secure(mux)
 }

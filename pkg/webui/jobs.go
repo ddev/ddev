@@ -9,14 +9,13 @@ import (
 	"io"
 	"net/http"
 	"os/exec"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
-
-	"github.com/charmbracelet/x/ansi"
 )
 
 // maxJobLines bounds the output a job keeps for late subscribers.
@@ -244,7 +243,7 @@ func (js *jobs) killAll() {
 	}
 }
 
-// scanLines calls add with each line of r as plain text.
+// scanLines calls add with each line of r, cleaned by cleanLine.
 func scanLines(r io.Reader, add func(string)) {
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
@@ -308,21 +307,33 @@ func trimIncompleteRune(b []byte) []byte {
 	return b
 }
 
+// escape matches an escape sequence: CSI, such as a color or a cursor
+// movement, OSC, such as a hyperlink, or a two-character one. Last come a
+// CSI cut short at the end and a lone escape.
+var escape = regexp.MustCompile(`\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_]|\[[0-?]*[ -/]*$|)`)
+
 // cleanLine keeps what a terminal would show of a line: the text after its
-// last carriage return, without colors or cursor movement.
+// last carriage return, with its colors but without cursor movement or
+// hyperlinks.
 func cleanLine(line string) string {
 	line = strings.TrimRight(line, "\r\n")
 	if i := strings.LastIndexByte(line, '\r'); i >= 0 {
 		line = line[i+1:]
 	}
-	return ansi.Strip(line)
+	return escape.ReplaceAllStringFunc(line, func(seq string) string {
+		if strings.HasPrefix(seq, "\x1b[") && strings.HasSuffix(seq, "m") {
+			return seq
+		}
+		return ""
+	})
 }
 
 // ddevCommand prepares a ddev subcommand in dir, or the current directory
 // when dir is empty. It cannot prompt or start a TUI.
 func (s *Server) ddevCommand(ctx context.Context, dir string, args ...string) *exec.Cmd {
 	c := exec.CommandContext(ctx, s.ddevBinary, args...)
-	c.Env = append(slices.Clone(s.baseEnv), "DDEV_NO_TUI=true", "DDEV_NONINTERACTIVE=true")
+	// The page shows ddev's colors, which ddev leaves out on a pipe.
+	c.Env = append(slices.Clone(s.baseEnv), "DDEV_NO_TUI=true", "DDEV_NONINTERACTIVE=true", "CLICOLOR_FORCE=1")
 	c.Dir = dir
 	return c
 }

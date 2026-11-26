@@ -23,7 +23,8 @@ func TestMain(m *testing.M) {
 		fmt.Println("args:", strings.Join(os.Args[1:], " "))
 		wd, _ := os.Getwd()
 		fmt.Println("dir:", wd)
-		fmt.Fprintln(os.Stderr, "\x1b[31mcolored\x1b[0m stderr")
+		fmt.Println("CLICOLOR_FORCE:", os.Getenv("CLICOLOR_FORCE"))
+		fmt.Fprintln(os.Stderr, "\x1b[31mcolored\x1b[0m stderr\x1b[K")
 		fmt.Println("progress 10%\rprogress 100%")
 		if code == "sleep" {
 			time.Sleep(10 * time.Second)
@@ -197,7 +198,8 @@ func TestJobRunsAndStreams(t *testing.T) {
 	all := strings.Join(events, "\n")
 	require.Contains(t, all, `"$ ddev poweroff"`)
 	require.Contains(t, all, `"args: poweroff"`)
-	require.Contains(t, all, `"colored stderr"`, "colors are stripped")
+	require.Contains(t, all, `"CLICOLOR_FORCE: 1"`, "ddev colors its output for the page")
+	require.Contains(t, all, `"\u001b[31mcolored\u001b[0m stderr"`, "colors stay, other sequences go")
 	require.Contains(t, all, `"progress 100%"`, "only the text after a carriage return is kept")
 	require.NotContains(t, all, "progress 10%")
 	require.Equal(t, `end {"err":""}`, events[len(events)-1])
@@ -254,7 +256,12 @@ func TestJobFailureAndBusy(t *testing.T) {
 
 func TestCleanLine(t *testing.T) {
 	require.Equal(t, "done", cleanLine("50%\rdone\r\n"))
-	require.Equal(t, "red text", cleanLine("\x1b[31mred\x1b[0m text"))
+	// Colors stay; cursor movement, hyperlinks and cut sequences go.
+	require.Equal(t, "\x1b[31mred\x1b[0m text", cleanLine("\x1b[31mred\x1b[0m text"))
+	require.Equal(t, "\x1b[1;32mok\x1b[0m", cleanLine("\x1b[2K\x1b[1;32mok\x1b[0m\x1b[1A"))
+	require.Equal(t, "docs", cleanLine("\x1b]8;;https://docs.ddev.com\x1b\\docs\x1b]8;;\x1b\\"))
+	require.Equal(t, "cut ", cleanLine("cut \x1b[3"))
+	require.Equal(t, "lone ", cleanLine("lone \x1b"))
 	require.Equal(t, "plain", cleanLine("plain"))
 }
 
@@ -274,10 +281,10 @@ func TestReadOutput(t *testing.T) {
 	write(" built\nStarting \xc3")
 	require.Equal(t, "Starting ", <-partials, "half a rune waits for the rest")
 	write("\xa9\r\x1b[1m50%")
-	require.Equal(t, "50%", <-partials)
+	require.Equal(t, "\x1b[1m50%", <-partials)
 	_ = pw.Close()
 	require.Equal(t, "", <-partials)
-	require.Equal(t, []string{"Building project images..... built", "50%"}, lines)
+	require.Equal(t, []string{"Building project images..... built", "\x1b[1m50%"}, lines)
 }
 
 func TestEditorURL(t *testing.T) {

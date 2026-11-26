@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
@@ -20,12 +21,14 @@ import (
 // when no job has changed it.
 const refreshInterval = 5 * time.Second
 
-// handleEvents streams the project list as `status` events.
+// handleEvents streams the project list as `status` events, and what the
+// GUI app asks its window to show as `show` events.
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	sse, ok := newSSE(w)
 	if !ok {
 		return
 	}
+	shown := s.showCh()
 	for {
 		changed := s.changedCh()
 		st := loadStatus()
@@ -33,13 +36,32 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		st.Desktop = s.desktop
 		st.Version = versionconstants.DdevVersion
 		sse.send("status", st)
+		refresh := time.After(refreshInterval)
+	wait:
 		select {
 		case <-changed:
-		case <-time.After(refreshInterval):
+		case <-refresh:
+		case <-shown:
+			shown = s.showCh()
+			sse.send("show", s.shownTarget())
+			goto wait
 		case <-r.Context().Done():
 			return
 		}
 	}
+}
+
+// handleShow asks the window to show About DDEV or a project, for the GUI
+// app's tray. Pointing the window at a new URL instead would leave WebView2
+// black when the window is shown again.
+func (s *Server) handleShow(w http.ResponseWriter, r *http.Request) {
+	target := r.FormValue("target")
+	if target != "about" && !strings.HasPrefix(target, "project=") {
+		http.Error(w, "unknown target", http.StatusBadRequest)
+		return
+	}
+	s.requestShow(target)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) handleDetail(w http.ResponseWriter, r *http.Request) {
@@ -300,6 +322,27 @@ func streamLines(ctx context.Context, sse *sse, pr io.ReadCloser, wait func() er
 			return
 		}
 	}
+}
+
+// about is what the About dialog shows.
+type about struct {
+	// App is the GUI app's version, empty in a browser.
+	App string `json:"app,omitempty"`
+	// Binary is the ddev that serves the page.
+	Binary string `json:"binary"`
+	// Version is `ddev version -j`'s raw output, and Error why part of it
+	// is missing, such as Docker being unreachable.
+	Version map[string]string `json:"version"`
+	Error   string            `json:"error,omitempty"`
+}
+
+func (s *Server) handleVersion(w http.ResponseWriter, _ *http.Request) {
+	info, err := version.GetVersionInfo()
+	a := about{App: s.appVersion, Binary: s.ddevBinary, Version: info}
+	if err != nil {
+		a.Error = err.Error()
+	}
+	writeJSON(w, http.StatusOK, a)
 }
 
 func (s *Server) handleProjectTypes(w http.ResponseWriter, _ *http.Request) {
