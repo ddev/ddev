@@ -48,7 +48,7 @@ Run `ddev gui` in a terminal, or start the app as you start any other: from the 
 DDEV_GUI_APP=~/Downloads/DDEV.app ddev gui
 ```
 
-Closing the window keeps the app running in the tray. To show the window again, choose **Open DDEV** in the tray menu, or on Windows click the tray icon. On macOS and Windows, launching the app again, or running `ddev gui`, also shows its window.
+Closing the window keeps the app running in the tray. To show the window again, choose **Open DDEV** in the tray menu, or on Windows click the tray icon. Launching the app again, or running `ddev gui`, also shows its window.
 
 To quit, choose **Quit DDEV app** in the tray menu. If an action such as a project start is still running, the app asks first, since quitting stops that action.
 
@@ -90,7 +90,7 @@ When an action ends while the window is in the background, the app shows a notif
 
     **Folder** opens the project with `xdg-open`, which needs `xdg-utils`. The tray icon needs a StatusNotifierItem host, and notifications need a desktop session bus.
 
-    On Linux, a closed window does not come back yet, from the tray, by launching the app again, or with `ddev gui`. Quit the app and start it again to get the window back.
+    If a closed window does not come back, as has happened on Ubuntu on arm64, quit the app from the tray and start it again.
 
 ## Using DDEV in WSL2
 

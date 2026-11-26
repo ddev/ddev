@@ -69,13 +69,14 @@ ddev gui --browser --port 8765 --no-open`,
 		if !browser {
 			exe, reason := findGUIApp()
 			if exe != "" {
-				if err := launchGUIApp(exe, project); err != nil {
-					util.Failed("Unable to open the DDEV app %s: %v", exe, err)
+				err := launchGUIApp(exe, project)
+				if err == nil {
+					output.UserOut.Printf("Opened the DDEV app (experimental). Use 'ddev gui --browser' for the web UI.")
+					return
 				}
-				output.UserOut.Printf("Opened the DDEV app (experimental). Use 'ddev gui --browser' for the web UI.")
-				return
+				reason = fmt.Sprintf("The DDEV app %s did not start: %v", exe, err)
 			}
-			util.Warning("%s, so the DDEV web UI opens in your browser instead.", reason)
+			util.Warning("%s\nThe DDEV web UI opens in your browser instead.", reason)
 		}
 		serveGUI(port, noOpen, false, project)
 	},
@@ -197,9 +198,13 @@ func windowsAppFromWSL2() string {
 	return p
 }
 
+// guiStartupWait is how long launchGUIApp watches the app for a failed
+// start, such as a missing WebKitGTK library, which ends it at once.
+const guiStartupWait = 1500 * time.Millisecond
+
 // launchGUIApp starts the DDEV app, which runs this ddev. A running app
 // takes the arguments of the new one, shows its window, and selects the
-// project, so the new one exits.
+// project, so the new one exits with status 0.
 func launchGUIApp(exe string, project string) error {
 	var args []string
 	// From WSL2, the Windows app runs the ddev on this distro's login PATH.
@@ -214,12 +219,45 @@ func launchGUIApp(exe string, project string) error {
 	if self, err := os.Executable(); err == nil && !windowsFromWSL2 {
 		c.Env = append(os.Environ(), "DDEV_BINARY="+self)
 	}
+	// Its stderr goes to a file, not a pipe: a Go program dies when it writes
+	// to a pipe whose reader has exited. Windows cannot remove the file while
+	// the app holds it, so there the app's output is not kept.
+	var errFile *os.File
+	if !nodeps.IsWindows() {
+		f, err := os.CreateTemp("", "ddev-gui-*.log")
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = f.Close()
+			_ = os.Remove(f.Name())
+		}()
+		errFile, c.Stderr = f, f
+	}
 	// Its own process group keeps Ctrl+C in this terminal from reaching it.
 	setProcessGroupAttr(c)
 	if err := c.Start(); err != nil {
 		return err
 	}
-	return c.Process.Release()
+	exited := make(chan error, 1)
+	go func() { exited <- c.Wait() }()
+	select {
+	case <-time.After(guiStartupWait):
+		return nil
+	case err := <-exited:
+		if err == nil || errFile == nil {
+			return err
+		}
+		out, _ := os.ReadFile(errFile.Name())
+		lines := strings.Split(strings.TrimSpace(strings.ReplaceAll(string(out), "\r\n", "\n")), "\n")
+		if len(lines) > 5 {
+			lines = lines[len(lines)-5:]
+		}
+		if msg := strings.Join(lines, "\n"); msg != "" {
+			return fmt.Errorf("%w\n%s", err, msg)
+		}
+		return err
+	}
 }
 
 func registerGUICmd() {

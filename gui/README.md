@@ -221,8 +221,9 @@ their output.
 - **Windows:** nobody has seen a notification there.
   The app has no icon resource, so a notification has no icon. The installer
   does not check for the WebView2 runtime.
-- **Linux:** no AUR or Homebrew package holds the app yet. A closed window
-  does not come back, from the tray or by relaunching, which looks like
-  Wails' own `Show` after `Hide`.
+- **Linux:** no AUR or Homebrew package holds the app yet. On Ubuntu 26.04
+  arm64, a closed window once did not come back, from the tray or by
+  relaunching. On amd64 it comes back with GNOME and KDE Plasma, on Wayland
+  and through XWayland.
 - **Updates:** the app has no update check of its own. Homebrew, the Linux
   packages, and the Windows installer update it with `ddev`.

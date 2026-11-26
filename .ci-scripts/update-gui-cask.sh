@@ -18,7 +18,10 @@ cask=$(sed -e "s/@VERSION@/${version}/g" -e "s/@SHA256@/${sha256}/g" -e "s/@OWNE
 
 path="Casks/ddev-gui.rb"
 repo="${owner}/homebrew-ddev"
-existing_sha=$(GH_TOKEN="${GITHUB_TOKEN}" gh api "repos/${repo}/contents/${path}" --jq .sha 2>/dev/null || true)
+# On a 404, as before the first release, gh prints the error body to stdout.
+if ! existing_sha=$(GH_TOKEN="${GITHUB_TOKEN}" gh api "repos/${repo}/contents/${path}" --jq .sha 2>/dev/null); then
+  existing_sha=""
+fi
 args=(-X PUT "repos/${repo}/contents/${path}"
   -f message="ddev-gui ${version}"
   -f content="$(printf '%s\n' "${cask}" | base64 -w0)")
