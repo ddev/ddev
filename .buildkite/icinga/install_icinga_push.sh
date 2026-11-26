@@ -1,8 +1,8 @@
 #!/bin/bash
 # Installs testbot_icinga_push.sh on a macOS testbot as a launchd agent that
 # runs every 5 minutes. Safe to rerun: it reloads the agent only when the
-# script or the plist changed. testbot_maintenance.sh runs it on every job
-# once ~/.config/ddev-icinga/env exists, so runners pick up script changes.
+# script or the plist changed. testbot_maintenance.sh runs it on main builds
+# once ~/.config/ddev-icinga/env exists, so runners pick up merged changes.
 
 set -eu -o pipefail
 

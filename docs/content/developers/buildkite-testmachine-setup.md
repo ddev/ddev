@@ -486,7 +486,7 @@ The script reports:
 | --- | --- |
 | Host check | DOWN after 10 minutes without a result |
 | `disk` | `/System/Volumes/Data` 80% (WARNING) or 90% (CRITICAL) used |
-| `load` | 15-minute load average 7 (WARNING) or 10 (CRITICAL) |
+| `load-average` | 15-minute load average 7 (WARNING) or 10 (CRITICAL) |
 | `buildkite-agent` | Not running (CRITICAL), or a job running 4 hours (WARNING) or 8 hours (CRITICAL) |
 | `docker-providers` | A Docker context whose daemon doesn't answer within 20 seconds (CRITICAL); a stopped provider is normal |
 | `leftover-containers` | Containers in any running provider while no job runs (WARNING) |
@@ -502,7 +502,7 @@ In Icinga Director:
    It must not import `unreachable-linux`, whose apply rules run SSH and agent checks.
 2. Create a service template `ddev-macos-runner-pushed` with the same settings,
    except `dummy_state` = `3`.
-3. Add a service apply rule for each of `disk`, `load`, `buildkite-agent`,
+3. Add a service apply rule for each of `disk`, `load-average`, `buildkite-agent`,
    `docker-providers`, and `leftover-containers`, importing
    `ddev-macos-runner-pushed` and assigned where `"ddev-macos-runner" in host.templates`.
    The service names must match the names the script pushes.

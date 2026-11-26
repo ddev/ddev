@@ -106,7 +106,7 @@ function check_load {
   elif awk -v l="${load15}" -v w="${LOAD_WARN}" 'BEGIN { exit !(l >= w) }'; then
     status=${WARNING}
   fi
-  push "load" "${status}" "load average ${load1}, ${load5}, ${load15}" \
+  push "load-average" "${status}" "load average ${load1}, ${load5}, ${load15}" \
     "load1=${load1}" "load5=${load5}" "load15=${load15};${LOAD_WARN};${LOAD_CRIT}"
 }
 
