@@ -493,69 +493,13 @@ The script reports:
 
 ### Icinga Configuration on `monitor.ddev.com`
 
-In Icinga Director:
-
-1. Create a host template `ddev-macos-runner` with check command `dummy`,
-   active and passive checks enabled, check interval and retry interval
-   `10m`, max check attempts `1`, host group `ddev-testrunners`, and custom
-   variables `dummy_state` = `2` and `dummy_text` = `No result pushed for 10 minutes`.
-   It must not import `unreachable-linux`, whose apply rules run SSH and agent checks.
-2. Create a service template `ddev-macos-runner-pushed` with the same settings,
-   except `dummy_state` = `3`.
-3. Add a service apply rule for each of `disk`, `load-average`, `buildkite-agent`,
-   `docker-providers`, and `leftover-containers`, importing
-   `ddev-macos-runner-pushed` and assigned where `"ddev-macos-runner" in host.templates`.
-   The service names must match the names the script pushes.
-4. Add a host per runner, importing `ddev-macos-runner`, named with the
-   runner's Tailscale short name, for example `tb-macos-arm64-7`. Deploy.
-
-The equivalent Icinga DSL, for reference:
-
-```text
-template Host "ddev-macos-runner" {
-    check_command = "dummy"
-    enable_active_checks = true
-    enable_passive_checks = true
-    check_interval = 10m
-    retry_interval = 10m
-    max_check_attempts = 1
-    groups = [ "ddev-testrunners" ]
-    vars.dummy_state = 2
-    vars.dummy_text = "No result pushed for 10 minutes"
-}
-
-template Service "ddev-macos-runner-pushed" {
-    check_command = "dummy"
-    enable_active_checks = true
-    enable_passive_checks = true
-    check_interval = 10m
-    retry_interval = 10m
-    max_check_attempts = 1
-    vars.dummy_state = 3
-    vars.dummy_text = "No result pushed for 10 minutes"
-}
-
-apply Service "docker-providers" {
-    import "ddev-macos-runner-pushed"
-    assign where "ddev-macos-runner" in host.templates
-}
-```
-
-Director doesn't manage API users, so add one per runner by hand in
-`/etc/icinga2/conf.d/api-users.conf`. The filter limits each runner to its own
-results, because pull request code runs on the runner and can read the password:
-
-```text
-object ApiUser "push-tb-macos-arm64-7" {
-    password = "<generated password>"
-    permissions = [ {
-        permission = "actions/process-check-result"
-        filter = {{ host.name == "tb-macos-arm64-7" }}
-    } ]
-}
-```
-
-Then run `sudo icinga2 daemon -C && sudo systemctl reload icinga2`.
+Each runner needs a host in Icinga Director that imports the
+`ddev-macos-runner` template, named with the runner's Tailscale short name,
+and an Icinga API user that can submit results only for that host. Pull request
+code runs on the runner and can read the password, so the user can't touch any
+other host. Maintainers create both; the steps are in the private
+`ddev/maintainer-info` repository, under "macOS Runners: Pushed Checks" in
+`topics/monitoring.md`.
 
 ### Runner Setup
 
@@ -565,7 +509,7 @@ Then run `sudo icinga2 daemon -C && sudo systemctl reload icinga2`.
     ICINGA_URL=https://monitor.ddev.com:5665
     ICINGA_HOST=tb-macos-arm64-7
     ICINGA_API_USER=push-tb-macos-arm64-7
-    ICINGA_API_PASSWORD=<generated password>
+    ICINGA_API_PASSWORD=<the API user's password>
     ```
 
 2. Copy the Icinga CA certificate, `/var/lib/icinga2/certs/ca.crt` on
@@ -577,7 +521,6 @@ Then run `sudo icinga2 daemon -C && sudo systemctl reload icinga2`.
    of `main`, so runners pick up changes once they are merged. Builds of other
    branches and pull requests don't install; try changes there with `--dry-run`.
 4. Push failures go to `~/.config/ddev-icinga/push.log`.
-5. Add the runner to `/usr/local/bin/check_buildkite_agents.sh` on `monitor.ddev.com`.
 
 ## macOS Docker Desktop Test Agent Setup (Apple Silicon)
 
