@@ -178,7 +178,7 @@ The filename decides where its content lands in the generated Dockerfile, and [g
 | 3 | `pre.Dockerfile`, `pre.Dockerfile.*`<br>([global](#global-dockerfiles), then project)         | For directives that have to come early, like proxy settings, SSL termination, [CA certificates](#global-dockerfiles), or [EOL PHP versions](#adding-eol-versions-of-php)                 |
 | 4 | DDEV’s own build steps                                                                        | PHP version, `webimage_extra_packages` or `dbimage_extra_packages`, Composer update, database clients                                                                                     |
 | 5 | `Dockerfile`, `Dockerfile.*`<br>([global](#global-dockerfiles), then project)                 | The usual choice for most customizations                                                                                                                                                 |
-| 6 | DDEV’s finishing steps                                                                        | Permission fixes on the web image, which have to run after everything else                                                                                                               |
+| 6 | DDEV’s finishing steps                                                                        | Keeps PHP config writable for `phpenmod` and `phpdismod` after your steps                                                                                                                |
 
 Within each group, files are inserted in alphabetical order, so `Dockerfile` comes first, then `Dockerfile.*` alphabetically.
 
