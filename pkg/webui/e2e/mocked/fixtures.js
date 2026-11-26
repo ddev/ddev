@@ -33,7 +33,7 @@ function describe(p, extra) {
     mailpit_https_url: `https://${p.name}.ddev.site:8026`,
     dbinfo: {
       dbname: 'db', username: 'db', password: 'db', host: 'db', dbPort: '3306',
-      published_port: isRunning ? 32771 : 0, database_type: 'mariadb', database_version: '11.8',
+      published_port: isRunning ? 32771 : -1, database_type: 'mariadb', database_version: '11.8',
     },
     services: {
       web: {

@@ -58,6 +58,8 @@ test('shows a stopped project', async ({ page }) => {
   await expect(page.getByRole('checkbox')).toBeDisabled();
   // A path with a space is quoted for the shell.
   await expect(page.getByText("cd '/home/me/projects/my wp' && ddev ssh")).toBeVisible();
+  await page.getByRole('button', { name: 'Database' }).click();
+  await expect(page.locator('tr', { hasText: 'From the host' })).toContainText('start the project');
 });
 
 test('shows services and database details', async ({ page }) => {

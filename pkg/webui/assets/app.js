@@ -87,7 +87,7 @@ function copy(text) {
 
 function copyable(text, display) {
   return h('span', { class: 'copyable' }, display || text,
-    h('button', { class: 'copy-btn', title: 'Copy', type: 'button', onclick: () => copy(text) }, '⧉'));
+    h('button', { class: 'copy-btn', title: 'Copy', 'aria-label': 'Copy', type: 'button', onclick: () => copy(text) }));
 }
 
 function link(url, text) {
@@ -340,7 +340,7 @@ function overviewTab(p, d) {
   return h('div', { class: 'cards' },
     h('div', { class: 'card' }, h('h3', {}, 'URLs'),
       running && urls.length
-        ? h('ul', { class: 'url-list' }, urls.map((u) => h('li', {}, link(u), ' ', h('button', { class: 'copy-btn', type: 'button', onclick: () => copy(u) }, '⧉'))))
+        ? h('ul', { class: 'url-list' }, urls.map((u) => h('li', {}, link(u), ' ', h('button', { class: 'copy-btn', title: 'Copy', 'aria-label': 'Copy', type: 'button', onclick: () => copy(u) }))))
         : h('p', { class: 'muted' }, 'Start the project to get its URLs.')),
     h('div', { class: 'card' }, h('h3', {}, 'Configuration'), kv([
       ['PHP', desc.php_version],
@@ -413,7 +413,7 @@ function databaseTab(p, d) {
       ['Password', db.password && copyable(db.password)],
       ['From this project', copyable(`db:${db.dbPort}`)],
       ['From other projects', copyable(`ddev-${p.name}-db:${db.dbPort}`)],
-      ['From the host', db.published_port ? copyable(`${host}:${db.published_port}`) : (p.status === 'running' ? 'not published' : 'start the project')],
+      ['From the host', db.published_port > 0 ? copyable(`${host}:${db.published_port}`) : (p.status === 'running' ? 'not published' : 'start the project')],
     ])),
     h('div', { class: 'card' }, h('h3', {}, 'Tools'),
       h('p', { class: 'muted' }, 'Open a database client in a terminal:'),
