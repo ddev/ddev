@@ -36,7 +36,9 @@
   let step = 'load';
   try {
     step = 'status stream';
-    await until('the status stream', () => $('#conn-status').textContent === 'connected');
+    // #status-text leaves Connecting… once the stream opens. Without Docker
+    // it then reads "Docker unreachable", which is enough here.
+    await until('the status stream', () => !/^(Connecting|Disconnected)/.test($('#status-text').textContent));
 
     step = 'refused directory';
     await addProject(DDEV_SELFTEST_DIR + '/missing');
