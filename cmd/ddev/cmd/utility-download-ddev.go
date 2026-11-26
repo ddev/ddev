@@ -234,8 +234,7 @@ func runDownloadDdev(cmd *cobra.Command) error {
 		}
 	}
 
-	printResult(ddevDest, hostnameDest, target, spec.signed, autoUnblocked)
-	printGUIResult(guiDest, target)
+	printResult(ddevDest, hostnameDest, guiDest, target, spec.signed, autoUnblocked)
 	return nil
 }
 
@@ -267,20 +266,16 @@ func copyGUIApp(extractDir, outputDir string, t buildTarget) (string, error) {
 	return dest, nil
 }
 
-// printGUIResult says where the GUI app landed and how to start it.
-func printGUIResult(dest string, t buildTarget) {
-	if dest == "" {
-		return
-	}
-	util.Success("Downloaded the experimental GUI app to %s", dest)
-	if !t.isNative || strings.HasSuffix(dest, ".zip") {
+// printGUIHint says how to start the GUI app that landed at dest.
+func printGUIHint(dest string, t buildTarget) {
+	if dest == "" || strings.HasSuffix(dest, ".zip") {
 		return
 	}
 	// `ddev gui` finds the app next to it and makes the app run that ddev.
 	ddev := filepath.Join(filepath.Dir(dest), "ddev"+t.exeExt)
-	output.UserOut.Println("To open it:")
+	output.UserOut.Println("To open the GUI app:")
 	if t.goos == "windows" {
-		output.UserOut.Printf("  & %q gui", ddev)
+		output.UserOut.Printf("  & %s gui", psQuote(ddev))
 	} else {
 		output.UserOut.Printf("  %q gui", ddev)
 	}
@@ -572,10 +567,13 @@ func copyExecutable(src, dest string) error {
 
 // printResult reports where the binaries landed and how to use them.
 // UserOut appends a newline per call, so blank separator lines use Println("").
-func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblocked bool) {
+func printResult(ddevDest, hostnameDest, guiDest string, t buildTarget, signed, autoUnblocked bool) {
 	util.Success("Downloaded ddev to %s", ddevDest)
 	if hostnameDest != "" {
 		util.Success("Downloaded ddev-hostname to %s", hostnameDest)
+	}
+	if guiDest != "" {
+		util.Success("Downloaded the experimental GUI app to %s", guiDest)
 	}
 
 	// macOS Gatekeeper and Windows SmartScreen can refuse to run downloaded
@@ -617,10 +615,10 @@ func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblo
 		return
 	}
 
-	output.UserOut.Println("")
 	for _, line := range pathHint(filepath.Dir(ddevDest), t.goos, os.Getenv("MSYSTEM")) {
 		output.UserOut.Println(line)
 	}
+	printGUIHint(guiDest, t)
 }
 
 // pathHint returns the lines telling the user how to put outputDir first on

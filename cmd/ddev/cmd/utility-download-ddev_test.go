@@ -2,11 +2,14 @@ package cmd
 
 import (
 	"archive/zip"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/github"
@@ -85,6 +88,32 @@ func TestDownloadDdevPathHint(t *testing.T) {
 		require.Equal(t, `  export PATH="/c/Users/u/tmp/dl:$PATH"`,
 			pathHint(`C:\Users\u\tmp\dl`, "windows", "MINGW64")[1])
 	}
+}
+
+// TestDownloadDdevPrintResult verifies the downloads are listed first,
+// then the hints, with no blank line between them.
+func TestDownloadDdevPrintResult(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "dl")
+	ddev := filepath.Join(dir, "ddev")
+	linux := buildTarget{goos: "linux", osName: "linux", arch: "amd64", isNative: true}
+	capture := util.CaptureUserOut()
+	printResult(ddev, filepath.Join(dir, "ddev-hostname"), filepath.Join(dir, "ddev-gui"), linux, true, false)
+	out := capture()
+	lines := strings.Split(strings.TrimRight(out, "\r\n"), "\n")
+	for i, l := range lines {
+		lines[i] = strings.TrimSpace(ansi.Strip(l))
+	}
+	require.Equal(t, []string{
+		"Downloaded ddev to " + ddev,
+		"Downloaded ddev-hostname to " + filepath.Join(dir, "ddev-hostname"),
+		"Downloaded the experimental GUI app to " + filepath.Join(dir, "ddev-gui"),
+		"To use this build in the current shell (this window only):",
+		fmt.Sprintf(`export PATH="%s:$PATH"`, dir),
+		"hash -r",
+		"ddev version",
+		"To open the GUI app:",
+		fmt.Sprintf("%q gui", ddev),
+	}, lines)
 }
 
 // TestDownloadDdevClearMacQuarantine verifies the auto-unblock is attempted
