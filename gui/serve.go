@@ -190,6 +190,8 @@ func startServe(t target) (*serveClient, error) {
 			}
 			out.add(line)
 		}
+		// A line too long for the scanner ends the loop; ddev must not block.
+		_, _ = io.Copy(io.Discard, pr)
 	}()
 	exited := make(chan struct{})
 	go func() {
