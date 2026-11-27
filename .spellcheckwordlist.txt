@@ -104,6 +104,7 @@ IPv
 If
 IIS
 Joomla
+KDE
 Kalabox
 Kubernetes
 Lando
