@@ -59,6 +59,7 @@ func main() {
 	if err := checkWebKitSandbox(); err != nil {
 		log.Fatal(err)
 	}
+	setAppName()
 	useLoginShellPath()
 
 	var st *selfTest
@@ -229,6 +230,7 @@ func main() {
 	})
 	q.app, q.show = app, showWindow
 	q.handleSignals()
+	followDarkMode(app)
 
 	window = app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:      "main",
