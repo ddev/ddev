@@ -97,8 +97,8 @@ func TestProgressOptsPlainWriterRouting(t *testing.T) {
 }
 
 // TestQuietEventProcessorSuppressesSubEvents verifies that quietEventProcessor
-// drops per-layer sub-events (ParentID set) and in-progress top-level events,
-// only reporting a resource's final Done/Error/Warning status once.
+// drops per-layer sub-events (ParentID set), reports the start of a pull
+// once, and reports a resource's final Done/Error/Warning status once.
 func TestQuietEventProcessorSuppressesSubEvents(t *testing.T) {
 	var buf bytes.Buffer
 	ep := newQuietEventProcessor(&buf)
@@ -107,8 +107,11 @@ func TestQuietEventProcessorSuppressesSubEvents(t *testing.T) {
 	ep.On(
 		// Sub-event (layer download progress) must be dropped entirely.
 		api.Resource{ID: "sha256:layer", ParentID: "Image ddev/ddev-webserver:latest", Status: api.Working, Text: "Downloading", Details: "45%"},
-		// In-progress top-level event must be dropped.
+		// The start of a pull is reported at once, and only once.
 		api.Resource{ID: "Image ddev/ddev-webserver:latest", Status: api.Working, Text: "Pulling"},
+		api.Resource{ID: "Image ddev/ddev-webserver:latest", Status: api.Working, Text: "Pulling"},
+		// Other in-progress top-level events are dropped.
+		api.Resource{ID: "Container ddev-p-web", Status: api.Working, Text: "Creating"},
 		// Final top-level event must be reported.
 		api.Resource{ID: "Image ddev/ddev-webserver:latest", Status: api.Done, Text: "Pulled"},
 		// A repeat of the same final event must not be reported twice.
@@ -116,15 +119,16 @@ func TestQuietEventProcessorSuppressesSubEvents(t *testing.T) {
 		// A different top-level resource erroring out must be reported.
 		api.Resource{ID: "Image ddev/ddev-dbserver:latest", Status: api.Error, Text: "Error", Details: "pull access denied"},
 	)
-	// Errors are printed before the operation ends.
+	// Pulls and errors are printed before the operation ends.
+	require.Contains(t, buf.String(), "Image Pulling: ddev/ddev-webserver:latest\n")
 	require.Contains(t, buf.String(), "Image ddev/ddev-dbserver:latest Error pull access denied")
 	ep.Done("pull", false)
 
 	out := buf.String()
 	require.NotContains(t, out, "Downloading", "layer sub-events must be suppressed")
-	require.NotContains(t, out, "Pulling", "in-progress top-level events must be suppressed")
-	require.Equal(t, 1, strings.Count(out, "ddev/ddev-webserver:latest"),
-		"expected exactly one reported line for the webserver image")
+	require.NotContains(t, out, "Creating", "in-progress top-level events must be suppressed")
+	require.Equal(t, 2, strings.Count(out, "ddev/ddev-webserver:latest"),
+		"expected one Pulling and one Pulled line for the webserver image")
 	require.Contains(t, out, "Image Pulled: ddev/ddev-webserver:latest\n")
 }
 
