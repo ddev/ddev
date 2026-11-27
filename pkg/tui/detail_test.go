@@ -507,19 +507,6 @@ func TestDetailScroll(t *testing.T) {
 	require.True(t, keys(t, m, "g", "space").detail.vp.AtTop(), "space does not scroll")
 }
 
-func TestEditorURL(t *testing.T) {
-	t.Setenv("WSL_DISTRO_NAME", "")
-	require.Equal(t, "vscode://file/home/user/my%20site?windowId=_blank", editorURL("vscode", "/home/user/my site"))
-	require.Equal(t, "phpstorm://open?file=/home/user/my%20site", editorURL("phpstorm", "/home/user/my site"))
-	require.Equal(t, "phpstorm://open?file=/home/user/a%26b%2Bc", editorURL("phpstorm", "/home/user/a&b+c"))
-	require.Equal(t, "vscode://file/C:/Users/me/site?windowId=_blank", editorURL("vscode", "C:/Users/me/site"))
-	require.Empty(t, editorURL("unknown", "/home/user"))
-
-	t.Setenv("WSL_DISTRO_NAME", "Ubuntu-26.04")
-	require.Equal(t, "vscode://vscode-remote/wsl+Ubuntu-26.04/home/user/my%20site?windowId=_blank", editorURL("vscode", "/home/user/my site"))
-	require.Equal(t, "phpstorm://open?file=//wsl.localhost/Ubuntu-26.04/home/user/my%20site", editorURL("phpstorm", "/home/user/my site"))
-}
-
 func TestDashboardHyperlinks(t *testing.T) {
 	m := newModel(t, 120, 24, sampleProjects()...)
 	out := m.View().Content

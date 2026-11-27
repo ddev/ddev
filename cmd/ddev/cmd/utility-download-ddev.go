@@ -38,7 +38,9 @@ var DownloadDdevCmd = &cobra.Command{
 	Short:       "Download ddev and ddev-hostname binaries built by CI or a release",
 	Long: `Download the ddev and ddev-hostname binaries built by DDEV CI for a given
 source (PR, branch, commit, release tag, latest stable release, or main HEAD)
-and write them into a directory. Exactly one source flag is required.
+and write them into a directory. Exactly one source flag is required. A CI
+build that includes the experimental GUI app (ddev-gui, or DDEV.app
+on macOS) brings it too, next to the ddev it runs.
 
 Releases and main builds are signed; PR and other branch builds are not. No
 source needs a GitHub token, but one (DDEV_GITHUB_TOKEN, GH_TOKEN, or
@@ -210,9 +212,17 @@ func runDownloadDdev(cmd *cobra.Command) error {
 		}
 	}
 
+	guiDest, err := copyGUIApp(extractDir, outputDir, target)
+	if err != nil {
+		return err
+	}
+
 	paths := []string{ddevDest}
 	if hostnameDest != "" {
 		paths = append(paths, hostnameDest)
+	}
+	if guiDest != "" {
+		paths = append(paths, guiDest)
 	}
 	autoUnblocked := false
 	if !spec.signed {
@@ -224,12 +234,73 @@ func runDownloadDdev(cmd *cobra.Command) error {
 		}
 	}
 
-	printResult(ddevDest, hostnameDest, target, spec.signed, autoUnblocked)
+	printResult(ddevDest, hostnameDest, guiDest, target, spec.signed, autoUnblocked)
 	return nil
 }
 
+// copyGUIApp copies the experimental GUI app, which CI puts in each
+// OS's artifact, next to ddev, where the app looks for the ddev it runs.
+// On macOS it is DDEV.app, zipped by ditto to keep its permissions and
+// signature. It returns "" when the build has no GUI app.
+func copyGUIApp(extractDir, outputDir string, t buildTarget) (string, error) {
+	bin := "ddev-gui" + t.exeExt
+	if src := filepath.Join(extractDir, bin); fileutil.FileExists(src) {
+		dest := filepath.Join(outputDir, bin)
+		return dest, copyExecutable(src, dest)
+	}
+	zipped := filepath.Join(extractDir, "DDEV.app.zip")
+	if !fileutil.FileExists(zipped) {
+		return "", nil
+	}
+	if runtime.GOOS != "darwin" || !util.IsCommandAvailable("ditto") {
+		dest := filepath.Join(outputDir, "DDEV.app.zip")
+		return dest, fileutil.CopyFile(zipped, dest)
+	}
+	dest := filepath.Join(outputDir, "DDEV.app")
+	if err := os.RemoveAll(dest); err != nil {
+		return "", err
+	}
+	if out, err := exec.Command("ditto", "-x", "-k", zipped, outputDir).CombinedOutput(); err != nil {
+		return "", fmt.Errorf("unable to unzip DDEV.app: %v: %s", err, out)
+	}
+	return dest, nil
+}
+
+// printGUIHint says how to start the GUI app that landed at dest.
+func printGUIHint(dest string, t buildTarget) {
+	if dest == "" || strings.HasSuffix(dest, ".zip") {
+		return
+	}
+	// `ddev gui` finds the app next to it and makes the app run that ddev.
+	ddev := filepath.Join(filepath.Dir(dest), "ddev"+t.exeExt)
+	if t.goos == "linux" && webKitSandboxBlocked() {
+		const profile = "/etc/apparmor.d/ddev-gui-download"
+		rule := fmt.Sprintf(`abi <abi/4.0>, profile ddev-gui-download %q flags=(unconfined) { userns, }`, dest)
+		output.UserOut.Println("AppArmor stops the GUI app from starting. To allow it, as the ddev-gui package does:")
+		output.UserOut.Printf("  echo '%s' | sudo tee %s", strings.ReplaceAll(rule, "'", `'\''`), profile)
+		output.UserOut.Printf("  sudo apparmor_parser -r %s", profile)
+	}
+	output.UserOut.Println("To open the GUI app:")
+	if t.goos == "windows" {
+		output.UserOut.Printf("  & %s gui", psQuote(ddev))
+	} else {
+		output.UserOut.Printf("  %q gui", ddev)
+	}
+}
+
+// webKitSandboxBlocked reports whether bubblewrap, which WebKitGTK's sandbox
+// runs, cannot create a user namespace, as on Ubuntu 24.04.
+func webKitSandboxBlocked() bool {
+	bwrap, err := exec.LookPath("bwrap")
+	if err != nil {
+		return false
+	}
+	return exec.Command(bwrap, "--ro-bind", "/", "/", "true").Run() != nil
+}
+
 // clearMacQuarantine best-effort clears the macOS "com.apple.quarantine" xattr
-// from freshly downloaded files, so Gatekeeper doesn't refuse to run them.
+// from freshly downloaded files and app bundles, so Gatekeeper doesn't refuse
+// to run them.
 // Returns whether it attempted the clear (the xattr tool was found); a missing
 // or absent attribute is not treated as a failure, since the file may not
 // have been quarantined in the first place.
@@ -238,7 +309,7 @@ func clearMacQuarantine(paths []string) bool {
 		return false
 	}
 	for _, p := range paths {
-		_ = exec.Command("xattr", "-d", "com.apple.quarantine", p).Run()
+		_ = exec.Command("xattr", "-dr", "com.apple.quarantine", p).Run()
 	}
 	return true
 }
@@ -513,10 +584,13 @@ func copyExecutable(src, dest string) error {
 
 // printResult reports where the binaries landed and how to use them.
 // UserOut appends a newline per call, so blank separator lines use Println("").
-func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblocked bool) {
+func printResult(ddevDest, hostnameDest, guiDest string, t buildTarget, signed, autoUnblocked bool) {
 	util.Success("Downloaded ddev to %s", ddevDest)
 	if hostnameDest != "" {
 		util.Success("Downloaded ddev-hostname to %s", hostnameDest)
+	}
+	if guiDest != "" {
+		util.Success("Downloaded the experimental GUI app to %s", guiDest)
 	}
 
 	// macOS Gatekeeper and Windows SmartScreen can refuse to run downloaded
@@ -558,10 +632,10 @@ func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblo
 		return
 	}
 
-	output.UserOut.Println("")
 	for _, line := range pathHint(filepath.Dir(ddevDest), t.goos, os.Getenv("MSYSTEM")) {
 		output.UserOut.Println(line)
 	}
+	printGUIHint(guiDest, t)
 }
 
 // pathHint returns the lines telling the user how to put outputDir first on

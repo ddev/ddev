@@ -11,6 +11,7 @@ on:
       - ".ci-scripts/**"
       - "!.github/workflows/docs**"
       - "cmd/**"
+      - "gui/**"
       - "pkg/**"
       - "third_party/**"
       - "vendor/**"
@@ -50,6 +51,9 @@ jobs:
         with:
           go-version: '>=1.23'
           check-latest: true
+          cache-dependency-path: |
+            go.sum
+            gui/go.sum
 
       # Find out info about how github is getting the hash
       - run: "git describe --tags --always --dirty"
@@ -58,14 +62,6 @@ jobs:
       - name: Build DDEV executables
         run: make CGO_ENABLED=0 BUILDARGS="" linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64_install windows_arm64_install wsl_amd64 wsl_arm64 mkcert
 
-      - name: Generate artifacts
-        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
-
-      - name: Upload all artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: all-ddev-executables
-          path: ${{ github.workspace }}/artifacts/*
       - name: Upload macos-amd64 binary
         uses: actions/upload-artifact@v7
         with:
@@ -106,6 +102,7 @@ jobs:
             .gotmp/bin/windows_amd64/ddev.exe
             .gotmp/bin/windows_amd64/ddev-hostname.exe
             .gotmp/bin/windows_amd64/mkcert.exe
+            .gotmp/bin/windows_amd64/ddev-gui.exe
       - name: Upload windows_amd64 installer
         uses: actions/upload-artifact@v7
         with:
@@ -119,8 +116,219 @@ jobs:
             .gotmp/bin/windows_arm64/ddev.exe
             .gotmp/bin/windows_arm64/ddev-hostname.exe
             .gotmp/bin/windows_arm64/mkcert.exe
+            .gotmp/bin/windows_arm64/ddev-gui.exe
       - name: Upload windows_arm64 installer
         uses: actions/upload-artifact@v7
         with:
           name: ddev-windows-arm64-installer
           path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
+
+  # The experimental GUI app (gui/README.md) joins each OS's ddev
+  # artifact, so `ddev utility download-ddev --pr` brings the app with the
+  # ddev it runs. The Windows app is already there: the build job
+  # cross-builds it, and the installers carry it. macOS and Linux need CGO,
+  # so they build here and upload the ddev artifacts again with the app.
+  # These jobs may fail without failing the workflow, so the download comment
+  # still appears. Their builds are unsigned; main-build.yml signs.
+  gui-macos:
+    name: GUI app on macOS
+    runs-on: macos-latest
+    needs: build
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: gui/go.sum
+
+      - name: Build the universal DDEV.app
+        run: make -C gui
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: ddev-macos-*
+          path: ddev-artifacts
+
+      - name: Add DDEV.app.zip to the ddev artifacts
+        run: |
+          set -eu -o pipefail
+          for arch in arm64 amd64; do
+            cp .gotmp/bin/darwin_universal/DDEV.app.zip "ddev-artifacts/ddev-macos-${arch}/"
+          done
+          chmod +x ddev-artifacts/ddev-macos-arm64/*
+
+      - name: Upload macos-amd64 binary and app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-macos-amd64
+          path: ddev-artifacts/ddev-macos-amd64/*
+          overwrite: true
+
+      - name: Upload macos-arm64 binary and app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-macos-arm64
+          path: ddev-artifacts/ddev-macos-arm64/*
+          overwrite: true
+
+      - name: Go tests
+        env:
+          DDEV_BINARY: ${{ github.workspace }}/ddev-artifacts/ddev-macos-arm64/ddev
+        run: make -C gui test
+
+      # Drives the dashboard in the app's own window; see gui/selftest.js.
+      - name: Self-test in the app window
+        env:
+          DDEV_GUI_SELFTEST: "true"
+          DDEV_NO_INSTRUMENTATION: "true"
+          DDEV_BINARY: ${{ github.workspace }}/ddev-artifacts/ddev-macos-arm64/ddev
+        run: .gotmp/bin/darwin_universal/DDEV.app/Contents/MacOS/ddev-gui
+
+  gui-linux:
+    name: GUI app on Linux ${{ matrix.arch }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
+    needs: build
+    continue-on-error: true
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: gui/go.sum
+
+      - name: Install GTK 4 and WebKitGTK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev xvfb
+
+      # Wails needs CGO on Linux, so each architecture builds on its own runner.
+      - name: Build the app
+        run: make -C gui
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: ddev-linux-${{ matrix.arch }}
+          path: ddev-artifact
+
+      - name: Add ddev-gui to the ddev artifact
+        run: |
+          cp .gotmp/bin/linux_${{ matrix.arch }}/ddev-gui ddev-artifact/
+          chmod +x ddev-artifact/*
+
+      - name: Upload linux-${{ matrix.arch }} binary and app
+        uses: actions/upload-artifact@v7
+        with:
+          name: ddev-linux-${{ matrix.arch }}
+          path: ddev-artifact/*
+          overwrite: true
+
+      - name: Go tests
+        env:
+          DDEV_BINARY: ${{ github.workspace }}/ddev-artifact/ddev
+        run: make -C gui test
+
+      # The app runs the ddev next to it, as a package installs them.
+      - name: Self-test in the app window
+        env:
+          DDEV_GUI_SELFTEST: "true"
+          DDEV_NO_INSTRUMENTATION: "true"
+        run: xvfb-run --auto-servernum ddev-artifact/ddev-gui
+
+  # The build job's ddev-windows-amd64 artifact holds the app next to
+  # ddev.exe, as a traditional Windows install does.
+  gui-windows:
+    name: GUI app on Windows
+    runs-on: windows-latest
+    needs: build
+    continue-on-error: true
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: gui/go.sum
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: ddev-windows-amd64
+          path: ddev
+
+      - name: Go tests
+        shell: bash
+        env:
+          CGO_ENABLED: "0"
+          DDEV_BINARY: ${{ github.workspace }}\ddev\ddev.exe
+        run: cd gui && go test -v -count=1 ./...
+
+      - name: Self-test in the app window
+        env:
+          DDEV_GUI_SELFTEST: "true"
+          DDEV_NO_INSTRUMENTATION: "true"
+        run: ./ddev/ddev-gui.exe | cat
+
+  # The tarballs in all-ddev-executables carry the GUI app, so they are
+  # made after the jobs that add it to each OS's ddev artifact.
+  all-artifacts:
+    name: Archive all executables
+    runs-on: ubuntu-26.04
+    needs: [build, gui-macos, gui-linux]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # git describe names the version in each tarball
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: ddev-*
+          path: incoming
+
+      # Artifacts do not carry the executable bit.
+      - name: Assemble .gotmp/bin
+        run: |
+          set -eu -o pipefail
+          mkdir -p .gotmp/bin/darwin_universal
+          for arch in amd64 arm64; do
+            for os in linux macos windows; do
+              dir=$os
+              if [ $os = macos ]; then dir=darwin; fi
+              mkdir -p ".gotmp/bin/${dir}_${arch}"
+              cp -a "incoming/ddev-${os}-${arch}/." ".gotmp/bin/${dir}_${arch}/"
+            done
+            chmod +x .gotmp/bin/{linux,darwin}_${arch}/*
+          done
+          if [ -f .gotmp/bin/darwin_arm64/DDEV.app.zip ]; then
+            mv .gotmp/bin/darwin_arm64/DDEV.app.zip .gotmp/bin/darwin_universal/
+          fi
+
+      - name: Generate artifacts
+        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
+
+      - name: Upload all artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: all-ddev-executables
+          path: ${{ github.workspace }}/artifacts/*

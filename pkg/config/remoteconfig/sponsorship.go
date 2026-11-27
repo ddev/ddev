@@ -15,13 +15,21 @@ import (
 const (
 	sponsorshipLocalFileName  = ".sponsorship-data"
 	sponsorshipUpdateInterval = 24 // hours
+	// sponsorshipStateKey keeps the download time apart from the remote
+	// config's, so that neither download holds the other back.
+	sponsorshipStateKey = "sponsorship"
 )
+
+type sponsorshipState struct {
+	UpdatedAt time.Time `yaml:"updated_at"`
+}
 
 // sponsorshipManager implements types.SponsorshipManager
 type sponsorshipManager struct {
 	downloader       downloader.JSONCDownloader
 	fileStorage      storage.SponsorshipStorage
-	state            *state
+	stateManager     statetypes.State
+	state            sponsorshipState
 	updateInterval   time.Duration
 	isInternetActive func() bool
 	data             *types.SponsorshipData
@@ -29,13 +37,20 @@ type sponsorshipManager struct {
 }
 
 // NewSponsorshipManager creates a new sponsorship data manager using a direct URL
+// An updateInterval of 0 means the default of 24 hours.
 func NewSponsorshipManager(localPath string, stateManager statetypes.State, isInternetActive func() bool, updateInterval int, url string) types.SponsorshipManager {
+	if updateInterval <= 0 {
+		updateInterval = sponsorshipUpdateInterval
+	}
 	mgr := &sponsorshipManager{
 		downloader:       downloader.NewURLJSONCDownloader(url),
 		fileStorage:      storage.NewSponsorshipFileStorage(localPath + "/" + sponsorshipLocalFileName),
-		state:            newState(stateManager),
+		stateManager:     stateManager,
 		updateInterval:   time.Duration(updateInterval) * time.Hour,
 		isInternetActive: isInternetActive,
+	}
+	if err := stateManager.Get(sponsorshipStateKey, &mgr.state); err != nil {
+		util.Debug("Error while loading sponsorship state: %v", err)
 	}
 
 	mgr.loadFromLocalStorage()
@@ -136,7 +151,10 @@ func (m *sponsorshipManager) updateFromRemote() {
 
 	// Update state
 	m.state.UpdatedAt = time.Now()
-	if err = m.state.save(); err != nil {
+	if err = m.stateManager.Set(sponsorshipStateKey, m.state); err == nil {
+		err = m.stateManager.Save()
+	}
+	if err != nil {
 		util.Debug("Error saving sponsorship state: %v", err)
 	}
 }

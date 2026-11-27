@@ -44,36 +44,29 @@ if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
 fi
 
 
-# mkcert comes from `make mkcert`, already in each .gotmp/bin platform directory
+# mkcert comes from `make mkcert`, already in each .gotmp/bin platform directory.
+# The GUI app is built in other jobs, so it is added only where present:
+# ddev-gui next to ddev, and DDEV.app.zip from darwin_universal.
 
-# Generate macOS-amd64 tarball/zipball
-pushd $BASE_DIR/.gotmp/bin/darwin_amd64 >/dev/null
-tar -czf $ARTIFACTS/ddev_macos-amd64.$VERSION.tar.gz ddev ddev-hostname mkcert
-popd >/dev/null
+# archive <os>-<arch> <dir> <files...>
+archive() {
+  local name=$1 dir=$2
+  shift 2
+  local files=("$@")
+  local extra=()
+  for f in ddev-gui ddev-gui.exe; do
+    if [ -f "$BASE_DIR/$dir/$f" ]; then files+=("$f"); fi
+  done
+  if [[ $name == macos-* ]] && [ -f "$BASE_DIR/.gotmp/bin/darwin_universal/DDEV.app.zip" ]; then
+    extra=(-C "$BASE_DIR/.gotmp/bin/darwin_universal" DDEV.app.zip)
+  fi
+  tar -czf "$ARTIFACTS/ddev_$name.$VERSION.tar.gz" -C "$BASE_DIR/$dir" "${files[@]}" ${extra[@]+"${extra[@]}"}
+}
 
-# Generate macOS-arm64 tarball/zipball
-pushd $BASE_DIR/.gotmp/bin/darwin_arm64 >/dev/null
-tar -czf $ARTIFACTS/ddev_macos-arm64.$VERSION.tar.gz ddev ddev-hostname mkcert
-popd >/dev/null
-
-# Generate linux-amd64 tarball/zipball
-pushd $BASE_DIR/.gotmp/bin/linux_amd64 >/dev/null
-tar -czf $ARTIFACTS/ddev_linux-amd64.$VERSION.tar.gz ddev ddev-hostname mkcert
-popd >/dev/null
-
-# Generate linux-arm64 tarball/zipball
-pushd $BASE_DIR/.gotmp/bin/linux_arm64 >/dev/null
-tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev ddev-hostname mkcert
-popd >/dev/null
-
-# generate windows-amd64 tarball/zipball; mkcert.exe is already here and signed
-pushd $BASE_DIR/.gotmp/bin/windows_amd64 >/dev/null
-tar -czf $ARTIFACTS/ddev_windows-amd64.$VERSION.tar.gz ddev.exe ddev-hostname.exe mkcert.exe
-popd >/dev/null
-
-# generate windows-arm64 tarball/zipball
-pushd $BASE_DIR/.gotmp/bin/windows_arm64 >/dev/null
-tar -czf $ARTIFACTS/ddev_windows-arm64.$VERSION.tar.gz ddev.exe ddev-hostname.exe mkcert.exe
-popd >/dev/null
-
-
+archive macos-amd64 .gotmp/bin/darwin_amd64 ddev ddev-hostname mkcert
+archive macos-arm64 .gotmp/bin/darwin_arm64 ddev ddev-hostname mkcert
+archive linux-amd64 .gotmp/bin/linux_amd64 ddev ddev-hostname mkcert
+archive linux-arm64 .gotmp/bin/linux_arm64 ddev ddev-hostname mkcert
+# mkcert.exe is already here and signed
+archive windows-amd64 .gotmp/bin/windows_amd64 ddev.exe ddev-hostname.exe mkcert.exe
+archive windows-arm64 .gotmp/bin/windows_arm64 ddev.exe ddev-hostname.exe mkcert.exe

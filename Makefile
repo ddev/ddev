@@ -286,7 +286,7 @@ setup:
 	@if [ -n "$(GOTESTSUM_JSONFILE_DIR)" ]; then mkdir -p "$(GOTESTSUM_JSONFILE_DIR)"; fi
 
 # Required static analysis targets for pre-push.
-staticrequired: setup golangci-lint markdownlint zensical check-image-tags
+staticrequired: setup golangci-lint gui-mod-tidy gui-lint markdownlint zensical check-image-tags
 
 # A changed image whose tag never made it into versionconstants.go ships a
 # binary pulling tags nothing builds. Checked rather than fixed here, because
@@ -413,21 +413,29 @@ windows_install: windows_amd64_install windows_arm64_install
 # the installer is then signed itself. The signing and packaging targets take
 # no build prerequisites, so main-build.yml can run one on a machine holding
 # nothing but signtool and the files it downloaded.
-windows_amd64_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt
-windows_arm64_binaries: $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt
+windows_amd64_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt windows_amd64_gui
+windows_arm64_binaries: $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt windows_arm64_gui
 windows_binaries: windows_amd64_binaries windows_arm64_binaries
+
+# The GUI app (gui/) needs no CGO on Windows, so it cross-builds here
+# and ships in the installer next to ddev.exe. Its module has its own
+# dependencies, so Go rebuilds it only when something changed.
+windows_%_gui:
+	$(MAKE) -C gui GOOS=windows GOARCH=$* VERSION=$(VERSION) binary
 
 windows_%_sign_binaries:
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing $* binaries, DDEV_WINDOWS_SIGN not set"; else \
 		echo "Signing windows $* binaries..." && \
-		signtool sign -fd SHA256 "$(GOTMP)/bin/windows_$*/ddev.exe" "$(GOTMP)/bin/windows_$*/ddev-hostname.exe" "$(GOTMP)/bin/windows_$*/mkcert.exe" "$(GOTMP)/bin/windows_$*/ddev_gen_autocomplete.exe"; \
+		signtool sign -fd SHA256 "$(GOTMP)/bin/windows_$*/ddev.exe" "$(GOTMP)/bin/windows_$*/ddev-hostname.exe" "$(GOTMP)/bin/windows_$*/mkcert.exe" "$(GOTMP)/bin/windows_$*/ddev_gen_autocomplete.exe" "$(GOTMP)/bin/windows_$*/ddev-gui.exe"; \
 	fi
 
 windows_sign_binaries: windows_amd64_sign_binaries windows_arm64_sign_binaries
 
 # Packs whatever is already in $(GOTMP)/bin/windows_$* and $(GOTMP)/bin/linux_$*.
+# makensis aborts with std::bad_alloc under the C locale or none, as in a
+# minimal environment, so it gets a UTF-8 one.
 windows_%_package:
-	@makensis -DTARGET_ARCH=$* -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
+	@LC_ALL=C.UTF-8 makensis -DTARGET_ARCH=$* -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 
 windows_%_sign_installer:
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing $* installer, DDEV_WINDOWS_SIGN not set"; else \
@@ -491,12 +499,35 @@ golangci-lint:
 	@echo "golangci-lint: "
 	$(call run_tool,golangci-lint,run $(SRC_AND_UNDER),$(GOLANGCI_LINT_HINT))
 
+# gui/ is a separate module, unvendored and independent of this one.
+# This tidies it and fails until the result is staged for commit, as CI's
+# Static Validation does.
+.PHONY: gui-mod-tidy
+gui-mod-tidy:
+	@echo "gui-mod-tidy: "
+	@cd gui && go mod tidy
+	@git diff --quiet -- gui/go.mod gui/go.sum || { echo "gui/go.mod or go.sum changed after 'go mod tidy'; stage and commit them."; exit 1; }
+
+# gui/ is a separate, unvendored module, so it downloads its modules.
+# Lint it as Windows code, which needs no CGO or GTK headers. CI also lints
+# it for Linux and macOS.
+.PHONY: gui-lint
+gui-lint:
+	@echo "gui-lint: "
+	$(call require_tool,golangci-lint,$(GOLANGCI_LINT_HINT))
+	@cd gui && GOOS=windows PATH="$(DEV_TOOLS_PATH):$$PATH" golangci-lint run --modules-download-mode=mod $(GUI_LINT_ARGS) ./...
+
 # `run --fix` applies the gofmt formatter too, so there is no gofmt target.
-# DDEV_GO_FILES overrides the default $(SRC_AND_UNDER) scope
+# DDEV_GO_FILES overrides the default $(SRC_AND_UNDER) scope; a path in
+# gui/ is fixed in that module instead.
 .PHONY: golangci-lint-fix
 golangci-lint-fix:
 	@echo "golangci-lint --fix: "
+ifneq ($(filter gui% $(CURDIR)/gui%,$(DDEV_GO_FILES)),)
+	@$(MAKE) --no-print-directory gui-lint GUI_LINT_ARGS=--fix
+else
 	$(call run_tool,golangci-lint,run --fix $(if $(DDEV_GO_FILES),$(DDEV_GO_FILES),$(SRC_AND_UNDER)),$(GOLANGCI_LINT_HINT))
+endif
 
 go-mod-update:
 	@echo "bump golang dependencies: "
@@ -510,6 +541,28 @@ quickstart-test: build dummy-project
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); bats docs/tests
+WEBUI_E2E=pkg/webui/e2e
+
+.PHONY: webui-e2e webui-e2e-real
+# Browser tests of the `ddev gui` dashboard against a fake API, in Chromium
+# and WebKit; no Docker.
+webui-e2e:
+	cd $(WEBUI_E2E) && npm ci --no-audit --no-fund && npx playwright install chromium webkit && npx playwright test --project=mocked --project=mocked-webkit
+
+# Browser test of a real `ddev gui`, which starts and deletes a project.
+webui-e2e-real: build
+	cd $(WEBUI_E2E) && npm ci --no-audit --no-fund && npx playwright install chromium && DDEV_WEBUI_E2E=true DDEV_BINARY=$(DDEV_BINARY_FULLPATH) npx playwright test --project=real
+
+.PHONY: gui
+# Experimental Wails GUI app, a separate module; see gui/README.md.
+# On Linux and Windows it lands next to the ddev built here. On macOS it is
+# .gotmp/bin/darwin_universal/DDEV.app, linked next to ddev for `ddev gui`.
+gui: build
+	$(MAKE) -C gui VERSION=$(VERSION)
+ifeq ($(BUILD_OS),darwin)
+	ln -sfn ../darwin_universal/DDEV.app $(DDEV_PATH)/DDEV.app
+endif
+
 # bats refuses ever to exit until all processes started by it
 # have exited. So we don't want to let bats/ddev start mutagen daemon
 dummy-project: build

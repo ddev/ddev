@@ -4,9 +4,6 @@ import (
 	"cmp"
 	"fmt"
 	"net"
-	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -17,6 +14,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 )
 
 const addonRegistryURL = "https://addons.ddev.com"
@@ -376,7 +374,7 @@ func (v detailView) content(s Styles, w int) string {
 
 	lines = append(lines, "")
 	add(label("Path") + link(output.FileURL(d.AppRoot), formatProjectPath(d.AppRoot)))
-	add(label("Open in") + link(editorURL("vscode", d.AppRoot), "VS Code") + s.Muted.Render(" · ") + link(editorURL("phpstorm", d.AppRoot), "PhpStorm"))
+	add(label("Open in") + link(util.EditorURL("vscode", d.AppRoot), "VS Code") + s.Muted.Render(" · ") + link(util.EditorURL("phpstorm", d.AppRoot), "PhpStorm"))
 
 	var urls []string
 	for _, u := range d.URLs {
@@ -547,36 +545,9 @@ func (v detailView) xdebugText(s Styles) string {
 func openProjectCmd(k KeyMap, msg tea.KeyPressMsg, appRoot string) tea.Cmd {
 	switch {
 	case key.Matches(msg, k.OpenVSC):
-		return openTargetCmd("VS Code", editorURL("vscode", appRoot))
+		return openTargetCmd("VS Code", util.EditorURL("vscode", appRoot))
 	case key.Matches(msg, k.OpenPhpS):
 		return openInPhpStormCmd(appRoot)
 	}
 	return openTargetCmd("directory", appRoot)
-}
-
-// editorURL returns a URL that opens dir through an editor's registered URL
-// scheme, or "" for an unknown editor. Under WSL the editors run on Windows,
-// so they get a WSL remote URI or a \\wsl.localhost path instead of a Linux path.
-func editorURL(editor, dir string) string {
-	p := filepath.ToSlash(dir)
-	if !strings.HasPrefix(p, "/") {
-		p = "/" + p
-	}
-	distro := os.Getenv("WSL_DISTRO_NAME")
-	switch editor {
-	case "vscode":
-		u := &url.URL{Scheme: "vscode", Host: "file", Path: p, RawQuery: "windowId=_blank"}
-		if distro != "" {
-			u.Host = "vscode-remote"
-			u.Path = "/wsl+" + distro + p
-		}
-		return u.String()
-	case "phpstorm":
-		if distro != "" {
-			p = "//wsl.localhost/" + distro + p
-		}
-		// EscapedPath leaves & and + alone, but they would end the file= value
-		return "phpstorm://open?file=" + strings.NewReplacer("&", "%26", "+", "%2B").Replace((&url.URL{Path: p}).EscapedPath())
-	}
-	return ""
 }

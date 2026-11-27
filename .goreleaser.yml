@@ -43,6 +43,24 @@ builds:
   binary: ddev-hostname
 
 
+# The experimental GUI app (gui/README.md). main-build.yml builds it
+# for Linux on native runners, since it needs CGO there, and signs the
+# Windows build with ddev.exe. DDEV.app for macOS is released separately,
+# below in release.extra_files.
+- id: ddev-gui
+  builder: prebuilt
+  goos:
+  - linux
+  - windows
+  goarch:
+  - amd64
+  - arm64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev-gui{{.Ext}}
+  binary: ddev-gui
+
 - id: mkcert
   # requires make completions
   builder: prebuilt
@@ -189,6 +207,7 @@ archives:
   ids:
     - ddev
     - ddev-hostname
+    - ddev-gui
     - mkcert
     - ddev_bash_completion.sh
     - ddev_zsh_completion.sh
@@ -229,6 +248,9 @@ archives:
 
 checksum:
   name_template: "checksums.txt"
+  extra_files:
+  - glob: .gotmp/bin/darwin_universal/DDEV.app.zip
+    name_template: "ddev-gui_macos-universal.v{{ .Version }}.zip"
 
 
 #### RELEASE ####
@@ -236,6 +258,11 @@ release:
   prerelease: auto
   # Releases are created manually via the GitHub UI before the tag is pushed
   mode: append
+  # The signed and notarized DDEV.app, zipped by ditto so it stays signed.
+  # .ci-scripts/update-gui-cask.sh points the ddev-gui cask at it.
+  extra_files:
+  - glob: .gotmp/bin/darwin_universal/DDEV.app.zip
+    name_template: "ddev-gui_macos-universal.v{{ .Version }}.zip"
   github:
     owner: "{{ .Env.REPOSITORY_OWNER }}"
     name: ddev
@@ -408,6 +435,56 @@ nfpms:
     rpm:
       dependencies:
       - nss-tools
+
+# The experimental GUI app, apart from ddev so that ddev itself needs no
+# GTK or WebKitGTK. It runs the ddev from the ddev package.
+- id: ddev-gui
+  maintainer: DDEV Maintainers
+  license: "Apache 2"
+  homepage: https://github.com/ddev/ddev
+  description: |
+    Experimental GUI app for DDEV, with a window and a tray menu
+  package_name: ddev-gui
+  ids:
+  - ddev-gui
+  formats:
+  - deb
+  - rpm
+  contents:
+  - src: gui/packaging/com.ddev.gui.desktop
+    dst: /usr/share/applications/com.ddev.gui.desktop
+    file_info:
+      mode: 0644
+  # The mark without the macOS tile, which desktops draw sharp at any size.
+  - src: pkg/webui/assets/favicon.svg
+    dst: /usr/share/icons/hicolor/scalable/apps/com.ddev.gui.svg
+    file_info:
+      mode: 0644
+  - src: gui/packaging/ddev-gui.apparmor
+    dst: /etc/apparmor.d/ddev-gui
+    packager: deb
+    file_info:
+      mode: 0644
+  # The first release with `ddev gui --desktop`; GoReleaser cannot template
+  # dependencies. "~" sorts before any suffix, so prereleases such as
+  # 1.25.7~alpha1 qualify. Raise it if the app ships in a later release.
+  # The app uses glibc 2.38 symbols (`objdump -T`), and Wails calls GTK 4.14
+  # and WebKitGTK 2.40 functions.
+  overrides:
+    deb:
+      dependencies:
+      - ddev (>= 1.25.7~)
+      - libc6 (>= 2.38)
+      - libgtk-4-1 (>= 4.14)
+      - libwebkitgtk-6.0-4 (>= 2.40)
+      scripts:
+        postinstall: gui/packaging/ddev-gui-postinstall.sh
+    rpm:
+      dependencies:
+      - ddev >= 1.25.7~
+      - glibc >= 2.38
+      - gtk4 >= 4.14
+      - webkitgtk6.0 >= 2.40
 
 # WSL2 package containing Windows binaries (ddev-hostname.exe and mkcert.exe)
 - id: ddev-wsl2

@@ -67,8 +67,12 @@ jobs:
         with:
           go-version: '>=1.23'
           check-latest: true
+          cache-dependency-path: |
+            go.sum
+            gui/go.sum
 
-      # The Windows targets stop at the binaries; NSIS cannot run until they
+      # The Windows targets stop at the binaries, including the GUI app;
+      # NSIS cannot run until they
       # come back signed. See the build-installers job.
       - name: Build DDEV executables
         run: make ${{ matrix.target }}
@@ -153,7 +157,8 @@ jobs:
               "bin/windows_${arch}/ddev.exe" \
               "bin/windows_${arch}/ddev-hostname.exe" \
               "bin/windows_${arch}/mkcert.exe" \
-              "bin/windows_${arch}/ddev_gen_autocomplete.exe"
+              "bin/windows_${arch}/ddev_gen_autocomplete.exe" \
+              "bin/windows_${arch}/ddev-gui.exe"
           done
 
       - name: "Verify that instrumentation is working (Windows)"
@@ -171,7 +176,7 @@ jobs:
         run: |
           set -eu -o pipefail
           for arch in amd64 arm64; do
-            for f in ddev.exe ddev-hostname.exe mkcert.exe; do
+            for f in ddev.exe ddev-hostname.exe mkcert.exe ddev-gui.exe; do
               signtool verify -pa "bin/windows_${arch}/${f}"
             done
           done
@@ -360,6 +365,111 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  # The experimental GUI app (gui/README.md). It holds no DDEV code
+  # and no ddev binary, and runs the installed ddev. The Windows app builds
+  # and is signed with the other Windows binaries and goes into the
+  # installers. macOS and Linux need CGO, so they build here, and the
+  # artifacts job releases them: DDEV.app as a zip and a Homebrew cask, the
+  # Linux app in the Linux archives and a ddev-gui deb and rpm.
+  gui-macos:
+    name: Build, sign, and notarize DDEV.app
+    runs-on: macos-latest
+    steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@v4
+
+      - name: Load signing-certificate password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.DDEV_SIGNING_SERVICE_ACCOUNT_TOKEN }}"
+          DDEV_MACOS_SIGNING_PASSWORD: "op://ddev-signing/2prggopnzml4kqotzzs3dgcsr4/certificate_password"
+
+      - name: "setup macOS"
+        run: |
+          brew untap aws/tap || true
+          brew install coreutils gnu-getopt jq
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: gui/go.sum
+
+      - name: Build, sign, and notarize the universal app
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.DDEV_SIGNING_SERVICE_ACCOUNT_TOKEN }}"
+          DISABLE_NOTARIZATION: ${{ vars.DISABLE_NOTARIZATION }}
+        run: |
+          set -o errexit -o pipefail
+          cert_dir=$(mktemp -d "${TMPDIR:-/tmp}/ddev-signing-cert.XXXXXXXX")
+          trap 'rm -rf "${cert_dir}"' EXIT
+          export DDEV_MACOS_CERT_FILE="${cert_dir}/ddev-developer-id-2026.p12"
+          op read --out-file "${DDEV_MACOS_CERT_FILE}" "op://ddev-signing/2prggopnzml4kqotzzs3dgcsr4/ddev-developer-id-2026.p12"
+          chmod 600 "${DDEV_MACOS_CERT_FILE}"
+          make -C gui app sign
+          if [ "${DISABLE_NOTARIZATION:-}" != "true" ]; then
+            make -C gui notarize
+          else
+            make -C gui zip
+          fi
+
+      - name: Upload DDEV.app.zip
+        uses: actions/upload-artifact@v7
+        with:
+          name: gui-darwin_universal
+          path: .gotmp/bin/darwin_universal/DDEV.app.zip
+          retention-days: 1
+          if-no-files-found: error
+
+  # Wails needs CGO on Linux, so each architecture builds on its own runner.
+  gui-linux:
+    name: Build the GUI app for Linux ${{ matrix.arch }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+          cache-dependency-path: gui/go.sum
+
+      - name: Install GTK 4 and WebKitGTK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev
+
+      - name: Build
+        run: make -C gui
+
+      - name: Upload linux-${{ matrix.arch }} app
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-linux_${{ matrix.arch }}
+          path: .gotmp/bin/linux_${{ matrix.arch }}/ddev-gui
+          retention-days: 1
+          if-no-files-found: error
+
   artifacts:
     env:
       AUR_PACKAGE_NAME: ${{ vars.AUR_PACKAGE_NAME }}
@@ -368,7 +478,7 @@ jobs:
       DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
     name: Upload artifacts
     runs-on: ubuntu-26.04
-    needs: [build, sign-windows-installers, notarize-macos]
+    needs: [build, sign-windows-installers, notarize-macos, gui-macos, gui-linux]
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5
@@ -411,7 +521,12 @@ jobs:
             cp -a "incoming/signed-installers/windows_${arch}/." ".gotmp/bin/windows_${arch}/"
           done
           cp -a incoming/build-completions/. .gotmp/bin/
-          chmod +x .gotmp/bin/{linux,darwin}_{amd64,arm64}/{ddev,ddev-hostname,mkcert}
+          for arch in amd64 arm64; do
+            cp -a "incoming/desktop-linux_${arch}/ddev-gui" ".gotmp/bin/linux_${arch}/"
+          done
+          mkdir -p .gotmp/bin/darwin_universal
+          cp -a incoming/gui-darwin_universal/DDEV.app.zip .gotmp/bin/darwin_universal/
+          chmod +x .gotmp/bin/{linux,darwin}_{amd64,arm64}/{ddev,ddev-hostname,mkcert} .gotmp/bin/linux_{amd64,arm64}/ddev-gui
 
       # Signing rewrote the installers after they were built, so this is the
       # first point at which they can be hashed.
@@ -445,6 +560,12 @@ jobs:
         env:
           CGO_ENABLED: 0
 
+      # goreleaser attached DDEV.app.zip to the release; the cask installs it
+      # into /Applications and brings the ddev formula along.
+      - name: Update the ddev-gui Homebrew cask
+        if: startsWith( github.ref, 'refs/tags/v1') && !contains(github.ref, '-')
+        run: ./.ci-scripts/update-gui-cask.sh "${GITHUB_REF_NAME}" .gotmp/bin/darwin_universal/DDEV.app.zip "${{ github.repository_owner }}"
+
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
@@ -454,22 +575,28 @@ jobs:
         with:
           name: all-ddev-executables
           path: ${{ github.workspace }}/artifacts/*
+      # Paths from two directories would make .gotmp/bin the artifact's root,
+      # but `ddev utility download-ddev` expects ddev and DDEV.app.zip at the
+      # top, so stage them in one directory first.
+      - name: Stage macOS artifacts
+        run: |
+          set -eu -o pipefail
+          for arch in amd64 arm64; do
+            mkdir -p "macos-artifacts/ddev-macos-${arch}"
+            cp -a ".gotmp/bin/darwin_${arch}/ddev" ".gotmp/bin/darwin_${arch}/ddev-hostname" ".gotmp/bin/darwin_${arch}/mkcert" .gotmp/bin/darwin_universal/DDEV.app.zip "macos-artifacts/ddev-macos-${arch}/"
+          done
       - name: Upload macos-amd64 binary
         uses: actions/upload-artifact@v7
         with:
           name: ddev-macos-amd64
-          path: |
-            .gotmp/bin/darwin_amd64/ddev
-            .gotmp/bin/darwin_amd64/ddev-hostname
-            .gotmp/bin/darwin_amd64/mkcert
+          path: macos-artifacts/ddev-macos-amd64/*
+          if-no-files-found: error
       - name: Upload macos-arm64 binary
         uses: actions/upload-artifact@v7
         with:
           name: ddev-macos-arm64
-          path: |
-            .gotmp/bin/darwin_arm64/ddev
-            .gotmp/bin/darwin_arm64/ddev-hostname
-            .gotmp/bin/darwin_arm64/mkcert
+          path: macos-artifacts/ddev-macos-arm64/*
+          if-no-files-found: error
       - name: Upload linux-arm64 binary
         uses: actions/upload-artifact@v7
         with:
@@ -478,6 +605,7 @@ jobs:
             .gotmp/bin/linux_arm64/ddev
             .gotmp/bin/linux_arm64/ddev-hostname
             .gotmp/bin/linux_arm64/mkcert
+            .gotmp/bin/linux_arm64/ddev-gui
       - name: Upload linux-amd64 binary
         uses: actions/upload-artifact@v7
         with:
@@ -486,6 +614,7 @@ jobs:
             .gotmp/bin/linux_amd64/ddev
             .gotmp/bin/linux_amd64/ddev-hostname
             .gotmp/bin/linux_amd64/mkcert
+            .gotmp/bin/linux_amd64/ddev-gui
       - name: Upload windows-amd64 binary
         uses: actions/upload-artifact@v7
         with:
@@ -494,6 +623,7 @@ jobs:
             .gotmp/bin/windows_amd64/ddev.exe
             .gotmp/bin/windows_amd64/ddev-hostname.exe
             .gotmp/bin/windows_amd64/mkcert.exe
+            .gotmp/bin/windows_amd64/ddev-gui.exe
 
       - name: Upload windows_amd64 installer
         uses: actions/upload-artifact@v7
@@ -508,6 +638,7 @@ jobs:
             .gotmp/bin/windows_arm64/ddev.exe
             .gotmp/bin/windows_arm64/ddev-hostname.exe
             .gotmp/bin/windows_arm64/mkcert.exe
+            .gotmp/bin/windows_arm64/ddev-gui.exe
       - name: Upload windows_arm64 installer
         uses: actions/upload-artifact@v7
         with:

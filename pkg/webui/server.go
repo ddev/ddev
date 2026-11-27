@@ -1,0 +1,292 @@
+// Package webui serves the experimental DDEV web UI for `ddev gui`.
+// It reads projects through pkg/ddevapp, runs actions as ddev
+// subcommands the way `ddev tui` does, and streams their output and project
+// status to the browser with Server-Sent Events.
+//
+// It listens on 127.0.0.1 only, and every request must carry the token from
+// the launch URL, since any page the user visits could otherwise reach it.
+// The GUI app in gui/ runs `ddev gui --desktop` and shows the
+// same web UI in its window.
+package webui
+
+import (
+	"context"
+	"crypto/rand"
+	"crypto/subtle"
+	"embed"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io"
+	"io/fs"
+	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"strconv"
+	"sync"
+	"time"
+)
+
+//go:embed assets
+var assets embed.FS
+
+// cookiePrefix and the port name the cookie that holds the token after the
+// launch URL, so the token leaves the address bar. Cookies ignore the port,
+// so without it two servers would overwrite each other's token.
+const cookiePrefix = "ddev_gui_token_"
+
+// Server is the dashboard's HTTP server.
+type Server struct {
+	token      string
+	cookieName string
+	// hosts are the Host header values the server answers to, which stops
+	// DNS rebinding from reaching it through another name.
+	hosts map[string]bool
+	// origins are the Origin header values a state-changing request may
+	// carry.
+	origins  map[string]bool
+	listener net.Listener
+	http     *http.Server
+	// endRequests cancels every request's context, so open streams return
+	// and Shutdown need not wait for its timeout.
+	endRequests context.CancelFunc
+	jobs        *jobs
+	// baseEnv is the environment from before any project was described.
+	// Describe sets project variables on this process, which must not leak
+	// into a subcommand for another project.
+	baseEnv []string
+	// ddevBinary is the ddev binary subcommands run with.
+	ddevBinary string
+	// desktop is set when a desktop window, not a browser, shows the page.
+	desktop bool
+	// appVersion is the GUI app's version, when it shows the page.
+	appVersion string
+
+	// changed is closed and replaced whenever a job starts or ends, so the
+	// status streams reload at once instead of on their next tick.
+	changedMu sync.Mutex
+	changed   chan struct{}
+
+	// shown is closed and replaced when the GUI app asks its window to
+	// show showTarget, such as "about".
+	showMu     sync.Mutex
+	shown      chan struct{}
+	showTarget string
+}
+
+// New listens on 127.0.0.1:port, or a free port when port is 0.
+func New(port int) (*Server, error) {
+	l, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)))
+	if err != nil {
+		return nil, err
+	}
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		_ = l.Close()
+		return nil, err
+	}
+	bin, err := os.Executable()
+	if err != nil {
+		_ = l.Close()
+		return nil, err
+	}
+	s := &Server{
+		token:      hex.EncodeToString(b),
+		listener:   l,
+		baseEnv:    os.Environ(),
+		ddevBinary: bin,
+		changed:    make(chan struct{}),
+		shown:      make(chan struct{}),
+	}
+	s.jobs = newJobs(s.notifyChanged)
+	actual := l.Addr().(*net.TCPAddr).Port
+	s.cookieName = cookiePrefix + strconv.Itoa(actual)
+	s.hosts, s.origins = map[string]bool{}, map[string]bool{}
+	for _, h := range []string{"127.0.0.1", "localhost"} {
+		hp := net.JoinHostPort(h, strconv.Itoa(actual))
+		s.hosts[hp] = true
+		s.origins["http://"+hp] = true
+	}
+	base, cancel := context.WithCancel(context.Background())
+	s.endRequests = cancel
+	s.http = &http.Server{ReadHeaderTimeout: 10 * time.Second, BaseContext: func(net.Listener) context.Context { return base }}
+	return s, nil
+}
+
+// SetDesktop prepares the server for the GUI app's window, which opens
+// no new windows: the page asks the server to open links instead. The
+// About dialog shows appVersion, the app's own version. Call it before
+// Serve.
+func (s *Server) SetDesktop(appVersion string) {
+	s.desktop = true
+	s.appVersion = appVersion
+}
+
+// StopWithStdin shuts the server down when standard input closes. The
+// GUI app holds it open, so the server stops with the app. Children get
+// the null device instead: on Windows, starting one that inherits the pipe,
+// such as the git that RunHostCommand runs, hangs behind this read.
+func (s *Server) StopWithStdin() {
+	in := os.Stdin
+	if devNull, err := os.Open(os.DevNull); err == nil {
+		os.Stdin = devNull
+	}
+	go func() {
+		_, _ = io.Copy(io.Discard, in)
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		_ = s.Shutdown(ctx)
+	}()
+}
+
+// URL is the launch URL, which carries the token.
+func (s *Server) URL() string {
+	return fmt.Sprintf("http://%s/?token=%s", s.listener.Addr().String(), s.token)
+}
+
+// Serve serves until Shutdown.
+func (s *Server) Serve() error {
+	s.http.Handler = s.Handler()
+	err := s.http.Serve(s.listener)
+	if errors.Is(err, http.ErrServerClosed) {
+		return nil
+	}
+	return err
+}
+
+// Shutdown stops the server and the subcommands it started.
+func (s *Server) Shutdown(ctx context.Context) error {
+	s.jobs.killAll()
+	if s.http == nil {
+		return nil
+	}
+	s.endRequests()
+	return s.http.Shutdown(ctx)
+}
+
+func (s *Server) notifyChanged() {
+	s.changedMu.Lock()
+	defer s.changedMu.Unlock()
+	close(s.changed)
+	s.changed = make(chan struct{})
+}
+
+func (s *Server) changedCh() <-chan struct{} {
+	s.changedMu.Lock()
+	defer s.changedMu.Unlock()
+	return s.changed
+}
+
+func (s *Server) requestShow(target string) {
+	s.showMu.Lock()
+	defer s.showMu.Unlock()
+	s.showTarget = target
+	close(s.shown)
+	s.shown = make(chan struct{})
+}
+
+// showCh is closed when the window is next asked to show something.
+func (s *Server) showCh() <-chan struct{} {
+	s.showMu.Lock()
+	defer s.showMu.Unlock()
+	return s.shown
+}
+
+func (s *Server) shownTarget() string {
+	s.showMu.Lock()
+	defer s.showMu.Unlock()
+	return s.showTarget
+}
+
+// Handler returns the routes wrapped in the security checks.
+func (s *Server) Handler() http.Handler {
+	mux := http.NewServeMux()
+	static, _ := fs.Sub(assets, "assets")
+	mux.Handle("GET /", http.FileServerFS(static))
+
+	mux.HandleFunc("GET /api/events", s.handleEvents)
+	mux.HandleFunc("GET /api/projects/{name}", s.handleDetail)
+	mux.HandleFunc("POST /api/projects/{name}/actions/{action}", s.handleProjectAction)
+	mux.HandleFunc("POST /api/projects/{name}/open/{target}", s.handleOpen)
+	mux.HandleFunc("GET /api/projects/{name}/logs", s.handleLogs)
+	mux.HandleFunc("POST /api/projects", s.handleAddProject)
+	mux.HandleFunc("POST /api/actions/{action}", s.handleGlobalAction)
+	mux.HandleFunc("GET /api/jobs/{id}", s.handleJobStream)
+	mux.HandleFunc("GET /api/project-types", s.handleProjectTypes)
+	mux.HandleFunc("GET /api/addons/registry", s.handleAddonRegistry)
+	mux.HandleFunc("GET /api/messages", s.handleMessages)
+	mux.HandleFunc("GET /api/news", s.handleNews)
+	mux.HandleFunc("GET /api/version", s.handleVersion)
+	mux.HandleFunc("GET /api/shared", s.handleShared)
+	mux.HandleFunc("GET /api/shared/{name}/logs", s.handleSharedLogs)
+	mux.HandleFunc("POST /api/jobs/clear", s.handleClearJobs)
+	mux.HandleFunc("POST /api/jobs/{id}/remove", s.handleRemoveJob)
+	if s.desktop {
+		mux.HandleFunc("POST /api/open-url", s.handleOpenURL)
+		mux.HandleFunc("POST /api/show", s.handleShow)
+	}
+	return s.secure(mux)
+}
+
+// securityHeaders are sent with every response.
+func securityHeaders(h http.Header) {
+	h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+	h.Set("X-Content-Type-Options", "nosniff")
+	h.Set("Referrer-Policy", "no-referrer")
+	h.Set("Cache-Control", "no-store")
+}
+
+// secure rejects requests to an unexpected host, without the token, or,
+// for a state change, from another origin. The launch URL's token is moved
+// to a cookie and the browser sent back to /.
+func (s *Server) secure(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		securityHeaders(w.Header())
+
+		if !s.hosts[r.Host] {
+			http.Error(w, "unexpected Host header", http.StatusForbidden)
+			return
+		}
+		if q := r.URL.Query().Get("token"); q != "" && r.Method == http.MethodGet && r.URL.Path == "/" {
+			if !s.tokenMatches(q) {
+				http.Error(w, "invalid token", http.StatusForbidden)
+				return
+			}
+			http.SetCookie(w, &http.Cookie{Name: s.cookieName, Value: s.token, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})
+			http.Redirect(w, r, "/", http.StatusFound)
+			return
+		}
+		bearer := false
+		if auth := r.Header.Get("Authorization"); auth != "" {
+			const prefix = "Bearer "
+			if len(auth) <= len(prefix) || auth[:len(prefix)] != prefix || !s.tokenMatches(auth[len(prefix):]) {
+				http.Error(w, "invalid token", http.StatusUnauthorized)
+				return
+			}
+			bearer = true
+		} else if c, err := r.Cookie(s.cookieName); err != nil || !s.tokenMatches(c.Value) {
+			http.Error(w, "Open the URL that `ddev gui --browser` printed, which includes the access token.", http.StatusUnauthorized)
+			return
+		}
+		// A cookie is sent with cross-site requests in some cases, so a
+		// state change through it must come from this origin.
+		if r.Method != http.MethodGet && r.Method != http.MethodHead && !bearer && !s.sameOrigin(r) {
+			http.Error(w, "cross-origin request refused", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) tokenMatches(t string) bool {
+	return subtle.ConstantTimeCompare([]byte(t), []byte(s.token)) == 1
+}
+
+func (s *Server) sameOrigin(r *http.Request) bool {
+	if o := r.Header.Get("Origin"); o != "" {
+		return s.origins[o]
+	}
+	ref, err := url.Parse(r.Header.Get("Referer"))
+	return err == nil && s.origins[ref.Scheme+"://"+ref.Host]
+}

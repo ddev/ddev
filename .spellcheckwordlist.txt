@@ -81,6 +81,7 @@ FQDNs
 FrankenPHP
 Fritzbox
 GitLab
+GTK
 GUI
 GUIs
 Get
@@ -103,6 +104,7 @@ IPv
 If
 IIS
 Joomla
+KDE
 Kalabox
 Kubernetes
 Lando
@@ -187,6 +189,7 @@ STARTTLS
 StarterKits
 Starts
 Statamic
+StatusNotifierItem
 Sulu
 Support
 Svelte
@@ -222,6 +225,8 @@ WinGet
 WantedBy
 Webhosting
 WebSocket
+WebView
+WebKitGTK
 WRN
 Xcode
 XDebug

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DDEV</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <button id="brand" class="brand-home" type="button" title="Start page"><picture><source srcset="logo-dark.svg" media="(prefers-color-scheme: dark)"><img src="logo.svg" alt="DDEV" class="logo"></picture></button>
+      <a class="badge experimental" href="https://docs.ddev.com/en/stable/users/usage/gui/" target="_blank" rel="noopener noreferrer" title="ddev gui is experimental and may change. Read about it on docs.ddev.com">experimental</a>
+    </div>
+    <div class="spacer"></div>
+    <button id="status" class="status-button" type="button"><span class="dot"></span><span id="status-text">Connecting…</span></button>
+    <div class="global-actions">
+      <button id="btn-start-all" class="btn" type="button" title="Start all projects"><i class="i lead i-play"></i>Start all</button>
+      <button id="btn-stop-all" class="btn" type="button" title="Stop all projects"><i class="i lead i-stop"></i>Stop all</button>
+      <button id="btn-poweroff" class="btn danger" type="button" title="Stop all projects and DDEV’s shared containers"><i class="i lead i-power"></i>Power off</button>
+      <button id="btn-more" class="btn icon-btn" type="button" title="More" aria-label="More" aria-haspopup="menu"><i class="i i-more"></i></button>
+    </div>
+  </header>
+
+  <div id="error-banner" class="banner hidden"></div>
+  <div id="notices" class="notices"></div>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <nav class="nav" aria-label="Pages">
+        <button id="nav-home" class="nav-home i-home selected" type="button">Start page</button>
+        <button id="nav-shared" class="nav-home i-shared" type="button">Shared services</button>
+      </nav>
+      <div class="list-head"><span>Projects <span id="project-count" class="count-muted"></span></span><button id="btn-add" class="btn small" type="button" title="Add project"><i class="i lead i-plus"></i>Add</button></div>
+      <input id="filter" class="filter" type="search" placeholder="Filter projects (/)" autocomplete="off">
+      <div id="status-chips" class="chips" role="group" aria-label="Show projects"></div>
+      <ul id="project-list" class="project-list" role="listbox" aria-label="Projects"></ul>
+      <p id="project-empty" class="muted hidden">No projects yet. Use “Add” to configure one.</p>
+    </aside>
+
+    <section id="detail" class="detail"></section>
+  </main>
+
+  <section id="activity" class="activity collapsed">
+    <header id="activity-head" class="activity-head">
+      <button id="activity-toggle" class="linkish" type="button" aria-expanded="false" aria-controls="activity-body">Activity <span id="activity-count" class="count"></span></button>
+      <span id="activity-title" class="muted"></span>
+      <button id="activity-clear" class="btn small" type="button" title="Remove the finished actions from the list. Running ones stay." disabled>Clear history</button>
+      <span class="chevron" aria-hidden="true"></span>
+    </header>
+    <div id="activity-body" class="activity-body">
+      <ul id="job-list" class="job-list"></ul>
+      <pre id="job-output" class="output"></pre>
+    </div>
+  </section>
+
+  <dialog id="dialog">
+    <form method="dialog" id="dialog-form">
+      <h2 id="dialog-title"></h2>
+      <div id="dialog-body"></div>
+      <menu>
+        <button type="button" class="btn" id="dialog-cancel">Cancel</button>
+        <button value="ok" class="btn primary" id="dialog-ok">OK</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>

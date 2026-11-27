@@ -1,0 +1,263 @@
+// A stand-in for the `ddev gui` API. It serves the real page files from
+// ../../assets and keeps event streams open, so a test decides when status,
+// job output and log lines arrive.
+'use strict';
+
+const fs = require('node:fs');
+const http = require('node:http');
+const path = require('node:path');
+
+const ASSETS = path.join(__dirname, '..', '..', 'assets');
+// Same policy as secure() in pkg/webui/server.go, so a page change that
+// breaks it fails here.
+const CSP = "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
+
+class MockBackend {
+  constructor() {
+    // holdStatus keeps a new page waiting for its first status, which a test
+    // then sends with pushStatus.
+    this.holdStatus = false;
+    // newsGate, when set, is a promise the blog posts wait for.
+    this.newsGate = null;
+    this.newsRequests = 0;
+    this.projects = [];
+    this.details = {};
+    this.router = 'healthy';
+    this.sshAgent = 'healthy';
+    this.error = '';
+    // desktop marks the status as shown in the GUI app's webview.
+    this.desktop = false;
+    this.jobs = [];
+    this.posts = [];
+    // postHeaders[i] holds the headers of posts[i].
+    this.postHeaders = [];
+    this.registry = [
+      { repo: 'ddev/ddev-redis', title: 'ddev-redis', description: 'Redis', type: 'official' },
+      { repo: 'ddev/ddev-solr', title: 'ddev-solr', description: 'Solr', type: 'official' },
+      // It holds the letters of "rediss" in order, which once hid ddev-redis.
+      { repo: 'ddev/ddev-redis-insight', title: 'ddev-redis-insight', description: 'Redis Insight', type: 'official' },
+      // It holds the letters of "redis" in order, and nothing more.
+      { repo: 'someone/ddev-ready-dist', title: 'ddev-ready-dist', description: 'Ready', type: 'contrib' },
+    ];
+    this.projectTypes = ['drupal11', 'laravel', 'php', 'wordpress'];
+    this.messages = {
+      tips: [{ message: 'Use `ddev describe` to see a summary. https://docs.ddev.com/' }, { message: 'Try *ddev share*.' }],
+      infos: [],
+      warnings: [{ message: 'Upgrade Docker soon.' }],
+      sponsorship: {
+        message: "Thanks for your ongoing support! We're up to 86.4% of our $12,000/month goal ($10,368). Join all the wonderful sponsors at https://ddev.com/sponsor",
+        monthly: 10368, goal: 12000, percent: 86.4,
+      },
+    };
+    this.news = [{ title: 'DDEV v1.25.6 is out', link: 'https://ddev.com/blog/release-v1-25-6', date: '2026-11-20', category: 'Announcements', description: 'PHP 8.6.0 and security fixes.' }];
+    this.shared = [
+      { name: 'ddev-router', label: 'Router', status: 'healthy', image: 'ddev/ddev-traefik-router:v1', dashboard: 'http://127.0.0.1:10999', docs: 'users/extend/traefik-router/' },
+      { name: 'ddev-ssh-agent', label: 'SSH agent', status: 'stopped', docs: 'users/usage/commands/#auth-ssh' },
+    ];
+    // postReply lets a test answer a POST itself, returning {status, body}.
+    this.postReply = null;
+    this.statusClients = new Set();
+    this.jobClients = new Map();
+    this.logClients = new Set();
+    this.logRequests = [];
+    this.nextJob = 1;
+  }
+
+  async start() {
+    this.server = http.createServer((req, res) => {
+      this.handle(req, res).catch((e) => {
+        console.error('mock backend:', e);
+        if (!res.headersSent) text(res, 500, String(e));
+      });
+    });
+    await new Promise((resolve) => this.server.listen(0, '127.0.0.1', resolve));
+    this.url = `http://127.0.0.1:${this.server.address().port}/`;
+  }
+
+  async stop() {
+    for (const res of [...this.statusClients, ...this.logClients, ...[...this.jobClients.values()].flat()]) res.end();
+    this.server.closeAllConnections();
+    await new Promise((resolve) => this.server.close(resolve));
+  }
+
+  // ---- test controls ----
+
+  setProjects(projects) {
+    this.projects = projects;
+    this.pushStatus();
+  }
+
+  pushStatus() {
+    const status = { projects: this.projects, router: this.router, ssh_agent: this.sshAgent, jobs: this.jobs.map(summary), error: this.error || undefined, desktop: this.desktop || undefined };
+    for (const res of this.statusClients) send(res, 'status', status);
+  }
+
+  // show asks the page to show a target, as the GUI app's tray does.
+  show(target) {
+    for (const res of this.statusClients) send(res, 'show', target);
+  }
+
+  addJob(title, project) {
+    const job = { id: this.nextJob++, title, project, started: new Date().toISOString(), done: false, err: '', lines: [] };
+    this.jobs.push(job);
+    this.pushStatus();
+    return job;
+  }
+
+  jobLines(id, lines) {
+    const job = this.job(id);
+    job.lines.push(...lines);
+    for (const res of this.jobClients.get(id) || []) send(res, 'lines', lines);
+  }
+
+  // jobPartial sends the line a job is still writing.
+  jobPartial(id, text) {
+    for (const res of this.jobClients.get(id) || []) send(res, 'partial', text);
+  }
+
+  endJob(id, err = '') {
+    const job = this.job(id);
+    job.done = true;
+    job.err = err;
+    for (const res of this.jobClients.get(id) || []) {
+      send(res, 'end', { err });
+      res.end();
+    }
+    this.jobClients.delete(id);
+    this.pushStatus();
+  }
+
+  logLines(lines) {
+    for (const res of this.logClients) send(res, 'lines', lines);
+  }
+
+  job(id) {
+    const job = this.jobs.find((j) => j.id === id);
+    if (!job) throw new Error(`no job ${id}`);
+    return job;
+  }
+
+  // ---- HTTP ----
+
+  async handle(req, res) {
+    const url = new URL(req.url, 'http://x');
+    res.setHeader('Content-Security-Policy', CSP);
+    res.setHeader('Cache-Control', 'no-store');
+    if (req.method === 'POST') return this.handlePost(req, res, url);
+    const p = url.pathname;
+    let m;
+    if (p === '/api/events') {
+      sse(res);
+      this.statusClients.add(res);
+      req.on('close', () => this.statusClients.delete(res));
+      if (!this.holdStatus) this.pushStatus();
+    } else if ((m = p.match(/^\/api\/jobs\/(\d+)$/))) {
+      const job = this.jobs.find((j) => j.id === Number(m[1]));
+      if (!job) return text(res, 404, 'not found');
+      sse(res);
+      if (job.lines.length) send(res, 'lines', job.lines);
+      if (job.done) {
+        send(res, 'end', { err: job.err });
+        return res.end();
+      }
+      const list = this.jobClients.get(job.id) || [];
+      list.push(res);
+      this.jobClients.set(job.id, list);
+    } else if ((m = p.match(/^\/api\/projects\/([^/]+)\/logs$/))) {
+      this.logRequests.push({ project: decodeURIComponent(m[1]), service: url.searchParams.get('service') });
+      sse(res);
+      this.logClients.add(res);
+      req.on('close', () => this.logClients.delete(res));
+    } else if ((m = p.match(/^\/api\/projects\/([^/]+)$/))) {
+      const d = this.details[decodeURIComponent(m[1])];
+      if (!d) return text(res, 404, 'no project named ' + m[1]);
+      json(res, 200, d);
+    } else if (p === '/api/project-types') {
+      json(res, 200, this.projectTypes);
+    } else if (p === '/api/shared') {
+      json(res, 200, this.shared);
+    } else if ((m = p.match(/^\/api\/shared\/([^/]+)\/logs$/))) {
+      this.logRequests.push({ shared: decodeURIComponent(m[1]) });
+      sse(res);
+      this.logClients.add(res);
+      req.on('close', () => this.logClients.delete(res));
+    } else if (p === '/api/news') {
+      this.newsRequests++;
+      if (this.newsGate) await this.newsGate;
+      json(res, 200, { posts: this.news });
+    } else if (p === '/api/messages') {
+      json(res, 200, this.messages);
+    } else if (p === '/api/version') {
+      json(res, 200, { app: this.desktop ? 'v1.0.0' : undefined, binary: '/usr/local/bin/ddev', version: { 'DDEV version': 'v1.25.6', docker: '28.0.1', os: 'linux' } });
+    } else if (p === '/api/addons/registry') {
+      json(res, 200, this.registry);
+    } else {
+      this.serveAsset(res, p === '/' ? '/index.html' : p);
+    }
+  }
+
+  async handlePost(req, res, url) {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    const post = { path: url.pathname, form: Object.fromEntries(new URLSearchParams(body)) };
+    this.posts.push(post);
+    this.postHeaders.push(req.headers);
+    const reply = this.postReply && this.postReply(post);
+    if (reply) {
+      return typeof reply.body === 'string' ? text(res, reply.status, reply.body) : json(res, reply.status, reply.body ?? {});
+    }
+    const rm = url.pathname.match(/^\/api\/jobs\/(\d+)\/remove$/);
+    if (rm) {
+      this.jobs = this.jobs.filter((j) => j.id !== Number(rm[1]) || !j.done);
+      this.pushStatus();
+      res.writeHead(204);
+      return res.end();
+    }
+    if (url.pathname === '/api/jobs/clear') {
+      this.jobs = this.jobs.filter((j) => !j.done);
+      this.pushStatus();
+      res.writeHead(204);
+      return res.end();
+    }
+    if (url.pathname.includes('/open/') || url.pathname === '/api/open-url') {
+      res.writeHead(204);
+      return res.end();
+    }
+    const m = url.pathname.match(/^\/api\/projects\/([^/]+)\/actions\/(.+)$/);
+    const job = this.addJob(m ? `${m[2]} ${decodeURIComponent(m[1])}` : url.pathname, m ? decodeURIComponent(m[1]) : '');
+    json(res, 202, summary(job));
+  }
+
+  serveAsset(res, p) {
+    const file = path.join(ASSETS, path.normalize(p));
+    if (!file.startsWith(ASSETS) || !fs.existsSync(file)) return text(res, 404, 'not found');
+    res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
+    res.end(fs.readFileSync(file));
+  }
+}
+
+function summary(j) {
+  return { id: j.id, title: j.title, project: j.project, started: j.started, done: j.done, err: j.err || undefined };
+}
+
+function sse(res) {
+  res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+  res.flushHeaders();
+}
+
+function send(res, event, data) {
+  res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+}
+
+function json(res, status, v) {
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(v));
+}
+
+function text(res, status, s) {
+  res.writeHead(status, { 'Content-Type': 'text/plain' });
+  res.end(s);
+}
+
+module.exports = { MockBackend };

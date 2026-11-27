@@ -101,7 +101,8 @@ Other skip conditions remain, so check the selected test's prerequisites.
 
 **`make staticrequired` must pass before every commit command, including an
 amend, squash, or reword.** It runs golangci-lint, markdownlint, zensical, and
-an image-tag check.
+an image-tag check. It also runs `make gui-mod-tidy`, which
+tidies `gui/go.mod` and fails until that change is staged.
 
 - Read its full output. Never pipe it through `tail`, `head`, or `grep`.
 - Fix every failure without asking first, even in changes you didn't write,

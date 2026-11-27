@@ -12,6 +12,7 @@ on:
       - "cmd/**"
       - "pkg/**"
       - "winpkg/**"
+      - "gui/**"
       - "go.*"
 
 concurrency:
@@ -63,6 +64,45 @@ jobs:
           install-mode: none
           skip-cache: true
 
+      # The GUI app is a separate module without vendor/. Its Linux code uses
+      # CGO and needs these headers; macOS builds without CGO through purego.
+      - name: Install GTK 4 and WebKitGTK headers
+        if: ${{ !cancelled() }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev
+
+      - name: Lint the GUI app for Linux
+        if: ${{ !cancelled() }}
+        uses: golangci/golangci-lint-action@v9
+        with:
+          install-mode: none
+          skip-cache: true
+          working-directory: gui
+          args: --modules-download-mode=mod
+
+      - name: Lint the GUI app for Windows
+        if: ${{ !cancelled() }}
+        uses: golangci/golangci-lint-action@v9
+        env:
+          GOOS: windows
+        with:
+          install-mode: none
+          skip-cache: true
+          working-directory: gui
+          args: --modules-download-mode=mod
+
+      - name: Lint the GUI app for macOS
+        if: ${{ !cancelled() }}
+        uses: golangci/golangci-lint-action@v9
+        env:
+          GOOS: darwin
+        with:
+          install-mode: none
+          skip-cache: true
+          working-directory: gui
+          args: --modules-download-mode=mod --build-tags purego
+
   check_modules:
     name: Check Go Modules
     runs-on: ubuntu-26.04
@@ -86,3 +126,10 @@ jobs:
         run: |
           go mod tidy
           git diff --exit-code
+
+      - name: Verify and tidy the GUI app's modules
+        working-directory: gui
+        run: |
+          go mod verify
+          go mod tidy
+          git diff --exit-code || { echo "::error::gui/go.mod is out of date. Run 'make gui-mod-tidy' and commit the result."; exit 1; }

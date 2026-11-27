@@ -2,11 +2,14 @@ package cmd
 
 import (
 	"archive/zip"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/github"
@@ -85,6 +88,32 @@ func TestDownloadDdevPathHint(t *testing.T) {
 		require.Equal(t, `  export PATH="/c/Users/u/tmp/dl:$PATH"`,
 			pathHint(`C:\Users\u\tmp\dl`, "windows", "MINGW64")[1])
 	}
+}
+
+// TestDownloadDdevPrintResult verifies the downloads are listed first,
+// then the hints, with no blank line between them.
+func TestDownloadDdevPrintResult(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "dl")
+	ddev := filepath.Join(dir, "ddev")
+	linux := buildTarget{goos: "linux", osName: "linux", arch: "amd64", isNative: true}
+	capture := util.CaptureUserOut()
+	printResult(ddev, filepath.Join(dir, "ddev-hostname"), filepath.Join(dir, "ddev-gui"), linux, true, false)
+	out := capture()
+	lines := strings.Split(strings.TrimRight(out, "\r\n"), "\n")
+	for i, l := range lines {
+		lines[i] = strings.TrimSpace(ansi.Strip(l))
+	}
+	require.Equal(t, []string{
+		"Downloaded ddev to " + ddev,
+		"Downloaded ddev-hostname to " + filepath.Join(dir, "ddev-hostname"),
+		"Downloaded the experimental GUI app to " + filepath.Join(dir, "ddev-gui"),
+		"To use this build in the current shell (this window only):",
+		fmt.Sprintf(`export PATH="%s:$PATH"`, dir),
+		"hash -r",
+		"ddev version",
+		"To open the GUI app:",
+		fmt.Sprintf("%q gui", ddev),
+	}, lines)
 }
 
 // TestDownloadDdevClearMacQuarantine verifies the auto-unblock is attempted
@@ -230,6 +259,40 @@ func TestDownloadDdevExtractAndCopy(t *testing.T) {
 		require.NoError(t, statErr)
 		require.NotZero(t, info.Mode()&0111, "copied binary must be executable")
 	}
+}
+
+// TestDownloadDdevCopyGUIApp checks that the GUI app in a CI
+// artifact lands next to ddev, and that a build without it is no error.
+func TestDownloadDdevCopyGUIApp(t *testing.T) {
+	extract, out := t.TempDir(), t.TempDir()
+	linux := buildTarget{goos: "linux", osName: "linux", arch: "amd64"}
+
+	dest, err := copyGUIApp(extract, out, linux)
+	require.NoError(t, err)
+	require.Empty(t, dest, "an artifact without the app")
+
+	require.NoError(t, os.WriteFile(filepath.Join(extract, "ddev-gui"), []byte("#!/bin/sh\n"), 0o644))
+	dest, err = copyGUIApp(extract, out, linux)
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(out, "ddev-gui"), dest)
+	require.FileExists(t, dest)
+
+	if !nodeps.IsMacOS() {
+		return
+	}
+	// DDEV.app arrives zipped by ditto, which keeps its permissions.
+	app := filepath.Join(t.TempDir(), "DDEV.app")
+	require.NoError(t, os.MkdirAll(filepath.Join(app, "Contents", "MacOS"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(app, "Contents", "MacOS", "ddev-gui"), []byte("#!/bin/sh\n"), 0o755))
+	macExtract := t.TempDir()
+	zipOut, err := exec.RunHostCommand("ditto", "-c", "-k", "--keepParent", app, filepath.Join(macExtract, "DDEV.app.zip"))
+	require.NoError(t, err, zipOut)
+	dest, err = copyGUIApp(macExtract, out, buildTarget{goos: "darwin", osName: "macos", arch: "arm64"})
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(out, "DDEV.app"), dest)
+	info, err := os.Stat(filepath.Join(dest, "Contents", "MacOS", "ddev-gui"))
+	require.NoError(t, err)
+	require.NotZero(t, info.Mode()&0o111, "the app's executable must stay executable")
 }
 
 // TestDownloadDdevFlagGroups verifies the mutually-exclusive / one-required source
