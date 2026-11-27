@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 //go:embed selftest.js
@@ -98,4 +99,31 @@ func (st *selfTest) check(res selfTestResult) selfTestResult {
 		}
 	}
 	return res
+}
+
+// runSelfTest waits for selftest.js to report, prints the result, and exits
+// with its status. Wails' Quit ends the process without returning from Run.
+// tray checks the tray menu once the page has passed.
+func runSelfTest(srv *serveClient, st *selfTest, tray func() error) {
+	code := 1
+	select {
+	case res := <-st.result:
+		res = st.check(res)
+		if res.OK {
+			if err := tray(); err != nil {
+				res = selfTestResult{Step: "tray menu", Error: err.Error()}
+			}
+		}
+		if res.OK {
+			fmt.Println("SELFTEST PASS")
+			code = 0
+		} else {
+			fmt.Printf("SELFTEST FAIL at %s: %s\n%s\n", res.Step, res.Error, res.Output)
+		}
+	case <-time.After(3 * time.Minute):
+		fmt.Println("SELFTEST FAIL: no result from the window within 3 minutes")
+	}
+	srv.Close()
+	st.cleanup()
+	os.Exit(code)
 }

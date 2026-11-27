@@ -19,12 +19,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/signal"
 	"runtime"
-	"slices"
 	"strings"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -263,37 +260,9 @@ func main() {
 			return
 		}
 		go watchExit(app, srv, q)
-		// Notifications need an app bundle on macOS and a session bus on
-		// Linux; without them the app runs without notifications. Windows
-		// registers a COM class, which needs the main thread.
-		if err := application.InvokeSyncWithError(func() error {
-			return notifier.ServiceStartup(context.Background(), application.ServiceOptions{})
-		}); err != nil {
-			log.Printf("Notifications are off: %v", err)
-			return
-		}
-		if st == nil {
-			if ok, _ := notifier.CheckNotificationAuthorization(); !ok {
-				// macOS refuses an ad-hoc signed app here, such as a PR build.
-				if granted, err := notifier.RequestNotificationAuthorization(); err != nil {
-					log.Printf("Notifications are off: %v", err)
-				} else if !granted {
-					log.Printf("Notifications are off: they are not allowed for DDEV in the system settings")
-				}
-			}
-		}
-		notifyOn.Store(true)
+		notifyOn.Store(startNotifications(notifier, st == nil))
 	})
 
-	tray := app.SystemTray.New()
-	icons := newTrayIcons(tray, runtime.GOOS)
-	if runtime.GOOS == "linux" {
-		// Without a label, Wails names the item "Wails". The hover text shows
-		// the label, so a tooltip would repeat it. macOS shows a label as text.
-		tray.SetLabel("DDEV")
-	} else {
-		tray.SetTooltip("DDEV")
-	}
 	// pageURL is the dashboard page once loaded, without the launch token.
 	pageURL := "/"
 	if u, err := url.Parse(windowURL); err == nil && u.Host != "" {
@@ -318,24 +287,36 @@ func main() {
 		}
 		app.Menu.Set(menu)
 	}
-	t := &trayMenu{app: app, tray: tray, icons: icons, srv: srv, startErr: startErr, show: showWindow, navigate: navigate}
-	// Wails opens the menu on a right-click only if the tray has a menu when
-	// the app starts, and follow's first menu arrives later.
-	firstErr := "Connecting to ddev gui…"
-	if startErr != nil {
-		firstErr = startErr.Error()
-	}
-	tray.SetMenu(t.build(nil, firstErr))
-	if runtime.GOOS != "darwin" {
-		// As other Windows and Linux tray apps do, a click shows or hides the
-		// window. A macOS menu bar extra opens its menu.
-		tray.OnClick(toggleWindow)
-	}
-	go t.follow()
+	startTray(&trayMenu{app: app, srv: srv, startErr: startErr, show: showWindow, navigate: navigate}, toggleWindow)
 
 	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// startNotifications starts the notifier and, unless ask is false, asks for
+// permission to notify. It returns whether notifications work: they need an
+// app bundle on macOS and a session bus on Linux.
+func startNotifications(notifier *notifications.NotificationService, ask bool) bool {
+	// Windows registers a COM class, which needs the main thread.
+	if err := application.InvokeSyncWithError(func() error {
+		return notifier.ServiceStartup(context.Background(), application.ServiceOptions{})
+	}); err != nil {
+		log.Printf("Notifications are off: %v", err)
+		return false
+	}
+	if !ask {
+		return true
+	}
+	if ok, _ := notifier.CheckNotificationAuthorization(); !ok {
+		// macOS refuses an ad-hoc signed app here, such as a PR build.
+		if granted, err := notifier.RequestNotificationAuthorization(); err != nil {
+			log.Printf("Notifications are off: %v", err)
+		} else if !granted {
+			log.Printf("Notifications are off: they are not allowed for DDEV in the system settings")
+		}
+	}
+	return true
 }
 
 // fitWindow shrinks the window to fit the screen, such as a 1366x768
@@ -410,33 +391,6 @@ func watchExit(app *application.App, srv *serveClient, q *quitter) {
 	})
 }
 
-// runSelfTest waits for selftest.js to report, prints the result, and exits
-// with its status. Wails' Quit ends the process without returning from Run.
-// tray checks the tray menu once the page has passed.
-func runSelfTest(srv *serveClient, st *selfTest, tray func() error) {
-	code := 1
-	select {
-	case res := <-st.result:
-		res = st.check(res)
-		if res.OK {
-			if err := tray(); err != nil {
-				res = selfTestResult{Step: "tray menu", Error: err.Error()}
-			}
-		}
-		if res.OK {
-			fmt.Println("SELFTEST PASS")
-			code = 0
-		} else {
-			fmt.Printf("SELFTEST FAIL at %s: %s\n%s\n", res.Step, res.Error, res.Output)
-		}
-	case <-time.After(3 * time.Minute):
-		fmt.Println("SELFTEST FAIL: no result from the window within 3 minutes")
-	}
-	srv.Close()
-	st.cleanup()
-	os.Exit(code)
-}
-
 // logRequests logs each request the webview makes, since the window has no
 // developer tools in a production build.
 func logRequests(next http.Handler) http.Handler {
@@ -444,218 +398,4 @@ func logRequests(next http.Handler) http.Handler {
 		log.Printf("%s %s host=%q origin=%q", r.Method, r.URL.RequestURI(), r.Host, r.Header.Get("Origin"))
 		next.ServeHTTP(w, r)
 	})
-}
-
-// trayMenu keeps the tray menu in step with the projects.
-type trayMenu struct {
-	app  *application.App
-	tray *application.SystemTray
-	// srv is nil when ddev gui could not start, and startErr says why.
-	srv      *serveClient
-	startErr error
-	show     func()
-	icons    *trayIcons
-	// navigate shows the window and a target, such as "about".
-	navigate func(target string)
-	last     []project
-	err      string
-}
-
-func (t *trayMenu) follow() {
-	waitForTrayWindow()
-	first := true
-	for {
-		var changed <-chan struct{}
-		var projects []project
-		var err error
-		if t.srv != nil {
-			changed = t.srv.Changed()
-			projects, err = t.srv.Projects()
-		} else {
-			err = t.startErr
-		}
-		errText := ""
-		if err != nil {
-			errText = err.Error()
-		}
-		if first || errText != t.err || !slices.Equal(projects, t.last) {
-			first, t.last, t.err = false, projects, errText
-			menu := t.build(projects, errText)
-			application.InvokeAsync(func() { t.tray.SetMenu(menu) })
-		}
-		running := 0
-		if t.srv != nil {
-			running = len(t.srv.RunningJobs())
-		}
-		t.icons.set(stateOf(projects, running))
-		select {
-		case <-changed:
-		case <-time.After(5 * time.Second):
-		}
-	}
-}
-
-func (t *trayMenu) build(projects []project, errText string) *application.Menu {
-	m := t.app.NewMenu()
-	m.Add("Open DDEV").OnClick(func(*application.Context) { t.show() })
-	m.AddSeparator()
-	if errText != "" {
-		// A menu item shows one line.
-		errText, _, _ = strings.Cut(errText, "\n")
-		m.Add(trayText(errText)).SetEnabled(false)
-	} else if len(projects) == 0 {
-		m.Add("No projects").SetEnabled(false)
-	}
-	running := 0
-	for _, p := range projects {
-		sub := m.AddSubmenu(statusMark(p.Status) + " " + p.Name)
-		sub.Add(p.Status + " · " + p.Type).SetEnabled(false)
-		sub.AddSeparator()
-		// A project that is starting or unhealthy is up too, and needs Stop.
-		if p.Up {
-			running++
-			if site := p.URL; site != "" {
-				sub.Add("Open site").OnClick(func(*application.Context) { _ = t.app.Browser.OpenURL(site) })
-			}
-			if mailpit := p.Mailpit; mailpit != "" {
-				sub.Add("Open Mailpit").OnClick(func(*application.Context) { _ = t.app.Browser.OpenURL(mailpit) })
-			}
-			sub.Add("Restart").OnClick(t.action(p.Name, "restart"))
-			sub.Add("Stop").OnClick(t.action(p.Name, "stop"))
-		} else {
-			sub.Add("Start").OnClick(t.action(p.Name, "start"))
-		}
-		sub.AddSeparator()
-		name := p.Name
-		sub.Add("Show in DDEV").OnClick(t.open("project=" + url.QueryEscape(name)))
-	}
-	m.AddSeparator()
-	m.Add("Start all").SetEnabled(len(projects) > running).OnClick(t.global("start-all"))
-	// The window asks before these.
-	m.Add("Stop all").SetEnabled(running > 0).OnClick(t.open("stop-all"))
-	m.Add("Power off").OnClick(t.open("poweroff"))
-	m.AddSeparator()
-	if t.srv != nil {
-		m.Add("About DDEV").OnClick(t.open("about"))
-	}
-	m.Add("Quit DDEV app").OnClick(func(*application.Context) { t.app.Quit() })
-	return m
-}
-
-// trayText keeps the underscores of a Linux tray label, where a single one
-// marks the next letter as a shortcut key and is not shown.
-func trayText(s string) string {
-	if runtime.GOOS != "linux" {
-		return s
-	}
-	return strings.ReplaceAll(s, "_", "__")
-}
-
-func (t *trayMenu) action(project, action string) func(*application.Context) {
-	return t.post("/api/projects/" + url.PathEscape(project) + "/actions/" + action)
-}
-
-func (t *trayMenu) global(action string) func(*application.Context) {
-	return t.post("/api/actions/" + action)
-}
-
-func (t *trayMenu) open(target string) func(*application.Context) {
-	return func(*application.Context) { t.navigate(target) }
-}
-
-// showQuestion shows d on the window, which comes forward first. On macOS a
-// question on its own blocks the whole app, the tray included, even once it
-// hides behind another app; on the window it blocks only the window.
-func showQuestion(d *application.MessageDialog, window *application.WebviewWindow, show func()) {
-	if runtime.GOOS == "darwin" && window != nil {
-		show()
-		d.AttachToWindow(window)
-	}
-	d.Show()
-}
-
-func (t *trayMenu) post(path string) func(*application.Context) {
-	return func(*application.Context) {
-		if t.srv == nil {
-			return
-		}
-		if err := t.srv.Post(path); err != nil {
-			t.app.Dialog.Error().SetTitle("DDEV").SetMessage(err.Error()).Show()
-		}
-	}
-}
-
-func statusMark(status string) string {
-	switch status {
-	case "running":
-		return "●"
-	case "paused", "stopped":
-		return "○"
-	}
-	return "◌"
-}
-
-// quitter keeps a quit from killing running jobs unasked: Shutdown kills
-// them, which can leave a project half started or a database half restored.
-type quitter struct {
-	app    *application.App
-	srv    *serveClient
-	window *application.WebviewWindow
-	show   func()
-	// force is set once the user has agreed, or a signal asked to quit.
-	force atomic.Bool
-	// asking is set while the question is shown.
-	asking atomic.Bool
-}
-
-// shouldQuit is Wails' ShouldQuit. It runs on the main thread, so it shows
-// its question from another goroutine and refuses this quit; the answer
-// quits again.
-func (q *quitter) shouldQuit() bool {
-	var running []string
-	if q.srv != nil && !q.force.Load() {
-		running = q.srv.RunningJobs()
-	}
-	if len(running) == 0 {
-		return true
-	}
-	if !q.asking.Swap(true) {
-		go q.ask(running)
-	}
-	return false
-}
-
-func (q *quitter) ask(running []string) {
-	// GTK shows nothing for a dialog built off the main thread, so this goes
-	// back to it. shouldQuit has returned by the time the main loop runs it.
-	application.InvokeAsync(func() {
-		d := q.app.Dialog.Question().
-			SetTitle("DDEV is still working").
-			SetMessage("Quitting stops these, which can leave a project half done:\n\n" + strings.Join(running, "\n"))
-		quit := d.AddButton("Quit anyway")
-		wait := d.AddButton("Keep running")
-		d.SetDefaultButton(wait)
-		d.SetCancelButton(wait)
-		quit.OnClick(func() {
-			q.asking.Store(false)
-			q.force.Store(true)
-			go q.app.Quit()
-		})
-		wait.OnClick(func() { q.asking.Store(false) })
-		showQuestion(d, q.window, q.show)
-	})
-}
-
-// handleSignals quits without asking on SIGINT or SIGTERM, as from a
-// terminal or the system, and exits at once on a second signal.
-func (q *quitter) handleSignals() {
-	sigs := make(chan os.Signal, 2)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-sigs
-		q.force.Store(true)
-		go q.app.Quit()
-		<-sigs
-		os.Exit(1)
-	}()
 }
