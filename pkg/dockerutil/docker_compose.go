@@ -84,7 +84,7 @@ func NewComposeServiceWithStreams(stdout, stderr io.Writer) (context.Context, ap
 		// echoes every layer download/extract progress tick, flooding logs with
 		// hundreds of lines per image. Report only the final status of each
 		// top-level resource instead.
-		ep = newQuietEventProcessor(output.UserErr.Out)
+		ep = newQuietEventProcessor(stderr)
 	}
 	opts := []compose.Option{
 		compose.WithOutputStream(stdout),
@@ -97,8 +97,9 @@ func NewComposeServiceWithStreams(stdout, stderr io.Writer) (context.Context, ap
 
 // quietEventProcessor implements api.EventProcessor for non-interactive
 // output. It drops per-layer sub-events (ParentID set) and in-progress
-// states, prints Error/Warning at once, and collects Done states into one
-// line per kind and status at the end of each operation, for example
+// states other than the start of a pull, which can take minutes. It prints
+// Error/Warning at once, and collects Done states into one line per kind
+// and status at the end of each operation, for example
 // "Container Stopped: ddev-d11-web, ddev-d11-db".
 type quietEventProcessor struct {
 	out      io.Writer
@@ -126,8 +127,14 @@ func (q *quietEventProcessor) On(events ...api.Resource) {
 		if e.ParentID != "" {
 			continue
 		}
-		switch e.Status {
-		case api.Done, api.Error, api.Warning:
+		switch {
+		case e.Status == api.Working && e.Text == api.StatusPulling:
+			if !q.reported[e.ID+"\x00"+e.Text] {
+				q.reported[e.ID+"\x00"+e.Text] = true
+				kind, name, _ := strings.Cut(e.ID, " ")
+				_, _ = fmt.Fprintf(q.out, "%s %s: %s\n", kind, e.Text, name)
+			}
+		case e.Status == api.Done || e.Status == api.Error || e.Status == api.Warning:
 			// A resource passes through several final states in one
 			// operation (Created, then Started), so dedupe on both.
 			if q.reported[e.ID+"\x00"+e.Text] {
