@@ -170,11 +170,10 @@ func (s *Server) handleGlobalAction(w http.ResponseWriter, r *http.Request) {
 
 // handleAddProject runs `ddev config` in an existing directory.
 func (s *Server) handleAddProject(w http.ResponseWriter, r *http.Request) {
-	dir := strings.TrimSpace(r.FormValue("dir"))
-	if rest, ok := strings.CutPrefix(dir, "~"); ok {
-		if home, err := os.UserHomeDir(); err == nil {
-			dir = filepath.Join(home, rest)
-		}
+	dir, err := util.ExpandHomedir(strings.TrimSpace(r.FormValue("dir")))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	if !filepath.IsAbs(dir) {
 		http.Error(w, "the project directory must be an absolute path", http.StatusBadRequest)
@@ -192,13 +191,15 @@ func (s *Server) handleAddProject(w http.ResponseWriter, r *http.Request) {
 		}
 		args = append(args, "--project-type="+t)
 	}
+	project := filepath.Base(dir)
 	if n := strings.TrimSpace(r.FormValue("name")); n != "" {
 		args = append(args, "--project-name="+n)
+		project = n
 	}
 	if d := strings.TrimSpace(r.FormValue("docroot")); d != "" {
 		args = append(args, "--docroot="+d)
 	}
-	s.startJob(w, "Configure "+dir, filepath.Base(dir), dir, args...)
+	s.startJob(w, "Configure "+dir, project, dir, args...)
 }
 
 func (s *Server) handleOpen(w http.ResponseWriter, r *http.Request) {

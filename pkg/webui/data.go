@@ -122,28 +122,32 @@ type projectDetail struct {
 
 // findApp returns the registered project called name.
 func findApp(name string) (*ddevapp.DdevApp, error) {
-	if err := globalconfig.ReadProjectList(); err != nil {
+	root, err := projectRoot(name)
+	if err != nil {
 		return nil, err
 	}
-	p := globalconfig.GetProject(name)
-	if p == nil {
-		return nil, fmt.Errorf("no project named %q", name)
-	}
-	if _, err := os.Stat(p.AppRoot); errors.Is(err, os.ErrNotExist) {
-		return nil, fmt.Errorf("project directory no longer exists: %s", p.AppRoot)
-	}
-	return ddevapp.NewApp(p.AppRoot, true)
+	return ddevapp.NewApp(root, true)
 }
 
 // appRoot returns the directory of the registered project called name.
 func appRoot(name string) (string, error) {
 	ddevMu.Lock()
 	defer ddevMu.Unlock()
-	app, err := findApp(name)
-	if err != nil {
+	return projectRoot(name)
+}
+
+func projectRoot(name string) (string, error) {
+	if err := globalconfig.ReadProjectList(); err != nil {
 		return "", err
 	}
-	return app.GetAppRoot(), nil
+	p := globalconfig.GetProject(name)
+	if p == nil {
+		return "", fmt.Errorf("no project named %q", name)
+	}
+	if _, err := os.Stat(p.AppRoot); errors.Is(err, os.ErrNotExist) {
+		return "", fmt.Errorf("project directory no longer exists: %s", p.AppRoot)
+	}
+	return p.AppRoot, nil
 }
 
 func loadDetail(name string) (projectDetail, error) {

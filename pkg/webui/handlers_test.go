@@ -53,6 +53,7 @@ func TestAddProjectValidation(t *testing.T) {
 		"missing dir":  {url.Values{"dir": {filepath.Join(dir, "nope")}}, "no such directory"},
 		"file":         {url.Values{"dir": {file}}, "no such directory"},
 		"unknown type": {url.Values{"dir": {dir}, "type": {"not-a-type"}}, "unknown project type"},
+		"other user":   {url.Values{"dir": {"~bob/site"}}, "user-specific home dir"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			rec := postForm(s, "/api/projects", tc.form)
@@ -75,6 +76,7 @@ func TestAddProjectRunsConfig(t *testing.T) {
 		"docroot": {"web"},
 	}))
 	require.Contains(t, out, "args: config --project-type=php --project-name=my-site --docroot=web")
+	require.Equal(t, "my-site", s.jobs.summaries()[0].Project)
 	realDir, err := filepath.EvalSymlinks(dir)
 	require.NoError(t, err)
 	require.Contains(t, out, "dir: "+realDir)
