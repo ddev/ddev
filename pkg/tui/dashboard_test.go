@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 )
@@ -471,7 +472,7 @@ func TestOpenKeys(t *testing.T) {
 	c := stubCommands(t)
 	want := []string{
 		"directory|/home/user/apps/alpha",
-		"VS Code|" + editorURL("vscode", "/home/user/apps/alpha"),
+		"VS Code|" + util.EditorURL("vscode", "/home/user/apps/alpha"),
 		"PhpStorm|/home/user/apps/alpha",
 	}
 	m := newModel(t, 120, 24, sampleProjects()...)

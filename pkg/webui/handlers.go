@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
@@ -206,17 +207,18 @@ func (s *Server) handleOpen(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	var target string
 	switch r.PathValue("target") {
 	case "folder":
-		target = root
-	case "vscode", "phpstorm":
-		target = editorURL(r.PathValue("target"), root)
+		err = util.OpenTarget(root)
+	case "vscode":
+		err = util.OpenTarget(util.EditorURL("vscode", root))
+	case "phpstorm":
+		err = util.OpenInPhpStorm(root)
 	default:
 		http.NotFound(w, r)
 		return
 	}
-	if err := openTarget(target); err != nil {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -231,7 +233,7 @@ func (s *Server) handleOpenURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "only http and https links can be opened", http.StatusBadRequest)
 		return
 	}
-	if err := openTarget(u.String()); err != nil {
+	if err := util.OpenTarget(u.String()); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

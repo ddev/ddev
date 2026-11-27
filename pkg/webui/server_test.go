@@ -286,11 +286,3 @@ func TestReadOutput(t *testing.T) {
 	require.Equal(t, "", <-partials)
 	require.Equal(t, []string{"Building project images..... built", "\x1b[1m50%"}, lines)
 }
-
-func TestEditorURL(t *testing.T) {
-	t.Setenv("WSL_DISTRO_NAME", "")
-	require.Equal(t, "vscode://file/home/me/my%20site?windowId=_blank", editorURL("vscode", "/home/me/my site"))
-	require.Equal(t, "phpstorm://open?file=/home/me/a%26b", editorURL("phpstorm", "/home/me/a&b"))
-	t.Setenv("WSL_DISTRO_NAME", "Ubuntu")
-	require.Equal(t, "vscode://vscode-remote/wsl+Ubuntu/home/me/site?windowId=_blank", editorURL("vscode", "/home/me/site"))
-}

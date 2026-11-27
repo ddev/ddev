@@ -112,7 +112,7 @@ func serveGUI(port int, noOpen bool, desktop bool, project string) {
 	if !noOpen && noDisplay() == "" {
 		// Some openers wait until the browser exits.
 		go func() {
-			if err := webui.OpenBrowser(launch); err != nil {
+			if err := util.OpenTarget(launch); err != nil {
 				util.Warning("Unable to open a browser: %v", err)
 			}
 		}()
