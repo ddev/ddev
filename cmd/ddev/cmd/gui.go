@@ -109,10 +109,13 @@ func serveGUI(port int, noOpen bool, desktop bool, project string) {
 		launch += "#project=" + url.QueryEscape(project)
 	}
 	output.UserOut.Printf("DDEV web UI (experimental) is at\n\n    %s\n\nKeep this URL private: its token gives control of your projects. Press Ctrl+C to stop.", launch)
-	if !noOpen {
-		if err := webui.OpenBrowser(launch); err != nil {
-			util.Warning("Unable to open a browser: %v", err)
-		}
+	if !noOpen && noDisplay() == "" {
+		// Some openers wait until the browser exits.
+		go func() {
+			if err := webui.OpenBrowser(launch); err != nil {
+				util.Warning("Unable to open a browser: %v", err)
+			}
+		}()
 	}
 	if err := srv.Serve(); err != nil {
 		util.Failed("DDEV web UI failed: %v", err)
@@ -133,16 +136,14 @@ func findGUIApp() (exe string, reason string) {
 		}
 		return e, ""
 	}
-	switch {
-	case nodeps.IsWSL2():
+	if nodeps.IsWSL2() {
 		if exe := windowsAppFromWSL2(); exe != "" {
 			return exe, ""
 		}
 		return "", "The DDEV app for Windows, ddev-gui.exe, was not found on the Windows PATH or in %LOCALAPPDATA%\\Programs\\DDEV"
-	case os.Getenv("SSH_CONNECTION") != "":
-		return "", "This is an SSH session"
-	case nodeps.IsLinux() && os.Getenv("DISPLAY") == "" && os.Getenv("WAYLAND_DISPLAY") == "":
-		return "", "There is no graphical session (DISPLAY and WAYLAND_DISPLAY are unset)"
+	}
+	if reason := noDisplay(); reason != "" {
+		return "", reason
 	}
 	dir := ""
 	if self, err := os.Executable(); err == nil {
@@ -173,6 +174,19 @@ func findGUIApp() (exe string, reason string) {
 		}
 	}
 	return "", fmt.Sprintf("The DDEV app was not found next to %s", filepath.Join(dir, "ddev"))
+}
+
+// noDisplay returns why no window can open here, or "".
+func noDisplay() string {
+	switch {
+	case nodeps.IsWSL2():
+		return ""
+	case os.Getenv("SSH_CONNECTION") != "":
+		return "This is an SSH session"
+	case nodeps.IsLinux() && os.Getenv("DISPLAY") == "" && os.Getenv("WAYLAND_DISPLAY") == "":
+		return "There is no graphical session (DISPLAY and WAYLAND_DISPLAY are unset)"
+	}
+	return ""
 }
 
 // windowsAppFromWSL2 returns the Windows DDEV app as WSL2 sees it: on the
