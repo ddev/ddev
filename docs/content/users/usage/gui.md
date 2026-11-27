@@ -48,7 +48,7 @@ Run `ddev gui` in a terminal, or start the app as you start any other: from the 
 DDEV_GUI_APP=~/Downloads/DDEV.app ddev gui
 ```
 
-Closing the window keeps the app running in the tray. To show the window again, choose **Open DDEV** in the tray menu, or on Windows and Linux click the tray icon, which also hides the window again. Launching the app again, or running `ddev gui`, also shows its window.
+Closing the window keeps the app running in the tray. To show the window again, choose **Open DDEV** in the tray menu, or on Windows and KDE Plasma click the tray icon, which also hides the window again. In GNOME, a click opens the menu. Launching the app again, or running `ddev gui`, also shows its window.
 
 A dot on the tray icon shows what DDEV is doing: yellow while an action runs or a project starts, green while a project runs, and none when all projects are stopped. On macOS the dot is next to the icon in the menu bar.
 

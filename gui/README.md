@@ -19,8 +19,9 @@ app shows that web UI in a native window, and adds what a browser tab cannot:
 - A Dock or taskbar icon. Closing the window keeps the app in the tray.
   Launching the app again shows the window, which is the way back on a
   desktop without a tray, such as GNOME without the AppIndicator extension.
-  On Windows and Linux, a click on the tray icon shows or hides the window,
-  and a right-click opens the menu. On macOS, a click opens the menu.
+  On Windows and KDE Plasma, a click on the tray icon shows or hides the
+  window, and a right-click opens the menu. On macOS and GNOME, a click opens
+  the menu.
 - A native notification when an action ends while the window is in the
   background. Notifications need the app bundle on macOS and a session bus on
   Linux; without them the app runs without notifications.
