@@ -431,7 +431,7 @@ function renderDetail() {
   detailKey = key;
   if (state.view !== 'project') {
     // The shared view keeps its log stream while its status refreshes.
-    if (state.view === 'shared' && root.querySelector('.logs-output')) {
+    if (state.view === 'shared' && root.querySelector('.shared-view .logs-output')) {
       root.querySelector('.shared-cards').replaceWith(sharedCards());
       return;
     }
@@ -1570,7 +1570,7 @@ async function showAbout() {
           onclick: () => navigator.clipboard.writeText(json).then(() => toast('Copied ddev version'), () => toast('Copy failed', true)),
         }, 'Copy as JSON')),
       a.error ? h('p', { class: 'muted' }, a.error) : null,
-      kv(Object.keys(v).sort().map((k) => [k, v[k]])),
+      h('details', { class: 'about-version' }, h('summary', {}, 'Show all'), kv(Object.keys(v).sort().map((k) => [k, v[k]]))),
     ].filter(Boolean));
   } catch (e) {
     details.replaceChildren(h('p', { class: 'muted' }, 'Unable to read the version: ' + e.message));

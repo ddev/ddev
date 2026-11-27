@@ -68,6 +68,8 @@ body {
 }
 
 a { color: var(--accent); }
+/* WebKitGTK would take the GTK theme's accent, orange on Ubuntu. */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 code, pre { font-family: var(--mono); }
 .hidden, [hidden] { display: none !important; }
 .muted { color: var(--muted); }
@@ -480,6 +482,7 @@ dialog.info { width: min(680px, 92vw); }
 .about-logo { width: 40px; height: 40px; }
 .section-head { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 6px; }
 .section-head h3 { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.about-version summary { cursor: pointer; color: var(--accent); width: max-content; }
 dialog::backdrop { background: rgba(0, 0, 0, .45); }
 dialog h2 { margin: 0 0 12px; font-size: 18px; }
 dialog menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; margin: 18px 0 0; }

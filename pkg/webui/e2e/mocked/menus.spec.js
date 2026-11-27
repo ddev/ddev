@@ -264,6 +264,13 @@ test('shows the shared services and follows their logs', async ({ page, backend 
   await expect(page.locator('#nav-home')).toHaveClass(/selected/);
 });
 
+test('opens the shared services from a project\'s logs', async ({ page }) => {
+  await page.getByRole('button', { name: 'Logs' }).click();
+  await expect(page.locator('.logs-output')).toBeVisible();
+  await page.locator('#nav-shared').click();
+  await expect(page.locator('#detail h1')).toHaveText('Shared services');
+});
+
 test('a project type links to its quickstart', async ({ page }) => {
   await expect(page.locator('.type-link')).toHaveAttribute('href', 'https://docs.ddev.com/en/stable/users/quickstart/#drupal');
 });
