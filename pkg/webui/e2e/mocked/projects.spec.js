@@ -137,6 +137,15 @@ test('hides the empty state while Docker is unreachable', async ({ page, backend
   await expect(page.locator('#project-empty')).toBeVisible();
 });
 
+test('shows the start page until Docker brings back the selected project', async ({ page, backend }) => {
+  backend.error = 'Docker is not reachable: connection refused';
+  backend.setProjects([]);
+  await expect(page.locator('#detail .home')).toBeVisible();
+  backend.error = '';
+  backend.setProjects([running, stopped]);
+  await expect(page.locator('#detail h1')).toContainText('d11');
+});
+
 test('shows a detail error', async ({ page, backend }) => {
   delete backend.details.wp;
   await page.locator('#project-list li', { hasText: 'wp' }).click();

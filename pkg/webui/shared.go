@@ -77,13 +77,15 @@ func (s *Server) handleSharedLogs(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	ddevMu.Lock()
 	c, err := findShared(name)
+	_, apiClient, clientErr := dockerutil.GetDockerClient()
+	ddevMu.Unlock()
 	if err != nil || c == nil {
 		http.Error(w, name+" is not running", http.StatusNotFound)
 		return
 	}
-	_, apiClient, err := dockerutil.GetDockerClient()
-	if err != nil {
+	if err = clientErr; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

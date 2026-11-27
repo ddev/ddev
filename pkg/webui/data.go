@@ -60,6 +60,7 @@ func loadStatus() status {
 		st.Error = err.Error()
 		return st
 	}
+	dockerutil.RetryAfterError()
 	if _, err := dockerutil.GetDockerVersion(); err != nil {
 		st.Error = "Docker is not reachable: " + err.Error()
 		return st

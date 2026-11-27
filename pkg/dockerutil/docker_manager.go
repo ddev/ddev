@@ -222,6 +222,15 @@ func getDockerIPFromDockerHost(host string) (string, error) {
 	return hostIP, nil
 }
 
+// RetryAfterError lets the next Docker call connect again if the last
+// attempt failed, for example because Docker was not running yet. It is
+// not thread-safe.
+func RetryAfterError() {
+	if sDockerManagerErr != nil {
+		sDockerManager, sDockerManagerErr, sDockerManagerOnce = nil, nil, sync.Once{}
+	}
+}
+
 // ResetDockerHost resets cached Docker host data in singleton (it's not thread-safe).
 // Used for testing only.
 func ResetDockerHost(host string) error {

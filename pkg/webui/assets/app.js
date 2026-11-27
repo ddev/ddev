@@ -426,7 +426,7 @@ function renderDetail() {
   const key = JSON.stringify(state.view === 'home' ? ['home', state.loaded, state.messages, state.news, state.tipIndex, state.projects.map((x) => [x.name, x.status, x.type, x.url]), state.error, running]
       : state.view === 'shared' ? ['shared', state.shared, state.sharedLog]
         : state.view === 'multi' ? ['multi', state.picked, state.projects, running]
-          : [p, state.tab, state.detail, state.xdebugWanted, running]);
+          : p ? [p, state.tab, state.detail, state.xdebugWanted, running] : ['none', state.projects.length, state.messages, state.error]);
   if (key === detailKey && root.childElementCount) return;
   detailKey = key;
   if (state.view !== 'project') {
@@ -441,7 +441,8 @@ function renderDetail() {
     return;
   }
   if (!p) {
-    root.replaceChildren(h('div', { class: 'placeholder muted' }, state.projects.length ? 'Select a project.' : ''));
+    // Without Docker the list is empty; the project returns with it.
+    root.replaceChildren(state.projects.length ? h('div', { class: 'placeholder muted' }, 'Select a project.') : homeView());
     return;
   }
   // The logs tab keeps its stream, so it is not rebuilt on every status.
