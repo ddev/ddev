@@ -254,6 +254,7 @@ func main() {
 		showWindow()
 	})
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
+		fitWindow(app.Screen.GetPrimary(), window)
 		if st != nil {
 			go runSelfTest(srv, st, func() error { return checkTray(window) })
 		}
@@ -336,6 +337,21 @@ func main() {
 	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// fitWindow shrinks the window to fit the screen, such as a 1366x768
+// laptop's, where Windows would put its title bar above the screen's edge.
+func fitWindow(s *application.Screen, window *application.WebviewWindow) {
+	if s == nil {
+		return
+	}
+	w, h := window.Size()
+	maxW, maxH := s.WorkArea.Width*9/10, s.WorkArea.Height*9/10
+	if w <= maxW && h <= maxH {
+		return
+	}
+	window.SetSize(min(w, maxW), min(h, maxH))
+	window.Center()
 }
 
 // argValue returns the value of a --name=value or --name value argument.
