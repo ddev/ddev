@@ -509,8 +509,8 @@ gui-mod-tidy:
 	@git diff --quiet -- gui/go.mod gui/go.sum || { echo "gui/go.mod or go.sum changed after 'go mod tidy'; stage and commit them."; exit 1; }
 
 # gui/ is a separate, unvendored module, so it downloads its modules.
-# Lint it as Windows code, which needs no CGO or GTK headers; its own files
-# build for every OS.
+# Lint it as Windows code, which needs no CGO or GTK headers. CI also lints
+# it for Linux and macOS.
 .PHONY: gui-lint
 gui-lint:
 	@echo "gui-lint: "

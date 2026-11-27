@@ -64,8 +64,24 @@ jobs:
           install-mode: none
           skip-cache: true
 
-      # A separate module without vendor/; see gui-lint in the Makefile.
-      - name: Lint the GUI app
+      # The GUI app is a separate module without vendor/. Its Linux code uses
+      # CGO and needs these headers; macOS builds without CGO through purego.
+      - name: Install GTK 4 and WebKitGTK headers
+        if: ${{ !cancelled() }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-4-dev libwebkitgtk-6.0-dev
+
+      - name: Lint the GUI app for Linux
+        if: ${{ !cancelled() }}
+        uses: golangci/golangci-lint-action@v9
+        with:
+          install-mode: none
+          skip-cache: true
+          working-directory: gui
+          args: --modules-download-mode=mod
+
+      - name: Lint the GUI app for Windows
         if: ${{ !cancelled() }}
         uses: golangci/golangci-lint-action@v9
         env:
@@ -75,6 +91,17 @@ jobs:
           skip-cache: true
           working-directory: gui
           args: --modules-download-mode=mod
+
+      - name: Lint the GUI app for macOS
+        if: ${{ !cancelled() }}
+        uses: golangci/golangci-lint-action@v9
+        env:
+          GOOS: darwin
+        with:
+          install-mode: none
+          skip-cache: true
+          working-directory: gui
+          args: --modules-download-mode=mod --build-tags purego
 
   check_modules:
     name: Check Go Modules
