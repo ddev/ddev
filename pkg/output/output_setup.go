@@ -48,6 +48,7 @@ var (
 	}()
 	// DdevOutputFormatter is the specialized formatter for UserOut
 	DdevOutputFormatter = &TextFormatter{
+		ForceColors:      ColorsForced(),
 		DisableColors:    !ColorsEnabled(),
 		DisableTimestamp: true,
 	}
@@ -126,6 +127,14 @@ func (w *JSONProgressWriter) Write(p []byte) (int, error) {
 func ColorsEnabled() bool {
 	noColor, set := os.LookupEnv("NO_COLOR")
 	return !set || noColor == ""
+}
+
+// ColorsForced is whether CLICOLOR_FORCE asks for colors where there is no
+// terminal, as `ddev gui` does for the commands whose output it shows.
+// NO_COLOR still turns them off. See https://bixense.com/clicolors/
+func ColorsForced() bool {
+	force := os.Getenv("CLICOLOR_FORCE")
+	return force != "" && force != "0" && ColorsEnabled()
 }
 
 // WaitTimer tracks elapsed time for wait operations with inline output
