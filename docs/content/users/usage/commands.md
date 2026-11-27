@@ -553,7 +553,7 @@ ddev craft up
 
 ## `dbeaver`
 
-Open [DBeaver](https://dbeaver.io/) with the current project’s database (global shell host container command). This command is only available if `DBeaver.app` is installed as `/Applications/DBeaver.app` for macOS, if `dbeaver.exe` is installed to all users as `C:/Program Files/dbeaver/dbeaver.exe` for WSL2 and Windows, and if `dbeaver` (or another binary like `dbeaver-ce`) available inside `/usr/bin` for Linux (Flatpak and snap support included).
+Open [DBeaver](https://dbeaver.io/) with the current project’s database (global shell host container command). This command is only available if `DBeaver.app` is installed as `/Applications/DBeaver.app` or `~/Applications/DBeaver.app` for macOS, if `dbeaver.exe` is installed to all users as `C:/Program Files/dbeaver/dbeaver.exe` for WSL2 and Windows, and if `dbeaver` (or another binary like `dbeaver-ce`) available inside `/usr/bin` for Linux (Flatpak and snap support included).
 
 Example:
 
@@ -1322,7 +1322,7 @@ ddev push lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=m
 
 ## `querious`
 
-Open [Querious](https://www.araelium.com/querious) with the current project’s MariaDB or MySQL database (global shell host container command). This is only available if `Querious.app` is installed as `/Applications/Querious.app`, and only for projects with `mysql` or `mariadb` databases.
+Open [Querious](https://www.araelium.com/querious) with the current project’s MariaDB or MySQL database (global shell host container command). This is only available if `Querious.app` is installed as `/Applications/Querious.app` or `~/Applications/Querious.app`, and only for projects with `mysql` or `mariadb` databases.
 
 Example:
 
@@ -1404,7 +1404,7 @@ curl -fsSL https://ddev.com/install.sh | bash
 
 ## `sequelace`
 
-Open [SequelAce](https://sequel-ace.com/) with the current project’s database (global shell host container command). This command is only available if `Sequel Ace.app` is installed as `/Applications/Sequel Ace.app`, and only for projects with `mysql` or `mariadb` databases.
+Open [SequelAce](https://sequel-ace.com/) with the current project’s database (global shell host container command). This command is only available if `Sequel Ace.app` is installed as `/Applications/Sequel Ace.app` or `~/Applications/Sequel Ace.app`, and only for projects with `mysql` or `mariadb` databases.
 
 Example:
 
@@ -1650,7 +1650,7 @@ ddev stop --remove-data
 
 ## `tableplus`
 
-Open [TablePlus](https://tableplus.com) with the current project’s database (global shell host container command). This command is only available if `TablePlus.app` is installed as `/Applications/TablePlus.app`.
+Open [TablePlus](https://tableplus.com) with the current project’s database (global shell host container command). This command is only available if `TablePlus.app` is installed as `/Applications/TablePlus.app` or `~/Applications/TablePlus.app`.
 
 Example:
 
@@ -1661,7 +1661,7 @@ ddev tableplus
 
 ## `tablepro`
 
-Open [TablePro](https://tablepro.app) with the current project’s database (global shell host container command). This command is only available if `TablePro.app` is installed as `/Applications/TablePro.app`.
+Open [TablePro](https://tablepro.app) with the current project’s database (global shell host container command). This command is only available if `TablePro.app` is installed as `/Applications/TablePro.app` or `~/Applications/TablePro.app`.
 
 Example:
 

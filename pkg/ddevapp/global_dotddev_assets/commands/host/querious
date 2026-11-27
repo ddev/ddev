@@ -6,7 +6,7 @@
 ## Usage: querious [database]
 ## Example: "ddev querious"
 ## OSTypes: darwin
-## HostBinaryExists: /Applications/Querious.app
+## HostBinaryExists: /Applications/Querious.app,~/Applications/Querious.app
 ## DBTypes: mysql,mariadb
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then

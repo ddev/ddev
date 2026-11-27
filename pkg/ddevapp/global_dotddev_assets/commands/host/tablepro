@@ -5,7 +5,7 @@
 ## Usage: tablepro
 ## Example: "ddev tablepro"
 ## OSTypes: darwin
-## HostBinaryExists: /Applications/TablePro.app
+## HostBinaryExists: /Applications/TablePro.app,~/Applications/TablePro.app
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
