@@ -5,7 +5,7 @@
 ## Usage: sequelace
 ## Example: "ddev sequelace" or "ddev sequelace database2" to open a database named "database2".
 ## OSTypes: darwin
-## HostBinaryExists: /Applications/Sequel Ace.app
+## HostBinaryExists: /Applications/Sequel Ace.app,~/Applications/Sequel Ace.app
 ## DBTypes: mysql,mariadb
 
 DATABASE="${1:-db}"
@@ -24,4 +24,11 @@ fi
 query="mysql://root:root@${DDEV_PROJECT}.${DDEV_TLD}:${DDEV_HOST_DB_PORT}/${DATABASE}"
 
 set -x
-open "$query" -a "/Applications/Sequel Ace.app/Contents/MacOS/Sequel Ace"
+for app in "$HOME/Applications/Sequel Ace.app" "/Applications/Sequel Ace.app"; do
+  if [ -d "$app" ]; then
+    open "$query" -a "$app/Contents/MacOS/Sequel Ace"
+    exit 0
+  fi
+done
+echo "Sequel Ace.app not found" >&2
+exit 1
