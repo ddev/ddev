@@ -1,0 +1,10 @@
+# Lets WebKitGTK's sandbox create user namespaces on Ubuntu 24.04 and later.
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile ddev-gui /usr/bin/ddev-gui flags=(unconfined) {
+  userns,
+
+  include if exists <local/ddev-gui>
+}

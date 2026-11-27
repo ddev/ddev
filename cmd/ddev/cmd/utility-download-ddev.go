@@ -273,12 +273,29 @@ func printGUIHint(dest string, t buildTarget) {
 	}
 	// `ddev gui` finds the app next to it and makes the app run that ddev.
 	ddev := filepath.Join(filepath.Dir(dest), "ddev"+t.exeExt)
+	if t.goos == "linux" && webKitSandboxBlocked() {
+		const profile = "/etc/apparmor.d/ddev-gui-download"
+		rule := fmt.Sprintf(`abi <abi/4.0>, profile ddev-gui-download %q flags=(unconfined) { userns, }`, dest)
+		output.UserOut.Println("AppArmor stops the GUI app from starting. To allow it, as the ddev-gui package does:")
+		output.UserOut.Printf("  echo '%s' | sudo tee %s", strings.ReplaceAll(rule, "'", `'\''`), profile)
+		output.UserOut.Printf("  sudo apparmor_parser -r %s", profile)
+	}
 	output.UserOut.Println("To open the GUI app:")
 	if t.goos == "windows" {
 		output.UserOut.Printf("  & %s gui", psQuote(ddev))
 	} else {
 		output.UserOut.Printf("  %q gui", ddev)
 	}
+}
+
+// webKitSandboxBlocked reports whether bubblewrap, which WebKitGTK's sandbox
+// runs, cannot create a user namespace, as on Ubuntu 24.04.
+func webKitSandboxBlocked() bool {
+	bwrap, err := exec.LookPath("bwrap")
+	if err != nil {
+		return false
+	}
+	return exec.Command(bwrap, "--ro-bind", "/", "/", "true").Run() != nil
 }
 
 // clearMacQuarantine best-effort clears the macOS "com.apple.quarantine" xattr

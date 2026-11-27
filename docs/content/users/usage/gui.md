@@ -30,7 +30,7 @@ The app contains no DDEV code. It runs `ddev gui --desktop` from the `ddev` you 
     ```bash
     # Debian and Ubuntu
     sudo apt-get install ddev-gui
-    # Fedora, Red Hat, and similar
+    # Fedora
     sudo dnf install ddev-gui
     ```
 

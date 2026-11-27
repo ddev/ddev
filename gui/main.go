@@ -56,6 +56,9 @@ func main() {
 		log.Fatal("DDEV is not designed to run as root")
 	}
 	shareHiddenConsole()
+	if err := checkWebKitSandbox(); err != nil {
+		log.Fatal(err)
+	}
 	useLoginShellPath()
 
 	var st *selfTest

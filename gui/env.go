@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -96,6 +97,23 @@ var wellKnownDirs = func() []string {
 		return []string{"/usr/bin", "/usr/local/bin", "/home/linuxbrew/.linuxbrew/bin"}
 	}
 	return nil
+}
+
+// checkWebKitSandbox returns why WebKitGTK's sandbox would fail, which
+// otherwise crashes the app with a stack trace.
+func checkWebKitSandbox() error {
+	if runtime.GOOS != "linux" || os.Getenv("WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS") != "" {
+		return nil
+	}
+	bwrap, err := exec.LookPath("bwrap")
+	if err != nil {
+		return nil
+	}
+	out, err := exec.Command(bwrap, "--ro-bind", "/", "/", "true").CombinedOutput()
+	if err == nil {
+		return nil
+	}
+	return fmt.Errorf("WebKitGTK cannot start its sandbox: %s\nAppArmor allows user namespaces only for programs with a profile, which the ddev-gui package installs", strings.TrimSpace(string(out)))
 }
 
 func ddevName() string {
