@@ -2,6 +2,8 @@ package remoteconfig_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -275,4 +277,30 @@ func containsAny(s string, substrings []string) bool {
 		}
 	}
 	return false
+}
+
+// TestSponsorshipUpdateInterval checks that the sponsorship data, with the
+// default interval, is downloaded once a day and not on every run, and that
+// its download leaves the remote config's update time alone.
+func TestSponsorshipUpdateInterval(t *testing.T) {
+	downloads := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		downloads++
+		_, _ = w.Write([]byte(`{"total_monthly_average_income": 100}`))
+	}))
+	defer srv.Close()
+	tmpDir := t.TempDir()
+	statePath := filepath.Join(tmpDir, ".state.yaml")
+	online := func() bool { return true }
+
+	for range 2 {
+		mgr := remoteconfig.NewSponsorshipManager(tmpDir, yaml.NewState(statePath), online, 0, srv.URL)
+		require.Equal(t, float64(100), mgr.GetTotalMonthlyIncome())
+	}
+	require.Equal(t, 1, downloads)
+
+	state, err := os.ReadFile(statePath)
+	require.NoError(t, err)
+	require.Contains(t, string(state), "sponsorship:")
+	require.NotContains(t, string(state), "remote_config:")
 }
