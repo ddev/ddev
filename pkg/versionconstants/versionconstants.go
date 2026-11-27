@@ -68,10 +68,10 @@ var BaseDBTagBranch = "v1.25.6"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "2926a16252" // 20261120_stasadev_v1.25.6_images-2926a16252
+var TraefikRouterTag = "5c29f160d7" // 20261127_stasadev_traefik_3_8-5c29f160d7
 
 // TraefikRouterTagBranch is the branch TraefikRouterTag's content was built from.
-var TraefikRouterTagBranch = "v1.25.6"
+var TraefikRouterTagBranch = "20261127_stasadev_traefik_3_8"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
