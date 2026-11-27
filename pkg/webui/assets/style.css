@@ -337,6 +337,7 @@ table.grid tr:last-child td { border-bottom: none; }
 /* Block-level: WebKit fills a selection over the line box an inline-flex box
    sits in, which shows as a strip above it. */
 .copyable { display: flex; width: fit-content; max-width: 100%; align-items: center; gap: 6px; font-family: var(--mono); font-size: 13px; }
+.copyable .cmd-part { display: inline-block; max-width: 100%; }
 .copy-btn { display: inline-grid; place-items: center; flex-shrink: 0; width: 22px; height: 22px; padding: 0; border: none; border-radius: 4px; background: none; color: var(--muted); cursor: pointer; vertical-align: middle; }
 .copy-btn::before {
   content: "";

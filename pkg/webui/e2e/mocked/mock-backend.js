@@ -37,6 +37,8 @@ class MockBackend {
       { repo: 'ddev/ddev-solr', title: 'ddev-solr', description: 'Solr', type: 'official' },
       // It holds the letters of "rediss" in order, which once hid ddev-redis.
       { repo: 'ddev/ddev-redis-insight', title: 'ddev-redis-insight', description: 'Redis Insight', type: 'official' },
+      // It holds the letters of "redis" in order, and nothing more.
+      { repo: 'someone/ddev-ready-dist', title: 'ddev-ready-dist', description: 'Ready', type: 'contrib' },
     ];
     this.projectTypes = ['drupal11', 'laravel', 'php', 'wordpress'];
     this.messages = {

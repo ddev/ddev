@@ -1,6 +1,6 @@
 'use strict';
 
-const { test, expect, nthPost, reload } = require('./fixtures');
+const { test, expect, nthPost, reload, detail, stopped } = require('./fixtures');
 
 test('toggles Xdebug', async ({ page, backend }) => {
   const toggle = page.getByRole('switch');
@@ -44,7 +44,7 @@ test('installs, updates and removes add-ons', async ({ page, backend }) => {
   // The registry's add-ons are suggested as the name is typed.
   const repo = page.getByLabel('Add-on repository');
   await repo.click();
-  await expect(page.locator('.menu').getByRole('menuitem')).toHaveCount(3);
+  await expect(page.locator('.menu').getByRole('menuitem')).toHaveCount(4);
   await repo.fill('sol');
   await expect(page.locator('.menu').getByRole('menuitem')).toHaveText(['ddev/ddev-solr']);
   await expect(repo).toBeFocused();
@@ -53,11 +53,14 @@ test('installs, updates and removes add-ons', async ({ page, backend }) => {
   await expect(repo).toHaveValue('ddev/ddev-solr');
   // The picked add-on's list stays closed.
   await expect(page.locator('.menu')).toHaveCount(0);
-  // The list matches fuzzily, and allows for a typo, best match first.
-  for (const q of ['rds', 'rediss', 'reids']) {
+  // The list allows for a typo, best match first, and shows scattered
+  // letters only when nothing matches better.
+  for (const q of ['redis', 'rediss', 'reids']) {
     await repo.fill(q);
     await expect(page.locator('.menu').getByRole('menuitem')).toHaveText(['ddev/ddev-redis', 'ddev/ddev-redis-insight']);
   }
+  await repo.fill('rds');
+  await expect(page.locator('.menu').getByRole('menuitem')).toHaveCount(3);
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   await expect(page.locator('.menu')).toHaveCount(0);
@@ -75,6 +78,26 @@ test('installs, updates and removes add-ons', async ({ page, backend }) => {
   await expect(page.locator('#dialog h2')).toHaveText('Remove redis?');
   await page.locator('#dialog').getByRole('button', { name: 'Remove' }).click();
   expect(await nthPost(backend, 3)).toEqual({ path: '/api/projects/d11/actions/addon-remove', form: { addon: 'redis' } });
+
+  // A running project uses the change after a restart, which a failed job
+  // does not need.
+  backend.endJob(backend.jobs[2].id, 'exit status 1');
+  await expect(page.locator('.toast').last()).toContainText('failed');
+  const restart = page.locator('.toast', { hasText: 'Restart d11' });
+  await expect(restart).toHaveCount(2);
+  await restart.first().getByRole('button', { name: 'Restart' }).click();
+  expect((await nthPost(backend, 4)).path).toBe('/api/projects/d11/actions/restart');
+});
+
+test('asks for no restart after an add-on change in a stopped project', async ({ page, backend }) => {
+  await page.locator('#project-list li', { hasText: 'wp' }).click();
+  await page.getByRole('button', { name: 'Add-ons' }).click();
+  await page.getByLabel('Add-on repository').fill('ddev/ddev-solr');
+  await page.getByRole('button', { name: 'Install' }).click();
+  await nthPost(backend, 1);
+  backend.endJob(backend.jobs[0].id);
+  await expect(page.locator('#activity-title')).toContainText('done');
+  await expect(page.locator('.toast', { hasText: 'Restart' })).toHaveCount(0);
 });
 
 test('shows when no add-ons are installed', async ({ page, backend }) => {
@@ -172,6 +195,14 @@ test('adds a project', async ({ page, backend }) => {
     path: '/api/projects',
     form: { dir: '/home/me/projects/new', type: 'laravel', name: 'newsite', docroot: 'public' },
   });
+
+  // The new project is selected once ddev lists it, which can be after
+  // the job ends.
+  backend.endJob(backend.jobs[0].id);
+  await expect(page.locator('#detail h1')).toContainText('d11');
+  backend.setProjects([...backend.projects, { name: 'newsite', status: 'stopped', type: 'laravel', approot: '/home/me/projects/new' }]);
+  backend.details.newsite = detail(stopped);
+  await expect(page.locator('#detail h1')).toContainText('newsite');
 });
 
 test('reports a refused project directory', async ({ page, backend }) => {

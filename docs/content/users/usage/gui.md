@@ -102,7 +102,7 @@ Above a project's tabs, **Open site**, **Mailpit**, and **Open folder** open wha
 
 To start or stop several projects at once, Ctrl+click or Shift+click them in the list, or tick the box that shows when you point at one. The page then offers **Start**, **Stop**, and **Restart** for all of them. **Start all**, **Stop all**, and **Power off** at the top act on every project.
 
-The arrow keys move between the start page, the shared services, and the projects in the list, and `/` goes to the filter. The filter, like the add-on name on the **Add-ons** tab, matches letters in order, as `ddev tui` does, so `dr11` finds `drupal11`, and it allows for a typo, so `rediss` finds `ddev/ddev-redis`.
+The arrow keys move between the start page, the shared services, and the projects in the list, and `/` goes to the filter. The filter, like the add-on name on the **Add-ons** tab, matches letters in order, as `ddev tui` does, so `dr11` finds `drupal11`, and it allows for a typo, so `rediss` finds `ddev/ddev-redis`. The add-on list shows such letter matches only when no name holds what you typed, or a typo of it.
 
 **Shared services**, or a click on the status at the top, shows the router and the SSH agent that all projects share: their health, the router's configuration problems, a link to the Traefik dashboard, the `docker exec` command that opens a shell in each, and their logs.
 

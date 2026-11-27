@@ -30,6 +30,9 @@ const state = {
   registry: null,
   types: null,
   seenJobs: new Set(),
+  // afterJob maps a job started here to what runs once it succeeds. A run
+  // that returns false runs again on the next status.
+  afterJob: new Map(),
   // shownJobs are the jobs the panel has shown, so a finished one doesn't
   // take it again.
   shownJobs: new Set(),
@@ -79,10 +82,13 @@ function icon(name, cls = '') {
   return h('i', { class: `i i-${name} ${cls}`, 'aria-hidden': 'true' });
 }
 
-function toast(text, isError) {
-  const t = h('div', { class: 'toast' + (isError ? ' error' : '') }, h('span', {}, text), closeButton('Dismiss', () => t.remove()));
+function toast(text, isError, action) {
+  const t = h('div', { class: 'toast' + (isError ? ' error' : '') }, h('span', {}, text),
+    action ? h('button', { class: 'btn small', type: 'button', onclick: () => { t.remove(); action.run(); } }, action.label) : null,
+    closeButton('Dismiss', () => t.remove()));
   $('toasts').append(t);
-  setTimeout(() => t.remove(), isError ? 9000 : 4000);
+  // A toast with an action waits for it, or for Dismiss.
+  if (!action) setTimeout(() => t.remove(), isError ? 9000 : 4000);
 }
 
 async function post(url, params) {
@@ -97,15 +103,16 @@ async function post(url, params) {
   return res.status === 204 ? null : res.json();
 }
 
-// runJob starts a job and shows its output, and returns whether it started.
+// runJob starts a job and shows its output. It returns the job, or null
+// when it did not start.
 async function runJob(url, params, openActivity = true) {
   try {
     const job = await post(url, params);
     showJob(job.id, openActivity);
-    return true;
+    return job;
   } catch (e) {
     toast(e.message, true);
-    return false;
+    return null;
   }
 }
 
@@ -121,7 +128,10 @@ function copyButton(text) {
 }
 
 function copyable(text, display, cls = '') {
-  return h('span', { class: 'copyable ' + cls }, display || text, copyButton(text));
+  // A command wraps after its "&&" rather than inside a word such as
+  // export-db.
+  display ||= h('span', {}, text.split(/(?<=&&) /).flatMap((part, i) => [i ? ' ' : '', h('span', { class: 'cmd-part' }, part)]));
+  return h('span', { class: 'copyable ' + cls }, display, copyButton(text));
 }
 
 function link(url, text) {
@@ -511,6 +521,15 @@ function projectAction(p, a, params) {
   return runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/' + a, params);
 }
 
+// addonAction runs an add-on action. As `ddev add-on` says, a running
+// project uses the change after a restart, so the page offers one.
+async function addonAction(p, a, params) {
+  afterJob(await projectAction(p, a, params), () => {
+    const now = state.projects.find((x) => x.name === p.name);
+    if (now && isUp(now.status)) toast(`Restart ${p.name} to use the add-on changes.`, false, { label: 'Restart', run: () => projectAction(now, 'restart') });
+  });
+}
+
 async function openIn(p, target) {
   try { await post('/api/projects/' + encodeURIComponent(p.name) + '/open/' + target); } catch (e) { toast(e.message, true); }
 }
@@ -570,7 +589,7 @@ function toolbar(p) {
   more.addEventListener('click', () => (menuAnchor === more ? menuClose() : openMenu(more, [
     { label: 'Create snapshot', disabled: busy || !(d && d.dbinfo), run: act('snapshot') },
     { label: 'Restore the latest snapshot…', disabled: busy || !(detail && detail.snapshots.length), run: () => restoreLatest(p) },
-    { label: 'Update add-ons', disabled: busy || !(detail && detail.addons.length), run: act('addon-update') },
+    { label: 'Update add-ons', disabled: busy || !(detail && detail.addons.length), run: () => addonAction(p, 'addon-update') },
     null,
     { label: 'Copy site URL', disabled: !p.url, run: () => copy(p.url) },
     { label: 'Copy path', run: () => copy(p.approot) },
@@ -701,7 +720,7 @@ function databaseTab(p, d) {
 
 function addonsTab(p, d) {
   const busy = !!runningJobFor(p.name);
-  const act = (a, params) => runJob('/api/projects/' + encodeURIComponent(p.name) + '/actions/' + a, params);
+  const act = (a, params) => addonAction(p, a, params);
   const input = h('input', { type: 'text', placeholder: 'Search add-ons or type owner/repo', 'aria-label': 'Add-on repository', autocomplete: 'off', role: 'combobox', 'aria-autocomplete': 'list' });
   // WebKitGTK draws a <datalist> in the GTK theme, so the page draws the
   // suggestions, as it does for dropdowns.
@@ -711,7 +730,11 @@ function addonsTab(p, d) {
   const suggest = async () => {
     if (chosen && input.value === chosen) return;
     chosen = '';
-    const addons = fuzzyFilter(input.value, await loadRegistry(), (a) => a.repo.split('/').pop(), { label: (a) => a.repo, fields: (a) => [a.repo] });
+    const found = fuzzyFilter(input.value, await loadRegistry(), (a) => a.repo.split('/').pop(), { label: (a) => a.repo, fields: (a) => [a.repo] });
+    // Scattered letters match much of the registry, so only the best kind
+    // of match shows: the text itself, else a typo of it, else letters.
+    const kind = (m) => (m.rank ? 2 : m.near < Infinity ? 1 : 0);
+    const addons = found.filter((m) => kind(m) === kind(found[0]));
     if (document.activeElement !== input) return;
     if (!addons.length) { if (menuAnchor === input) menuClose(); return; }
     openMenu(input, addons.map(({ item: a, idx }) => ({
@@ -1232,6 +1255,16 @@ function renderJobs() {
     }
     if (!j.done) state.seenJobs.delete(j.id);
   }
+  for (const [id, run] of state.afterJob) {
+    const j = state.jobs.find((x) => x.id === id);
+    if (!j || j.err) state.afterJob.delete(id);
+    else if (j.done && run(j) !== false) state.afterJob.delete(id);
+  }
+}
+
+// afterJob runs run when job succeeds. job is null when it did not start.
+function afterJob(job, run) {
+  if (job) state.afterJob.set(job.id, run);
 }
 
 async function removeJob(id) {
@@ -1610,7 +1643,19 @@ async function addProject() {
     field('Docroot', docroot),
   ], 'Configure');
   if (!ok) return;
-  await runJob('/api/projects', { dir: dir.value, type: type.value, name: name.value, docroot: docroot.value });
+  const from = viewKey();
+  afterJob(await runJob('/api/projects', { dir: dir.value, type: type.value, name: name.value, docroot: docroot.value }), (j) => {
+    // The project shows in the status after ddev config ends, not always in
+    // the same one. It is selected unless the user went elsewhere meanwhile.
+    const p = state.projects.find((x) => x.name === j.project || x.approot === dir.value.trim());
+    if (!p) return false;
+    if (viewKey() === from) showTarget('project=' + encodeURIComponent(p.name));
+    return true;
+  });
+}
+
+function viewKey() {
+  return state.view + ':' + state.selected;
 }
 
 // ---------- keyboard ----------
