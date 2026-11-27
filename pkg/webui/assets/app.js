@@ -1679,17 +1679,20 @@ function onKeyDown(e) {
 
 // showTarget shows what target names, as a link such as #project=d11 or
 // #about does, or the GUI app's tray through the status stream. It returns
-// whether it named anything.
+// whether it named anything. stop-all and poweroff ask first, like their
+// buttons.
 function showTarget(target) {
   const about = /(?:^|&)about(?:&|$)/.test(target);
   const m = /(?:^|&)project=([^&]+)/.exec(target);
+  const action = /(?:^|&)(stop-all|poweroff)(?:&|$)/.exec(target);
   if (m) {
     if (state.show !== 'all') { state.show = 'all'; localStorage.setItem('ddev.show', 'all'); }
     selectProject(decodeURIComponent(m[1].replace(/\+/g, ' ')));
     renderProjects();
   }
   if (about) showAbout();
-  return about || !!m;
+  if (action) $('btn-' + action[1]).click();
+  return about || !!m || !!action;
 }
 
 function init() {

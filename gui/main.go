@@ -310,16 +310,15 @@ func main() {
 		window.SetURL(pageURL + "#" + target)
 	}
 	reveal = func(name string) { navigate("project=" + url.QueryEscape(name)) }
-	showAbout := func() { navigate("about") }
 	if runtime.GOOS == "darwin" && srv != nil {
 		// The app menu's About shows the page's, with the versions of both.
 		menu := application.DefaultApplicationMenu()
 		if about := menu.FindByRole(application.About); about != nil {
-			about.OnClick(func(*application.Context) { showAbout() })
+			about.OnClick(func(*application.Context) { navigate("about") })
 		}
 		app.Menu.Set(menu)
 	}
-	t := &trayMenu{app: app, tray: tray, icons: icons, window: window, srv: srv, startErr: startErr, show: showWindow, reveal: reveal, about: showAbout}
+	t := &trayMenu{app: app, tray: tray, icons: icons, srv: srv, startErr: startErr, show: showWindow, navigate: navigate}
 	// Wails opens the menu on a right-click only if the tray has a menu when
 	// the app starts, and follow's first menu arrives later.
 	firstErr := "Connecting to ddev gui…"
@@ -449,20 +448,17 @@ func logRequests(next http.Handler) http.Handler {
 
 // trayMenu keeps the tray menu in step with the projects.
 type trayMenu struct {
-	app    *application.App
-	tray   *application.SystemTray
-	window *application.WebviewWindow
+	app  *application.App
+	tray *application.SystemTray
 	// srv is nil when ddev gui could not start, and startErr says why.
 	srv      *serveClient
 	startErr error
 	show     func()
 	icons    *trayIcons
-	// reveal shows the window with a project selected, and about with
-	// About DDEV.
-	reveal func(name string)
-	about  func()
-	last   []project
-	err    string
+	// navigate shows the window and a target, such as "about".
+	navigate func(target string)
+	last     []project
+	err      string
 }
 
 func (t *trayMenu) follow() {
@@ -531,16 +527,16 @@ func (t *trayMenu) build(projects []project, errText string) *application.Menu {
 		}
 		sub.AddSeparator()
 		name := p.Name
-		sub.Add("Show in DDEV").OnClick(func(*application.Context) { t.reveal(name) })
+		sub.Add("Show in DDEV").OnClick(t.open("project=" + url.QueryEscape(name)))
 	}
 	m.AddSeparator()
 	m.Add("Start all").SetEnabled(len(projects) > running).OnClick(t.global("start-all"))
-	// The page asks before these too.
-	m.Add("Stop all").SetEnabled(running > 0).OnClick(t.confirm("Stop all projects?", "Every running DDEV project will be stopped.", "Stop all", t.global("stop-all")))
-	m.Add("Power off").OnClick(t.confirm("Power off DDEV?", "This stops all projects and DDEV’s shared containers.", "Power off", t.global("poweroff")))
+	// The window asks before these.
+	m.Add("Stop all").SetEnabled(running > 0).OnClick(t.open("stop-all"))
+	m.Add("Power off").OnClick(t.open("poweroff"))
 	m.AddSeparator()
 	if t.srv != nil {
-		m.Add("About DDEV").OnClick(func(*application.Context) { t.about() })
+		m.Add("About DDEV").OnClick(t.open("about"))
 	}
 	m.Add("Quit DDEV app").OnClick(func(*application.Context) { t.app.Quit() })
 	return m
@@ -563,17 +559,8 @@ func (t *trayMenu) global(action string) func(*application.Context) {
 	return t.post("/api/actions/" + action)
 }
 
-// confirm asks before it runs then.
-func (t *trayMenu) confirm(title, message, okLabel string, then func(*application.Context)) func(*application.Context) {
-	return func(ctx *application.Context) {
-		d := t.app.Dialog.Question().SetTitle(title).SetMessage(message)
-		ok := d.AddButton(okLabel)
-		cancel := d.AddButton("Cancel")
-		d.SetDefaultButton(cancel)
-		d.SetCancelButton(cancel)
-		ok.OnClick(func() { go then(ctx) })
-		showQuestion(d, t.window, t.show)
-	}
+func (t *trayMenu) open(target string) func(*application.Context) {
+	return func(*application.Context) { t.navigate(target) }
 }
 
 // showQuestion shows d on the window, which comes forward first. On macOS a

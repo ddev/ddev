@@ -49,6 +49,9 @@ func TestShow(t *testing.T) {
 		t.Fatal("the status streams were not woken")
 	}
 	require.Equal(t, "project=d11", d.shownTarget())
+	rec = postForm(d, "/api/show", url.Values{"target": {"poweroff"}})
+	require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+	require.Equal(t, "poweroff", d.shownTarget())
 	rec = postForm(d, "/api/show", url.Values{"target": {"javascript:alert(1)"}})
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }

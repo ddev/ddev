@@ -7,8 +7,8 @@ app shows that web UI in a native window, and adds what a browser tab cannot:
 
 - A tray menu, also called a menu bar extra on macOS. It lists each project
   with its status, starts, stops, or restarts it, and opens its site. It also
-  has Start all, Stop all, and Power off; the last two ask first, as the
-  page does. Its About DDEV shows the versions of the app and of `ddev`,
+  has Start all, Stop all, and Power off; the last two open the window,
+  which asks first. Its About DDEV shows the versions of the app and of `ddev`,
   the `ddev` it runs, and `ddev version`, as the page's own About does.
 - A dot on the tray icon: yellow while an action runs or a project starts,
   green while a project runs, and none when all are stopped. macOS draws a

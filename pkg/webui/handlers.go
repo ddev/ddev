@@ -52,12 +52,12 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleShow asks the window to show About DDEV or a project, for the GUI
-// app's tray. Pointing the window at a new URL instead would leave WebView2
+// handleShow asks the window to show About DDEV, a project, or the question
+// before Stop all or Power off, for the GUI app's tray. Pointing the window at a new URL instead would leave WebView2
 // black when the window is shown again.
 func (s *Server) handleShow(w http.ResponseWriter, r *http.Request) {
 	target := r.FormValue("target")
-	if target != "about" && !strings.HasPrefix(target, "project=") {
+	if !slices.Contains([]string{"about", "stop-all", "poweroff"}, target) && !strings.HasPrefix(target, "project=") {
 		http.Error(w, "unknown target", http.StatusBadRequest)
 		return
 	}

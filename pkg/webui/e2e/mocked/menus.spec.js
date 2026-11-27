@@ -357,6 +357,14 @@ test('About shows the versions and the license', async ({ page, backend }) => {
 
   backend.show('project=wp');
   await expect(page.locator('#detail h1')).toContainText('wp');
+
+  const question = page.locator('#dialog');
+  backend.show('stop-all');
+  await expect(question.locator('h2')).toHaveText('Stop all projects?');
+  await question.getByRole('button', { name: 'Cancel' }).click();
+  backend.show('poweroff');
+  await question.getByRole('button', { name: 'Power off' }).click();
+  await expect.poll(() => backend.posts.at(-1)?.path).toBe('/api/actions/poweroff');
 });
 
 test('the status names a stopped or failing service', async ({ page, backend }) => {
